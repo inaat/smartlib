@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class BookReservation extends Model
+{
+    protected $fillable = [
+        'user_id',
+        'book_id',
+        'reservation_date',
+        'pickup_deadline',
+        'pickup_date',
+        'return_date',
+        'status',
+    ];
+
+    protected $casts = [
+        'reservation_date' => 'datetime',
+        'pickup_deadline' => 'datetime',
+        'pickup_date' => 'datetime',
+        'return_date' => 'datetime',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function book()
+    {
+        return $this->belongsTo(Book::class);
+    }
+}
