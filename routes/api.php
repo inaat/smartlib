@@ -8,11 +8,13 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\LibraryController as AdminLibrary;
 use App\Http\Controllers\Admin\SeatSectionController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscription;
+use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Librarian\DashboardController as LibrarianDashboard;
 use App\Http\Controllers\Librarian\SeatController;
 use App\Http\Controllers\Librarian\BookController as LibrarianBook;
 use App\Http\Controllers\Librarian\EventController as LibrarianEvent;
+use App\Http\Controllers\Librarian\AnalyticsController as LibrarianAnalytics;
 use App\Http\Controllers\Student\DashboardController as StudentDashboard;
 use App\Http\Controllers\Student\LibraryController as StudentLibrary;
 use App\Http\Controllers\Student\BookingController;
@@ -88,6 +90,7 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('admin')->middleware(['role:super_admin|admin|librarian'])->name('api.admin.')->group(function () {
         // Dashboard
         Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/stats', [AdminDashboard::class, 'stats'])->name('dashboard.stats');
 
         // Users
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -105,6 +108,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/libraries', [AdminLibrary::class, 'store'])->name('libraries.store');
         Route::get('/libraries/{library}', [AdminLibrary::class, 'show'])->name('libraries.show');
         Route::put('/libraries/{library}', [AdminLibrary::class, 'update'])->name('libraries.update');
+        Route::post('/libraries/{library}', [AdminLibrary::class, 'update'])->name('libraries.update.post'); // For FormData with method spoofing
         Route::delete('/libraries/{library}', [AdminLibrary::class, 'destroy'])->name('libraries.destroy');
 
         // Seat Sections
@@ -112,6 +116,13 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/libraries/{library}/sections', [SeatSectionController::class, 'store'])->name('libraries.sections.store');
         Route::put('/libraries/{library}/sections/{section}', [SeatSectionController::class, 'update'])->name('libraries.sections.update');
         Route::delete('/libraries/{library}/sections/{section}', [SeatSectionController::class, 'destroy'])->name('libraries.sections.destroy');
+
+        // Seats
+        Route::get('/seats', [SeatController::class, 'index'])->name('seats.index');
+        Route::post('/seats', [SeatController::class, 'store'])->name('seats.store');
+        Route::get('/seats/{seat}', [SeatController::class, 'show'])->name('seats.show');
+        Route::put('/seats/{seat}', [SeatController::class, 'update'])->name('seats.update');
+        Route::delete('/seats/{seat}', [SeatController::class, 'destroy'])->name('seats.destroy');
 
         // Books
         Route::get('/books', [LibrarianBook::class, 'index'])->name('books.index');
@@ -131,14 +142,27 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
         Route::get('/analytics/reports', [AnalyticsController::class, 'reports'])->name('analytics.reports');
 
+        // Subscription Plans
+        Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
+        Route::post('/subscription-plans', [SubscriptionPlanController::class, 'store'])->name('subscription-plans.store');
+        Route::get('/subscription-plans/{plan}', [SubscriptionPlanController::class, 'show'])->name('subscription-plans.show');
+        Route::put('/subscription-plans/{plan}', [SubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
+        Route::delete('/subscription-plans/{plan}', [SubscriptionPlanController::class, 'destroy'])->name('subscription-plans.destroy');
+
         // Subscriptions
         Route::get('/subscriptions', [AdminSubscription::class, 'index'])->name('subscriptions.index');
     });
 
     // Librarian Routes
-    Route::prefix('librarian')->middleware(['role:librarian,admin'])->name('api.librarian.')->group(function () {
+    Route::prefix('librarian')->middleware(['role:librarian|admin|super_admin'])->name('api.librarian.')->group(function () {
         // Dashboard
         Route::get('/dashboard', [LibrarianDashboard::class, 'index'])->name('dashboard');
+
+        // Seat Sections
+        Route::get('/libraries/{library}/sections', [SeatSectionController::class, 'index'])->name('libraries.sections.index');
+        Route::post('/libraries/{library}/sections', [SeatSectionController::class, 'store'])->name('libraries.sections.store');
+        Route::put('/libraries/{library}/sections/{section}', [SeatSectionController::class, 'update'])->name('libraries.sections.update');
+        Route::delete('/libraries/{library}/sections/{section}', [SeatSectionController::class, 'destroy'])->name('libraries.sections.destroy');
 
         // Seats
         Route::get('/seats', [SeatController::class, 'index'])->name('seats.index');
@@ -161,5 +185,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/events/{event}', [LibrarianEvent::class, 'show'])->name('events.show');
         Route::put('/events/{event}', [LibrarianEvent::class, 'update'])->name('events.update');
         Route::delete('/events/{event}', [LibrarianEvent::class, 'destroy'])->name('events.destroy');
+
+        // Analytics
+        Route::get('/analytics', [LibrarianAnalytics::class, 'index'])->name('analytics');
     });
 });

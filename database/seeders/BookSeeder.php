@@ -43,7 +43,6 @@ class BookSeeder extends Seeder
                 'reservation_queue' => [],
                 'borrowing_period' => 14,
                 'renewal_limit' => 2,
-                'fine_per_day' => 5.00,
                 'qr_code' => null,
             ],
             [
@@ -72,7 +71,6 @@ class BookSeeder extends Seeder
                 'reservation_queue' => [],
                 'borrowing_period' => 14,
                 'renewal_limit' => 2,
-                'fine_per_day' => 5.00,
                 'qr_code' => null,
             ],
             [
@@ -108,7 +106,6 @@ class BookSeeder extends Seeder
                 'reservation_queue' => [],
                 'borrowing_period' => 30,
                 'renewal_limit' => 5,
-                'fine_per_day' => 0,
                 'qr_code' => null,
             ],
             [
@@ -137,7 +134,6 @@ class BookSeeder extends Seeder
                 'reservation_queue' => [],
                 'borrowing_period' => 14,
                 'renewal_limit' => 2,
-                'fine_per_day' => 5.00,
                 'qr_code' => null,
             ],
         ];

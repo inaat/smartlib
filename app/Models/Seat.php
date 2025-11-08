@@ -23,7 +23,6 @@ class Seat extends Model
         'power_outlets',
         'has_computer',
         'max_occupancy',
-        'hourly_rate',
         'restrictions',
     ];
 
@@ -36,7 +35,6 @@ class Seat extends Model
         'power_outlets' => 'integer',
         'has_computer' => 'boolean',
         'max_occupancy' => 'integer',
-        'hourly_rate' => 'decimal:2',
     ];
 
     public function library()

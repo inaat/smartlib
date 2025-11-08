@@ -21,7 +21,7 @@ class DashboardController extends Controller
             'total_seats' => Seat::count(),
             'active_bookings' => SeatBooking::whereIn('status', ['pending', 'active'])->count(),
             'today_bookings' => SeatBooking::whereDate('created_at', today())->count(),
-            'total_revenue' => UserSubscription::sum('amount_paid'),
+            'total_revenue' => (float) UserSubscription::sum('amount_paid'),
             'revenue_growth' => $this->calculateRevenueGrowth(),
         ];
 
@@ -38,6 +38,23 @@ class DashboardController extends Controller
         return view('admin.dashboard', compact('stats', 'pendingUsers', 'recentActivity', 'pendingCount'));
     }
 
+    public function stats()
+    {
+        $stats = [
+            'total_students' => User::where('user_type', 'student')->count(),
+            'active_students' => User::where('user_type', 'student')
+                ->where('status', 'approved')->count(),
+            'total_libraries' => Library::count(),
+            'total_seats' => Seat::count(),
+            'active_bookings' => SeatBooking::whereIn('status', ['pending', 'active'])->count(),
+            'today_bookings' => SeatBooking::whereDate('created_at', today())->count(),
+            'total_revenue' => (float) UserSubscription::sum('amount_paid'),
+            'revenue_growth' => $this->calculateRevenueGrowth(),
+        ];
+
+        return response()->json($stats);
+    }
+
     private function calculateRevenueGrowth()
     {
         $currentMonth = UserSubscription::whereMonth('created_at', now()->month)
@@ -48,8 +65,17 @@ class DashboardController extends Controller
             ->whereYear('created_at', now()->subMonth()->year)
             ->sum('amount_paid');
 
-        if ($lastMonth == 0) return 100;
+        // If both months are 0, no growth
+        if ($lastMonth == 0 && $currentMonth == 0) {
+            return 0;
+        }
 
+        // If last month was 0 but current month has revenue, show 100% growth
+        if ($lastMonth == 0 && $currentMonth > 0) {
+            return 100;
+        }
+
+        // Normal calculation
         return round((($currentMonth - $lastMonth) / $lastMonth) * 100, 1);
     }
 }

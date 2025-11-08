@@ -45,22 +45,34 @@ class EventController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:5120',
-            'start_time' => 'required|date|after:now',
-            'end_time' => 'required|date|after:start_time',
-            'location' => 'nullable|string',
-            'is_free' => 'required|boolean',
-            'price' => 'required_if:is_free,0|nullable|numeric|min:0',
+            'date' => 'required|date',
+            'start_time' => 'required',
+            'end_time' => 'required',
+            'venue' => 'nullable|string',
+            'type' => 'nullable|string',
+            'is_paid' => 'nullable|boolean',
+            'price' => 'nullable|numeric|min:0',
             'capacity' => 'nullable|integer|min:1',
         ]);
 
         $validated['library_id'] = $library->id;
-        $validated['registered_count'] = 0;
+        $validated['registered'] = 0;
+        $validated['is_active'] = true;
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('events', 'public');
         }
 
-        Event::create($validated);
+        $event = Event::create($validated);
+
+        // Return JSON for API requests
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Event created successfully',
+                'data' => $event
+            ], 201);
+        }
 
         return redirect()->route('librarian.events.index')
             ->with('success', 'Event created successfully');
@@ -95,13 +107,15 @@ class EventController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:5120',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time',
-            'location' => 'nullable|string',
-            'is_free' => 'required|boolean',
-            'price' => 'required_if:is_free,0|nullable|numeric|min:0',
+            'date' => 'required|date',
+            'start_time' => 'required',
+            'end_time' => 'required',
+            'venue' => 'nullable|string',
+            'type' => 'nullable|string',
+            'is_paid' => 'nullable|boolean',
+            'price' => 'nullable|numeric|min:0',
             'capacity' => 'nullable|integer|min:1',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if ($request->hasFile('image')) {
@@ -109,6 +123,15 @@ class EventController extends Controller
         }
 
         $event->update($validated);
+
+        // Return JSON for API requests
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Event updated successfully',
+                'data' => $event->fresh()
+            ]);
+        }
 
         return redirect()->route('librarian.events.index')
             ->with('success', 'Event updated successfully');
@@ -121,6 +144,14 @@ class EventController extends Controller
         }
 
         $event->delete();
+
+        // Return JSON for API requests
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Event deleted successfully'
+            ]);
+        }
 
         return redirect()->route('librarian.events.index')
             ->with('success', 'Event deleted successfully');

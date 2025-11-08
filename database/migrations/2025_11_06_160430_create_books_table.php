@@ -39,7 +39,6 @@ return new class extends Migration
             $table->json('reservation_queue')->nullable(); // array of user IDs
             $table->integer('borrowing_period')->default(14); // days
             $table->integer('renewal_limit')->default(2);
-            $table->decimal('fine_per_day', 8, 2)->default(5.00);
             $table->text('qr_code')->nullable();
             $table->timestamps();
 

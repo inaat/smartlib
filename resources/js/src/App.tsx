@@ -1,26 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { AppProvider } from './contexts/AppContext';
-import Layout from './components/Layout/Layout';
-import AdminLayout from './components/Layout/AdminLayout';
-import LoginForm from './components/Auth/LoginForm';
-import RegisterForm from './components/Auth/RegisterForm';
-import Dashboard from './components/Dashboard/Dashboard';
-import LibrariesPage from './components/Libraries/LibrariesPage';
-import SeatBookingPage from './components/Seats/SeatBookingPage';
-import BooksPage from './components/Books/BooksPage';
-import EventsPage from './components/Events/EventsPage';
-import ProfilePage from './components/Profile/ProfilePage';
-import AdminDashboard from './components/Admin/AdminDashboard';
-import UserManagement from './components/Admin/UserManagement';
-import LibraryManagement from './components/Admin/LibraryManagement';
-import LibraryDetails from './components/Admin/LibraryDetails';
-import BookManagement from './components/Admin/BookManagement';
-import BookingManagement from './components/Admin/BookingManagement';
-import AnalyticsView from './components/Admin/AnalyticsView';
-import SuperAdminSettings from './components/Admin/SuperAdminSettings';
-import QRCheckInPage from './components/QR/QRCheckInPage';
+import { AuthProvider, useAuth } from '@/shared/contexts/AuthContext';
+import { AppProvider } from '@/shared/contexts/AppContext';
+import LoginForm from '@/shared/components/Auth/LoginForm';
+import RegisterForm from '@/shared/components/Auth/RegisterForm';
+import StudentApp from '@/student/StudentApp';
+import LibrarianApp from '@/librarian/LibrarianApp';
+import SuperAdminApp from '@/superadmin/SuperAdminApp';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -67,237 +53,62 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-const StudentRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
-
-  if (!user || user.role !== 'student') {
-    return <Navigate to="/admin" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
-
-  if (!user || (user.role !== 'admin' && user.role !== 'super_admin' && user.role !== 'librarian')) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
-};
-
 const AppRoutes: React.FC = () => {
   const { user } = useAuth();
 
   // Redirect based on user role after login
   const getDefaultRoute = () => {
     if (!user) return '/login';
-    if (user.role === 'admin' || user.role === 'super_admin' || user.role === 'librarian') return '/admin';
-    return '/dashboard';
+    if (user.role === 'super_admin') return '/superadmin';
+    if (user.role === 'librarian') return '/librarian';
+    return '/student/dashboard';
   };
 
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
-        <Route 
-          path="/login" 
-          element={user ? <Navigate to={getDefaultRoute()} replace /> : <LoginForm />} 
-        />
-        <Route 
-          path="/register" 
-          element={user ? <Navigate to={getDefaultRoute()} replace /> : <RegisterForm />} 
-        />
-
-        {/* Student Routes */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <StudentRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              </StudentRoute>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/libraries" 
-          element={
-            <ProtectedRoute>
-              <StudentRoute>
-                <Layout>
-                  <LibrariesPage />
-                </Layout>
-              </StudentRoute>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/libraries/:libraryId/seats" 
-          element={
-            <ProtectedRoute>
-              <StudentRoute>
-                <Layout>
-                  <SeatBookingPage />
-                </Layout>
-              </StudentRoute>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/books" 
-          element={
-            <ProtectedRoute>
-              <StudentRoute>
-                <Layout>
-                  <BooksPage />
-                </Layout>
-              </StudentRoute>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/events" 
-          element={
-            <ProtectedRoute>
-              <StudentRoute>
-                <Layout>
-                  <EventsPage />
-                </Layout>
-              </StudentRoute>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/profile" 
-          element={
-            <ProtectedRoute>
-              <StudentRoute>
-                <Layout>
-                  <ProfilePage />
-                </Layout>
-              </StudentRoute>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/qr-checkin" 
-          element={
-            <ProtectedRoute>
-              <StudentRoute>
-                <Layout>
-                  <QRCheckInPage />
-                </Layout>
-              </StudentRoute>
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Admin Routes */}
-        <Route 
-          path="/admin" 
-          element={
-            <ProtectedRoute>
-              <AdminRoute>
-                <AdminLayout>
-                  <AdminDashboard />
-                </AdminLayout>
-              </AdminRoute>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin/users" 
-          element={
-            <ProtectedRoute>
-              <AdminRoute>
-                <AdminLayout>
-                  <UserManagement />
-                </AdminLayout>
-              </AdminRoute>
-            </ProtectedRoute>
-          } 
+        {/* ========== PUBLIC ROUTES ========== */}
+        <Route
+          path="/login"
+          element={user ? <Navigate to={getDefaultRoute()} replace /> : <LoginForm />}
         />
         <Route
-          path="/admin/libraries"
+          path="/register"
+          element={user ? <Navigate to={getDefaultRoute()} replace /> : <RegisterForm />}
+        />
+
+        {/* ========== STUDENT ROUTES ========== */}
+        <Route
+          path="/student/*"
           element={
             <ProtectedRoute>
-              <AdminRoute>
-                <AdminLayout>
-                  <LibraryManagement />
-                </AdminLayout>
-              </AdminRoute>
+              <StudentApp />
             </ProtectedRoute>
           }
         />
+
+        {/* ========== LIBRARIAN ROUTES ========== */}
         <Route
-          path="/admin/libraries/:id"
+          path="/librarian/*"
           element={
             <ProtectedRoute>
-              <AdminRoute>
-                <AdminLayout>
-                  <LibraryDetails />
-                </AdminLayout>
-              </AdminRoute>
+              <LibrarianApp />
             </ProtectedRoute>
           }
         />
+
+        {/* ========== SUPER ADMIN ROUTES ========== */}
         <Route
-          path="/admin/books" 
+          path="/superadmin/*"
           element={
             <ProtectedRoute>
-              <AdminRoute>
-                <AdminLayout>
-                  <BookManagement />
-                </AdminLayout>
-              </AdminRoute>
+              <SuperAdminApp />
             </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin/bookings" 
-          element={
-            <ProtectedRoute>
-              <AdminRoute>
-                <AdminLayout>
-                  <BookingManagement />
-                </AdminLayout>
-              </AdminRoute>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin/analytics" 
-          element={
-            <ProtectedRoute>
-              <AdminRoute>
-                <AdminLayout>
-                  <AnalyticsView />
-                </AdminLayout>
-              </AdminRoute>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin/settings" 
-          element={
-            <ProtectedRoute>
-              <AdminRoute>
-                <AdminLayout>
-                  <SuperAdminSettings />
-                </AdminLayout>
-              </AdminRoute>
-            </ProtectedRoute>
-          } 
+          }
         />
 
-        {/* Default Route */}
+        {/* ========== DEFAULT & FALLBACK ========== */}
         <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
-        
-        {/* Catch all route */}
         <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
       </Routes>
     </Router>

@@ -15,6 +15,9 @@ class DashboardController extends Controller
         $library = Auth::user()->library;
 
         if (!$library) {
+            if (request()->expectsJson() || request()->is('api/*')) {
+                return response()->json(['error' => 'No library assigned to you'], 403);
+            }
             return redirect()->back()->with('error', 'No library assigned to you');
         }
 
@@ -40,6 +43,16 @@ class DashboardController extends Controller
             ->orderBy('start_time')
             ->take(5)
             ->get();
+
+        // Return JSON for API requests
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'library' => $library,
+                'stats' => $stats,
+                'recentBookings' => $recentBookings,
+                'upcomingEvents' => $upcomingEvents,
+            ]);
+        }
 
         return view('librarian.dashboard', compact('stats', 'recentBookings', 'upcomingEvents', 'library'));
     }

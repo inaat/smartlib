@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Book extends Model
 {
@@ -33,7 +34,6 @@ class Book extends Model
         'reservation_queue',
         'borrowing_period',
         'renewal_limit',
-        'fine_per_day',
         'qr_code',
     ];
 
@@ -50,8 +50,29 @@ class Book extends Model
         'reservation_queue' => 'array',
         'borrowing_period' => 'integer',
         'renewal_limit' => 'integer',
-        'fine_per_day' => 'decimal:2',
     ];
+
+    protected $appends = ['cover_url'];
+
+    public function getCoverUrlAttribute()
+    {
+        if (!$this->cover) {
+            return 'https://images.pexels.com/photos/159866/books-book-pages-read-literature-159866.jpeg?auto=compress&cs=tinysrgb&w=400';
+        }
+
+        // If it's already a full URL, return it
+        if (filter_var($this->cover, FILTER_VALIDATE_URL)) {
+            return $this->cover;
+        }
+
+        // If it already starts with /storage/, return as is
+        if (str_starts_with($this->cover, '/storage/')) {
+            return $this->cover;
+        }
+
+        // Otherwise, convert storage path to URL
+        return Storage::url($this->cover);
+    }
 
     public function library()
     {
