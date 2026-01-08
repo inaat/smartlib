@@ -7,181 +7,308 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function showLogin()
-    {
-        return view('auth.login');
-    }
-
+    /**
+     * Login user
+     */
     public function login(Request $request)
     {
-        // Check if request is from API
-        if ($request->expectsJson() || $request->is('api/*')) {
-            return $this->apiLogin($request);
-        }
-
         $request->validate([
-            'crn' => 'required',
-            'password' => 'required',
-            'device_type' => 'required|in:mobile,laptop',
-        ]);
-
-        $user = User::where('crn', $request->crn)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return back()->withErrors([
-                'crn' => 'The provided credentials are incorrect.',
-            ])->onlyInput('crn');
-        }
-
-        if ($user->status !== 'approved') {
-            return back()->with('error', 'Your account is pending approval or has been suspended.');
-        }
-
-        // Handle session management (1 mobile at a time)
-        if ($request->device_type === 'mobile') {
-            // Logout other mobile sessions
-            $user->tokens()->where('name', 'mobile')->delete();
-        }
-
-        Auth::login($user, $request->boolean('remember'));
-
-        $request->session()->regenerate();
-
-        // Redirect based on user type
-        return $this->redirectUser($user);
-    }
-
-    protected function apiLogin(Request $request)
-    {
-        $request->validate([
-            'crn' => 'required|string',
+            'email' => 'required|email',
             'password' => 'required|string',
+            'remember' => 'boolean',
         ]);
 
-        $user = User::where('crn', $request->crn)->first();
+        $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Invalid credentials'
-            ], 401);
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
         }
 
-        if ($user->status !== 'approved') {
-            return response()->json([
-                'message' => 'Your account is pending approval'
-            ], 403);
+        if (!$user->is_active) {
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been deactivated. Please contact support.'],
+            ]);
         }
 
-        // Create token
-        $token = $user->createToken('auth-token')->accessToken;
+        // Create token for API authentication
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        // Load relationships
+        $user->load(['userSubscriptions' => function($query) {
+            $query->where('status', 'active')->latest();
+        }, 'libraries']);
+
+        $libraryId = $user->libraries->first()?->id;
 
         return response()->json([
-            'user' => $user->load('library', 'activeSubscription'),
-            'token' => $token
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'crn' => $user->crn,
+                'role' => $user->role,
+                'ca_level' => $user->ca_level,
+                'is_active' => $user->is_active,
+                'trial_used' => $user->trial_used,
+                'trial_started_at' => $user->trial_started_at,
+                'trial_ends_at' => $user->trial_ends_at,
+                'created_at' => $user->created_at,
+                'isApproved' => $user->is_active, // For frontend compatibility
+                'role' => $user->role, // For frontend compatibility
+                'library_id' => $libraryId,
+                'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
+                'profile_picture' => $user->profile_picture,
+            ],
+            'token' => $token,
+            'message' => 'Login successful'
         ]);
     }
 
-    public function showRegister()
-    {
-        return view('auth.register');
-    }
-
+    /**
+     * Register new user (Student)
+     */
     public function register(Request $request)
     {
-        // Check if request is from API
-        if ($request->expectsJson() || $request->is('api/*')) {
-            return $this->apiRegister($request);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'required|string|regex:/^03\d{9}$/',
+            'crn' => 'required|string|regex:/^CRN\d{6}$/|unique:users,crn',
+            'ca_level' => 'required|in:PRC,CAP,Final',
+            'password' => 'required|string|min:8',
+            'password_confirmation' => 'required|same:password',
+            'plan_id' => 'nullable|exists:subscription_plans,id',
+        ]);
+
+
+
+
+        // Determine trial end date based on plan or default
+        $trialEndsAt = now()->addDays(7);
+        $plan = null;
+
+        if ($request->plan_id) {
+            $plan = \App\Models\SubscriptionPlan::find($request->plan_id);
+            if ($plan && $plan->free_trial_days > 0) {
+                $trialEndsAt = now()->addDays($plan->free_trial_days);
+            }
         }
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'crn' => 'required|string|unique:users',
-            'email' => 'required|email|unique:users',
-            'phone' => 'nullable|string',
-            'icap_id_card_photo' => 'required|image|max:10240',
-            'password' => 'required|min:8|confirmed',
-        ]);
-
-        // Upload ICAP ID card photo
-        $icapPhotoPath = $request->file('icap_id_card_photo')->store('icap_photos', 'public');
-
+        // Create user
         $user = User::create([
             'name' => $request->name,
-            'crn' => $request->crn,
             'email' => $request->email,
             'phone' => $request->phone,
-            'icap_id_card_photo' => $icapPhotoPath,
-            'password' => Hash::make($request->password),
-            'user_type' => 'student',
-            'status' => 'pending',
-        ]);
-
-        $user->assignRole('student');
-
-        return redirect()->route('login')->with('success', 'Registration successful! Your account is pending approval.');
-    }
-
-    protected function apiRegister(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'crn' => 'required|string|unique:users',
-            'email' => 'required|email|unique:users',
-            'phone' => 'nullable|string',
-            'password' => 'required|min:8',
-        ]);
-
-        $user = User::create([
-            'name' => $request->name,
             'crn' => $request->crn,
-            'email' => $request->email,
-            'phone' => $request->phone,
+            'role' => 'student',
+            'ca_level' => $request->ca_level,
             'password' => Hash::make($request->password),
-            'user_type' => 'student',
-            'status' => 'pending',
+            'is_active' => true,
+            'trial_used' => true,
+            'trial_started_at' => now(),
+            'trial_ends_at' => $trialEndsAt,
         ]);
 
-        $user->assignRole('student');
+        // Create subscription if plan selected
+        if ($plan) {
+            $status = 'pending';
+            $expiresAt = null;
+            $startedAt = null;
 
-        // Auto-approve for demo (remove in production)
-        $user->update(['status' => 'approved']);
+            if ($plan->free_trial_days > 0) {
+                $status = 'active';
+                $startedAt = now();
+                $expiresAt = now()->addDays($plan->free_trial_days);
+            } elseif ($plan->price == 0) {
+                $status = 'active';
+                $startedAt = now();
+                $expiresAt = now()->addDays($plan->duration_days);
+            }
 
-        $token = $user->createToken('auth-token')->accessToken;
+            \App\Models\UserSubscription::create([
+                'user_id' => $user->id,
+                'subscription_plan_id' => $plan->id,
+                'status' => $status,
+                'started_at' => $startedAt,
+                'expires_at' => $expiresAt,
+                'auto_renew' => false,
+                'amount_paid' => 0,
+                'renewal_attempts' => 0,
+            ]);
+        }
+
+
+
+        // Create token
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'crn' => $user->crn,
+                'role' => $user->role,
+                'ca_level' => $user->ca_level,
+                'is_active' => $user->is_active,
+                'trial_used' => $user->trial_used,
+                'trial_started_at' => $user->trial_started_at,
+                'trial_ends_at' => $user->trial_ends_at,
+                'isApproved' => true,
+                'role' => 'student',
+                'library_id' => null,
+                'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
+                'profile_picture' => $user->profile_picture,
+            ],
             'token' => $token,
-            'message' => 'Registration successful'
+            'message' => 'Registration successful! Welcome to SMART LIB.'
         ], 201);
     }
 
-    public function logout(Request $request)
+    /**
+     * Send OTP for registration
+     */
+    public function sendOTP(Request $request)
     {
-        // Check if request is from API
-        if ($request->expectsJson() || $request->is('api/*')) {
-            $request->user()->token()->revoke();
-            return response()->json(['message' => 'Logged out successfully']);
+        $request->validate([
+            'phone' => 'required|string|regex:/^03\d{9}$/',
+            'crn' => 'required|string|regex:/^CRN\d{6}$/',
+        ]);
+
+
+        // Check if user already exists
+        if (User::where('crn', $request->crn)->exists()) {
+            throw ValidationException::withMessages([
+                'crn' => ['This CRN is already registered.'],
+            ]);
         }
 
-        Auth::logout();
+        if (User::where('phone', $request->phone)->exists()) {
+            throw ValidationException::withMessages([
+                'phone' => ['This phone number is already registered.'],
+            ]);
+        }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Generate 4-digit OTP
+        $otp = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
 
-        return redirect()->route('login');
+        // Store OTP in database
+        DB::table('otp_verifications')->insert([
+            'phone' => $request->phone,
+            'crn' => $request->crn,
+            'otp' => $otp,
+            'verified' => false,
+            'expires_at' => now()->addMinutes(10),
+            'attempts' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // In production, send OTP via SMS
+        // For demo, return OTP in response (REMOVE IN PRODUCTION!)
+        return response()->json([
+            'message' => 'OTP sent successfully to ' . $request->phone,
+            'otp' => $otp, // REMOVE IN PRODUCTION!
+            'expires_in' => 600, // 10 minutes
+        ]);
     }
 
-    protected function redirectUser($user)
+    /**
+     * Get current authenticated user
+     */
+    public function me(Request $request)
     {
-        return match($user->user_type) {
-            'super_admin' => redirect()->route('admin.dashboard'),
-            'librarian' => redirect()->route('librarian.dashboard'),
-            'student' => redirect()->route('student.dashboard'),
-            default => redirect()->route('login'),
-        };
+        $user = $request->user();
+        
+        $user->load(['userSubscriptions' => function($query) {
+            $query->where('status', 'active')->latest();
+        }, 'libraries']);
+
+        $libraryId = $user->libraries->first()?->id;
+
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'crn' => $user->crn,
+            'role' => $user->role,
+            'ca_level' => $user->ca_level,
+            'is_active' => $user->is_active,
+            'trial_used' => $user->trial_used,
+            'trial_started_at' => $user->trial_started_at,
+            'trial_ends_at' => $user->trial_ends_at,
+            'created_at' => $user->created_at,
+            'isApproved' => $user->is_active,
+            'role' => $user->role,
+            'library_id' => $libraryId,
+            'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
+            'profile_picture' => $user->profile_picture,
+        ]);
+    }
+
+    /**
+     * Logout user
+     */
+    public function logout(Request $request)
+    {
+        // Revoke current token
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Logged out successfully'
+        ]);
+    }
+
+    /**
+     * Logout from all devices
+     */
+    public function logoutAll(Request $request)
+    {
+        // Revoke all tokens
+        $request->user()->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Logged out from all devices successfully'
+        ]);
+    }
+
+    /**
+     * Check field uniqueness
+     */
+    public function checkUniqueness(Request $request)
+    {
+        $request->validate([
+            'field' => 'required|string|in:email,crn',
+            'value' => 'required|string',
+        ]);
+
+        $field = $request->field;
+        $value = trim($request->value);
+
+        if ($field === 'email') {
+            $exists = User::withTrashed()->where('email', $value)->exists();
+        } else {
+            $exists = User::withTrashed()->where($field, $value)->exists();
+        }
+        
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists ? "This " . strtoupper($field === 'crn' ? 'CRN' : $field) . " is already registered." : null,
+            'debug' => [
+                'field' => $field,
+                'value' => $value,
+                'count' => User::where($field, $value)->count()
+            ]
+        ]);
     }
 }

@@ -28,6 +28,12 @@ class SubscriptionController extends Controller
             'price' => 'required|numeric|min:0',
             'duration_days' => 'required|integer|min:1',
             'seat_bookings_limit' => 'nullable|integer|min:0',
+            'daily_seat_bookings_limit' => 'nullable|integer|min:0',
+            'monthly_seat_bookings_limit' => 'nullable|integer|min:0',
+            'libraries_access_limit' => 'nullable|integer|min:0',
+            'books_access_limit' => 'nullable|integer|min:0',
+            'events_joining_limit' => 'nullable|integer|min:0',
+            'advance_booking_days' => 'nullable|integer|min:-1',
             'is_active' => 'boolean',
         ]);
 
@@ -51,6 +57,12 @@ class SubscriptionController extends Controller
             'price' => 'required|numeric|min:0',
             'duration_days' => 'required|integer|min:1',
             'seat_bookings_limit' => 'nullable|integer|min:0',
+            'daily_seat_bookings_limit' => 'nullable|integer|min:0',
+            'monthly_seat_bookings_limit' => 'nullable|integer|min:0',
+            'libraries_access_limit' => 'nullable|integer|min:0',
+            'books_access_limit' => 'nullable|integer|min:0',
+            'events_joining_limit' => 'nullable|integer|min:0',
+            'advance_booking_days' => 'nullable|integer|min:-1',
             'is_active' => 'boolean',
         ]);
 

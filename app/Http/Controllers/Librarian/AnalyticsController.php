@@ -94,8 +94,51 @@ class AnalyticsController extends Controller
 
         // Event stats
         $totalEvents = $library->events()->count();
-        $upcomingEvents = $library->events()->where('date', '>=', now())->count();
-        $pastEvents = $library->events()->where('date', '<', now())->count();
+        $upcomingEvents = $library->events()
+            ->where(function ($q) {
+                $q->where('date', '>', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->where('date', '=', now()->toDateString())
+                         ->where('start_time', '>', now()->toTimeString());
+                  });
+            })->count();
+        $pastEvents = $library->events()
+            ->where(function ($q) {
+                $q->where('date', '<', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->where('date', '=', now()->toDateString())
+                         ->where('start_time', '<', now()->toTimeString());
+                  });
+            })->count();
+
+        // Top Students (by completed booking hours)
+        $topStudents = $library->seatBookings()
+            ->where('seat_bookings.created_at', '>=', $startDate)
+            ->where('status', 'completed')
+            ->join('users', 'seat_bookings.user_id', '=', 'users.id')
+            ->select('users.id', 'users.name', 'users.loyalty_points as points', DB::raw('SUM(total_minutes) / 60 as hours'))
+            ->groupBy('users.id', 'users.name', 'users.loyalty_points')
+            ->orderByDesc('hours')
+            ->take(5)
+            ->get()
+            ->map(function ($student) {
+                $student->hours = round($student->hours, 1);
+                return $student;
+            });
+
+        // Popular Seats
+        $popularSeats = $library->seatBookings()
+            ->where('seat_bookings.created_at', '>=', $startDate)
+            ->join('seats', 'seat_bookings.seat_id', '=', 'seats.id')
+            ->select('seats.seat_number as number', DB::raw('COUNT(*) as bookings'))
+            ->groupBy('seats.id', 'seats.seat_number')
+            ->orderByDesc('bookings')
+            ->take(5)
+            ->get()
+            ->map(function ($seat) use ($totalBookings) {
+                $seat->utilization = $totalBookings > 0 ? round(($seat->bookings / $totalBookings) * 100, 1) : 0;
+                return $seat;
+            });
 
         return response()->json([
             'library' => [
@@ -121,6 +164,8 @@ class AnalyticsController extends Controller
             ],
             'dailyTrends' => $dailyTrends,
             'popularTimeSlots' => $popularTimeSlots,
+            'topStudents' => $topStudents,
+            'popularSeats' => $popularSeats,
             'timeRange' => $timeRange,
         ]);
     }

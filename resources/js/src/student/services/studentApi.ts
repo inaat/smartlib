@@ -78,9 +78,13 @@ export const studentAPI = {
     }
   },
 
-  async checkIn(bookingId: string, qrCode: string): Promise<{ success: boolean }> {
+  async checkIn(bookingId: string, qrCode: string, latitude?: number, longitude?: number): Promise<{ success: boolean }> {
     try {
-      const response = await api.post(`/student/bookings/${bookingId}/checkin`, { qrCode });
+      const response = await api.post(`/student/bookings/${bookingId}/checkin`, {
+        qrCode,
+        latitude,
+        longitude
+      });
       return response.data;
     } catch (error) {
       handleApiError(error);
@@ -201,9 +205,30 @@ export const studentAPI = {
   },
 
   // Loyalty
-  async getLoyaltyTransactions(): Promise<any[]> {
+  async getLoyaltyTransactions(): Promise<any> {
     try {
       const response = await api.get('/student/profile/loyalty-transactions');
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  // Subscriptions
+  async getSubscriptionPlans(): Promise<any[]> {
+    try {
+      const response = await api.get('/student/subscription-plans');
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async subscribe(planId: number): Promise<any> {
+    try {
+      const response = await api.post('/student/subscriptions', { plan_id: planId });
       return response.data;
     } catch (error) {
       handleApiError(error);

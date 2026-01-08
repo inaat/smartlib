@@ -2,70 +2,77 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // Get first library for librarian assignment
-        $firstLibrary = \App\Models\Library::first();
+        // Create Owner
+        DB::table('users')->insert([
+            'name' => 'System Owner',
+            'email' => 'owner@smartlib.com',
+            'password' => Hash::make('password'),
+            'role' => 'owner',
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-        // Create roles if they don't exist
-        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $librarianRole = Role::firstOrCreate(['name' => 'librarian']);
-        $studentRole = Role::firstOrCreate(['name' => 'student']);
+        // Create Super Admins
+        for ($i = 1; $i <= 3; $i++) {
+            DB::table('users')->insert([
+                'name' => "Super Admin $i",
+                'email' => "superadmin$i@smartlib.com",
+                'password' => Hash::make('password'),
+                'role' => 'super_admin',
+                'is_active' => true,
+                'created_by' => 1, // Created by owner
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
-        // Create Super Admin
-        $superAdmin = User::updateOrCreate(
-            ['email' => 'superadmin@icap.edu.pk'],
-            [
-                'name' => 'Super Administrator',
-                'crn' => 'SUPERADMIN001',
-                'password' => Hash::make('superadmin'),
-                'user_type' => 'super_admin',
-                'status' => 'approved',
-                'loyalty_points' => 0,
-            ]
-        );
-        $superAdmin->assignRole($superAdminRole);
+        // Create Librarians
+        for ($i = 1; $i <= 10; $i++) {
+            DB::table('users')->insert([
+                'name' => "Librarian $i",
+                'email' => "librarian$i@smartlib.com",
+                'password' => Hash::make('password'),
+                'role' => 'librarian',
+                'is_active' => true,
+                'created_by' => 2, // Created by super admin
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
-        // Create Librarian with library access
-        $librarian = User::updateOrCreate(
-            ['email' => 'admin@icap.edu.pk'],
-            [
-                'name' => 'Library Admin',
-                'crn' => 'ADMIN001',
-                'password' => Hash::make('admin'),
-                'user_type' => 'librarian',
-                'status' => 'approved',
-                'loyalty_points' => 0,
-                'library_id' => $firstLibrary?->id,
-            ]
-        );
-        $librarian->assignRole($librarianRole);
-
-        // Create Student
-        $student = User::updateOrCreate(
-            ['email' => 'student@icap.edu.pk'],
-            [
-                'name' => 'Ahmad Hassan',
-                'crn' => 'ICAP2024001',
-                'password' => Hash::make('student'),
-                'user_type' => 'student',
-                'status' => 'approved',
-                'loyalty_points' => 250,
-            ]
-        );
-        $student->assignRole($studentRole);
-
-        $this->command->info('Users seeded successfully!');
-        $this->command->info('Super Admin: SUPERADMIN001 / superadmin');
-        $this->command->info('Librarian: ADMIN001 / admin');
-        $this->command->info('Student: ICAP2024001 / student');
+        // Create Students
+        $caLevels = ['PRC', 'CAP', 'Final'];
+        for ($i = 1; $i <= 10; $i++) {
+            $trialUsed = $i % 3 == 0; // Some students used trial
+            $trialStarted = $trialUsed ? now()->subDays(rand(10, 30)) : null;
+            
+            DB::table('users')->insert([
+                'name' => "Student $i",
+                'email' => "student$i@smartlib.com",
+                'password' => Hash::make('password'),
+                'phone' => '0300' . str_pad($i, 7, '0', STR_PAD_LEFT),
+                'crn' => 'CRN' . str_pad($i, 6, '0', STR_PAD_LEFT),
+                'role' => 'student',
+                'ca_level' => $caLevels[$i % 3],
+                'is_active' => true,
+                'trial_used' => $trialUsed,
+                'trial_started_at' => $trialStarted,
+                'trial_ends_at' => $trialStarted ? $trialStarted->addDays(7) : null,
+                'created_at' => now()->subDays(rand(1, 60)),
+                'updated_at' => now(),
+            ]);
+        }
     }
 }

@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Passport\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens, HasRoles;
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -21,14 +21,18 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'crn',
-        'icap_id_card_photo',
         'phone',
-        'profile_photo',
-        'user_type',
-        'status',
+        'crn',
+        'role',
+        'ca_level',
+        'is_active',
+        'trial_used',
+        'trial_started_at',
+        'trial_ends_at',
+        'created_by',
         'library_id',
-        'loyalty_points',
+        'status',
+        'profile_picture',
     ];
 
     /**
@@ -51,39 +55,43 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'loyalty_points' => 'integer',
+            'is_active' => 'boolean',
+            'trial_used' => 'boolean',
+            'trial_started_at' => 'datetime',
+            'trial_ends_at' => 'datetime',
         ];
     }
 
-    protected $appends = ['isApproved', 'role', 'loyaltyPoints', 'subscriptionPlan'];
+    /**
+     * Get the library ID for the librarian.
+     */
+    public function getLibraryIdAttribute()
+    {
+        return ($this->attributes['library_id'] ?? null) ?: $this->libraries->first()?->id;
+    }
 
-    // Relationships
+    /**
+     * Get the library model for the librarian.
+     */
+    public function getLibraryAttribute()
+    {
+        return $this->library()->first() ?: $this->libraries->first();
+    }
+
     public function library()
     {
         return $this->belongsTo(Library::class);
     }
 
-    public function seatBookings()
+    // Relationships
+    public function libraries()
     {
-        return $this->hasMany(SeatBooking::class);
+        return $this->belongsToMany(Library::class, 'library_librarian')
+            ->withPivot('permissions')
+            ->withTimestamps();
     }
 
-    public function bookings()
-    {
-        return $this->hasMany(SeatBooking::class);
-    }
-
-    public function bookReservations()
-    {
-        return $this->hasMany(BookReservation::class);
-    }
-
-    public function eventRegistrations()
-    {
-        return $this->hasMany(EventRegistration::class);
-    }
-
-    public function subscriptions()
+    public function userSubscriptions()
     {
         return $this->hasMany(UserSubscription::class);
     }
@@ -92,103 +100,76 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserSubscription::class)
             ->where('status', 'active')
-            ->where('end_date', '>=', now());
+            ->where('expires_at', '>', now());
+    }
+
+    public function seatBookings()
+    {
+        return $this->hasMany(SeatBooking::class);
+    }
+
+    public function attendance()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function studyStreak()
+    {
+        return $this->hasOne(StudyStreak::class);
+    }
+
+    public function pomodoroSessions()
+    {
+        return $this->hasMany(PomodoroSession::class);
+    }
+
+    public function habits()
+    {
+        return $this->hasMany(Habit::class);
+    }
+
+    public function digitalBooks()
+    {
+        return $this->hasMany(DigitalBook::class);
+    }
+
+    public function communityGroups()
+    {
+        return $this->belongsToMany(CommunityGroup::class, 'group_members')
+            ->withPivot('role', 'joined_at', 'is_muted')
+            ->withTimestamps();
+    }
+
+    public function supportTickets()
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
+
+    public function achievements()
+    {
+        return $this->belongsToMany(Achievement::class, 'user_achievements')
+            ->withPivot('earned_at', 'progress_value', 'notified')
+            ->withTimestamps();
+    }
+
+    public function violations()
+    {
+        return $this->hasMany(UserViolation::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function createdUsers()
+    {
+        return $this->hasMany(User::class, 'created_by');
     }
 
     public function loyaltyTransactions()
     {
         return $this->hasMany(LoyaltyTransaction::class);
     }
-
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class);
-    }
-
-    // Helper methods
-    public function isStudent()
-    {
-        return $this->user_type === 'student';
-    }
-
-    public function isLibrarian()
-    {
-        return $this->user_type === 'librarian';
-    }
-
-    public function isSuperAdmin()
-    {
-        return $this->user_type === 'super_admin';
-    }
-
-    public function isApproved()
-    {
-        return $this->status === 'approved';
-    }
-
-    public function getIsApprovedAttribute()
-    {
-        return $this->status === 'approved';
-    }
-
-    public function getRoleAttribute()
-    {
-        return $this->user_type;
-    }
-
-    public function getLoyaltyPointsAttribute()
-    {
-        return $this->attributes['loyalty_points'] ?? 0;
-    }
-
-    public function getSubscriptionPlanAttribute()
-    {
-        $activeSubscription = $this->activeSubscription;
-        if ($activeSubscription && $activeSubscription->subscription_plan) {
-            return $activeSubscription->subscription_plan->name ?? 'free';
-        }
-        return 'free';
-    }
-
-    public function hasActiveBooking()
-    {
-        return $this->seatBookings()
-            ->whereIn('status', ['pending', 'active'])
-            ->exists();
-    }
-
-    public function canBookSeat()
-    {
-        if (!$this->isApproved()) {
-            return false;
-        }
-
-        if ($this->hasActiveBooking()) {
-            return false;
-        }
-
-        $activeSubscription = $this->activeSubscription;
-        if (!$activeSubscription) {
-            return false;
-        }
-
-        if ($activeSubscription->subscription_plan->seat_bookings_limit === null) {
-            return true;
-        }
-
-        return $activeSubscription->bookings_used < $activeSubscription->subscription_plan->seat_bookings_limit;
-    }
-
-    public function addLoyaltyPoints(int $points, string $type, string $description = null, $related = null)
-    {
-        $this->increment('loyalty_points', $points);
-
-        return $this->loyaltyTransactions()->create([
-            'points' => $points,
-            'type' => $type,
-            'description' => $description,
-            'related_type' => $related ? get_class($related) : null,
-            'related_id' => $related?->id,
-        ]);
-    }
 }
+

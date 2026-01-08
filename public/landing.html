@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Library Management - Modern Library Software for Institutions</title>
+    <meta name="description" content="Manage students, books, and borrowing in one clean, intelligent platform. Perfect for schools, colleges, and universities.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #4CAF50;
+            --text-black: #212121;
+            --text-gray: #757575;
+            --bg-white: #ffffff;
+            --bg-light-gray: #fafafa;
+            --border-gray: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text-gray);
+            background: var(--bg-white);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-gray);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-black);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-green);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 40px;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--text-black);
+        }
+
+        .btn-primary {
+            background: var(--primary-green);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary {
+            color: var(--text-gray);
+            padding: 12px 28px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            color: var(--text-black);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 120px 0;
+            background: var(--bg-white);
+        }
+
+        .hero .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 56px;
+            font-weight: 800;
+            color: var(--text-black);
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        .hero-content p {
+            font-size: 20px;
+            color: var(--text-gray);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+        }
+
+        .hero-image {
+            background: var(--bg-light-gray);
+            border-radius: 12px;
+            border: 1px solid var(--border-gray);
+            padding: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        .hero-image img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 0;
+            background: var(--bg-light-gray);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .section-header h2 {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--text-black);
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            font-size: 18px;
+            color: var(--text-gray);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .feature-card {
+            background: var(--bg-white);
+            padding: 40px 32px;
+            border-radius: 12px;
+            border: 1px solid var(--border-gray);
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary-green);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--primary-green);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .feature-icon svg {
+            width: 28px;
+            height: 28px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .feature-card h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-black);
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            font-size: 16px;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* Benefits Section */
+        .benefits {
+            padding: 100px 0;
+            background: var(--bg-white);
+        }
+
+        .benefits .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .benefits h2 {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--text-black);
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        .benefits-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .check-icon svg {
+            width: 14px;
+            height: 14px;
+            stroke: white;
+            fill: none;
+            stroke-width: 3;
+        }
+
+        .benefit-item div h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-black);
+            margin-bottom: 4px;
+        }
+
+        .benefit-item div p {
+            font-size: 15px;
+            color: var(--text-gray);
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 100px 0;
+            background: var(--bg-light-gray);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-top: 64px;
+        }
+
+        .pricing-card {
+            background: var(--bg-white);
+            padding: 48px 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-gray);
+            transition: all 0.2s;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--primary-green);
+            box-shadow: 0 8px 32px rgba(76, 175, 80, 0.15);
+            transform: scale(1.05);
+        }
+
+        .pricing-card:hover {
+            border-color: var(--primary-green);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .pricing-card h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-black);
+            margin-bottom: 8px;
+        }
+
+        .pricing-card .price {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--text-black);
+            margin: 24px 0;
+        }
+
+        .pricing-card .price span {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-gray);
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin: 32px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            color: var(--text-gray);
+        }
+
+        .pricing-features .check-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .pricing-features .check-icon svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 120px 0;
+            background: var(--bg-white);
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--text-black);
+            margin-bottom: 16px;
+        }
+
+        .cta p {
+            font-size: 20px;
+            color: var(--text-gray);
+            margin-bottom: 40px;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-light-gray);
+            border-top: 1px solid var(--border-gray);
+            padding: 64px 0 32px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+
+        .footer-column h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-black);
+            margin-bottom: 20px;
+        }
+
+        .footer-column ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-column a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-green);
+        }
+
+        .footer-bottom {
+            padding-top: 32px;
+            border-top: 1px solid var(--border-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-bottom p {
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .social-links a {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .social-links a:hover {
+            border-color: var(--primary-green);
+            background: var(--primary-green);
+        }
+
+        .social-links svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-gray);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .social-links a:hover svg {
+            stroke: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero .container,
+            .benefits .container {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .features-grid,
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .hero-content h1 {
+                font-size: 42px;
+            }
+
+            nav ul {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <a href="#" class="logo">
+                <div class="logo-icon">SL</div>
+                <span>Smart Library</span>
+            </a>
+            <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#benefits">Benefits</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="/login" class="btn-primary">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Smart Library Management for Modern Institutions</h1>
+                <p>Manage students, books, and borrowing in one clean, intelligent platform. Perfect for schools, colleges, and universities.</p>
+                <div class="hero-buttons">
+                    <a href="#contact" class="btn-primary">Request Demo</a>
+                    <a href="#features" class="btn-secondary">View Features →</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <svg viewBox="0 0 600 400" style="width: 100%; height: auto;">
+                    <!-- Dashboard mockup -->
+                    <rect x="0" y="0" width="600" height="400" fill="#f5f5f5" rx="8"/>
+                    <!-- Header -->
+                    <rect x="0" y="0" width="600" height="60" fill="white"/>
+                    <rect x="20" y="20" width="120" height="20" fill="#4CAF50" rx="4"/>
+                    <!-- Sidebar -->
+                    <rect x="0" y="60" width="150" height="340" fill="white"/>
+                    <rect x="20" y="80" width="110" height="12" fill="#e0e0e0" rx="4"/>
+                    <rect x="20" y="110" width="110" height="12" fill="#e0e0e0" rx="4"/>
+                    <rect x="20" y="140" width="110" height="12" fill="#4CAF50" rx="4"/>
+                    <!-- Main content -->
+                    <rect x="170" y="80" width="410" height="100" fill="white" rx="8"/>
+                    <rect x="190" y="100" width="180" height="16" fill="#212121" rx="4"/>
+                    <rect x="190" y="130" width="280" height="12" fill="#757575" rx="4"/>
+                    <!-- Cards -->
+                    <rect x="170" y="200" width="190" height="120" fill="white" rx="8"/>
+                    <rect x="380" y="200" width="190" height="120" fill="white" rx="8"/>
+                    <circle cx="210" cy="230" r="20" fill="#4CAF50"/>
+                    <circle cx="420" cy="230" r="20" fill="#4CAF50"/>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Everything You Need to Manage Your Library</h2>
+                <p>Powerful features designed for modern educational institutions</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                    </div>
+                    <h3>Digital Catalog Management</h3>
+                    <p>Organize and manage your entire book collection with powerful search, categorization, and tracking features.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <h3>Student Management</h3>
+                    <p>Track student borrowing history, manage memberships, and send automated notifications for due dates.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="12" y1="20" x2="12" y2="10"></line>
+                            <line x1="18" y1="20" x2="18" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="16"></line>
+                        </svg>
+                    </div>
+                    <h3>Analytics & Reports</h3>
+                    <p>Get insights into borrowing patterns, popular books, and library usage with comprehensive analytics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <h3>Secure Access Control</h3>
+                    <p>Role-based permissions ensure librarians, students, and administrators have appropriate access levels.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <h3>Mobile-Friendly</h3>
+                    <p>Access your library system from any device with our responsive, mobile-optimized interface.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Real-Time Updates</h3>
+                    <p>Instant notifications for book availability, due dates, and reservation confirmations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section id="benefits" class="benefits">
+        <div class="container">
+            <div>
+                <h2>Why Choose Our Platform?</h2>
+                <p style="font-size: 18px; margin-bottom: 40px;">Join hundreds of institutions already transforming their library management</p>
+            </div>
+            <ul class="benefits-list">
+                <li class="benefit-item">
+                    <div class="check-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4>Automated Borrowing System</h4>
+                        <p>Streamline check-outs and returns with barcode scanning and automated workflows</p>
+                    </div>
+                </li>
+                <li class="benefit-item">
+                    <div class="check-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4>Real-Time Availability Tracking</h4>
+                        <p>Students can instantly check book availability and place reservations online</p>
+                    </div>
+                </li>
+                <li class="benefit-item">
+                    <div class="check-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4>Comprehensive Reporting</h4>
+                        <p>Generate detailed reports on circulation, inventory, and user activity</p>
+                    </div>
+                </li>
+                <li class="benefit-item">
+                    <div class="check-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4>Easy Integration</h4>
+                        <p>Seamlessly integrate with your existing student information systems</p>
+                    </div>
+                </li>
+                <li class="benefit-item">
+                    <div class="check-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4>24/7 Support</h4>
+                        <p>Our dedicated support team is always ready to help you succeed</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2>Simple, Transparent Pricing</h2>
+                <p>Choose the plan that fits your institution's needs</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Basic</h3>
+                    <p style="color: var(--text-gray); font-size: 15px;">For small schools</p>
+                    <div class="price">$49<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            Up to 500 books
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            100 active students
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            Basic reporting
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            Email support
+                        </li>
+                    </ul>
+                    <a href="#contact" class="btn-primary" style="width: 100%; text-align: center;">Get Started</a>
+                </div>
+                <div class="pricing-card featured">
+                    <h3>Professional</h3>
+                    <p style="color: var(--text-gray); font-size: 15px;">For colleges</p>
+                    <div class="price">$149<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            Up to 5,000 books
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            1,000 active students
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            Advanced analytics
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            Priority support
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            API access
+                        </li>
+                    </ul>
+                    <a href="#contact" class="btn-primary" style="width: 100%; text-align: center;">Get Started</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <p style="color: var(--text-gray); font-size: 15px;">For universities</p>
+                    <div class="price">Custom</div>
+                    <ul class="pricing-features">
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            Unlimited books
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            Unlimited students
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            Custom integrations
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            Dedicated support
+                        </li>
+                        <li>
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            On-premise option
+                        </li>
+                    </ul>
+                    <a href="#contact" class="btn-primary" style="width: 100%; text-align: center;">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="contact" class="cta">
+        <div class="container">
+            <h2>Ready to Transform Your Library?</h2>
+            <p>Join hundreds of institutions already using our platform</p>
+            <a href="/register" class="btn-primary" style="font-size: 18px; padding: 16px 40px;">Start Free Trial</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <a href="#" class="logo" style="margin-bottom: 16px;">
+                        <div class="logo-icon">SL</div>
+                        <span>Smart Library</span>
+                    </a>
+                    <p style="font-size: 15px; line-height: 1.6;">Modern library management software for educational institutions.</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#careers">Careers</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#demo">Request Demo</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#blog">Blog</a></li>
+                        <li><a href="#docs">Documentation</a></li>
+                        <li><a href="#support">Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#privacy">Privacy Policy</a></li>
+                        <li><a href="#terms">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 Smart Library. All rights reserved.</p>
+                <div class="social-links">
+                    <a href="#twitter">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                        </svg>
+                    </a>
+                    <a href="#linkedin">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                            <rect x="2" y="9" width="4" height="12"></rect>
+                            <circle cx="4" cy="4" r="2"></circle>
+                        </svg>
+                    </a>
+                    <a href="#facebook">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

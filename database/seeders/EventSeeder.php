@@ -2,11 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Event;
-use App\Models\Library;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class EventSeeder extends Seeder
 {
@@ -15,116 +12,66 @@ class EventSeeder extends Seeder
      */
     public function run(): void
     {
-        $libraries = Library::all();
+        $libraryIds = DB::table('libraries')->pluck('id')->toArray();
+        $librarianIds = DB::table('users')->where('role', 'librarian')->pluck('id')->toArray();
+        $studentIds = DB::table('users')->where('role', 'student')->pluck('id')->toArray();
 
-        $events = [
-            [
-                'title' => 'Introduction to Research Methods Workshop',
-                'description' => 'Learn effective research methodologies and academic writing techniques',
-                'venue' => 'Conference Room A',
-                'capacity' => 50,
-                'registered' => 0,
-                'waitlist' => 0,
-                'type' => 'workshop',
-                'is_paid' => false,
-                'price' => null,
-                'image' => null,
-                'organizer_id' => null,
-                'is_active' => true,
-                'speakers' => [],
-                'agenda' => [],
-                'materials' => [],
-                'prerequisites' => [],
-                'certificate_provided' => true,
-                'recording_available' => false,
-                'tags' => ['research', 'academic', 'workshop'],
-                'target_audience' => ['Students', 'Researchers'],
-                'difficulty' => 'beginner',
-                'attendance_tracking' => true,
-            ],
-            [
-                'title' => 'Digital Library Resources Training',
-                'description' => 'Hands-on training for using digital library databases and resources',
-                'venue' => 'Computer Lab',
-                'capacity' => 30,
-                'registered' => 0,
-                'waitlist' => 0,
-                'type' => 'workshop',
-                'is_paid' => false,
-                'price' => null,
-                'image' => null,
-                'organizer_id' => null,
-                'is_active' => true,
-                'speakers' => [],
-                'agenda' => [],
-                'materials' => [],
-                'prerequisites' => [],
-                'certificate_provided' => false,
-                'recording_available' => true,
-                'tags' => ['digital', 'training', 'resources'],
-                'target_audience' => ['All Students'],
-                'difficulty' => 'beginner',
-                'attendance_tracking' => true,
-            ],
-            [
-                'title' => 'Author Meet & Greet',
-                'description' => 'Meet bestselling author and discuss their latest book',
-                'venue' => 'Main Hall',
-                'capacity' => 100,
-                'registered' => 0,
-                'waitlist' => 0,
-                'type' => 'networking',
-                'is_paid' => true,
-                'price' => 150,
-                'image' => null,
-                'organizer_id' => null,
-                'is_active' => true,
-                'speakers' => [],
-                'agenda' => [],
-                'materials' => [],
-                'prerequisites' => [],
-                'certificate_provided' => false,
-                'recording_available' => false,
-                'tags' => ['author', 'books', 'networking'],
-                'target_audience' => ['Book Lovers', 'Students'],
-                'difficulty' => null,
-                'attendance_tracking' => true,
-            ],
-            [
-                'title' => 'Study Skills Seminar',
-                'description' => 'Improve your study habits and time management skills',
-                'venue' => 'Seminar Room B',
-                'capacity' => 40,
-                'registered' => 0,
-                'waitlist' => 0,
-                'type' => 'seminar',
-                'is_paid' => false,
-                'price' => null,
-                'image' => null,
-                'organizer_id' => null,
-                'is_active' => true,
-                'speakers' => [],
-                'agenda' => [],
-                'materials' => [],
-                'prerequisites' => [],
-                'certificate_provided' => true,
-                'recording_available' => true,
-                'tags' => ['study-skills', 'productivity', 'seminar'],
-                'target_audience' => ['All Students'],
-                'difficulty' => 'beginner',
-                'attendance_tracking' => true,
-            ],
-        ];
+        $eventTypes = ['Workshop', 'Seminar', 'Study Group', 'Book Club', 'Career Guidance', 'Exam Prep'];
+        
+        // Create 20 events
+        for ($i = 1; $i <= 10; $i++) {
+            $libraryId = $libraryIds[array_rand($libraryIds)];
+            $createdBy = $librarianIds[array_rand($librarianIds)];
+            $startTime = now()->addDays(rand(-10, 30))->setTime(rand(10, 18), 0);
+            $endTime = $startTime->copy()->addHours(rand(1, 3));
+            
+            $eventId = DB::table('events')->insertGetId([
+                'library_id' => $libraryId,
+                'created_by' => $createdBy,
+                'title' => $eventTypes[array_rand($eventTypes)] . ' - ' . $i,
+                'description' => 'Join us for an exciting ' . strtolower($eventTypes[array_rand($eventTypes)]) . ' session. Learn, network, and grow!',
+                'event_type' => $eventTypes[array_rand($eventTypes)],
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'location' => 'Hall ' . chr(65 + rand(0, 4)),
+                'max_participants' => rand(20, 100),
+                'requires_approval' => $i % 3 == 0, // Every 3rd event requires approval
+                'status' => $startTime < now() ? 'completed' : 'published',
+                'created_at' => now()->subDays(rand(5, 20)),
+                'updated_at' => now(),
+            ]);
 
-        foreach ($libraries as $library) {
-            foreach ($events as $eventData) {
-                $eventData['library_id'] = $library->id;
-                $eventDate = Carbon::now()->addDays(rand(7, 30));
-                $eventData['date'] = $eventDate->format('Y-m-d');
-                $eventData['start_time'] = $eventDate->setHour(rand(9, 16))->setMinute(0)->format('H:i:s');
-                $eventData['end_time'] = $eventDate->copy()->addHours(rand(2, 4))->format('H:i:s');
-                $eventData['registration_deadline'] = $eventDate->copy()->subDays(2);
-                Event::create($eventData);
+            // Register students for events
+            $participantsCount = rand(10, 50);
+            $selectedStudents = array_rand(array_flip($studentIds), min($participantsCount, count($studentIds)));
+            
+            foreach ((array)$selectedStudents as $studentId) {
+                $registeredAt = now()->subDays(rand(1, 15));
+                $requiresApproval = DB::table('events')->where('id', $eventId)->value('requires_approval');
+                
+                $status = 'pending';
+                if (!$requiresApproval) {
+                    $status = 'approved';
+                } elseif (rand(0, 1)) {
+                    $status = 'approved';
+                }
+                
+                if ($startTime < now() && $status == 'approved') {
+                    $status = rand(0, 1) ? 'attended' : 'absent';
+                }
+                
+                DB::table('event_registrations')->insert([
+                    'event_id' => $eventId,
+                    'user_id' => $studentId,
+                    'status' => $status,
+                    'registered_at' => $registeredAt,
+                    'approved_at' => $status != 'pending' ? $registeredAt->copy()->addHours(rand(1, 24)) : null,
+                    'approved_by' => $status != 'pending' ? $createdBy : null,
+                    'attended' => $status == 'attended',
+                    'attendance_marked_at' => $status == 'attended' ? $startTime->copy()->addMinutes(rand(5, 30)) : null,
+                    'created_at' => $registeredAt,
+                    'updated_at' => now(),
+                ]);
             }
         }
     }

@@ -16,9 +16,9 @@ const handleApiError = (error: any) => {
 
 export const superadminAPI = {
   // Dashboard
-  async getDashboard(): Promise<any> {
+  async getDashboard(params?: any): Promise<any> {
     try {
-      const response = await api.get('/admin/dashboard');
+      const response = await api.get('/admin/dashboard', { params });
       return response.data;
     } catch (error) {
       handleApiError(error);
@@ -153,9 +153,9 @@ export const superadminAPI = {
   },
 
   // Books
-  async getBooks(): Promise<Book[]> {
+  async getBooks(params?: any): Promise<Book[]> {
     try {
-      const response = await api.get('/admin/books');
+      const response = await api.get('/admin/books', { params });
       return response.data;
     } catch (error) {
       handleApiError(error);
@@ -173,8 +173,13 @@ export const superadminAPI = {
     }
   },
 
-  async updateBook(bookId: string, updates: Partial<Book>): Promise<Book> {
+  async updateBook(bookId: string, updates: any): Promise<Book> {
     try {
+      if (updates instanceof FormData) {
+        updates.append('_method', 'PUT');
+        const response = await api.post(`/admin/books/${bookId}`, updates);
+        return response.data;
+      }
       const response = await api.put(`/admin/books/${bookId}`, updates);
       return response.data;
     } catch (error) {
@@ -192,9 +197,9 @@ export const superadminAPI = {
   },
 
   // Events
-  async getEvents(): Promise<Event[]> {
+  async getEvents(params?: any): Promise<Event[]> {
     try {
-      const response = await api.get('/admin/events');
+      const response = await api.get('/admin/events', { params });
       return response.data;
     } catch (error) {
       handleApiError(error);
@@ -231,9 +236,149 @@ export const superadminAPI = {
   },
 
   // Analytics
-  async getAnalytics(): Promise<Analytics[]> {
+  async getAnalytics(): Promise<any> {
     try {
       const response = await api.get('/admin/analytics');
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  // Floors
+  async getFloors(libraryId: number): Promise<any[]> {
+    try {
+      const response = await api.get(`/admin/libraries/${libraryId}/floors`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async createFloor(libraryId: number, floor: FormData): Promise<any> {
+    try {
+      const response = await api.post(`/admin/libraries/${libraryId}/floors`, floor);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async updateFloor(libraryId: number, floorId: number, floor: FormData): Promise<any> {
+    try {
+      const response = await api.post(`/admin/libraries/${libraryId}/floors/${floorId}`, floor);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async deleteFloor(libraryId: number, floorId: number): Promise<void> {
+    try {
+      await api.delete(`/admin/libraries/${libraryId}/floors/${floorId}`);
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  // Bookings
+  async getBookings(params?: any): Promise<any> {
+    try {
+      const response = await api.get('/librarian/bookings', { params });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async getBookingStats(params?: any): Promise<any> {
+    try {
+      const response = await api.get('/librarian/bookings/stats', { params });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  // Seats
+  async getSeats(params?: any): Promise<any[]> {
+    try {
+      const response = await api.get('/librarian/seats', { params });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async createSeat(seat: any): Promise<any> {
+    try {
+      const response = await api.post('/librarian/seats', seat);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async updateSeat(seatId: number, updates: any): Promise<any> {
+    try {
+      const response = await api.put(`/librarian/seats/${seatId}`, updates);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async deleteSeat(seatId: number): Promise<void> {
+    try {
+      await api.delete(`/librarian/seats/${seatId}`);
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  // Orders
+  async getOrders(params?: any): Promise<any> {
+    try {
+      const response = await api.get('/admin/orders', { params });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async approveOrder(orderId: number): Promise<void> {
+    try {
+      await api.post(`/admin/orders/${orderId}/approve`);
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async rejectOrder(orderId: number, notes?: string): Promise<void> {
+    try {
+      await api.post(`/admin/orders/${orderId}/reject`, { notes });
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async getUserSubscriptions(params?: any): Promise<any> {
+    try {
+      const response = await api.get('/admin/user-subscriptions', { params });
       return response.data;
     } catch (error) {
       handleApiError(error);

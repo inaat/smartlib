@@ -13,42 +13,126 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $range = request('range', 'today');
+        $dateRange = $this->getDateRange($range);
+
         $stats = [
-            'total_students' => User::where('user_type', 'student')->count(),
-            'active_students' => User::where('user_type', 'student')
-                ->where('status', 'approved')->count(),
+            'total_students' => User::where('role', 'student')->count(),
+            'active_students' => User::where('role', 'student')
+                ->where('is_active', true)->count(),
             'total_libraries' => Library::count(),
+            'active_libraries' => Library::where('is_active', true)->count(),
             'total_seats' => Seat::count(),
-            'active_bookings' => SeatBooking::whereIn('status', ['pending', 'active'])->count(),
+            'active_bookings' => SeatBooking::whereIn('status', ['booked', 'checked_in'])
+                ->whereBetween('created_at', $dateRange)
+                ->count(),
             'today_bookings' => SeatBooking::whereDate('created_at', today())->count(),
-            'total_revenue' => (float) UserSubscription::sum('amount_paid'),
+            'total_revenue' => (float) UserSubscription::whereBetween('created_at', $dateRange)->sum('amount_paid'),
             'revenue_growth' => $this->calculateRevenueGrowth(),
         ];
 
-        $pendingUsers = User::where('status', 'pending')
-            ->where('user_type', 'student')
+        $pendingUsers = User::where('is_active', false)
+            ->where('role', 'student')
             ->latest()
             ->take(5)
             ->get();
 
-        $pendingCount = User::where('status', 'pending')->count();
+        $pendingCount = User::where('is_active', false)->count();
 
-        $recentActivity = collect([]);
+        $recentActivity = collect();
+
+        // Recent Bookings
+        $recentBookings = SeatBooking::with(['user', 'seat.seatSection.library'])
+            ->whereBetween('created_at', $dateRange)
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function($booking) {
+                $libraryName = $booking->seat?->seatSection?->library?->name ?? 'Library';
+                return [
+                    'id' => 'booking_' . $booking->id,
+                    'title' => ($booking->user->name ?? 'User') . ' booked a seat in ' . $libraryName,
+                    'time' => $booking->created_at->diffForHumans(),
+                    'icon' => 'BookOpen',
+                    'bg' => 'bg-blue-50',
+                    'iconColor' => 'text-blue-600',
+                    'status' => ucfirst(str_replace('_', ' ', $booking->status)),
+                    'statusClass' => in_array($booking->status, ['active', 'checked_in', 'booked']) ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                ];
+            });
+
+        // Recent Registrations
+        $recentUsers = User::where('role', 'student')
+            ->whereBetween('created_at', $dateRange)
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function($user) {
+                return [
+                    'id' => 'user_' . $user->id,
+                    'title' => 'New student registered: ' . $user->name,
+                    'time' => $user->created_at->diffForHumans(),
+                    'icon' => 'UserPlus',
+                    'bg' => 'bg-indigo-50',
+                    'iconColor' => 'text-indigo-600',
+                    'status' => ucfirst($user->status ?? ($user->is_active ? 'active' : 'pending')),
+                    'statusClass' => ($user->status === 'approved' || $user->is_active) ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                ];
+            });
+
+        $recentActivity = $recentBookings->concat($recentUsers)->sortByDesc('time')->take(10)->values();
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'stats' => $stats,
+                'pendingUsers' => $pendingUsers,
+                'pendingCount' => $pendingCount,
+                'recentActivity' => $recentActivity
+            ]);
+        }
 
         return view('admin.dashboard', compact('stats', 'pendingUsers', 'recentActivity', 'pendingCount'));
     }
 
+    private function getDateRange($range)
+    {
+        $now = now();
+        switch ($range) {
+            case 'today':
+                return [$now->copy()->startOfDay(), $now->copy()->endOfDay()];
+            case 'this_week':
+                return [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()];
+            case 'this_month':
+                return [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()];
+            case 'last_month':
+                $lastMonth = now()->subMonth();
+                return [$lastMonth->copy()->startOfMonth(), $lastMonth->copy()->endOfMonth()];
+            case 'last_30_days':
+                return [now()->subDays(30), now()];
+            case 'this_year':
+                return [$now->copy()->startOfYear(), $now->copy()->endOfYear()];
+            default:
+                return [$now->copy()->startOfDay(), $now->copy()->endOfDay()];
+        }
+    }
+
     public function stats()
     {
+        $range = request('range', 'today');
+        $dateRange = $this->getDateRange($range);
+
         $stats = [
-            'total_students' => User::where('user_type', 'student')->count(),
-            'active_students' => User::where('user_type', 'student')
-                ->where('status', 'approved')->count(),
+            'total_students' => User::where('role', 'student')->count(),
+            'active_students' => User::where('role', 'student')
+                ->where('is_active', true)->count(),
             'total_libraries' => Library::count(),
+            'active_libraries' => Library::where('is_active', true)->count(),
             'total_seats' => Seat::count(),
-            'active_bookings' => SeatBooking::whereIn('status', ['pending', 'active'])->count(),
+            'active_bookings' => SeatBooking::whereIn('status', ['booked', 'checked_in'])
+                ->whereBetween('created_at', $dateRange)
+                ->count(),
             'today_bookings' => SeatBooking::whereDate('created_at', today())->count(),
-            'total_revenue' => (float) UserSubscription::sum('amount_paid'),
+            'total_revenue' => (float) UserSubscription::whereBetween('created_at', $dateRange)->sum('amount_paid'),
             'revenue_growth' => $this->calculateRevenueGrowth(),
         ];
 

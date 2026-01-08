@@ -65,10 +65,10 @@ export const librarianAPI = {
     }
   },
 
-  
 
 
- 
+
+
 
 
   // Books
@@ -96,6 +96,66 @@ export const librarianAPI = {
   async getBookings(): Promise<any[]> {
     try {
       const response = await api.get('/admin/bookings');
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+  // Events
+  async getEvents(): Promise<Event[]> {
+    try {
+      const response = await api.get('/librarian/events');
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async createEvent(event: Partial<Event> | FormData): Promise<Event> {
+    try {
+      const response = await api.post('/librarian/events', event, {
+        headers: event instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {}
+      });
+      return response.data.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async updateEvent(eventId: number, event: Partial<Event> | FormData): Promise<Event> {
+    try {
+      // If using FormData, we might need to use POST with _method=PUT for Laravel
+      if (event instanceof FormData) {
+        event.append('_method', 'PUT');
+        const response = await api.post(`/librarian/events/${eventId}`, event, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data.data;
+      } else {
+        const response = await api.put(`/librarian/events/${eventId}`, event);
+        return response.data.data;
+      }
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async deleteEvent(eventId: number): Promise<void> {
+    try {
+      await api.delete(`/librarian/events/${eventId}`);
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Analytics
+  async getAnalytics(timeRange: string = 'week'): Promise<any> {
+    try {
+      const response = await api.get('/librarian/analytics', { params: { timeRange } });
       return response.data;
     } catch (error) {
       handleApiError(error);

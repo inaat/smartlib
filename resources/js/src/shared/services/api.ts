@@ -1,13 +1,11 @@
 import axios, { AxiosInstance } from 'axios';
 
-// Create axios instance with default config
+// Create axios instance
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: '/api',
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: true, // Enable credentials for CSRF token
 });
 
 // Request interceptor to add auth token
@@ -24,17 +22,41 @@ api.interceptors.request.use(
   }
 );
 
+// Response interceptor to handle errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Unauthorized - clear token and redirect to login
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('smart-lib-user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth API
 export const authAPI = {
-  login: async (crn: string, password: string) => {
-    const response = await api.post('/auth/login', { crn, password });
+  async login(email: string, password: string, remember: boolean = false) {
+    const response = await api.post('/auth/login', { email, password, remember });
     if (response.data.token) {
       localStorage.setItem('auth_token', response.data.token);
     }
     return response.data;
   },
 
-  register: async (userData: any) => {
+  async sendOTP(phone: string, crn: string) {
+    const response = await api.post('/auth/send-otp', { phone, crn });
+    return response.data;
+  },
+
+  async checkUniqueness(field: 'email' | 'crn', value: string) {
+    const response = await api.post('/auth/check-uniqueness', { field, value });
+    return response.data;
+  },
+
+  async register(userData: any) {
     const response = await api.post('/auth/register', userData);
     if (response.data.token) {
       localStorage.setItem('auth_token', response.data.token);
@@ -42,355 +64,438 @@ export const authAPI = {
     return response.data;
   },
 
-  logout: async () => {
-    const response = await api.post('/auth/logout');
-    localStorage.removeItem('auth_token');
+  async getCurrentUser() {
+    const response = await api.get('/auth/me');
     return response.data;
   },
 
-  getCurrentUser: async () => {
-    const response = await api.get('/auth/user');
+  async getPublicSettings() {
+    const response = await api.get('/settings/public');
     return response.data;
+  },
+
+  async logout() {
+    await api.post('/auth/logout');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('smart-lib-user');
+  },
+
+  async logoutAll() {
+    await api.post('/auth/logout-all');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('smart-lib-user');
   },
 };
 
 // Student API
 export const studentAPI = {
-  getNotifications: async () => {
-    const response = await api.get('/student/notifications');
+  async getDashboard() {
+    const response = await api.get('/student/dashboard');
     return response.data;
   },
 
-  markNotificationRead: async (notificationId: string) => {
-    const response = await api.patch(`/student/notifications/${notificationId}/read`);
-    return response.data;
-  },
-
-  updateProfile: async (userData: any) => {
-    const response = await api.put('/student/profile', userData);
-    return response.data;
-  },
-
-  getLibraries: async () => {
+  async getLibraries() {
     const response = await api.get('/student/libraries');
     return response.data;
   },
 
-  getBooks: async () => {
-    const response = await api.get('/student/books');
+  async getLibrary(id: number) {
+    const response = await api.get(`/student/libraries/${id}`);
     return response.data;
   },
 
-  getEvents: async () => {
-    const response = await api.get('/student/events');
+  async getSeats(libraryId: number) {
+    const response = await api.get(`/student/libraries/${libraryId}/seats`);
     return response.data;
   },
 
-  getBookings: async () => {
+  async getBookings() {
     const response = await api.get('/student/bookings');
     return response.data;
   },
 
-  createBooking: async (bookingData: any) => {
-    const response = await api.post('/student/bookings', bookingData);
+  async createBooking(data: any) {
+    const response = await api.post('/student/bookings', data);
     return response.data;
   },
 
-  cancelBooking: async (bookingId: string) => {
-    const response = await api.delete(`/student/bookings/${bookingId}`);
-    return response.data;
-  },
-
-  reserveBook: async (bookId: string) => {
-    const response = await api.post(`/student/books/${bookId}/reserve`);
-    return response.data;
-  },
-
-  checkIn: async (bookingId: string, qrCode: string) => {
+  async checkIn(bookingId: number, qrCode: string) {
     const response = await api.post(`/student/bookings/${bookingId}/checkin`, { qr_code: qrCode });
     return response.data;
   },
 
-  checkOut: async (bookingId: string) => {
+  async checkOut(bookingId: number) {
     const response = await api.post(`/student/bookings/${bookingId}/checkout`);
+    return response.data;
+  },
+
+  async extendBooking(bookingId: number, minutes: number) {
+    const response = await api.post(`/student/bookings/${bookingId}/extend`, { minutes });
+    return response.data;
+  },
+
+  async cancelBooking(bookingId: number) {
+    const response = await api.post(`/student/bookings/${bookingId}/cancel`);
+    return response.data;
+  },
+
+  async getDashboard() {
+    const response = await api.get('/student/dashboard');
+    return response.data;
+  },
+
+  async getEvents() {
+    const response = await api.get('/student/events');
+    return response.data;
+  },
+
+  async registerForEvent(eventId: number) {
+    const response = await api.post(`/student/events/${eventId}/register`);
+    return response.data;
+  },
+
+  async getBooks() {
+    const response = await api.get('/student/books');
+    return response.data;
+  },
+
+  async reserveBook(bookId: number) {
+    const response = await api.post(`/student/books/${bookId}/reserve`);
+    return response.data;
+  },
+
+  async getProfile() {
+    const response = await api.get('/profile');
+    return response.data;
+  },
+
+  async updateProfile(data: any) {
+    if (data instanceof FormData) {
+      data.append('_method', 'PUT');
+      const response = await api.post('/profile', data);
+      return response.data;
+    }
+    const response = await api.put('/profile', data);
+    return response.data;
+  },
+
+  async getNotifications() {
+    const response = await api.get('/notifications');
+    return response.data;
+  },
+
+  async markNotificationRead(notificationId: number) {
+    const response = await api.post(`/notifications/${notificationId}/read`);
     return response.data;
   },
 };
 
 // Admin API
 export const adminAPI = {
-  getUsers: async () => {
-    const response = await api.get('/admin/users');
+  async getDashboard() {
+    const response = await api.get('/admin/dashboard');
     return response.data;
   },
 
-  updateUser: async (userId: string, userData: any) => {
-    const response = await api.put(`/admin/users/${userId}`, userData);
-    return response.data;
-  },
-
-  deleteUser: async (userId: string) => {
-    const response = await api.delete(`/admin/users/${userId}`);
-    return response.data;
-  },
-
-  approveUser: async (userId: string) => {
-    const response = await api.patch(`/admin/users/${userId}/approve`);
-    return response.data;
-  },
-
-  rejectUser: async (userId: string) => {
-    const response = await api.delete(`/admin/users/${userId}/reject`);
-    return response.data;
-  },
-
-  getLibraries: async () => {
-    const response = await api.get('/admin/libraries');
-    return response.data;
-  },
-
-  createLibrary: async (libraryData: any) => {
-    const headers = libraryData instanceof FormData
-      ? { 'Content-Type': 'multipart/form-data' }
-      : {};
-    const response = await api.post('/admin/libraries', libraryData, { headers });
-    return response.data;
-  },
-
-  updateLibrary: async (libraryId: string, libraryData: any) => {
-    const headers = libraryData instanceof FormData
-      ? { 'Content-Type': 'multipart/form-data' }
-      : {};
-
-    // For FormData with PUT, we need to use POST with _method field
-    if (libraryData instanceof FormData) {
-      const response = await api.post(`/admin/libraries/${libraryId}`, libraryData, { headers });
-      return response.data;
-    } else {
-      const response = await api.put(`/admin/libraries/${libraryId}`, libraryData);
-      return response.data;
-    }
-  },
-
-  deleteLibrary: async (libraryId: string) => {
-    const response = await api.delete(`/admin/libraries/${libraryId}`);
-    return response.data;
-  },
-
-  getBooks: async () => {
-    const response = await api.get('/admin/books');
-    return response.data;
-  },
-
-  createBook: async (bookData: any) => {
-    const headers = bookData instanceof FormData
-      ? { 'Content-Type': 'multipart/form-data' }
-      : {};
-    const response = await api.post('/admin/books', bookData, { headers });
-    return response.data;
-  },
-
-  updateBook: async (bookId: string, bookData: any) => {
-    const headers = bookData instanceof FormData
-      ? { 'Content-Type': 'multipart/form-data' }
-      : {};
-
-    // For FormData with PUT, we need to use POST with _method field
-    if (bookData instanceof FormData) {
-      bookData.append('_method', 'PUT');
-      const response = await api.post(`/admin/books/${bookId}`, bookData, { headers });
-      return response.data;
-    } else {
-      const response = await api.put(`/admin/books/${bookId}`, bookData);
-      return response.data;
-    }
-  },
-
-  deleteBook: async (bookId: string) => {
-    const response = await api.delete(`/admin/books/${bookId}`);
-    return response.data;
-  },
-
-  getEvents: async () => {
-    const response = await api.get('/admin/events');
-    return response.data;
-  },
-
-  createEvent: async (eventData: any) => {
-    const response = await api.post('/admin/events', eventData);
-    return response.data;
-  },
-
-  updateEvent: async (eventId: string, eventData: any) => {
-    const response = await api.put(`/admin/events/${eventId}`, eventData);
-    return response.data;
-  },
-
-  deleteEvent: async (eventId: string) => {
-    const response = await api.delete(`/admin/events/${eventId}`);
-    return response.data;
-  },
-
-  getDashboardStats: async () => {
+  async getStats() {
     const response = await api.get('/admin/dashboard/stats');
     return response.data;
   },
 
-  getSeatSections: async (libraryId: string) => {
-    const response = await api.get(`/admin/libraries/${libraryId}/sections`);
+  async getUsers() {
+    const response = await api.get('/admin/users');
     return response.data;
   },
 
-  createSeatSection: async (libraryId: string, sectionData: any) => {
-    const response = await api.post(`/admin/libraries/${libraryId}/sections`, sectionData);
+  async getPendingUsers() {
+    const response = await api.get('/admin/users/pending');
     return response.data;
   },
 
-  updateSeatSection: async (libraryId: string, sectionId: string, sectionData: any) => {
-    const response = await api.put(`/admin/libraries/${libraryId}/sections/${sectionId}`, sectionData);
+  async approveUser(userId: number) {
+    const response = await api.post(`/admin/users/${userId}/approve`);
     return response.data;
   },
 
-  deleteSeatSection: async (libraryId: string, sectionId: string) => {
-    const response = await api.delete(`/admin/libraries/${libraryId}/sections/${sectionId}`);
+  async rejectUser(userId: number) {
+    const response = await api.delete(`/admin/users/${userId}/reject`);
     return response.data;
   },
 
-  getSeats: async (libraryId?: string) => {
-    const url = libraryId ? `/admin/libraries/${libraryId}/seats` : '/admin/seats';
-    const response = await api.get(url);
+  async createUser(data: any) {
+    const response = await api.post('/admin/users', data);
     return response.data;
   },
 
-  createSeat: async (seatData: any) => {
-    const response = await api.post('/admin/seats', seatData);
+  async updateUser(id: number, data: any) {
+    const response = await api.put(`/admin/users/${id}`, data);
     return response.data;
   },
 
-  updateSeat: async (seatId: string, seatData: any) => {
-    const response = await api.put(`/admin/seats/${seatId}`, seatData);
+  async deleteUser(id: number) {
+    const response = await api.delete(`/admin/users/${id}`);
     return response.data;
   },
 
-  deleteSeat: async (seatId: string) => {
-    const response = await api.delete(`/admin/seats/${seatId}`);
+  async getLibraries() {
+    const response = await api.get('/admin/libraries');
     return response.data;
   },
 
-  getSubscriptionPlans: async () => {
+  async createLibrary(data: any) {
+    const response = await api.post('/admin/libraries', data);
+    return response.data;
+  },
+
+  async updateLibrary(id: number, data: any) {
+    if (data instanceof FormData) {
+      data.append('_method', 'PUT');
+      const response = await api.post(`/admin/libraries/${id}`, data);
+      return response.data;
+    }
+    const response = await api.put(`/admin/libraries/${id}`, data);
+    return response.data;
+  },
+
+  async deleteLibrary(id: number) {
+    const response = await api.delete(`/admin/libraries/${id}`);
+    return response.data;
+  },
+
+  async getAnalytics() {
+    const response = await api.get('/admin/analytics');
+    return response.data;
+  },
+
+  async getBooks() {
+    const response = await api.get('/admin/books');
+    return response.data;
+  },
+
+  async createBook(data: any) {
+    const response = await api.post('/admin/books', data);
+    return response.data;
+  },
+
+  async updateBook(id: number, data: any) {
+    const response = await api.put(`/admin/books/${id}`, data);
+    return response.data;
+  },
+
+  async getEvents() {
+    const response = await api.get('/admin/events');
+    return response.data;
+  },
+
+  async getLibrarians() {
+    const response = await api.get('/admin/users/librarians');
+    return response.data;
+  },
+
+  async createLibrarian(data: any) {
+    const response = await api.post('/admin/users', { ...data, role: 'librarian' });
+    return response.data;
+  },
+
+  async updateLibrarian(id: number, data: any) {
+    const response = await api.put(`/admin/users/${id}`, data);
+    return response.data;
+  },
+
+  async deleteLibrarian(id: number) {
+    const response = await api.delete(`/admin/users/${id}`);
+    return response.data;
+  },
+
+  async getSubscriptionPlans() {
     const response = await api.get('/admin/subscription-plans');
     return response.data;
   },
 
-  createSubscriptionPlan: async (planData: any) => {
-    const response = await api.post('/admin/subscription-plans', planData);
+  async createSubscriptionPlan(data: any) {
+    const response = await api.post('/admin/subscription-plans', data);
     return response.data;
   },
 
-  updateSubscriptionPlan: async (planId: string, planData: any) => {
-    const response = await api.put(`/admin/subscription-plans/${planId}`, planData);
+  async updateSubscriptionPlan(id: number, data: any) {
+    const response = await api.put(`/admin/subscription-plans/${id}`, data);
     return response.data;
   },
 
-  deleteSubscriptionPlan: async (planId: string) => {
-    const response = await api.delete(`/admin/subscription-plans/${planId}`);
+  async deleteSubscriptionPlan(id: number) {
+    const response = await api.delete(`/admin/subscription-plans/${id}`);
+    return response.data;
+  },
+
+  async getSettings() {
+    const response = await api.get('/admin/settings');
+    return response.data;
+  },
+
+  async updateSettings(settings: any[]) {
+    const response = await api.put('/admin/settings', { settings });
     return response.data;
   },
 };
 
 // Librarian API
 export const librarianAPI = {
-  getLibraryStats: async (libraryId: string) => {
-    const response = await api.get(`/librarian/libraries/${libraryId}/stats`);
+  async getDashboard() {
+    const response = await api.get('/librarian/dashboard');
     return response.data;
   },
 
-  getLibraryBookings: async (libraryId: string) => {
-    const response = await api.get(`/librarian/libraries/${libraryId}/bookings`);
-    return response.data;
-  },
-
-  updateBooking: async (bookingId: string, bookingData: any) => {
-    const response = await api.put(`/librarian/bookings/${bookingId}`, bookingData);
-    return response.data;
-  },
-
-  getSeatSections: async (libraryId: string) => {
-    const response = await api.get(`/librarian/libraries/${libraryId}/sections`);
-    return response.data;
-  },
-
-  createSeatSection: async (libraryId: string, sectionData: any) => {
-    const response = await api.post(`/librarian/libraries/${libraryId}/sections`, sectionData);
-    return response.data;
-  },
-
-  updateSeatSection: async (libraryId: string, sectionId: string, sectionData: any) => {
-    const response = await api.put(`/librarian/libraries/${libraryId}/sections/${sectionId}`, sectionData);
-    return response.data;
-  },
-
-  deleteSeatSection: async (libraryId: string, sectionId: string) => {
-    const response = await api.delete(`/librarian/libraries/${libraryId}/sections/${sectionId}`);
-    return response.data;
-  },
-
-  getSeats: async () => {
+  async getSeats() {
     const response = await api.get('/librarian/seats');
     return response.data;
   },
 
-  createSeat: async (seatData: any) => {
-    const response = await api.post('/librarian/seats', seatData);
+  async createSeat(data: any) {
+    const response = await api.post('/librarian/seats', data);
     return response.data;
   },
 
-  updateSeat: async (seatId: string, seatData: any) => {
-    const response = await api.put(`/librarian/seats/${seatId}`, seatData);
+  async updateSeat(id: number, data: any) {
+    const response = await api.put(`/librarian/seats/${id}`, data);
     return response.data;
   },
 
-  deleteSeat: async (seatId: string) => {
-    const response = await api.delete(`/librarian/seats/${seatId}`);
+  async deleteSeat(id: number) {
+    const response = await api.delete(`/librarian/seats/${id}`);
     return response.data;
   },
 
-  getEvents: async () => {
+  async getEvents() {
     const response = await api.get('/librarian/events');
     return response.data;
   },
 
-  createEvent: async (eventData: any) => {
-    const headers = eventData instanceof FormData
-      ? { 'Content-Type': 'multipart/form-data' }
-      : {};
-    const response = await api.post('/librarian/events', eventData, { headers });
+  async createEvent(data: any) {
+    const response = await api.post('/librarian/events', data);
     return response.data;
   },
 
-  updateEvent: async (eventId: string, eventData: any) => {
-    const headers = eventData instanceof FormData
-      ? { 'Content-Type': 'multipart/form-data' }
-      : {};
+  async getBooks() {
+    const response = await api.get('/librarian/books');
+    return response.data;
+  },
 
-    if (eventData instanceof FormData) {
-      eventData.append('_method', 'PUT');
-      const response = await api.post(`/librarian/events/${eventId}`, eventData, { headers });
-      return response.data;
-    } else {
-      const response = await api.put(`/librarian/events/${eventId}`, eventData);
+  async createBook(data: FormData) {
+    const response = await api.post('/librarian/books', data);
+    return response.data;
+  },
+
+  async updateBook(id: number, data: any) {
+    if (data instanceof FormData) {
+      data.append('_method', 'PUT');
+      const response = await api.post(`/librarian/books/${id}`, data);
       return response.data;
     }
-  },
-
-  deleteEvent: async (eventId: string) => {
-    const response = await api.delete(`/librarian/events/${eventId}`);
+    const response = await api.put(`/librarian/books/${id}`, data);
     return response.data;
   },
 
-  getAnalytics: async (timeRange?: string) => {
-    const params = timeRange ? { timeRange } : {};
+  async deleteBook(id: number) {
+    const response = await api.delete(`/librarian/books/${id}`);
+    return response.data;
+  },
+
+  async getAnalytics(params?: any) {
     const response = await api.get('/librarian/analytics', { params });
+    return response.data;
+  },
+
+  async getFloors(libraryId: number) {
+    const response = await api.get(`/librarian/libraries/${libraryId}/floors`);
+    return response.data;
+  },
+
+  async createFloor(libraryId: number, data: FormData) {
+    const response = await api.post(`/librarian/libraries/${libraryId}/floors`, data);
+    return response.data;
+  },
+
+  async updateFloor(libraryId: number, floorId: number, data: FormData) {
+    // Use POST with _method=PUT for FormData support
+    data.append('_method', 'PUT');
+    const response = await api.post(`/librarian/libraries/${libraryId}/floors/${floorId}`, data);
+    return response.data;
+  },
+
+  async deleteFloor(libraryId: number, floorId: number) {
+    const response = await api.delete(`/librarian/libraries/${libraryId}/floors/${floorId}`);
+    return response.data;
+  },
+
+  async getSections(libraryId: number, floorId?: number) {
+    const response = await api.get(`/librarian/libraries/${libraryId}/sections`, {
+      params: { floor_id: floorId }
+    });
+    return response.data;
+  },
+
+  async createSection(libraryId: number, data: any) {
+    const response = await api.post(`/librarian/libraries/${libraryId}/sections`, data);
+    return response.data;
+  },
+
+  async updateSection(libraryId: number, sectionId: number, data: any) {
+    const response = await api.put(`/librarian/libraries/${libraryId}/sections/${sectionId}`, data);
+    return response.data;
+  },
+
+  async deleteSection(libraryId: number, sectionId: number) {
+    const response = await api.delete(`/librarian/libraries/${libraryId}/sections/${sectionId}`);
+    return response.data;
+  },
+
+
+  async getStudents() {
+    const response = await api.get('/librarian/students');
+    return response.data;
+  },
+  async getStudentStats() {
+    const response = await api.get('/librarian/students/stats');
+    return response.data;
+  },
+  async createStudent(data: any) {
+    const response = await api.post('/librarian/students', data);
+    return response.data;
+  },
+  async updateStudent(id: number, data: any) {
+    const response = await api.put(`/librarian/students/${id}`, data);
+    return response.data;
+  },
+  async deleteStudent(id: number) {
+    const response = await api.delete(`/librarian/students/${id}`);
+    return response.data;
+  },
+  async getLibraryInfo() {
+    const response = await api.get('/librarian/library');
+    return response.data;
+  },
+  async updateLibraryInfo(data: any) {
+    const response = await api.put('/librarian/library', data);
+    return response.data;
+  },
+  async getBookings(params: any = {}) {
+    const response = await api.get('/librarian/bookings', { params });
+    return response.data;
+  },
+  async getBookingStats() {
+    const response = await api.get('/librarian/bookings/stats');
+    return response.data;
+  },
+  async checkInBooking(id: number) {
+    const response = await api.post(`/librarian/bookings/${id}/check-in`);
+    return response.data;
+  },
+  async checkOutBooking(id: number) {
+    const response = await api.post(`/librarian/bookings/${id}/check-out`);
+    return response.data;
+  },
+  async cancelBooking(id: number) {
+    const response = await api.post(`/librarian/bookings/${id}/cancel`);
     return response.data;
   },
 };

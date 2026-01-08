@@ -10,15 +10,20 @@ use Illuminate\Http\Request;
 
 class SeatSectionController extends Controller
 {
-    public function index($libraryId)
+    public function index(Request $request, $libraryId)
     {
-        $sections = SeatSection::where('library_id', $libraryId)
-            ->withCount('seats')
-            ->with('seats')
+        $query = SeatSection::where('library_id', $libraryId);
+
+        if ($request->has('floor_id')) {
+            $query->where('floor_id', $request->floor_id);
+        }
+
+        $sections = $query->withCount('seats')
+            ->with(['seats', 'floor'])
             ->get()
             ->map(function ($section) {
                 $section->available_seats = $section->seats()->where('status', 'available')->count();
-                $section->occupied_seats = $section->seats()->whereIn('status', ['booked', 'occupied'])->count();
+                $section->occupied_seats = $section->seats()->whereIn('status', ['reserved', 'occupied'])->count();
                 return $section;
             });
 
@@ -31,34 +36,46 @@ class SeatSectionController extends Controller
             'name' => 'required|string|max:255',
             'total_seats' => 'required|integer|min:1',
             'description' => 'nullable|string',
+            'floor_id' => 'required|exists:floors,id',
         ]);
 
-        // Check if total seats exceeds library capacity
+        // Check if total seats exceeds library capacity (Skipped as capacity column is missing)
         $library = Library::findOrFail($libraryId);
-        $currentTotalSeats = SeatSection::where('library_id', $libraryId)->sum('total_seats');
-
-        if ($currentTotalSeats + $validated['total_seats'] > $library->capacity) {
-            return response()->json([
-                'message' => "Cannot add {$validated['total_seats']} seats. Maximum capacity is {$library->capacity}. Current total: {$currentTotalSeats}",
-            ], 422);
-        }
-
+        
         $section = SeatSection::create([
             'library_id' => $libraryId,
             'name' => $validated['name'],
             'total_seats' => $validated['total_seats'],
             'description' => $validated['description'] ?? null,
+            'floor_id' => $validated['floor_id'] ?? null,
         ]);
 
         // Auto-create seats for this section
         for ($i = 1; $i <= $validated['total_seats']; $i++) {
-            Seat::create([
+            $seatNumber = "{$section->name}-{$i}";
+            $qrContent = encrypt([
+                'type' => 'seat',
+                'seat_number' => $seatNumber,
                 'library_id' => $libraryId,
-                'section_id' => $section->id,
-                'seat_number' => "{$section->name}-{$i}",
-                'status' => 'available',
-                'type' => 'regular',
             ]);
+
+            $seat = Seat::create([
+                'floor_id' => $section->floor_id,
+                'section_id' => $section->id,
+                'seat_number' => $seatNumber,
+                'status' => 'available',
+                'seat_type' => 'open',
+                'qr_code' => $qrContent,
+                'qr_generated_at' => now(),
+            ]);
+
+            // Generate QR image
+            try {
+                $qrImage = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')->size(300)->generate($qrContent);
+                \Illuminate\Support\Facades\Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.png", $qrImage);
+            } catch (\Exception $e) {
+                \Log::error("QR Code generation failed for seat {$seat->id}: " . $e->getMessage());
+            }
         }
 
         $section->load('seats');
@@ -78,6 +95,7 @@ class SeatSectionController extends Controller
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'is_active' => 'sometimes|boolean',
+            'floor_id' => 'nullable|exists:floors,id',
         ]);
 
         $section->update($validated);

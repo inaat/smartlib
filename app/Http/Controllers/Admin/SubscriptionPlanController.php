@@ -16,10 +16,16 @@ class SubscriptionPlanController extends Controller
     {
         $plans = SubscriptionPlan::orderBy('created_at', 'desc')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $plans
-        ]);
+        return response()->json($plans);
+    }
+
+    /**
+     * Display a listing of active resources for public view.
+     */
+    public function publicIndex()
+    {
+        $plans = SubscriptionPlan::where('status', 'active')->orderBy('price', 'asc')->get();
+        return response()->json($plans);
     }
 
     /**
@@ -32,6 +38,7 @@ class SubscriptionPlanController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'duration_days' => 'required|integer|min:1',
+            'free_trial_days' => 'nullable|integer|min:0',
             'seat_bookings_limit' => 'nullable|integer|min:0',
             'book_reservations_limit' => 'nullable|integer|min:0',
             'digital_books_access' => 'boolean',
@@ -51,11 +58,7 @@ class SubscriptionPlanController extends Controller
 
         $plan = SubscriptionPlan::create($request->all());
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Subscription plan created successfully',
-            'data' => $plan
-        ], 201);
+        return response()->json($plan, 201);
     }
 
     /**
@@ -83,6 +86,7 @@ class SubscriptionPlanController extends Controller
             'description' => 'nullable|string',
             'price' => 'sometimes|required|numeric|min:0',
             'duration_days' => 'sometimes|required|integer|min:1',
+            'free_trial_days' => 'nullable|integer|min:0',
             'seat_bookings_limit' => 'nullable|integer|min:0',
             'book_reservations_limit' => 'nullable|integer|min:0',
             'digital_books_access' => 'boolean',
@@ -102,11 +106,7 @@ class SubscriptionPlanController extends Controller
 
         $plan->update($request->all());
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Subscription plan updated successfully',
-            'data' => $plan->fresh()
-        ]);
+        return response()->json($plan->fresh());
     }
 
     /**

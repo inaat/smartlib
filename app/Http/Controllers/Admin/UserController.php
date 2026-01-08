@@ -13,7 +13,7 @@ class UserController extends Controller
     public function pending()
     {
         $users = User::where('status', 'pending')
-            ->where('user_type', 'student')
+            ->where('role', 'student')
             ->latest()
             ->paginate(20);
 
@@ -22,7 +22,7 @@ class UserController extends Controller
 
     public function students()
     {
-        $students = User::where('user_type', 'student')
+        $students = User::where('role', 'student')
             ->latest()
             ->paginate(20);
 
@@ -31,17 +31,22 @@ class UserController extends Controller
 
     public function librarians()
     {
-        $librarians = User::where('user_type', 'librarian')
+        $librarians = User::where('role', 'librarian')
             ->with('library')
-            ->latest()
-            ->paginate(20);
+            ->latest();
 
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json($librarians->get());
+        }
+
+        $librarians = $librarians->paginate(20);
         return view('admin.users.librarians', compact('librarians'));
     }
 
     public function index()
     {
-        $users = User::withCount('bookings')
+        $users = User::where('role', 'student')
+            ->withCount('seatBookings as bookings_count')
             ->with(['library', 'activeSubscription.subscription_plan'])
             ->latest()
             ->get();
@@ -62,8 +67,10 @@ class UserController extends Controller
             'crn' => 'required|string|unique:users',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8',
-            'user_type' => 'required|in:student,librarian,super_admin',
-            'library_id' => 'required_if:user_type,librarian',
+            'role' => 'required|in:student,librarian,super_admin',
+            'library_id' => 'nullable|exists:libraries,id',
+            'ca_level' => 'nullable|string|in:PRC,CAP,Final',
+            'phone' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
@@ -71,12 +78,18 @@ class UserController extends Controller
             'crn' => $request->crn,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'user_type' => $request->user_type,
-            'status' => 'approved',
+            'role' => $request->role,
+            'status' => $request->status ?? 'approved',
             'library_id' => $request->library_id,
+            'ca_level' => $request->ca_level,
+            'phone' => $request->phone,
         ]);
 
-        $user->assignRole($request->user_type);
+        $user->assignRole($request->role);
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json($user->load('library'), 201);
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully');
     }
@@ -92,12 +105,15 @@ class UserController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
-            'user_type' => 'sometimes|in:student,librarian,super_admin',
+            'role' => 'sometimes|in:student,librarian,super_admin',
             'status' => 'sometimes|in:pending,approved,suspended,banned',
-            'library_id' => 'sometimes|required_if:user_type,librarian',
+            'library_id' => 'nullable|exists:libraries,id',
+            'ca_level' => 'nullable|string|in:PRC,CAP,Final',
+            'phone' => 'nullable|string|max:20',
+            'crn' => 'sometimes|string|unique:users,crn,' . $user->id,
         ]);
 
-        $user->update($request->only(['name', 'email', 'user_type', 'status', 'library_id']));
+        $user->update($request->only(['name', 'email', 'role', 'status', 'library_id', 'ca_level', 'phone', 'crn']));
 
         if ($request->filled('password')) {
             $user->update(['password' => Hash::make($request->password)]);
@@ -109,6 +125,11 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $user->delete();
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json(['message' => 'User deleted successfully']);
+        }
+
         return redirect()->route('admin.users.index')->with('success', 'User deleted successfully');
     }
 

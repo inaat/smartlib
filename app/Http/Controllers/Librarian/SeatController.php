@@ -11,17 +11,63 @@ use Illuminate\Support\Facades\Storage;
 
 class SeatController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Check if API request
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if ($request->expectsJson() || $request->is('api/*')) {
             $user = Auth::user();
-            if ($user->library_id) {
-                $seats = Seat::where('library_id', $user->library_id)->latest()->get();
-            } else {
-                $seats = Seat::latest()->get();
+            $query = Seat::with(['floor', 'seatSection']);
+
+            if ($user->library_id && !in_array($user->role, ['super_admin', 'admin', 'owner'])) {
+                $query->whereHas('floor', function($q) use ($user) {
+                    $q->where('library_id', $user->library_id);
+                });
+            } elseif ($request->has('library_id')) {
+                $query->whereHas('floor', function($q) use ($request) {
+                    $q->where('library_id', $request->library_id);
+                });
             }
-            return response()->json($seats);
+
+            if ($request->has('section_id')) {
+                $query->where('section_id', $request->section_id);
+            }
+
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where('seat_number', 'like', "%{$search}%");
+            }
+
+            $seats = $query->latest()->get();
+
+            $data = $seats->map(function ($seat) {
+                return [
+                    'id' => $seat->id,
+                    'seat_number' => $seat->seat_number,
+                    'seat_type' => $seat->seat_type,
+                    'zone' => $seat->zone,
+                    'status' => $seat->status,
+                    'position_x' => $seat->position_x,
+                    'position_y' => $seat->position_y,
+                    'is_maintenance' => $seat->is_maintenance,
+                    'is_active' => $seat->is_active,
+                    'section_id' => $seat->section_id,
+                    'has_computer' => $seat->has_computer,
+                    'near_window' => $seat->near_window,
+                    'socket_count' => $seat->socket_count,
+                    'qr_code_url' => Storage::disk('public')->exists("qrcodes/seats/seat-{$seat->id}.png") 
+                        ? "/storage/qrcodes/seats/seat-{$seat->id}.png" 
+                        : null,
+                    'floor' => $seat->floor ? [
+                        'id' => $seat->floor->id,
+                        'name' => $seat->floor->name,
+                    ] : null,
+                    'seat_section' => $seat->seatSection ? [
+                        'id' => $seat->seatSection->id,
+                        'name' => $seat->seatSection->name,
+                    ] : null,
+                ];
+            });
+            return response()->json($data);
         }
 
         $library = Auth::user()->library;
@@ -43,20 +89,28 @@ class SeatController extends Controller
 
         $validated = $request->validate([
             'seat_number' => 'required|string',
-            'type' => 'nullable|in:regular,premium,group,silent,collaborative',
-            'status' => 'nullable|in:available,booked,maintenance,occupied',
-            'floor' => 'nullable|integer',
-            'section' => 'nullable|string',
-            'near_window' => 'nullable|boolean',
-            'power_outlets' => 'nullable|integer',
+            'seat_type' => 'nullable|string',
+            'status' => 'nullable|in:available,reserved,maintenance,occupied',
+            'floor_id' => 'required|integer|exists:floors,id',
+            'section_id' => 'nullable|integer|exists:seat_sections,id',
             'has_computer' => 'nullable|boolean',
-            'max_occupancy' => 'nullable|integer',
+            'near_window' => 'nullable|boolean',
+            'socket_count' => 'nullable|integer|min:0',
             'position_x' => 'nullable|integer',
             'position_y' => 'nullable|integer',
         ]);
 
-        // Check if seat number already exists in this library
-        if ($library->seats()->where('seat_number', $validated['seat_number'])->exists()) {
+        $validated['status'] = $validated['status'] ?? 'available';
+        $validated['seat_type'] = $validated['seat_type'] ?? 'open';
+        $validated['is_maintenance'] = ($validated['status'] === 'maintenance');
+
+        // Check if seat number already exists in this library (via floors)
+        $exists = Seat::where('seat_number', $validated['seat_number'])
+            ->whereHas('floor', function($query) use ($library) {
+                $query->where('library_id', $library->id);
+            })->exists();
+
+        if ($exists) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'message' => 'Seat number already exists in this library'
@@ -65,9 +119,9 @@ class SeatController extends Controller
             return back()->withErrors(['seat_number' => 'Seat number already exists in this library']);
         }
 
-        $validated['library_id'] = $library->id;
-        $validated['status'] = $validated['status'] ?? 'available';
-        $validated['type'] = $validated['type'] ?? 'regular';
+        // Get library from floor
+        $floor = \App\Models\Floor::findOrFail($validated['floor_id']);
+        $library = $floor->library;
 
         // Generate QR code
         $qrContent = encrypt([
@@ -77,19 +131,25 @@ class SeatController extends Controller
         ]);
 
         $validated['qr_code'] = $qrContent;
+        $validated['qr_generated_at'] = now();
 
         $seat = Seat::create($validated);
 
         // Generate QR image
-        $qrImage = QrCode::format('png')->size(300)->generate($qrContent);
-        Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.png", $qrImage);
+        try {
+            $qrImage = QrCode::format('png')->size(300)->generate($qrContent);
+            Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.png", $qrImage);
+        } catch (\Exception $e) {
+            // Log error but continue
+            \Log::error("QR Code generation failed: " . $e->getMessage());
+        }
 
         // Return JSON for API requests
         if ($request->expectsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
                 'message' => 'Seat created successfully',
-                'data' => $seat
+                'data' => $seat->load(['floor', 'seatSection'])
             ], 201);
         }
 
@@ -100,8 +160,11 @@ class SeatController extends Controller
     public function edit(Seat $seat)
     {
         // Ensure seat belongs to librarian's library
-        if ($seat->library_id !== Auth::user()->library_id) {
-            abort(403);
+        $user = Auth::user();
+        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
+            if ($seat->floor->library_id !== $user->library_id) {
+                abort(403);
+            }
         }
 
         return view('librarian.seats.edit', compact('seat'));
@@ -111,35 +174,58 @@ class SeatController extends Controller
     {
         // Check if user is admin/super_admin or librarian with permission
         $user = Auth::user();
-        if (!in_array($user->user_type, ['super_admin', 'admin'])) {
-            if ($seat->library_id !== $user->library_id) {
+        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
+            if ($seat->floor->library_id !== $user->library_id) {
                 abort(403);
             }
         }
 
         $validated = $request->validate([
-            'seat_number' => 'nullable|string',
-            'type' => 'nullable|in:regular,premium,group,silent,collaborative',
-            'status' => 'nullable|in:available,booked,maintenance,occupied',
-            'floor' => 'nullable|integer',
-            'near_window' => 'nullable|boolean',
-            'power_outlets' => 'nullable|integer',
+            'seat_number' => 'sometimes|string',
+            'seat_type' => 'nullable|string',
+            'status' => 'sometimes|in:available,reserved,maintenance,occupied',
+            'floor_id' => 'nullable|integer|exists:floors,id',
+            'section_id' => 'nullable|integer|exists:seat_sections,id',
             'has_computer' => 'nullable|boolean',
-            'max_occupancy' => 'nullable|integer',
+            'near_window' => 'nullable|boolean',
+            'socket_count' => 'nullable|integer|min:0',
             'position_x' => 'nullable|integer',
             'position_y' => 'nullable|integer',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        // Remove amenities and restrictions from the data if they exist
-        $updateData = collect($validated)->except(['amenities', 'restrictions'])->toArray();
+        // Auto-set is_maintenance based on status
+        if (isset($validated['status'])) {
+            $validated['is_maintenance'] = ($validated['status'] === 'maintenance');
+        }
 
-        $seat->update($updateData);
+        // Regenerate QR code if seat number changes
+        if (isset($validated['seat_number']) && $validated['seat_number'] !== $seat->seat_number) {
+            $library = $seat->floor->library;
+            $qrContent = encrypt([
+                'type' => 'seat',
+                'seat_number' => $validated['seat_number'],
+                'library_id' => $library->id,
+            ]);
+            $validated['qr_code'] = $qrContent;
+            $validated['qr_generated_at'] = now();
+            
+            // Regenerate image
+            try {
+                $qrImage = QrCode::format('png')->size(300)->generate($qrContent);
+                Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.png", $qrImage);
+            } catch (\Exception $e) {
+                \Log::error("QR Code regeneration failed: " . $e->getMessage());
+            }
+        }
+
+        $seat->update($validated);
 
         // Return JSON for API calls
-        if ($request->wantsJson()) {
+        if ($request->expectsJson() || $request->is('api/*')) {
             return response()->json([
                 'message' => 'Seat updated successfully',
-                'seat' => $seat->fresh()
+                'seat' => $seat->fresh(['floor', 'seatSection'])
             ]);
         }
 
@@ -149,8 +235,11 @@ class SeatController extends Controller
 
     public function destroy(Seat $seat)
     {
-        if ($seat->library_id !== Auth::user()->library_id) {
-            abort(403);
+        $user = Auth::user();
+        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
+            if ($seat->floor->library_id !== $user->library_id) {
+                abort(403);
+            }
         }
 
         $seat->delete();

@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SeatSection extends Model
 {
+    protected $table = 'seat_sections';
+
     protected $fillable = [
         'library_id',
+        'floor_id',
         'name',
         'total_seats',
         'description',
@@ -24,6 +27,12 @@ class SeatSection extends Model
     public function library(): BelongsTo
     {
         return $this->belongsTo(Library::class);
+    }
+
+    // Relationship to Floor
+    public function floor(): BelongsTo
+    {
+        return $this->belongsTo(Floor::class);
     }
 
     // Relationship to Seats

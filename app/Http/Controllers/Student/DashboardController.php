@@ -24,7 +24,13 @@ class DashboardController extends Controller
                 ->count(),
             'upcoming_events' => Event::whereHas('registrations', function($query) use ($user) {
                 $query->where('user_id', $user->id);
-            })->where('start_time', '>', now())->count(),
+            })->where(function ($q) {
+                $q->where('date', '>', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->where('date', '=', now()->toDateString())
+                         ->where('start_time', '>', now()->toTimeString());
+                  });
+            })->count(),
             'loyalty_points' => $user->loyalty_points,
         ];
 
@@ -73,16 +79,79 @@ class DashboardController extends Controller
             ->whereHas('registrations', function($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
-            ->where('start_time', '>', now())
+            ->where(function ($q) {
+                $q->where('date', '>', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->where('date', '=', now()->toDateString())
+                         ->where('start_time', '>', now()->toTimeString());
+                  });
+            })
+            ->orderBy('date')
             ->orderBy('start_time')
             ->take(3)
             ->get();
+
+        // Calculate study analytics
+        $completedBookings = SeatBooking::where('user_id', $user->id)
+            ->where('status', 'checked_out')
+            ->where('check_out_time', '>=', now()->subDays(7))
+            ->get();
+
+        $totalMinutes = $completedBookings->sum('total_minutes');
+        $totalHoursToday = SeatBooking::where('user_id', $user->id)
+            ->where('status', 'checked_out')
+            ->whereDate('check_out_time', today())
+            ->sum('total_minutes') / 60;
+
+        // Weekly study data
+        $weeklyStudyData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $hours = SeatBooking::where('user_id', $user->id)
+                ->where('status', 'checked_out')
+                ->whereDate('check_out_time', $date)
+                ->sum('total_minutes') / 60;
+            
+            $weeklyStudyData[] = [
+                'day' => $date->format('D'),
+                'hours' => round($hours, 1)
+            ];
+        }
+
+        // Calculate study streak
+        $studyStreak = 0;
+        $currentDate = now()->startOfDay();
+        while (true) {
+            $hasStudy = SeatBooking::where('user_id', $user->id)
+                ->where('status', 'checked_out')
+                ->whereDate('check_out_time', $currentDate)
+                ->exists();
+            
+            if (!$hasStudy) break;
+            $studyStreak++;
+            $currentDate = $currentDate->subDay();
+        }
+
+        // Session statistics
+        $totalSessions = $completedBookings->count();
+        $avgSessionDuration = $totalSessions > 0 ? round($totalMinutes / $totalSessions / 60, 1) : 0;
+        $focusScore = min(100, round(($totalSessions * 5) + ($studyStreak * 10)));
 
         return response()->json([
             'stats' => $stats,
             'active_booking' => $activeBooking,
             'recent_activity' => $recentActivity,
             'upcoming_events' => $upcomingEvents,
+            'analytics' => [
+                'study_streak' => $studyStreak,
+                'hours_today' => round($totalHoursToday, 1),
+                'weekly_hours' => round($totalMinutes / 60, 1),
+                'weekly_study_data' => $weeklyStudyData,
+                'avg_session_duration' => $avgSessionDuration,
+                'total_sessions' => $totalSessions,
+                'focus_score' => $focusScore,
+                'weekly_progress' => min(100, round(($totalMinutes / 60) / 20 * 100)), // 20 hours weekly goal
+            ]
         ]);
     }
 }

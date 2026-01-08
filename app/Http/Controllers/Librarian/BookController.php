@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Book;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
@@ -15,7 +16,7 @@ class BookController extends Controller
         if (request()->expectsJson() || request()->is('api/*')) {
             // For API, return all books (admins see all, librarians see their library's books)
             $user = Auth::user();
-            if ($user->user_type === 'super_admin') {
+            if (in_array($user->role, ['super_admin', 'admin', 'owner'])) {
                 $books = Book::latest()->get();
             } elseif ($user->library_id) {
                 $books = Book::where('library_id', $user->library_id)->latest()->get();
@@ -47,17 +48,17 @@ class BookController extends Controller
             'author' => 'required|string|max:255',
             'isbn' => 'required|string|unique:books',
             'description' => 'required|string',
-            'cover_image' => 'nullable|image|max:5120',
+            'cover_image' => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:5120',
             'cover_url' => 'nullable|string',
             'type' => 'required|in:physical,digital',
             'category' => 'required|string',
             'library_id' => 'required_if:type,physical|nullable|integer',
             'location' => 'nullable|string',
-            'pdf_file' => 'required_if:type,digital|nullable|file|mimes:pdf|max:51200',
+            'pdf_file' => 'required_if:type,digital|nullable|file|max:51200',
             'access_level' => 'nullable|in:free,premium,premium_plus',
             'subscription_required' => 'nullable|boolean',
             'passphrase' => 'nullable|string',
-            'status' => 'nullable|in:available,unavailable',
+            'status' => 'nullable|in:available,reserved,unavailable',
         ]);
 
         // Prepare data for Book model (map field names)
@@ -86,7 +87,7 @@ class BookController extends Controller
             $bookData['copies_available'] = 1;
         } else {
             // Digital book
-            $bookData['library_id'] = null;
+            $bookData['library_id'] = $validated['library_id'] ?? ($library ? $library->id : null);
             $bookData['copies_total'] = 0;
             $bookData['copies_available'] = 0;
 
@@ -98,9 +99,9 @@ class BookController extends Controller
 
             // Set digital access data
             $bookData['digital_access'] = [
-                'pdfUrl' => $pdfUrl,
-                'accessLevel' => $validated['access_level'] ?? 'free',
-                'subscriptionRequired' => filter_var($validated['subscription_required'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'file_url' => $pdfUrl ? Storage::url($pdfUrl) : null,
+                'access_level' => $validated['access_level'] ?? 'free',
+                'subscription_required' => filter_var($validated['subscription_required'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'passphrase' => $validated['passphrase'] ?? null,
             ];
         }
@@ -122,8 +123,11 @@ class BookController extends Controller
 
     public function show(Book $book)
     {
-        if ($book->library_id !== Auth::user()->library_id) {
-            abort(403);
+        $user = Auth::user();
+        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
+            if ($book->library_id !== $user->library_id) {
+                abort(403);
+            }
         }
 
         $book->load('reservations.user');
@@ -132,8 +136,11 @@ class BookController extends Controller
 
     public function edit(Book $book)
     {
-        if ($book->library_id !== Auth::user()->library_id) {
-            abort(403);
+        $user = Auth::user();
+        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
+            if ($book->library_id !== $user->library_id) {
+                abort(403);
+            }
         }
 
         return view('librarian.books.edit', compact('book'));
@@ -144,7 +151,7 @@ class BookController extends Controller
         $user = Auth::user();
 
         // Allow super_admin to update any book, librarians only their library's books
-        if ($user->user_type !== 'super_admin') {
+        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
             if ($book->library_id !== $user->library_id) {
                 abort(403);
             }
@@ -155,13 +162,13 @@ class BookController extends Controller
             'author' => 'required|string|max:255',
             'isbn' => 'required|string|unique:books,isbn,' . $book->id,
             'description' => 'required|string',
-            'cover_image' => 'nullable|image|max:5120',
+            'cover_image' => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:5120',
             'cover_url' => 'nullable|string',
             'type' => 'required|in:physical,digital',
             'category' => 'required|string',
             'library_id' => 'required_if:type,physical|nullable|integer',
             'location' => 'nullable|string',
-            'pdf_file' => 'nullable|file|mimes:pdf|max:51200',
+            'pdf_file' => 'nullable|file|max:51200',
             'access_level' => 'nullable|in:free,premium,premium_plus',
             'subscription_required' => 'nullable|boolean',
             'passphrase' => 'nullable|string',
@@ -192,7 +199,7 @@ class BookController extends Controller
             $bookData['location'] = $validated['location'] ?? $book->location;
         } else {
             // Digital book
-            $bookData['library_id'] = null;
+            $bookData['library_id'] = $validated['library_id'] ?? $book->library_id ?? ($user->library_id);
 
             // Handle PDF upload
             $currentDigitalAccess = $book->digital_access ?? [];
@@ -204,9 +211,9 @@ class BookController extends Controller
 
             // Set digital access data
             $bookData['digital_access'] = [
-                'pdfUrl' => $pdfUrl,
-                'accessLevel' => $validated['access_level'] ?? $currentDigitalAccess['accessLevel'] ?? 'free',
-                'subscriptionRequired' => filter_var($validated['subscription_required'] ?? $currentDigitalAccess['subscriptionRequired'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'file_url' => $pdfUrl ? Storage::url($pdfUrl) : ($currentDigitalAccess['file_url'] ?? null),
+                'access_level' => $validated['access_level'] ?? $currentDigitalAccess['access_level'] ?? 'free',
+                'subscription_required' => filter_var($validated['subscription_required'] ?? $currentDigitalAccess['subscription_required'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'passphrase' => $validated['passphrase'] ?? $currentDigitalAccess['passphrase'] ?? null,
             ];
         }
@@ -231,7 +238,7 @@ class BookController extends Controller
         $user = Auth::user();
 
         // Allow super_admin to delete any book, librarians only their library's books
-        if ($user->user_type !== 'super_admin') {
+        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
             if ($book->library_id !== $user->library_id) {
                 abort(403);
             }

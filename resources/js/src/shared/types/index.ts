@@ -25,6 +25,8 @@ export interface User {
   role: 'student' | 'librarian' | 'super_admin';
   loyaltyPoints: number;
   subscriptionPlan: string; // Dynamic from activeSubscription relationship
+  active_subscription?: UserSubscription;
+  loyalty_transactions?: LoyaltyTransaction[];
 }
 
 // Library Type - Matches Laravel Library Model
@@ -42,6 +44,12 @@ export interface Library {
   capacity: number;
   facilities?: string[] | string; // JSON field
   status: 'active' | 'inactive';
+  wifi_password?: string;
+  parking_available?: boolean;
+  operating_days?: string[] | string;
+  rules?: string[] | string;
+  special_features?: string[] | string;
+  contact_info?: string;
   created_at: string;
   updated_at: string;
 
@@ -52,6 +60,13 @@ export interface Library {
   distance?: number;
   images?: string[];
   description?: string;
+  openingHours?: string;
+  wifiPassword?: string;
+  parkingAvailable?: boolean;
+  operatingDays?: string[];
+  specialFeatures?: string[];
+  contactInfo?: string;
+  isActive?: boolean;
 }
 
 // Seat Type - Matches Laravel Seat Model
@@ -59,7 +74,7 @@ export interface Seat {
   id: number;
   library_id: number;
   seat_number: string;
-  status: 'available' | 'booked' | 'occupied' | 'maintenance' | 'free_soon';
+  status: 'available' | 'reserved' | 'occupied' | 'maintenance' | 'free_soon';
   type: 'regular' | 'premium' | 'group' | 'silent' | 'collaborative';
   qr_code?: string;
   next_available_time?: string;
@@ -67,7 +82,7 @@ export interface Seat {
   floor: number;
   section_id?: number;
   near_window: boolean;
-  power_outlets: number;
+  socket_count: number;
   has_computer: boolean;
   max_occupancy: number;
   created_at: string;
@@ -76,6 +91,7 @@ export interface Seat {
   // For UI display
   seatNumber?: string;
   libraryId?: number;
+  nextAvailableTime?: string;
   position?: { x: number; y: number }; // Computed for seat map
 }
 
@@ -117,7 +133,7 @@ export interface Booking {
   booking_date: string;
   start_time: string;
   end_time: string;
-  status: 'pending' | 'active' | 'completed' | 'cancelled' | 'no_show';
+  status: 'pending' | 'active' | 'completed' | 'cancelled' | 'no_show' | 'upcoming' | 'booked' | 'checked_in' | 'checked_out' | 'expired';
   check_in_time?: string;
   check_out_time?: string;
   qr_code?: string;
@@ -137,6 +153,7 @@ export interface Booking {
   checkedInAt?: string;
   checkedOutAt?: string;
   totalCost?: number;
+  autoReleaseTime?: string;
 }
 
 // Event Type - Matches Laravel Event Model
@@ -167,6 +184,7 @@ export interface Event {
   registered?: number;
   waitlist?: number;
   isActive?: boolean;
+  registered_count?: number;
 }
 
 // Book Reservation Type - Matches Laravel BookReservation Model
@@ -238,8 +256,8 @@ export interface UserSubscription {
   id: number;
   user_id: number;
   subscription_plan_id: number;
-  start_date: string;
-  end_date: string;
+  started_at: string;
+  expires_at: string;
   status: 'active' | 'expired' | 'cancelled';
   bookings_used: number;
   reservations_used: number;

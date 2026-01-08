@@ -18,16 +18,22 @@ class AnalyticsController extends Controller
     {
         $analytics = [
             'total_users' => User::count(),
-            'total_students' => User::where('user_type', 'student')->count(),
-            'total_librarians' => User::where('user_type', 'librarian')->count(),
+            'total_students' => User::where('role', 'student')->count(),
+            'total_librarians' => User::where('role', 'librarian')->count(),
             'total_libraries' => Library::count(),
             'total_bookings' => SeatBooking::count(),
             'active_bookings' => SeatBooking::whereIn('status', ['pending', 'active'])->count(),
             'completed_bookings' => SeatBooking::where('status', 'completed')->count(),
-            'total_revenue' => UserSubscription::sum('amount_paid'),
-            'monthly_revenue' => UserSubscription::whereMonth('created_at', now()->month)->sum('amount_paid'),
+            'total_revenue' => (float) UserSubscription::sum('amount_paid'),
+            'monthly_revenue' => (float) UserSubscription::whereMonth('created_at', now()->month)->sum('amount_paid'),
             'total_events' => Event::count(),
-            'upcoming_events' => Event::where('start_time', '>', now())->count(),
+            'upcoming_events' => Event::where(function ($q) {
+                $q->where('date', '>', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->where('date', '=', now()->toDateString())
+                         ->where('start_time', '>', now()->toTimeString());
+                  });
+            })->count(),
             'total_books' => Book::count(),
             'digital_books' => Book::where('type', 'digital')->count(),
         ];
@@ -50,6 +56,15 @@ class AnalyticsController extends Controller
             ->latest()
             ->take(10)
             ->get();
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'analytics' => $analytics,
+                'monthlyBookings' => $monthlyBookings,
+                'topLibraries' => $topLibraries,
+                'recentBookings' => $recentBookings
+            ]);
+        }
 
         return view('admin.analytics', compact('analytics', 'monthlyBookings', 'topLibraries', 'recentBookings'));
     }

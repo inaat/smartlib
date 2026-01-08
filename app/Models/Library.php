@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Floor;
+use App\Models\Seat;
 
 class Library extends Model
 {
@@ -10,54 +12,57 @@ class Library extends Model
         'name',
         'description',
         'address',
+        'photo',
         'latitude',
         'longitude',
-        'total_seats',
-        'available_seats',
-        'opening_hours',
-        'facilities',
-        'capacity',
-        'current_occupancy',
-        'images',
         'contact_info',
-        'rules',
         'special_features',
-        'accessibility_features',
-        'parking_available',
+        'capacity',
+        'opening_hours',
         'wifi_password',
-        'operating_days',
-        'holiday_schedule',
+        'parking_available',                    
         'is_active',
-        'photo',
+        'created_by',
     ];
 
     protected $casts = [
-        'facilities' => 'array',
-        'images' => 'array',
         'contact_info' => 'array',
-        'rules' => 'array',
         'special_features' => 'array',
-        'accessibility_features' => 'array',
-        'operating_days' => 'array',
-        'holiday_schedule' => 'array',
-        'total_seats' => 'integer',
-        'available_seats' => 'integer',
         'capacity' => 'integer',
-        'current_occupancy' => 'integer',
-        'latitude' => 'decimal:8',
-        'longitude' => 'decimal:8',
         'parking_available' => 'boolean',
         'is_active' => 'boolean',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
+
+    protected $appends = ['photo_url'];
+
+    public function getPhotoUrlAttribute()
+    {
+        if (!$this->photo) {
+            return 'https://images.pexels.com/photos/204494/pexels-photo-204494.jpeg?auto=compress&cs=tinysrgb&w=400';
+        }
+
+        if (filter_var($this->photo, FILTER_VALIDATE_URL)) {
+            return $this->photo;
+        }
+
+        return \Illuminate\Support\Facades\Storage::url($this->photo);
+    }
 
     public function seats()
     {
-        return $this->hasMany(Seat::class);
+        return $this->hasManyThrough(Seat::class, Floor::class);
     }
 
     public function seatSections()
     {
         return $this->hasMany(SeatSection::class);
+    }
+
+    public function floors()
+    {
+        return $this->hasMany(Floor::class);
     }
 
     public function books()
@@ -77,6 +82,21 @@ class Library extends Model
 
     public function seatBookings()
     {
-        return $this->hasManyThrough(SeatBooking::class, Seat::class);
+        return $this->hasMany(SeatBooking::class);
+    }
+
+    public function operatingHours()
+    {
+        return $this->hasMany(LibraryOperatingHour::class);
+    }
+
+    public function facilities()
+    {
+        return $this->hasMany(LibraryFacility::class)->orderBy('order');
+    }
+
+    public function rules()
+    {
+        return $this->hasMany(LibraryRule::class)->orderBy('order');
     }
 }

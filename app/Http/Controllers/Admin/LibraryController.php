@@ -36,7 +36,7 @@ class LibraryController extends Controller
 
     public function create()
     {
-        $librarians = User::where('user_type', 'librarian')
+        $librarians = User::where('role', 'librarian')
             ->whereNull('library_id')
             ->get();
         return view('admin.libraries.create', compact('librarians'));
@@ -85,7 +85,7 @@ class LibraryController extends Controller
 
     public function edit(Library $library)
     {
-        $librarians = User::where('user_type', 'librarian')
+        $librarians = User::where('role', 'librarian')
             ->where(function($q) use ($library) {
                 $q->whereNull('library_id')
                   ->orWhere('library_id', $library->id);

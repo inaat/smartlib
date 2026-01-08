@@ -4,8 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>SmartLib - Library Management System</title>
-        @viteReactRefresh
-        @vite(['resources/js/src/index.css', 'resources/js/src/main.tsx'])
+        @vite(['resources/js/src/index.css', 'resources/js/src/main.ts'])
     </head>
     <body>
         <div id="root"></div>

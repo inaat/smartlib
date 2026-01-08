@@ -9,18 +9,27 @@ class SeatBooking extends Model
     protected $fillable = [
         'user_id',
         'seat_id',
-        'booking_date',
-        'start_time',
-        'end_time',
+        'library_id',
+        'booking_time',
+        'check_in_time',
+        'check_out_time',
+        'scheduled_end_time',
+        'extended_until',
+        'extension_count',
         'status',
-        'checked_in_at',
-        'checked_out_at',
+        'qr_scanned',
+        'qr_scanned_at',
+        'total_minutes',
     ];
 
     protected $casts = [
-        'booking_date' => 'date',
-        'checked_in_at' => 'datetime',
-        'checked_out_at' => 'datetime',
+        'booking_time' => 'datetime',
+        'check_in_time' => 'datetime',
+        'check_out_time' => 'datetime',
+        'scheduled_end_time' => 'datetime',
+        'extended_until' => 'datetime',
+        'qr_scanned_at' => 'datetime',
+        'qr_scanned' => 'boolean',
     ];
 
     public function user()
@@ -31,5 +40,10 @@ class SeatBooking extends Model
     public function seat()
     {
         return $this->belongsTo(Seat::class);
+    }
+
+    public function library()
+    {
+        return $this->belongsTo(Library::class);
     }
 }

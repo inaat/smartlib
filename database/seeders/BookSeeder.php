@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Book;
-use App\Models\Library;
+use Illuminate\Support\Facades\DB;
 
 class BookSeeder extends Seeder
 {
@@ -14,137 +12,109 @@ class BookSeeder extends Seeder
      */
     public function run(): void
     {
-        $libraries = Library::all();
+        $libraries = DB::table('libraries')->pluck('id')->toArray();
+        
+        if (empty($libraries)) {
+            return;
+        }
 
         $books = [
             [
-                'title' => 'Introduction to Algorithms',
-                'author' => 'Thomas H. Cormen',
-                'isbn' => '9780262033848',
-                'type' => 'physical',
-                'category' => 'Computer Science',
-                'cover' => null,
-                'description' => 'Comprehensive introduction to modern study of computer algorithms',
+                'title' => 'The Great Gatsby',
+                'author' => 'F. Scott Fitzgerald',
+                'isbn' => '9780743273565',
+                'type' => 'Physical',
+                'category' => 'Fiction',
+                'description' => 'A story of wealth, love, and the American Dream in the 1920s.',
                 'availability' => 'available',
-                'location' => 'Shelf A-12',
-                'digital_access' => null,
-                'uploaded_by' => null,
-                'upload_date' => null,
-                'download_count' => 0,
-                'publisher' => 'MIT Press',
-                'publication_year' => 2009,
-                'edition' => '3rd Edition',
-                'language' => 'English',
-                'pages' => 1312,
-                'tags' => ['algorithms', 'computer-science', 'programming'],
-                'rating' => 4.5,
                 'copies_total' => 5,
                 'copies_available' => 5,
-                'reservation_queue' => [],
-                'borrowing_period' => 14,
-                'renewal_limit' => 2,
-                'qr_code' => null,
+            ],
+            [
+                'title' => 'To Kill a Mockingbird',
+                'author' => 'Harper Lee',
+                'isbn' => '9780061120084',
+                'type' => 'Physical',
+                'category' => 'Fiction',
+                'description' => 'A classic novel about racial injustice and the loss of innocence.',
+                'availability' => 'available',
+                'copies_total' => 3,
+                'copies_available' => 3,
+            ],
+            [
+                'title' => '1984',
+                'author' => 'George Orwell',
+                'isbn' => '9780451524935',
+                'type' => 'Digital',
+                'category' => 'Dystopian',
+                'description' => 'A chilling portrayal of a totalitarian future.',
+                'availability' => 'available',
+                'copies_total' => 10,
+                'copies_available' => 10,
+            ],
+            [
+                'title' => 'The Catcher in the Rye',
+                'author' => 'J.D. Salinger',
+                'isbn' => '9780316769488',
+                'type' => 'Physical',
+                'category' => 'Fiction',
+                'description' => 'A story about teenage angst and alienation.',
+                'availability' => 'reserved',
+                'copies_total' => 2,
+                'copies_available' => 0,
+            ],
+            [
+                'title' => 'A Brief History of Time',
+                'author' => 'Stephen Hawking',
+                'isbn' => '9780553380163',
+                'type' => 'Physical',
+                'category' => 'Science',
+                'description' => 'An exploration of the origins and fate of the universe.',
+                'availability' => 'available',
+                'copies_total' => 4,
+                'copies_available' => 4,
             ],
             [
                 'title' => 'Clean Code',
                 'author' => 'Robert C. Martin',
                 'isbn' => '9780132350884',
-                'type' => 'physical',
-                'category' => 'Software Engineering',
-                'cover' => null,
-                'description' => 'A handbook of agile software craftsmanship',
+                'type' => 'Digital',
+                'category' => 'Technology',
+                'description' => 'A handbook of agile software craftsmanship.',
                 'availability' => 'available',
-                'location' => 'Shelf B-05',
-                'digital_access' => null,
-                'uploaded_by' => null,
-                'upload_date' => null,
-                'download_count' => 0,
-                'publisher' => 'Prentice Hall',
-                'publication_year' => 2008,
-                'edition' => '1st Edition',
-                'language' => 'English',
-                'pages' => 464,
-                'tags' => ['clean-code', 'software-engineering', 'best-practices'],
-                'rating' => 4.7,
-                'copies_total' => 3,
-                'copies_available' => 3,
-                'reservation_queue' => [],
-                'borrowing_period' => 14,
-                'renewal_limit' => 2,
-                'qr_code' => null,
+                'copies_total' => 20,
+                'copies_available' => 20,
             ],
             [
-                'title' => 'Design Patterns',
-                'author' => 'Erich Gamma',
-                'isbn' => '9780201633610',
-                'type' => 'digital',
-                'category' => 'Software Engineering',
-                'cover' => null,
-                'description' => 'Elements of reusable object-oriented software',
+                'title' => 'The Lean Startup',
+                'author' => 'Eric Ries',
+                'isbn' => '9780307887894',
+                'type' => 'Physical',
+                'category' => 'Business',
+                'description' => 'How today\'s entrepreneurs use continuous innovation to create radically successful businesses.',
                 'availability' => 'available',
-                'location' => null,
-                'digital_access' => [
-                    'subscriptionRequired' => true,
-                    'pdfUrl' => '/books/digital/design-patterns.pdf',
-                    'accessLevel' => 'premium',
-                    'downloadAllowed' => true,
-                    'printAllowed' => false,
-                    'offlineAccess' => true,
-                ],
-                'uploaded_by' => 'admin',
-                'upload_date' => now(),
-                'download_count' => 125,
-                'publisher' => 'Addison-Wesley',
-                'publication_year' => 1994,
-                'edition' => '1st Edition',
-                'language' => 'English',
-                'pages' => 395,
-                'tags' => ['design-patterns', 'oop', 'software-architecture'],
-                'rating' => 4.8,
-                'copies_total' => 1,
-                'copies_available' => 1,
-                'reservation_queue' => [],
-                'borrowing_period' => 30,
-                'renewal_limit' => 5,
-                'qr_code' => null,
+                'copies_total' => 6,
+                'copies_available' => 6,
             ],
             [
-                'title' => 'The Pragmatic Programmer',
-                'author' => 'Andrew Hunt',
-                'isbn' => '9780135957059',
-                'type' => 'physical',
-                'category' => 'Software Engineering',
-                'cover' => null,
-                'description' => 'Your journey to mastery',
+                'title' => 'Thinking, Fast and Slow',
+                'author' => 'Daniel Kahneman',
+                'isbn' => '9780374533557',
+                'type' => 'Physical',
+                'category' => 'Psychology',
+                'description' => 'An exploration of the two systems that drive the way we think.',
                 'availability' => 'available',
-                'location' => 'Shelf B-08',
-                'digital_access' => null,
-                'uploaded_by' => null,
-                'upload_date' => null,
-                'download_count' => 0,
-                'publisher' => 'Addison-Wesley',
-                'publication_year' => 2019,
-                'edition' => '2nd Edition',
-                'language' => 'English',
-                'pages' => 352,
-                'tags' => ['programming', 'career', 'best-practices'],
-                'rating' => 4.6,
                 'copies_total' => 4,
                 'copies_available' => 4,
-                'reservation_queue' => [],
-                'borrowing_period' => 14,
-                'renewal_limit' => 2,
-                'qr_code' => null,
             ],
         ];
 
-        foreach ($libraries as $index => $library) {
-            foreach ($books as $bookData) {
-                $bookData['library_id'] = $library->id;
-                $bookData['isbn'] = $bookData['isbn'] . '-' . $library->id; // Make ISBN unique per library
-                $bookData['qr_code'] = 'BOOK-' . $library->id . '-' . rand(1000, 9999);
-                Book::create($bookData);
-            }
+        foreach ($books as $book) {
+            DB::table('books')->insert(array_merge($book, [
+                'library_id' => $libraries[array_rand($libraries)],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]));
         }
     }
 }

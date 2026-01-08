@@ -12,18 +12,26 @@ class EventController extends Controller
     public function index(Request $request)
     {
         $query = Event::where('is_active', true)
-            ->where('start_time', '>=', now());
+            ->where(function ($q) {
+                $q->where('date', '>', now()->toDateString())
+                  ->orWhere(function ($q2) {
+                      $q2->where('date', '=', now()->toDateString())
+                         ->where('start_time', '>=', now()->toTimeString());
+                  });
+            });
 
         // Filter by library
         if ($request->has('library_id')) {
             $query->where('library_id', $request->library_id);
         }
 
-        $events = $query->orderBy('start_time')->get();
+        $events = $query->orderBy('date')->orderBy('start_time')->get();
 
-        // Add registration count
-        $events->each(function($event) {
-            $event->registered = $event->registrations()->count();
+        // Add registration count and check if user is registered
+        $user = $request->user();
+        $events->each(function($event) use ($user) {
+            $event->registered_count = $event->registrations()->count();
+            $event->is_registered = $event->registrations()->where('user_id', $user->id)->exists();
         });
 
         return response()->json($events);
@@ -32,17 +40,26 @@ class EventController extends Controller
     public function show($id)
     {
         $event = Event::with('library')->findOrFail($id);
-        $event->registered = $event->registrations()->count();
+        $event->registered_count = $event->registrations()->count();
+        $event->is_registered = $event->registrations()->where('user_id', request()->user()->id)->exists();
 
         return response()->json($event);
     }
 
     public function register(Request $request, $id)
     {
-        $event = Event::findOrFail($id);
+        $user = $request->user();
+        $event = Event::with('library')->findOrFail($id);
+
+        // Check if user has active subscription
+        $activeSubscription = $user->activeSubscription()->first();
+
+        if (!$activeSubscription) {
+            return response()->json(['message' => 'You need an active subscription to register for events'], 400);
+        }
 
         // Check if already registered
-        $existingRegistration = EventRegistration::where('user_id', $request->user()->id)
+        $existingRegistration = EventRegistration::where('user_id', $user->id)
             ->where('event_id', $event->id)
             ->first();
 
@@ -56,10 +73,10 @@ class EventController extends Controller
         }
 
         $registration = EventRegistration::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
             'event_id' => $event->id,
             'registered_at' => now(),
-            'amount_paid' => $event->is_free ? 0 : $event->price,
+            'amount_paid' => $event->is_paid ? $event->price : 0,
         ]);
 
         return response()->json($registration, 201);
