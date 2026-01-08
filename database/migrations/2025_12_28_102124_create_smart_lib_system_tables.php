@@ -435,15 +435,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('system_settings')) {
-            Schema::create('system_settings', function (Blueprint $table) {
-                $table->id();
-                $table->string('key')->unique();
-                $table->text('value')->nullable();
-                $table->string('type')->default('string');
-                $table->timestamps();
-            });
-        }
+       
 
         // 9. Laravel System Tables
         if (!Schema::hasTable('sessions')) {
@@ -487,7 +479,6 @@ return new class extends Migration
         Schema::dropIfExists('personal_access_tokens');
         Schema::dropIfExists('cache');
         Schema::dropIfExists('sessions');
-        Schema::dropIfExists('system_settings');
         Schema::dropIfExists('notifications');
         Schema::dropIfExists('tickets');
         Schema::dropIfExists('event_registrations');

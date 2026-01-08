@@ -25,20 +25,49 @@ class LibrarySeeder extends Seeder
             $libraryId = DB::table('libraries')->insertGetId([
                 'name' => $library['name'],
                 'address' => $library['address'],
-                'opening_time' => $library['opening_time'],
-                'closing_time' => $library['closing_time'],
-                'rules' => 'No food or drinks. Maintain silence. Respect study hours.',
-                'contact_phone' => '021-' . rand(1000000, 9999999),
-                'contact_email' => strtolower(str_replace(' ', '', $library['name'])) . '@smartlib.com',
                 'is_active' => true,
                 'created_by' => 2, // Created by super admin
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
+            // Create operating hours for the library (Monday to Sunday)
+            $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            foreach ($daysOfWeek as $day) {
+                DB::table('library_operating_hours')->insert([
+                    'library_id' => $libraryId,
+                    'day_of_week' => $day,
+                    'is_open' => true,
+                    'open_time' => $library['opening_time'],
+                    'close_time' => $library['closing_time'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // Create library rules
+            $rules = [
+                ['type' => 'general', 'rule_text' => 'No food or drinks allowed in the library.', 'order' => 1],
+                ['type' => 'general', 'rule_text' => 'Maintain silence in quiet zones.', 'order' => 2],
+                ['type' => 'booking', 'rule_text' => 'Respect study hours and booking times.', 'order' => 3],
+                ['type' => 'conduct', 'rule_text' => 'Be respectful to other library users.', 'order' => 4],
+            ];
+
+            foreach ($rules as $rule) {
+                DB::table('library_rules')->insert([
+                    'library_id' => $libraryId,
+                    'type' => $rule['type'],
+                    'rule_text' => $rule['rule_text'],
+                    'order' => $rule['order'],
+                    'is_active' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
             // Create floors for each library
             $floorTypes = ['quiet_zone', 'discussion_area', 'girls_only', 'boys_only', 'mixed'];
-            for ($f = 1; $f <= 4; $f++) {
+            for ($f = 1; $f <= 1; $f++) {
                 $floorId = DB::table('floors')->insertGetId([
                     'library_id' => $libraryId,
                     'name' => "Floor $f",
@@ -50,24 +79,54 @@ class LibrarySeeder extends Seeder
                     'updated_at' => now(),
                 ]);
 
-                // Create seats for each floor
+                // Create sections for each floor
+                $sections = [
+                    ['name' => 'Section A', 'description' => 'Window side seating area'],
+                    ['name' => 'Section B', 'description' => 'Central study area'],
+                    ['name' => 'Section C', 'description' => 'Corner quiet zone'],
+                ];
+
                 $seatTypes = ['open', 'group', 'cabin'];
-                for ($s = 1; $s <= 25; $s++) {
-                    DB::table('seats')->insert([
+                $seatCounter = 1;
+
+                foreach ($sections as $sectionData) {
+                    $sectionId = DB::table('seat_sections')->insertGetId([
+                        'library_id' => $libraryId,
                         'floor_id' => $floorId,
-                        'seat_number' => "F{$f}-S" . str_pad($s, 3, '0', STR_PAD_LEFT),
-                        'seat_type' => $seatTypes[$s % 3],
-                        'zone' => 'Zone ' . chr(65 + ($s % 4)), // Zone A, B, C, D
-                        'position_x' => ($s % 5) * 100,
-                        'position_y' => floor($s / 5) * 100,
-                        'qr_code' => 'QR-' . uniqid() . '-' . $libraryId . '-' . $floorId . '-' . $s,
-                        'qr_generated_at' => now(),
-                        'qr_expires_at' => now()->addYear(),
-                        'is_maintenance' => $s % 20 == 0, // Every 20th seat is in maintenance
+                        'name' => $sectionData['name'],
+                        'description' => $sectionData['description'],
+                        'total_seats' => 8, // Will be updated as we add seats
                         'is_active' => true,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
+
+                    // Create 8-9 seats for each section
+                    $seatsInSection = rand(8, 9);
+                    for ($s = 0; $s < $seatsInSection; $s++) {
+                        DB::table('seats')->insert([
+                            'floor_id' => $floorId,
+                            'section_id' => $sectionId,
+                            'seat_number' => "F{$f}-S" . str_pad($seatCounter, 3, '0', STR_PAD_LEFT),
+                            'seat_type' => $seatTypes[$seatCounter % 3],
+                            'zone' => 'Zone ' . chr(65 + ($seatCounter % 4)), // Zone A, B, C, D
+                            'position_x' => ($seatCounter % 5) * 100,
+                            'position_y' => floor($seatCounter / 5) * 100,
+                            'qr_code' => 'QR-' . uniqid() . '-' . $libraryId . '-' . $floorId . '-' . $seatCounter,
+                            'qr_generated_at' => now(),
+                            'qr_expires_at' => now()->addYear(),
+                            'is_maintenance' => $seatCounter % 20 == 0, // Every 20th seat is in maintenance
+                            'is_active' => true,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                        $seatCounter++;
+                    }
+
+                    // Update section total_seats count
+                    DB::table('seat_sections')
+                        ->where('id', $sectionId)
+                        ->update(['total_seats' => $seatsInSection]);
                 }
             }
 

@@ -39,7 +39,7 @@ class UserSeeder extends Seeder
         }
 
         // Create Librarians
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 3; $i++) {
             DB::table('users')->insert([
                 'name' => "Librarian $i",
                 'email' => "librarian$i@smartlib.com",
