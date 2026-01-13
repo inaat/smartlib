@@ -106,7 +106,7 @@
     <!-- Footer -->
     <div class="border-t border-gray-200 p-4">
       <button
-        @click="logout"
+        @click="handleLogout"
         class="w-full flex items-center space-x-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
       >
         <LogOut class="w-4 h-4" />
@@ -137,13 +137,22 @@ import {
   LayoutGrid
 } from 'lucide-vue-next';
 
+import { useSwal } from '@/shared/composables/useSwal';
+
 defineProps<{
   isOpen: boolean;
 }>();
 
 defineEmits(['close']);
 
-const { user, logout } = useAuth();
+const { user, logout: authLogout } = useAuth();
+const { showConfirm } = useSwal();
+
+const handleLogout = async () => {
+  if (await showConfirm('Sign Out', 'Are you sure you want to sign out?', 'Yes, Sign Out')) {
+    await authLogout();
+  }
+};
 
 const mainNavItems = [
   { path: '/librarian/dashboard', label: 'Dashboard', icon: Home, exact: true },
@@ -156,6 +165,7 @@ const managementItems = [
   { path: '/librarian/floors', label: 'Floor Management', icon: Building2 },
   { path: '/librarian/sections', label: 'Section Management', icon: LayoutGrid },
   { path: '/librarian/books', label: 'Book Inventory', icon: BookMarked },
+  { path: '/librarian/reservations', label: 'Reserved Books', icon: BookOpen },
   { path: '/librarian/events', label: 'Events', icon: Calendar },
   { path: '/librarian/attendance', label: 'Attendance', icon: Clock },
 ];

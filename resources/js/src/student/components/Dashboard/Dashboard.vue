@@ -14,6 +14,18 @@
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <!-- Total Bookings -->
+          <div class="bg-gradient-to-br from-blue-500/30 to-indigo-500/20 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="p-2 bg-white/20 rounded-lg">
+                <Calendar class="w-4 h-4 text-white" />
+              </div>
+              <span class="text-sm font-medium text-white/90">Total Bookings</span>
+            </div>
+            <div class="text-3xl font-bold text-white">{{ bookings.length }}</div>
+            <div class="text-xs text-white/70 mt-1">This month</div>
+          </div>
+
           <!-- Hours Today -->
           <div class="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform">
             <div class="flex items-center space-x-2 mb-2">
@@ -26,50 +38,35 @@
             <div class="text-xs text-white/70 mt-1">Keep it up!</div>
           </div>
 
-          <!-- Weekly Goal -->
+          <!-- Reserved Books -->
           <div class="bg-gradient-to-br from-emerald-500/30 to-teal-500/20 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform">
             <div class="flex items-center space-x-2 mb-2">
               <div class="p-2 bg-white/20 rounded-lg">
-                <Target class="w-4 h-4 text-white" />
+                <BookMarked class="w-4 h-4 text-white" />
               </div>
-              <span class="text-sm font-medium text-white/90">Weekly Goal</span>
+              <span class="text-sm font-medium text-white/90">Reserved Books</span>
             </div>
-            <div class="text-3xl font-bold text-white">{{ weeklyProgress }}%</div>
-            <div class="text-xs text-white/70 mt-1">Almost there!</div>
+            <div class="text-3xl font-bold text-white">{{ reservations.length }}</div>
+            <div class="text-xs text-white/70 mt-1">Active reservations</div>
           </div>
 
-          <!-- Points -->
+          <!-- Available Libraries -->
           <div class="bg-gradient-to-br from-amber-500/30 to-orange-500/20 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform">
             <div class="flex items-center space-x-2 mb-2">
               <div class="p-2 bg-white/20 rounded-lg">
-                <Award class="w-4 h-4 text-white" />
+                <MapPin class="w-4 h-4 text-white" />
               </div>
-              <span class="text-sm font-medium text-white/90">Points</span>
+              <span class="text-sm font-medium text-white/90">Available Libraries</span>
             </div>
-            <div class="text-3xl font-bold text-white">{{ user?.loyaltyPoints || 0 }}</div>
-            <div class="text-xs text-white/70 mt-1">Earn more!</div>
-          </div>
-
-          <!-- Rank -->
-          <div class="bg-gradient-to-br from-purple-500/30 to-pink-500/20 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform">
-            <div class="flex items-center space-x-2 mb-2">
-              <div class="p-2 bg-white/20 rounded-lg">
-                <TrendingUp class="w-4 h-4 text-white" />
-              </div>
-              <span class="text-sm font-medium text-white/90">Rank</span>
-            </div>
-            <div class="text-3xl font-bold text-white">#{{ userRank }}</div>
-            <div class="text-xs text-white/70 mt-1">Top student!</div>
+            <div class="text-3xl font-bold text-white">{{ libraries.length }}</div>
+            <div class="text-xs text-white/70 mt-1">In your area</div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <StatsCard v-for="(stat, index) in stats" :key="index" v-bind="stat" />
-    </div>
-
+    
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Left Column - AI Recommendations & Study Analytics -->

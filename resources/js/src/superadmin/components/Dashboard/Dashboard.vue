@@ -225,9 +225,7 @@ const statsCards = computed(() => [
 const quickActions = [
   { label: 'Add Library', icon: Plus, bg: 'bg-indigo-50', iconColor: 'text-indigo-600', route: 'superadmin-libraries' },
   { label: 'System Settings', icon: Settings, bg: 'bg-gray-50', iconColor: 'text-gray-600', route: 'superadmin-settings' },
-  { label: 'Security Audit', icon: Shield, bg: 'bg-red-50', iconColor: 'text-red-600', route: null },
-  { label: 'Generate Report', icon: FileText, bg: 'bg-blue-50', iconColor: 'text-blue-600', route: null },
-];
+  ];
 
 const getActivityIcon = (iconName: string) => {
   switch (iconName) {

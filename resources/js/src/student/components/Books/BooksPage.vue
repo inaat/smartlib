@@ -184,17 +184,20 @@ const fetchBooks = async () => {
   }
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError, showWarning } = useSwal();
+
 const reserveBook = async (book: any) => {
-  if (!confirm(`Are you sure you want to reserve "${book.title}"?`)) return;
+  if (!await showConfirm('Reserve Book', `Are you sure you want to reserve "${book.title}"?`, 'Yes, Reserve')) return;
   
   reserving.value = book.id;
   try {
     await studentAPI.reserveBook(book.id);
-    alert('Book reserved successfully! You can pick it up within 7 days.');
+    showSuccess('Reserved!', 'Book reserved successfully! You can pick it up within 7 days.');
     await fetchBooks();
   } catch (error: any) {
     console.error('Error reserving book:', error);
-    alert(error.response?.data?.message || 'Failed to reserve book.');
+    showError('Reservation Failed', error.response?.data?.message || 'Failed to reserve book.');
   } finally {
     reserving.value = null;
   }
@@ -204,7 +207,7 @@ const readBook = (book: any) => {
   if (book.digital_access?.file_url) {
     window.open(book.digital_access.file_url, '_blank');
   } else {
-    alert('This digital book is not yet available for reading.');
+    showWarning('Not Available', 'This digital book is not yet available for reading.');
   }
 };
 
@@ -217,7 +220,7 @@ const downloadBook = (book: any) => {
     link.click();
     document.body.removeChild(link);
   } else {
-    alert('This digital book is not yet available for download.');
+    showWarning('Not Available', 'This digital book is not yet available for download.');
   }
 };
 

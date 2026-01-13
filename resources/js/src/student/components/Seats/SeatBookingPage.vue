@@ -211,6 +211,7 @@
                     type="date" 
                     v-model="selectedDate"
                     :min="minDate"
+                    :max="maxDate"
                     class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   />
                 </div>
@@ -224,12 +225,7 @@
                 </div>
               </div>
             </div>
-
             <div class="pt-6 border-t border-gray-100">
-              <div class="flex justify-between mb-4">
-                <span class="text-gray-500">Total Points</span>
-                <span class="font-bold text-gray-800">{{ bookingDuration * 10 }} pts</span>
-              </div>
               <button 
                 @click="confirmBooking"
                 :disabled="submitting"
@@ -283,6 +279,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useAuth } from '@/shared/composables/useAuth';
 import { studentAPI } from '@/shared/services/api';
 import { 
   ChevronRight, Armchair, Clock, Zap, 
@@ -306,10 +303,41 @@ const selectedSection = ref<number | null>(null);
 const selectedSeat = ref<any | null>(null);
 const bookingDuration = ref(2);
 
+const { user, isTrialActive } = useAuth();
+
 const selectedDate = ref(new Date().toISOString().split('T')[0]);
 const selectedTime = ref(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
 
 const minDate = computed(() => new Date().toISOString().split('T')[0]);
+
+const maxDate = computed(() => {
+  const today = new Date();
+  
+  // Default to today if no user info
+  if (!user.value) return today.toISOString().split('T')[0];
+
+  let allowedDays = 0;
+
+  if (user.value.active_subscription?.subscription_plan) {
+    const planDays = user.value.active_subscription.subscription_plan.advance_booking_days;
+    
+    if (planDays === -1) {
+      // Unlimited, set to 1 year ahead
+      const nextYear = new Date(today);
+      nextYear.setFullYear(today.getFullYear() + 1);
+      return nextYear.toISOString().split('T')[0];
+    }
+    
+    allowedDays = planDays;
+  } else if (isTrialActive.value) {
+    // Trial users can only book for today
+    allowedDays = 0;
+  }
+
+  const max = new Date(today);
+  max.setDate(today.getDate() + allowedDays);
+  return max.toISOString().split('T')[0];
+});
 
 const currentTime = computed(() => {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -371,6 +399,9 @@ const toggleSeatSelection = (seat: any) => {
 const getFloorName = (id: number) => floors.value.find(f => f.id === id)?.name || '';
 const getSectionName = (id: number) => sections.value.find(s => s.id === id)?.name || '';
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showError } = useSwal();
+
 const confirmBooking = async () => {
   if (!selectedSeat.value) return;
   
@@ -393,7 +424,7 @@ const confirmBooking = async () => {
     showSuccessModal.value = true;
   } catch (error) {
     console.error('Booking failed:', error);
-    alert('Failed to create booking. Please try again.');
+    showError('Booking Failed', 'Failed to create booking. Please try again.');
   } finally {
     submitting.value = false;
   }

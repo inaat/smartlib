@@ -289,8 +289,11 @@ const fetchPlans = async () => {
   }
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError } = useSwal();
+
 const subscribe = async (plan: any) => {
-  if (!confirm(`Are you sure you want to subscribe to the ${plan.name} plan for Rs. ${plan.price}?`)) {
+  if (!await showConfirm('Confirm Subscription', `Are you sure you want to subscribe to the ${plan.name} plan for Rs. ${plan.price}?`, 'Yes, Subscribe')) {
     return;
   }
 
@@ -298,10 +301,10 @@ const subscribe = async (plan: any) => {
     subscribingPlanId.value = plan.id;
     await studentAPI.subscribe(plan.id);
     await checkAuth(); // Refresh user to get updated subscription status
-    alert('Subscription activated successfully!');
+    showSuccess('Subscribed!', 'Subscription activated successfully!');
   } catch (error: any) {
     console.error('Subscription error:', error);
-    alert(error.message || 'Failed to subscribe. Please try again.');
+    showError('Subscription Failed', error.message || 'Failed to subscribe. Please try again.');
   } finally {
     subscribingPlanId.value = null;
   }

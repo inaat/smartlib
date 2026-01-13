@@ -109,13 +109,23 @@ class BookingController extends Controller
             return response()->json(['message' => 'Booking is not in a state that can be checked in'], 400);
         }
 
+        $now = now();
         $booking->update([
             'status' => 'checked_in',
-            'check_in_time' => now(),
+            'check_in_time' => $now,
         ]);
 
         // Update seat status
         $booking->seat->update(['status' => 'occupied']);
+
+        // Create Attendance record
+        \App\Models\Attendance::create([
+            'user_id' => $booking->user_id,
+            'library_id' => $booking->library_id,
+            'seat_booking_id' => $booking->id,
+            'date' => $now->toDateString(),
+            'check_in_time' => $now->toTimeString(),
+        ]);
 
         return response()->json([
             'message' => 'Checked in successfully',
@@ -135,9 +145,10 @@ class BookingController extends Controller
             return response()->json(['message' => 'Booking is not checked in'], 400);
         }
 
+        $now = now();
         $booking->update([
             'status' => 'checked_out',
-            'check_out_time' => now(),
+            'check_out_time' => $now,
         ]);
 
         // Update seat status
@@ -145,8 +156,17 @@ class BookingController extends Controller
 
         // Calculate total minutes
         if ($booking->check_in_time) {
-            $booking->total_minutes = now()->diffInMinutes($booking->check_in_time);
+            $booking->total_minutes = $now->diffInMinutes($booking->check_in_time);
             $booking->save();
+        }
+
+        // Update Attendance record
+        $attendance = \App\Models\Attendance::where('seat_booking_id', $booking->id)->first();
+        if ($attendance) {
+            $attendance->update([
+                'check_out_time' => $now->toTimeString(),
+                'total_minutes' => $booking->total_minutes,
+            ]);
         }
 
         return response()->json([

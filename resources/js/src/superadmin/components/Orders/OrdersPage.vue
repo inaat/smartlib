@@ -380,13 +380,17 @@ const changePage = (page: number) => {
   fetchData(page);
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError } = useSwal();
+
 const handleApprove = async (order: any) => {
-  if (confirm(`Are you sure you want to approve order #ORD-${order.id}?`)) {
+  if (await showConfirm('Approve Order', `Are you sure you want to approve order #ORD-${order.id}?`, 'Yes, Approve')) {
     try {
       await superadminAPI.approveOrder(order.id);
+      showSuccess('Approved!', 'Order approved successfully');
       fetchOrders(pagination.value.current_page);
     } catch (error) {
-      alert('Failed to approve order');
+      showError('Approval Failed', 'Failed to approve order');
     }
   }
 };
@@ -404,9 +408,10 @@ const confirmReject = async () => {
     rejecting.value = true;
     await superadminAPI.rejectOrder(selectedOrder.value.id, rejectReason.value);
     showRejectModal.value = false;
+    showSuccess('Rejected!', 'Order rejected successfully');
     fetchOrders(pagination.value.current_page);
   } catch (error) {
-    alert('Failed to reject order');
+    showError('Rejection Failed', 'Failed to reject order');
   } finally {
     rejecting.value = false;
   }

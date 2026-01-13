@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">Events Management</h1>
-        <p class="text-gray-600 mt-1">Organize and manage library events</p>
+        <h1 class="text-3xl font-bold text-white">Events Management</h1>
+        <p class="text-gray-400 mt-1">Organize and manage library events</p>
       </div>
       <div class="flex items-center space-x-3">
         <button 
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Create/Edit Event Modal -->
-    <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+    <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
           <h2 class="text-2xl font-bold text-gray-900">{{ isEditing ? 'Edit Event' : 'Create New Event' }}</h2>
@@ -266,6 +266,9 @@ const resetForm = () => {
   };
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError } = useSwal();
+
 const submitEvent = async () => {
   submitting.value = true;
   try {
@@ -284,29 +287,32 @@ const submitEvent = async () => {
 
     if (isEditing.value && editingId.value) {
       await librarianAPI.updateEvent(editingId.value, formData);
+      showSuccess('Updated!', 'Event updated successfully');
     } else {
       await librarianAPI.createEvent(formData);
+      showSuccess('Created!', 'Event created successfully');
     }
     
     await fetchEvents();
     closeModal();
   } catch (error) {
     console.error('Error saving event:', error);
-    alert('Failed to save event. Please check the form.');
+    showError('Save Failed', 'Failed to save event. Please check the form.');
   } finally {
     submitting.value = false;
   }
 };
 
 const deleteEvent = async (id: number) => {
-  if (!confirm('Are you sure you want to delete this event?')) return;
+  if (!await showConfirm('Delete Event', 'Are you sure you want to delete this event?', 'Yes, Delete')) return;
   
   try {
     await librarianAPI.deleteEvent(id);
+    showSuccess('Deleted!', 'Event deleted successfully');
     await fetchEvents();
   } catch (error) {
     console.error('Error deleting event:', error);
-    alert('Failed to delete event.');
+    showError('Delete Failed', 'Failed to delete event.');
   }
 };
 

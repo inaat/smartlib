@@ -206,9 +206,12 @@ const cancelEdit = () => {
   }
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showSuccess, showError, showWarning } = useSwal();
+
 const handleUpdateProfile = async () => {
   if (form.value.password && form.value.password !== form.value.password_confirmation) {
-    alert('Passwords do not match');
+    showWarning('Password Mismatch', 'Passwords do not match');
     return;
   }
 
@@ -227,10 +230,10 @@ const handleUpdateProfile = async () => {
     await studentAPI.updateProfile(updateData);
     await checkAuth();
     isEditing.value = false;
-    alert('Profile updated successfully');
+    showSuccess('Updated!', 'Profile updated successfully');
   } catch (error) {
     console.error('Failed to update profile:', error);
-    alert('Failed to update profile');
+    showError('Update Failed', 'Failed to update profile');
   } finally {
     isSaving.value = false;
   }
@@ -252,7 +255,7 @@ const handleFileChange = async (event: Event) => {
     
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      alert('File size must be less than 2MB');
+      showWarning('File too large', 'File size must be less than 2MB');
       return;
     }
 
@@ -262,10 +265,10 @@ const handleFileChange = async (event: Event) => {
       
       await studentAPI.updateProfile(formData);
       await checkAuth(); // Refresh user data to show new image
-      alert('Profile picture updated successfully');
+      showSuccess('Updated!', 'Profile picture updated successfully');
     } catch (error) {
       console.error('Failed to update profile picture:', error);
-      alert('Failed to update profile picture');
+      showError('Update Failed', 'Failed to update profile picture');
     }
   }
 };

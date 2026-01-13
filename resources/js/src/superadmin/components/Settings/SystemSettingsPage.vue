@@ -185,16 +185,19 @@ const fetchSettings = async () => {
   }
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showSuccess, showError } = useSwal();
+
 const saveAllSettings = async () => {
   saving.value = true;
   try {
     // Flatten all settings from all groups
     const allSettings = Object.values(settingsGroups.value).flat();
     await adminAPI.updateSettings(allSettings);
-    alert('System settings updated successfully!');
+    showSuccess('Saved!', 'System settings updated successfully!');
   } catch (error) {
     console.error('Error saving settings:', error);
-    alert('Failed to save settings. Please try again.');
+    showError('Save Failed', 'Failed to save settings. Please try again.');
   } finally {
     saving.value = false;
   }

@@ -117,7 +117,7 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
           <h3 class="text-xl font-bold text-gray-900">{{ isEditing ? 'Edit Subscription Plan' : 'Create New Plan' }}</h3>
@@ -405,6 +405,9 @@ const editPlan = (plan: any) => {
   showModal.value = true;
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError } = useSwal();
+
 const savePlan = async () => {
   saving.value = true;
   try {
@@ -416,25 +419,26 @@ const savePlan = async () => {
     }
     await fetchPlans();
     showModal.value = false;
-    alert(isEditing.value ? 'Plan updated successfully!' : 'Plan created successfully!');
+    showSuccess('Saved!', isEditing.value ? 'Plan updated successfully!' : 'Plan created successfully!');
   } catch (error: any) {
     console.error('Error saving plan:', error);
     const message = error.response?.data?.message || error.response?.data?.errors 
       ? Object.values(error.response.data.errors).flat().join('\n')
       : 'An error occurred while saving the plan.';
-    alert(message);
+    showError('Save Failed', message);
   } finally {
     saving.value = false;
   }
 };
 
 const confirmDelete = async (plan: any) => {
-  if (confirm(`Are you sure you want to delete the plan "${plan.name}"? This will only work if there are no active subscribers.`)) {
+  if (await showConfirm('Delete Plan', `Are you sure you want to delete the plan "${plan.name}"? This will only work if there are no active subscribers.`, 'Yes, Delete')) {
     try {
       await adminAPI.deleteSubscriptionPlan(plan.id);
       await fetchPlans();
+      showSuccess('Deleted!', 'Plan deleted successfully');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error deleting plan');
+      showError('Delete Failed', error.response?.data?.message || 'Error deleting plan');
     }
   }
 };

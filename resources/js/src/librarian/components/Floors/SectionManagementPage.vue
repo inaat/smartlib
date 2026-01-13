@@ -101,7 +101,7 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-bold text-gray-900">{{ isEditing ? 'Edit Section' : 'Add New Section' }}</h3>

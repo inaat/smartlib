@@ -26,7 +26,7 @@
     </div>
 
     <!-- Add Book Modal -->
-    <div v-if="isAddModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+    <div v-if="isAddModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
           <h2 class="text-2xl font-bold text-gray-900">Add New Book</h2>
@@ -272,7 +272,6 @@ import {
   RefreshCw,
   Edit2,
   Trash2,
-  Filter,
   X
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
@@ -306,6 +305,9 @@ const handlePdfUpload = (event: any) => {
   newBook.value.pdf_file = event.target.files[0];
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showSuccess, showError } = useSwal();
+
 const submitBook = async () => {
   submitting.value = true;
   try {
@@ -338,6 +340,7 @@ const submitBook = async () => {
     });
 
     await librarianAPI.createBook(formData);
+    showSuccess('Added!', 'Book added successfully');
     await fetchBooks();
     isAddModalOpen.value = false;
     resetForm();
@@ -348,9 +351,9 @@ const submitBook = async () => {
     
     if (errors) {
       const errorMessages = Object.values(errors).flat().join('\n');
-      alert(`${message}\n\n${errorMessages}`);
+      showError('Add Failed', `${message}\n\n${errorMessages}`);
     } else {
-      alert(message);
+      showError('Add Failed', message);
     }
   } finally {
     submitting.value = false;

@@ -53,6 +53,11 @@ const router = createRouter({
                     component: () => import('@/student/components/Books/BooksPage.vue')
                 },
                 {
+                    path: 'my-reservations',
+                    name: 'student-reservations',
+                    component: () => import('@/student/components/Books/MyReservationsPage.vue')
+                },
+                {
                     path: 'events',
                     name: 'student-events',
                     component: () => import('@/student/components/Events/EventsPage.vue')
@@ -129,6 +134,11 @@ const router = createRouter({
                     component: () => import('@/librarian/components/Books/BookInventoryPage.vue')
                 },
                 {
+                    path: 'reservations',
+                    name: 'librarian-reservations',
+                    component: () => import('@/librarian/components/Books/ReservedBooksPage.vue')
+                },
+                {
                     path: 'analytics',
                     name: 'librarian-analytics',
                     component: () => import('@/librarian/components/Analytics/AnalyticsPage.vue')
@@ -137,6 +147,11 @@ const router = createRouter({
                     path: 'events',
                     name: 'librarian-events',
                     component: () => import('@/librarian/components/Events/EventsPage.vue')
+                },
+                {
+                    path: 'attendance',
+                    name: 'librarian-attendance',
+                    component: () => import('@/librarian/components/Attendance/AttendancePage.vue')
                 },
                 {
                     path: 'profile',
@@ -163,6 +178,11 @@ const router = createRouter({
                     path: 'libraries',
                     name: 'superadmin-libraries',
                     component: () => import('@/superadmin/components/Library/LibraryManagementPage.vue')
+                },
+                {
+                    path: 'libraries/:id',
+                    name: 'superadmin-library-details',
+                    component: () => import('@/superadmin/components/Library/LibraryDetailsPage.vue')
                 },
                 {
                     path: 'librarians',

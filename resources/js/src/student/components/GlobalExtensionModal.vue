@@ -58,6 +58,9 @@ const isExpired = computed(() => {
   return new Date(expiredBooking.value.scheduled_end_time) <= new Date();
 });
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showError } = useSwal();
+
 const handleExtend = async () => {
   if (!expiredBooking.value) return;
   
@@ -68,7 +71,7 @@ const handleExtend = async () => {
       showExtensionModal.value = false;
       expiredBooking.value = null;
     } else {
-      alert('Could not extend booking. The seat might be reserved by someone else.');
+      showError('Extension Failed', 'Could not extend booking. The seat might be reserved by someone else.');
     }
   } catch (error) {
     console.error('Extension error:', error);

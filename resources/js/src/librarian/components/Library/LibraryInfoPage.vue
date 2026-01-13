@@ -306,6 +306,9 @@ import {
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showSuccess, showError, showWarning } = useSwal();
+
 const { user } = useAuth();
 const router = useRouter();
 
@@ -313,21 +316,13 @@ const loading = ref(true);
 const saving = ref(false);
 const activeTab = ref('basic');
 
-const tabs = [
-  { label: 'Basic Information', value: 'basic' },
-  { label: 'Operating Hours', value: 'hours' },
-  { label: 'Facilities', value: 'facilities' },
-  { label: 'Rules & Policies', value: 'rules' },
-  { label: 'Settings', value: 'settings' }
-];
-
-const libraryData = ref<any>({
+const libraryData = ref({
   name: '',
   address: '',
   capacity: 0,
   current_occupancy: 0,
-  latitude: null,
-  longitude: null
+  latitude: null as number | null,
+  longitude: null as number | null
 });
 
 const contactInfo = ref({
@@ -341,38 +336,48 @@ const operatingDays = ref([
   { day: 'Tuesday', isOpen: true, openTime: '08:00', closeTime: '22:00' },
   { day: 'Wednesday', isOpen: true, openTime: '08:00', closeTime: '22:00' },
   { day: 'Thursday', isOpen: true, openTime: '08:00', closeTime: '22:00' },
-  { day: 'Friday', isOpen: true, openTime: '08:00', closeTime: '20:00' },
-  { day: 'Saturday', isOpen: true, openTime: '09:00', closeTime: '18:00' },
+  { day: 'Friday', isOpen: true, openTime: '08:00', closeTime: '22:00' },
+  { day: 'Saturday', isOpen: true, openTime: '09:00', closeTime: '20:00' },
   { day: 'Sunday', isOpen: false, openTime: '', closeTime: '' }
 ]);
 
 const facilitiesList = ref([
-  { id: 1, name: 'High-Speed WiFi', icon: Wifi, available: false },
+  { id: 1, name: 'WiFi', icon: Wifi, available: true },
   { id: 2, name: 'Cafeteria', icon: Coffee, available: false },
-  { id: 3, name: 'Printing Services', icon: Printer, available: false },
-  { id: 4, name: 'Library Books', icon: BookOpen, available: false },
-  { id: 5, name: 'Power Outlets', icon: Zap, available: false },
-  { id: 6, name: 'Air Conditioning', icon: Wind, available: false },
+  { id: 3, name: 'Printer', icon: Printer, available: true },
+  { id: 4, name: 'Reading Room', icon: BookOpen, available: true },
+  { id: 5, name: 'Power Outlets', icon: Zap, available: true },
+  { id: 6, name: 'Air Conditioning', icon: Wind, available: true },
   { id: 7, name: 'Lockers', icon: Lock, available: false },
-  { id: 8, name: 'CCTV Security', icon: Camera, available: false }
+  { id: 8, name: 'CCTV', icon: Camera, available: true }
 ]);
 
 const specialFeatures = ref('');
 const rulesText = ref('');
 const cancellationPolicy = ref('');
 
-const librarySettings = ref<any>({
-  allowOnlineBookings: true,
-  autoCheckout: true,
-  sendNotifications: true,
+const librarySettings = ref({
+  allowBookings: true,
+  requireApproval: false,
+  allowExtensions: true,
+  sendReminders: true,
   maxBookingDuration: 4,
   advanceBookingDays: 7
 });
 
+const tabs = [
+  { value: 'basic', label: 'Basic Information' },
+  { value: 'hours', label: 'Operating Hours' },
+  { value: 'facilities', label: 'Facilities' },
+  { value: 'rules', label: 'Rules & Policies' },
+  { value: 'settings', label: 'Settings' }
+];
+
 const settingsConfig = [
-    { key: 'allowOnlineBookings', label: 'Allow Online Bookings', description: 'Students can book seats online' },
-    { key: 'autoCheckout', label: 'Auto Check-out', description: 'Automatically check out students after booking time' },
-    { key: 'sendNotifications', label: 'Send Notifications', description: 'Send booking confirmations and reminders' }
+  { key: 'allowBookings', label: 'Allow Bookings', description: 'Enable students to book seats' },
+  { key: 'requireApproval', label: 'Require Approval', description: 'Bookings need librarian approval' },
+  { key: 'allowExtensions', label: 'Allow Extensions', description: 'Students can extend their bookings' },
+  { key: 'sendReminders', label: 'Send Reminders', description: 'Send booking reminder notifications' }
 ];
 
 const occupancyRate = computed(() => {
@@ -380,9 +385,11 @@ const occupancyRate = computed(() => {
   return Math.round((libraryData.value.current_occupancy / libraryData.value.capacity) * 100);
 });
 
+// ... (rest of the code remains the same until getCurrentLocation)
+
 const getCurrentLocation = () => {
   if (!navigator.geolocation) {
-    alert('Geolocation is not supported by your browser');
+    showWarning('Not Supported', 'Geolocation is not supported by your browser');
     return;
   }
 
@@ -393,7 +400,7 @@ const getCurrentLocation = () => {
     },
     (error) => {
       console.error('Error getting location:', error);
-      alert('Unable to retrieve your location. Please enter manually.');
+      showError('Location Error', 'Unable to retrieve your location. Please enter manually.');
     }
   );
 };
@@ -444,7 +451,7 @@ const fetchLibraryInfo = async () => {
 
   } catch (error) {
     console.error('Error fetching library info:', error);
-    alert('Failed to load library information');
+    showError('Load Failed', 'Failed to load library information');
   } finally {
     loading.value = false;
   }
@@ -474,11 +481,11 @@ const saveChanges = async () => {
     };
 
     await librarianAPI.updateLibraryInfo(payload);
-    alert('Library information updated successfully');
+    showSuccess('Saved!', 'Library information updated successfully');
     fetchLibraryInfo();
   } catch (error) {
     console.error('Error updating library info:', error);
-    alert('Failed to update library information');
+    showError('Save Failed', 'Failed to update library information');
   } finally {
     saving.value = false;
   }

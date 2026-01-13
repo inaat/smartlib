@@ -13,10 +13,6 @@
           <option value="month">Last 30 Days</option>
           <option value="year">Last Year</option>
         </select>
-        <button class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center space-x-2">
-          <Download class="w-4 h-4" />
-          <span class="text-sm font-medium">Export Report</span>
-        </button>
       </div>
     </div>
 
@@ -185,43 +181,7 @@
     </div>
 
     <!-- Revenue & Statistics -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-600">Monthly Revenue</h3>
-          <DollarSign class="w-5 h-5 text-green-600" />
-        </div>
-        <p class="text-3xl font-bold text-gray-900">PKR 45,200</p>
-        <p class="text-sm text-green-600 mt-2 flex items-center">
-          <TrendingUp class="w-4 h-4 mr-1" />
-          +18% from last month
-        </p>
-      </div>
-
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-600">Cancellation Rate</h3>
-          <XCircle class="w-5 h-5 text-red-600" />
-        </div>
-        <p class="text-3xl font-bold text-gray-900">8.5%</p>
-        <p class="text-sm text-green-600 mt-2 flex items-center">
-          <TrendingDown class="w-4 h-4 mr-1" />
-          -3% from last month
-        </p>
-      </div>
-
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-600">Student Satisfaction</h3>
-          <Star class="w-5 h-5 text-yellow-500" />
-        </div>
-        <p class="text-3xl font-bold text-gray-900">4.8/5.0</p>
-        <p class="text-sm text-green-600 mt-2 flex items-center">
-          <TrendingUp class="w-4 h-4 mr-1" />
-          +0.2 from last month
-        </p>
-      </div>
-    </div>
+    
   </div>
 </template>
 

@@ -82,6 +82,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Books
         Route::get('/books', [StudentBook::class, 'index'])->name('books.index');
+        
+        // Book Reservations (must come before /books/{book} to avoid route conflict)
+        Route::get('/books/reservations', [StudentBook::class, 'getMyReservations'])->name('books.reservations');
+        Route::post('/books/reservations/{id}/return', [StudentBook::class, 'returnBook'])->name('books.reservations.return');
+        
+        // Book details and actions
         Route::get('/books/{book}', [StudentBook::class, 'show'])->name('books.show');
         Route::post('/books/{book}/reserve', [StudentBook::class, 'reserve'])->name('books.reserve');
 
@@ -224,6 +230,12 @@ Route::middleware('auth:sanctum')->group(function () {
         // Books
         Route::get('/books', [LibrarianBook::class, 'index'])->name('books.index');
         Route::post('/books', [LibrarianBook::class, 'store'])->name('books.store');
+        
+        // Book Reservations (must come before /books/{book} to avoid route conflict)
+        Route::get('/books/reservations', [\App\Http\Controllers\Librarian\BookReservationController::class, 'index'])->name('books.reservations');
+        Route::post('/books/reservations/{id}/approve-return', [\App\Http\Controllers\Librarian\BookReservationController::class, 'approveReturn'])->name('books.reservations.approve-return');
+        
+        // Book details and actions
         Route::get('/books/{book}', [LibrarianBook::class, 'show'])->name('books.show');
         Route::put('/books/{book}', [LibrarianBook::class, 'update'])->name('books.update');
         Route::delete('/books/{book}', [LibrarianBook::class, 'destroy'])->name('books.destroy');
@@ -255,5 +267,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/bookings/{id}/check-in', [LibrarianBooking::class, 'checkIn'])->name('bookings.checkin');
         Route::post('/bookings/{id}/check-out', [LibrarianBooking::class, 'checkOut'])->name('bookings.checkout');
         Route::post('/bookings/{id}/cancel', [LibrarianBooking::class, 'cancel'])->name('bookings.cancel');
+
+        // Attendance
+        Route::get('/attendance', [\App\Http\Controllers\Librarian\AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('/attendance/stats', [\App\Http\Controllers\Librarian\AttendanceController::class, 'stats'])->name('attendance.stats');
+        Route::post('/attendance/mark', [\App\Http\Controllers\Librarian\AttendanceController::class, 'markAttendance'])->name('attendance.mark');
     });
 });

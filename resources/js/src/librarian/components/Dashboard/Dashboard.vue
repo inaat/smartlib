@@ -11,16 +11,16 @@
 
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-      <div v-if="loading" class="absolute inset-0 bg-white bg-opacity-10 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-xl">
+      <div v-if="loading" class="absolute inset-0 bg-blue bg-opacity-10 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-xl">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
       <!-- Total Bookings Today -->
       <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
         <div class="flex items-center justify-between mb-4">
-          <div class="p-3 bg-white bg-opacity-20 rounded-lg">
+          <div class="p-3 bg-blue bg-opacity-20 rounded-lg">
             <Calendar class="w-6 h-6" />
           </div>
-          <span class="text-sm font-medium bg-white bg-opacity-20 px-3 py-1 rounded-full">Today</span>
+          <span class="text-sm font-medium bg-blue bg-opacity-20 px-3 py-1 rounded-full">Today</span>
         </div>
         <div class="space-y-1">
           <h3 class="text-2xl font-bold">{{ stats.todayBookings }}</h3>
@@ -35,10 +35,10 @@
       <!-- Active Students -->
       <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
         <div class="flex items-center justify-between mb-4">
-          <div class="p-3 bg-white bg-opacity-20 rounded-lg">
+          <div class="p-3 bg-blue bg-opacity-20 rounded-lg">
             <UserCheck class="w-6 h-6" />
           </div>
-          <span class="text-sm font-medium bg-white bg-opacity-20 px-3 py-1 rounded-full">Live</span>
+          <span class="text-sm font-medium bg-blue bg-opacity-20 px-3 py-1 rounded-full">Live</span>
         </div>
         <div class="space-y-1">
           <h3 class="text-2xl font-bold">{{ stats.activeStudents }}</h3>
@@ -53,10 +53,10 @@
       <!-- Pending Check-ins -->
       <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
         <div class="flex items-center justify-between mb-4">
-          <div class="p-3 bg-white bg-opacity-20 rounded-lg">
+          <div class="p-3 bg-blue bg-opacity-20 rounded-lg">
             <Clock class="w-6 h-6" />
           </div>
-          <span class="text-sm font-medium bg-white bg-opacity-20 px-3 py-1 rounded-full">Pending</span>
+          <span class="text-sm font-medium bg-blue bg-opacity-20 px-3 py-1 rounded-full">Pending</span>
         </div>
         <div class="space-y-1">
           <h3 class="text-2xl font-bold">{{ stats.pendingCheckIns }}</h3>
@@ -71,10 +71,10 @@
       <!-- Available Seats -->
       <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
         <div class="flex items-center justify-between mb-4">
-          <div class="p-3 bg-white bg-opacity-20 rounded-lg">
+          <div class="p-3 bg-blue bg-opacity-20 rounded-lg">
             <Building2 class="w-6 h-6" />
           </div>
-          <span class="text-sm font-medium bg-white bg-opacity-20 px-3 py-1 rounded-full">Available</span>
+          <span class="text-sm font-medium bg-blue bg-opacity-20 px-3 py-1 rounded-full">Available</span>
         </div>
         <div class="space-y-1">
           <h3 class="text-2xl font-bold">{{ stats.availableSeats }}</h3>
@@ -90,8 +90,8 @@
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Recent Bookings -->
-      <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 relative">
-        <div v-if="loading" class="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10 rounded-xl">
+      <div class="lg:col-span-2 bg-blue rounded-xl shadow-sm border border-gray-200 relative">
+        <div v-if="loading" class="absolute inset-0 bg-blue bg-opacity-50 flex items-center justify-center z-10 rounded-xl">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
         </div>
         <div class="p-6 border-b border-gray-200">
@@ -142,7 +142,7 @@
       <!-- Quick Actions & Alerts -->
       <div class="space-y-6">
         <!-- Alerts -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-blue rounded-xl shadow-sm border border-gray-200">
           <div class="p-6 border-b border-gray-200">
             <h2 class="text-lg font-bold text-gray-900">Alerts</h2>
           </div>
@@ -172,7 +172,7 @@
         </div>
 
         <!-- Occupancy Chart -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-blue rounded-xl shadow-sm border border-gray-200">
           <div class="p-6 border-b border-gray-200">
             <h2 class="text-lg font-bold text-gray-900">Occupancy Rate</h2>
           </div>
@@ -213,8 +213,8 @@
     </div>
 
     <!-- Today's Schedule -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 relative">
-      <div v-if="loading" class="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10 rounded-xl">
+    <div class="bg-blue rounded-xl shadow-sm border border-gray-200 relative">
+      <div v-if="loading" class="absolute inset-0 bg-blue bg-opacity-50 flex items-center justify-center z-10 rounded-xl">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
       </div>
       <div class="p-6 border-b border-gray-200">

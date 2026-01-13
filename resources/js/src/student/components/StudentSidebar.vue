@@ -78,16 +78,10 @@
 
     <!-- Footer -->
     <div class="border-t border-gray-200 p-4">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center space-x-2">
-          <Bell class="w-4 h-4 text-gray-400" />
-          <span class="text-sm text-gray-600">Notifications</span>
-        </div>
-        <span class="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
-      </div>
+      
       
       <button
-        @click="logout"
+        @click="handleLogout"
         class="w-full flex items-center space-x-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
       >
         <LogOut class="w-4 h-4" />
@@ -109,11 +103,13 @@ import {
   LogOut,
   X,
   ChevronRight,
-  Bell,
   CreditCard,
   BarChart3,
-  Gift
+  Gift,
+  BookMarked
 } from 'lucide-vue-next';
+
+import { useSwal } from '@/shared/composables/useSwal';
 
 defineProps<{
   isOpen: boolean;
@@ -121,12 +117,19 @@ defineProps<{
 
 defineEmits(['close']);
 
-const { user, logout } = useAuth();
+const { user, logout: authLogout } = useAuth();
+const { showConfirm } = useSwal();
+
+const handleLogout = async () => {
+  if (await showConfirm('Sign Out', 'Are you sure you want to sign out?', 'Yes, Sign Out')) {
+    await authLogout();
+  }
+};
 
 const mainNavItems = [
   { path: '/student/dashboard', label: 'Dashboard', icon: Home, exact: true },
-  { path: '/student/libraries', label: 'Find Libraries', icon: MapPin },
   { path: '/student/books', label: 'Browse Books', icon: BookOpen },
+  { path: '/student/my-reservations', label: 'My Reservations', icon: BookMarked },
   { path: '/student/events', label: 'Events & Seminars', icon: Calendar },
   { path: '/student/libraries', label: 'Seat Booking', icon: QrCode },
   { path: '/student/profile', label: 'My Profile', icon: User },

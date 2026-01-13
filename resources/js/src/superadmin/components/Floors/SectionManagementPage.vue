@@ -77,7 +77,7 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-xl font-bold text-gray-900">{{ isEditing ? 'Edit Section' : 'Add New Section' }}</h3>
@@ -234,6 +234,9 @@ const closeModal = () => {
   showModal.value = false;
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError, showWarning } = useSwal();
+
 const saveSection = async () => {
   if (!selectedLibraryId.value) return;
   loading.value = true;
@@ -245,6 +248,7 @@ const saveSection = async () => {
         floor_id: form.value.floor_id,
         is_active: form.value.is_active
       });
+      showSuccess('Updated!', 'Section updated successfully');
     } else {
       await superadminAPI.createSeatSection(selectedLibraryId.value.toString(), {
         name: form.value.name,
@@ -252,11 +256,13 @@ const saveSection = async () => {
         description: form.value.description,
         floor_id: form.value.floor_id as any
       });
+      showSuccess('Created!', 'Section created successfully');
     }
     await fetchData();
     closeModal();
   } catch (error) {
     console.error('Error saving section:', error);
+    showError('Save Failed', 'Failed to save section');
   } finally {
     loading.value = false;
   }
@@ -264,12 +270,14 @@ const saveSection = async () => {
 
 const confirmDelete = async (section: any) => {
   if (!selectedLibraryId.value) return;
-  if (confirm('Are you sure you want to delete this section? All associated seats will also be deleted.')) {
+  if (await showConfirm('Delete Section', 'Are you sure you want to delete this section? All associated seats will also be deleted.', 'Yes, Delete')) {
     try {
       await superadminAPI.deleteSeatSection(selectedLibraryId.value.toString(), section.id.toString());
+      showSuccess('Deleted!', 'Section deleted successfully');
       await fetchData();
     } catch (error) {
       console.error('Error deleting section:', error);
+      showError('Delete Failed', 'Failed to delete section');
     }
   }
 };
@@ -278,7 +286,7 @@ const printSectionQRs = async (section: any) => {
   try {
     const seats = await superadminAPI.getSeats({ section_id: section.id });
     if (seats.length === 0) {
-      alert('No seats found in this section.');
+      showWarning('No Seats', 'No seats found in this section.');
       return;
     }
 
@@ -336,7 +344,7 @@ const printSectionQRs = async (section: any) => {
     printWindow.document.close();
   } catch (error) {
     console.error('Error printing section QRs:', error);
-    alert('Failed to fetch seats for printing.');
+    showError('Print Failed', 'Failed to fetch seats for printing.');
   }
 };
 

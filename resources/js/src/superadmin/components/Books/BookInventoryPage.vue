@@ -96,7 +96,7 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+    <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto">
       <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 my-8 p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-xl font-bold text-gray-900">{{ isEditing ? 'Edit Book' : 'Add New Book' }}</h3>
@@ -300,6 +300,9 @@ const closeModal = () => {
   showModal.value = false;
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError } = useSwal();
+
 const saveBook = async () => {
   loading.value = true;
   try {
@@ -328,8 +331,10 @@ const saveBook = async () => {
       // Use POST with _method=PUT for FormData
       formData.append('_method', 'PUT');
       await superadminAPI.updateBook(form.value.id.toString(), formData as any);
+      showSuccess('Updated!', 'Book updated successfully');
     } else {
       await superadminAPI.createBook(formData as any);
+      showSuccess('Created!', 'Book created successfully');
     }
     await fetchBooks();
     closeModal();
@@ -340,9 +345,9 @@ const saveBook = async () => {
     
     if (errors) {
       const errorMessages = Object.values(errors).flat().join('\n');
-      alert(`${message}\n\n${errorMessages}`);
+      showError('Save Failed', `${message}\n\n${errorMessages}`);
     } else {
-      alert(message);
+      showError('Save Failed', message);
     }
   } finally {
     loading.value = false;
@@ -350,12 +355,14 @@ const saveBook = async () => {
 };
 
 const confirmDelete = async (book: any) => {
-  if (confirm('Are you sure you want to delete this book?')) {
+  if (await showConfirm('Delete Book', 'Are you sure you want to delete this book?', 'Yes, Delete')) {
     try {
       await superadminAPI.deleteBook(book.id.toString());
+      showSuccess('Deleted!', 'Book deleted successfully');
       await fetchBooks();
     } catch (error) {
       console.error('Error deleting book:', error);
+      showError('Delete Failed', 'Failed to delete book');
     }
   }
 };

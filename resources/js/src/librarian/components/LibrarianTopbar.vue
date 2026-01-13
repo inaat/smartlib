@@ -1,49 +1,40 @@
 <template>
   <div class="bg-white border-b border-gray-200 sticky top-0 z-40">
     <div class="flex items-center justify-between px-6 py-4">
-      <!-- Left: Menu Button & Search -->
-      <div class="flex items-center space-x-4 flex-1">
+      <!-- Left: Menu Button -->
+      <div class="flex items-center space-x-6">
         <button
           @click="$emit('toggle-sidebar')"
           class="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
         >
           <Menu class="w-5 h-5 text-gray-600" />
         </button>
-
-        <div class="relative flex-1 max-w-md">
-          <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            v-model="searchQuery"
-            placeholder="Search students, bookings, or books..."
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          />
-        </div>
       </div>
 
-      <!-- Right: Quick Actions & Profile -->
+      <!-- Right: Stats & User Menu -->
       <div class="flex items-center space-x-4">
-        <!-- Quick Stats -->
+        <!-- Stats Display -->
         <div class="hidden md:flex items-center space-x-4 mr-4">
-          <div class="flex items-center space-x-2 px-3 py-2 bg-green-50 rounded-lg">
-            <UserCheck class="w-4 h-4 text-green-600" />
-            <span class="text-sm font-medium text-green-700">{{ activeBookings }} Active</span>
-          </div>
-          <div class="flex items-center space-x-2 px-3 py-2 bg-blue-50 rounded-lg">
-            <Clock class="w-4 h-4 text-blue-600" />
-            <span class="text-sm font-medium text-blue-700">{{ pendingCheckIns }} Pending</span>
-          </div>
+          <!-- Active Check-ins -->
+          <router-link to="/librarian/attendance" class="flex items-center px-3 py-1.5 bg-green-50 rounded-full border border-green-100 shadow-sm hover:bg-green-100 transition-colors cursor-pointer">
+            <div class="relative flex items-center justify-center mr-2">
+              <div class="w-2 h-2 rounded-full bg-green-500"></div>
+              <div class="absolute w-2 h-2 rounded-full bg-green-500 animate-ping opacity-75"></div>
+            </div>
+            <span class="text-xs font-semibold text-green-700 whitespace-nowrap">
+              {{ stats.active }} Active
+            </span>
+          </router-link>
+          
+          <!-- Pending Check-ins -->
+          <router-link to="/librarian/bookings" class="flex items-center px-3 py-1.5 bg-orange-50 rounded-full border border-orange-100 shadow-sm hover:bg-orange-100 transition-colors cursor-pointer">
+            <div class="w-2 h-2 rounded-full bg-orange-500 mr-2"></div>
+            <span class="text-xs font-semibold text-orange-700 whitespace-nowrap">
+              {{ stats.pending }} Pending
+            </span>
+          </router-link>
         </div>
 
-        <!-- Notifications -->
-        <button class="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-          <Bell class="w-5 h-5 text-gray-600" />
-          <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            {{ unreadCount }}
-          </span>
-        </button>
-
-        <!-- User Menu -->
         <div class="relative">
           <button
             @click="showUserMenu = !showUserMenu"
@@ -68,7 +59,7 @@
           <!-- Dropdown Menu -->
           <div
             v-if="showUserMenu"
-            class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2"
+            class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
           >
             <router-link
               to="/librarian/profile"
@@ -79,14 +70,14 @@
               <span>My Profile</span>
             </router-link>
             <router-link
-              to="/librarian/settings"
+              to="/librarian/library"
               class="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
               @click="showUserMenu = false"
             >
               <Settings class="w-4 h-4" />
               <span>Settings</span>
             </router-link>
-            <hr class="my-2" />
+           
             <button
               @click="handleLogout"
               class="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -103,53 +94,59 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuth } from '@/shared/composables/useAuth';
-import { librarianAPI } from '@/librarian/services/librarianApi';
+import { useSwal } from '@/shared/composables/useSwal';
 import { 
   Menu, 
-  Search, 
-  Bell, 
   User, 
   ChevronDown, 
   LogOut, 
-  Settings,
-  UserCheck,
-  Clock
+  Settings
 } from 'lucide-vue-next';
+import { librarianAPI } from '@/shared/services/api';
 
 defineEmits(['toggle-sidebar']);
 
+const router = useRouter();
 const { user, logout } = useAuth();
+const { showConfirm } = useSwal();
 
-const searchQuery = ref('');
 const showUserMenu = ref(false);
-const unreadCount = ref(3);
-const activeBookings = ref(0);
-const pendingCheckIns = ref(0);
+const stats = ref({
+  active: 0,
+  pending: 0
+});
 
 const fetchStats = async () => {
   try {
-    const data = await librarianAPI.getDashboard();
-    if (data && data.stats) {
-      activeBookings.value = data.stats.active_bookings;
-      pendingCheckIns.value = data.stats.pending_bookings;
-    }
+    const data = await librarianAPI.getBookingStats();
+    stats.value = {
+      active: data.active || 0,
+      pending: data.pending || 0
+    };
   } catch (error) {
-    console.error('Error fetching header stats:', error);
+    console.error('Error fetching booking stats:', error);
   }
 };
 
 const handleLogout = async () => {
   showUserMenu.value = false;
-  await logout();
+  if (await showConfirm('Sign Out', 'Are you sure you want to sign out?', 'Yes, Sign Out')) {
+    await logout();
+    router.push('/login');
+  }
 };
-
-onMounted(() => {
-  fetchStats();
-});
 
 const getProfilePictureUrl = (path: string) => {
   if (path.startsWith('http')) return path;
   return `/storage/${path}`;
 };
+
+onMounted(() => {
+  fetchStats();
+  // Refresh stats every 30 seconds
+  const interval = setInterval(fetchStats, 30000);
+  return () => clearInterval(interval);
+});
 </script>

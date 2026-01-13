@@ -139,10 +139,7 @@ export const studentAPI = {
     return response.data;
   },
 
-  async getDashboard() {
-    const response = await api.get('/student/dashboard');
-    return response.data;
-  },
+
 
   async getEvents() {
     const response = await api.get('/student/events');
@@ -161,6 +158,16 @@ export const studentAPI = {
 
   async reserveBook(bookId: number) {
     const response = await api.post(`/student/books/${bookId}/reserve`);
+    return response.data;
+  },
+
+  async getMyReservations() {
+    const response = await api.get('/student/books/reservations');
+    return response.data;
+  },
+
+  async returnBook(reservationId: number) {
+    const response = await api.post(`/student/books/reservations/${reservationId}/return`);
     return response.data;
   },
 
@@ -336,6 +343,11 @@ export const adminAPI = {
     const response = await api.put('/admin/settings', { settings });
     return response.data;
   },
+
+  async getAllBookingStats() {
+    const response = await api.get('/admin/bookings/stats');
+    return response.data;
+  },
 };
 
 // Librarian API
@@ -397,6 +409,16 @@ export const librarianAPI = {
 
   async deleteBook(id: number) {
     const response = await api.delete(`/librarian/books/${id}`);
+    return response.data;
+  },
+
+  async getReservedBooks() {
+    const response = await api.get('/librarian/books/reservations');
+    return response.data;
+  },
+
+  async approveReturn(reservationId: number) {
+    const response = await api.post(`/librarian/books/reservations/${reservationId}/approve-return`);
     return response.data;
   },
 
@@ -496,6 +518,18 @@ export const librarianAPI = {
   },
   async cancelBooking(id: number) {
     const response = await api.post(`/librarian/bookings/${id}/cancel`);
+    return response.data;
+  },
+  async getAttendance(params: any = {}) {
+    const response = await api.get('/librarian/attendance', { params });
+    return response.data;
+  },
+  async getAttendanceStats(params: any = {}) {
+    const response = await api.get('/librarian/attendance/stats', { params });
+    return response.data;
+  },
+  async markAttendance(data: { crn: string, type: 'check_in' | 'check_out' }) {
+    const response = await api.post('/librarian/attendance/mark', data);
     return response.data;
   },
 };

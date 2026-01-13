@@ -293,17 +293,20 @@ const resetScanner = () => {
     startScanner();
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showSuccess, showError } = useSwal();
+
 const performCheckIn = async () => {
   if (!bookingId.value) {
-    alert('Booking ID missing. Please go back to your profile.');
+    showError('Missing Info', 'Booking ID missing. Please go back to your profile.');
     return;
   }
 
   if (!latitude.value || !longitude.value) {
-    alert('Location data is missing. Retrying...');
+    showError('Location Missing', 'Location data is missing. Retrying...');
     await getLocation();
     if (!latitude.value || !longitude.value) {
-      alert('Unable to get location. Please enable location services and try again.');
+      showError('Location Error', 'Unable to get location. Please enable location services and try again.');
       return;
     }
   }
@@ -311,11 +314,11 @@ const performCheckIn = async () => {
   try {
     isCheckingIn.value = true;
     await studentAPI.checkIn(bookingId.value, qrCode.value, latitude.value, longitude.value);
-    alert('Check-in successful! Welcome to the library.');
+    showSuccess('Checked In!', 'Check-in successful! Welcome to the library.');
     router.push('/student/dashboard');
   } catch (error: any) {
     console.error('Check-in failed:', error);
-    alert(error.message || 'Check-in failed');
+    showError('Check-in Failed', error.message || 'Check-in failed');
   } finally {
     isCheckingIn.value = false;
   }

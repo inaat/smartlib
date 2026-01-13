@@ -100,17 +100,29 @@ class BookController extends Controller
 
         $plan = $activeSubscription->subscriptionPlan;
 
-        // Check book reservation limit
-        if ($plan->book_reservations_limit !== -1) {
+        if (!$plan) {
+            return response()->json(['message' => 'Invalid subscription plan'], 400);
+        }
+
+        // Get the book reservation limit (default to unlimited if null or 0)
+        $bookLimit = $plan->book_reservations_limit ?? -1;
+        
+        // If limit is 0, treat as no limit allowed (shouldn't happen, but handle it)
+        if ($bookLimit === 0) {
+            $bookLimit = -1;
+        }
+
+        // Check book reservation limit (skip if -1 which means unlimited)
+        if ($bookLimit !== -1) {
             // Count active book reservations for this user
             $activeReservations = BookReservation::where('user_id', $user->id)
-                ->whereIn('status', ['pending', 'approved', 'borrowed'])
+                ->whereIn('status', ['reserved', 'pending_return'])
                 ->count();
 
-            if ($activeReservations >= $plan->book_reservations_limit) {
+            if ($activeReservations >= $bookLimit) {
                 return response()->json([
-                    'message' => "You have reached your book reservation limit ({$plan->book_reservations_limit}). Please return or cancel existing reservations first.",
-                    'limit' => $plan->book_reservations_limit,
+                    'message' => "You have reached your book reservation limit ({$bookLimit}). Please return existing reservations first.",
+                    'limit' => $bookLimit,
                     'current' => $activeReservations
                 ], 400);
             }
@@ -119,13 +131,62 @@ class BookController extends Controller
         $reservation = BookReservation::create([
             'user_id' => $user->id,
             'book_id' => $book->id,
-            'reservation_date' => now(),
-            'pickup_deadline' => now()->addDays(7),
-            'status' => 'pending',
+            'due_date' => now()->addDays(7), // Default 7 days borrowing period
+            'status' => 'reserved',
         ]);
 
         $book->update(['availability' => 'reserved']);
 
-        return response()->json($reservation, 201);
+        return response()->json([
+            'message' => 'Book reserved successfully',
+            'reservation' => $reservation,
+            'due_date' => $reservation->due_date->format('Y-m-d H:i:s')
+        ], 201);
+    }
+
+    /**
+     * Get current user's book reservations
+     */
+    public function getMyReservations(Request $request)
+    {
+        $user = $request->user();
+
+        $reservations = BookReservation::with(['book', 'book.library'])
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['reserved', 'pending_return'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Update overdue status
+        foreach ($reservations as $reservation) {
+            if ($reservation->isOverdue() && $reservation->status === 'reserved') {
+                $reservation->update(['status' => 'overdue']);
+            }
+        }
+
+        return response()->json($reservations);
+    }
+
+    /**
+     * Request to return a book
+     */
+    public function returnBook(Request $request, $id)
+    {
+        $user = $request->user();
+        
+        $reservation = BookReservation::where('id', $id)
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['reserved', 'overdue'])
+            ->firstOrFail();
+
+        // Update status to pending_return
+        $reservation->update([
+            'status' => 'pending_return'
+        ]);
+
+        return response()->json([
+            'message' => 'Return request submitted successfully. Please wait for librarian approval.',
+            'reservation' => $reservation
+        ]);
     }
 }

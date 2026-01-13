@@ -17,10 +17,6 @@
             @input="debounceSearch"
           />
         </div>
-        <button class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center space-x-2">
-          <Plus class="w-4 h-4" />
-          <span class="text-sm font-medium">New Booking</span>
-        </button>
       </div>
     </div>
 
@@ -305,39 +301,45 @@ const changePage = (page: number) => {
   }
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError } = useSwal();
+
 const handleCheckIn = async (id: number) => {
-  if (!confirm('Are you sure you want to check in this student?')) return;
+  if (!await showConfirm('Check In', 'Are you sure you want to check in this student?', 'Yes, Check In')) return;
   try {
     await librarianAPI.checkInBooking(id);
+    showSuccess('Checked In', 'Student checked in successfully.');
     await fetchBookings(pagination.value.current_page);
     await fetchStats();
   } catch (error) {
     console.error('Error checking in:', error);
-    alert('Failed to check in. Please try again.');
+    showError('Failed', 'Failed to check in. Please try again.');
   }
 };
 
 const handleCheckOut = async (id: number) => {
-  if (!confirm('Are you sure you want to check out this student?')) return;
+  if (!await showConfirm('Check Out', 'Are you sure you want to check out this student?', 'Yes, Check Out')) return;
   try {
     await librarianAPI.checkOutBooking(id);
+    showSuccess('Checked Out', 'Student checked out successfully.');
     await fetchBookings(pagination.value.current_page);
     await fetchStats();
   } catch (error) {
     console.error('Error checking out:', error);
-    alert('Failed to check out. Please try again.');
+    showError('Failed', 'Failed to check out. Please try again.');
   }
 };
 
 const handleCancel = async (id: number) => {
-  if (!confirm('Are you sure you want to cancel this booking?')) return;
+  if (!await showConfirm('Cancel Booking', 'Are you sure you want to cancel this booking?', 'Yes, Cancel')) return;
   try {
     await librarianAPI.cancelBooking(id);
+    showSuccess('Cancelled', 'Booking cancelled successfully.');
     await fetchBookings(pagination.value.current_page);
     await fetchStats();
   } catch (error) {
     console.error('Error cancelling booking:', error);
-    alert('Failed to cancel booking. Please try again.');
+    showError('Failed', 'Failed to cancel booking. Please try again.');
   }
 };
 

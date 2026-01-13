@@ -228,7 +228,7 @@
     </div>
 
     <!-- Seat Details Modal -->
-    <div v-if="selectedSeat" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+    <div v-if="selectedSeat" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto">
       <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 my-8 p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-xl font-bold text-gray-900">Seat {{ selectedSeat.seat_number }}</h3>
@@ -314,7 +314,7 @@
     </div>
 
     <!-- Create Modal -->
-    <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+    <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto">
       <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 my-8 p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-xl font-bold text-gray-900">Add New Seat</h3>

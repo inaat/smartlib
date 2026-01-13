@@ -307,6 +307,9 @@ const form = ref({
   is_active: true
 });
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError, showWarning } = useSwal();
+
 const fetchStudents = async () => {
   try {
     loading.value = true;
@@ -318,7 +321,7 @@ const fetchStudents = async () => {
     stats.value = statsData;
   } catch (error) {
     console.error('Error fetching students:', error);
-    alert('Failed to load students');
+    showError('Load Failed', 'Failed to load students');
   } finally {
     loading.value = false;
   }
@@ -387,31 +390,31 @@ const saveStudent = async () => {
 
     if (isEditing.value && currentStudentId.value) {
       await librarianAPI.updateStudent(currentStudentId.value, payload);
-      alert('Student updated successfully');
+      showSuccess('Updated!', 'Student updated successfully');
     } else {
       await librarianAPI.createStudent(payload);
-      alert('Student created successfully');
+      showSuccess('Created!', 'Student created successfully');
     }
     showModal.value = false;
     fetchStudents();
   } catch (error: any) {
     console.error('Error saving student:', error);
     const message = error.response?.data?.message || 'Failed to save student';
-    alert(message);
+    showError('Save Failed', message);
   } finally {
     saving.value = false;
   }
 };
 
 const confirmDelete = async (student: any) => {
-  if (confirm(`Are you sure you want to delete ${student.name}?`)) {
+  if (await showConfirm('Delete Student', `Are you sure you want to delete ${student.name}?`, 'Yes, Delete')) {
     try {
       await librarianAPI.deleteStudent(student.id);
-      alert('Student deleted successfully');
+      showSuccess('Deleted!', 'Student deleted successfully');
       fetchStudents();
     } catch (error) {
       console.error('Error deleting student:', error);
-      alert('Failed to delete student');
+      showError('Delete Failed', 'Failed to delete student');
     }
   }
 };
@@ -426,6 +429,6 @@ const formatDate = (dateStr: string) => {
 };
 
 const exportStudents = () => {
-  alert('Export functionality coming soon');
+  showWarning('Coming Soon', 'Export functionality coming soon');
 };
 </script>

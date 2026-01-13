@@ -139,18 +139,21 @@ const fetchEvents = async () => {
   }
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError } = useSwal();
+
 const joinEvent = async (event: ExtendedEvent) => {
-  if (!confirm(`Are you sure you want to join "${event.title}"?`)) return;
+  if (!await showConfirm('Join Event', `Are you sure you want to join "${event.title}"?`, 'Yes, Join')) return;
 
   joiningId.value = event.id;
   try {
     await studentAPI.registerForEvent(event.id.toString());
     // Optimistic update or refresh
     await fetchEvents();
-    alert('Successfully registered for the event!');
+    showSuccess('Joined!', 'Successfully registered for the event!');
   } catch (error: any) {
     console.error('Error joining event:', error);
-    alert(error.message || 'Failed to join event.');
+    showError('Join Failed', error.message || 'Failed to join event.');
   } finally {
     joiningId.value = null;
   }

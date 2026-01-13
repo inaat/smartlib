@@ -129,23 +129,29 @@ const formatTime = (dateStr: string) => {
   return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess } = useSwal();
+
 const handleCheckIn = async (id: number) => {
-  if (confirm('Check in to this seat?')) {
+  if (await showConfirm('Check In', 'Check in to this seat?', 'Yes, Check In')) {
     await checkInSeat(id, 'MOCK_QR');
     await loadBookings();
+    showSuccess('Checked In', 'You have successfully checked in.');
   }
 };
 
 const handleCheckOut = async (id: number) => {
-  if (confirm('Check out from this seat?')) {
+  if (await showConfirm('Check Out', 'Check out from this seat?', 'Yes, Check Out')) {
     await checkOutSeat(id);
     await loadBookings();
+    showSuccess('Checked Out', 'You have successfully checked out.');
   }
 };
 
 const handleCancel = async (id: number) => {
-  if (confirm('Are you sure you want to cancel this booking?')) {
+  if (await showConfirm('Cancel Booking', 'Are you sure you want to cancel this booking?', 'Yes, Cancel')) {
     await cancelBooking(id);
+    showSuccess('Cancelled', 'Booking cancelled successfully.');
   }
 };
 

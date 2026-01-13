@@ -301,27 +301,7 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-          <h3 class="text-lg font-bold text-gray-800 mb-6">Quick Actions</h3>
-          <div class="grid grid-cols-2 gap-4">
-            <button class="flex flex-col items-center p-4 rounded-2xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100 group">
-              <Lock class="w-6 h-6 text-gray-400 group-hover:text-blue-600 mb-2" />
-              <span class="text-xs font-bold">Security</span>
-            </button>
-            <button class="flex flex-col items-center p-4 rounded-2xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100 group">
-              <Bell class="w-6 h-6 text-gray-400 group-hover:text-blue-600 mb-2" />
-              <span class="text-xs font-bold">Alerts</span>
-            </button>
-            <button class="flex flex-col items-center p-4 rounded-2xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100 group">
-              <CreditCard class="w-6 h-6 text-gray-400 group-hover:text-blue-600 mb-2" />
-              <span class="text-xs font-bold">Payments</span>
-            </button>
-            <button class="flex flex-col items-center p-4 rounded-2xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100 group">
-              <Settings class="w-6 h-6 text-gray-400 group-hover:text-blue-600 mb-2" />
-              <span class="text-xs font-bold">Settings</span>
-            </button>
-          </div>
-        </div>
+        
       </div>
     </div>
     <!-- Success Modal -->
@@ -375,6 +355,9 @@ const getProfilePictureUrl = (path: string) => {
   return `/storage/${path}`;
 };
 
+import { useSwal } from '@/shared/composables/useSwal';
+const { showConfirm, showSuccess, showError, showWarning } = useSwal();
+
 const handleFileChange = async (event: Event) => {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files[0]) {
@@ -382,7 +365,7 @@ const handleFileChange = async (event: Event) => {
     
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      alert('File size must be less than 2MB');
+      showWarning('File too large', 'File size must be less than 2MB');
       return;
     }
 
@@ -392,10 +375,10 @@ const handleFileChange = async (event: Event) => {
       
       await studentAPI.updateProfile(formData);
       await checkAuth(); // Refresh user data to show new image
-      alert('Profile picture updated successfully');
+      showSuccess('Updated!', 'Profile picture updated successfully');
     } catch (error) {
       console.error('Failed to update profile picture:', error);
-      alert('Failed to update profile picture');
+      showError('Update Failed', 'Failed to update profile picture');
     }
   }
 };
@@ -469,15 +452,17 @@ const handleCheckIn = (id: number) => {
 };
 
 const handleCheckOut = async (id: number) => {
-  if (confirm('Check out from this seat?')) {
+  if (await showConfirm('Check Out', 'Check out from this seat?', 'Yes, Check Out')) {
     await checkOutSeat(id);
     await loadBookings();
+    showSuccess('Checked Out', 'You have successfully checked out.');
   }
 };
 
 const handleCancel = async (id: number) => {
-  if (confirm('Are you sure you want to cancel this booking?')) {
+  if (await showConfirm('Cancel Booking', 'Are you sure you want to cancel this booking?', 'Yes, Cancel')) {
     await cancelBooking(id);
+    showSuccess('Cancelled', 'Booking cancelled successfully.');
   }
 };
 
