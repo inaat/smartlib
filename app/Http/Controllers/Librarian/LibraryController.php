@@ -107,6 +107,7 @@ class LibraryController extends Controller
             'is_active' => $library->is_active ?? true,
             'floors_count' => $library->floors_count ?? 0,
             'seat_sections_count' => $library->seat_sections_count ?? 0,
+            'total_seats' => $library->seats()->count(),
             'books_count' => $library->books_count ?? 0,
             'events_count' => $library->events_count ?? 0,
         ];

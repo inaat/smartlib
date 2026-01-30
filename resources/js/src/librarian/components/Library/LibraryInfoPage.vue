@@ -34,7 +34,7 @@
               <div class="grid grid-cols-3 gap-6 mt-6">
                 <div>
                   <p class="text-purple-200 text-sm">Total Capacity</p>
-                  <p class="text-3xl font-bold mt-1">{{ libraryData.capacity || 0 }}</p>
+                  <p class="text-3xl font-bold mt-1">{{ libraryData.total_seats || 0 }}</p>
                 </div>
                 <div>
                   <p class="text-purple-200 text-sm">Current Occupancy</p>
@@ -116,14 +116,7 @@
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
                 />
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Total Capacity</label>
-                <input
-                  v-model.number="libraryData.capacity"
-                  type="number"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-                />
-              </div>
+
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
                 <input
@@ -320,6 +313,7 @@ const libraryData = ref({
   name: '',
   address: '',
   capacity: 0,
+  total_seats: 0,
   current_occupancy: 0,
   latitude: null as number | null,
   longitude: null as number | null
@@ -381,8 +375,8 @@ const settingsConfig = [
 ];
 
 const occupancyRate = computed(() => {
-  if (!libraryData.value.capacity) return 0;
-  return Math.round((libraryData.value.current_occupancy / libraryData.value.capacity) * 100);
+  if (!libraryData.value.total_seats) return 0;
+  return Math.round((libraryData.value.current_occupancy / libraryData.value.total_seats) * 100);
 });
 
 // ... (rest of the code remains the same until getCurrentLocation)
@@ -414,6 +408,7 @@ const fetchLibraryInfo = async () => {
         name: data.name,
         address: data.address,
         capacity: data.capacity,
+        total_seats: data.total_seats,
         current_occupancy: data.current_occupancy,
         latitude: data.latitude,
         longitude: data.longitude

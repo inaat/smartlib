@@ -169,16 +169,7 @@
               />
             </div>
 
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Capacity (Total Seats)</label>
-              <input
-                v-model.number="form.capacity"
-                type="number"
-                required
-                min="1"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Opening Hours</label>
@@ -301,7 +292,7 @@ const form = ref({
   address: '',
   latitude: null as number | null,
   longitude: null as number | null,
-  capacity: 50,
+
   opening_hours: '08:00 AM - 10:00 PM',
   description: '',
   wifi_password: '',
@@ -334,7 +325,7 @@ const openCreateModal = () => {
     address: '',
     latitude: null,
     longitude: null,
-    capacity: 50,
+
     opening_hours: '08:00 AM - 10:00 PM',
     description: '',
     wifi_password: '',
@@ -353,7 +344,7 @@ const editLibrary = (library: any) => {
     address: library.address,
     latitude: library.latitude,
     longitude: library.longitude,
-    capacity: library.capacity,
+
     opening_hours: library.opening_hours,
     description: library.description || '',
     wifi_password: library.wifi_password || '',
@@ -375,7 +366,7 @@ const saveLibrary = async () => {
     formData.append('address', form.value.address);
     if (form.value.latitude) formData.append('latitude', form.value.latitude.toString());
     if (form.value.longitude) formData.append('longitude', form.value.longitude.toString());
-    formData.append('capacity', form.value.capacity.toString());
+
     formData.append('opening_hours', form.value.opening_hours);
     formData.append('description', form.value.description || '');
     formData.append('wifi_password', form.value.wifi_password || '');

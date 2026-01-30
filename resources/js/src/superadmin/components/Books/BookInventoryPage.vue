@@ -143,6 +143,10 @@
                 <option value="digital">Digital</option>
               </select>
             </div>
+            <div v-if="form.type === 'physical'">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Borrowing Period (Days)</label>
+              <input v-model.number="form.borrowing_period" type="number" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="e.g. 7" />
+            </div>
           </div>
 
           <div>
@@ -213,7 +217,8 @@ const form = ref({
   location: '',
   cover_image: null as File | null,
   pdf_file: null as File | null,
-  status: 'available'
+  status: 'available',
+  borrowing_period: 7
 });
 
 const fetchBooks = async () => {
@@ -272,7 +277,8 @@ const openCreateModal = () => {
     location: '',
     cover_image: null,
     pdf_file: null,
-    status: 'available'
+    status: 'available',
+    borrowing_period: 7
   };
   showModal.value = true;
 };
@@ -291,7 +297,8 @@ const editBook = (book: any) => {
     location: book.location,
     cover_image: null,
     pdf_file: null,
-    status: book.availability
+    status: book.availability,
+    borrowing_period: book.borrowing_period || 7
   };
   showModal.value = true;
 };
@@ -313,23 +320,15 @@ const saveBook = async () => {
     formData.append('description', form.value.description);
     formData.append('category', form.value.category);
     formData.append('type', form.value.type);
-    if (form.value.library_id) formData.append('library_id', form.value.library_id.toString());
+    formData.append('library_id', form.value.library_id ? form.value.library_id.toString() : '');
     formData.append('location', form.value.location || '');
     formData.append('status', form.value.status);
+    formData.append('borrowing_period', form.value.borrowing_period.toString());
     
     if (form.value.cover_image instanceof File) formData.append('cover_image', form.value.cover_image);
     if (form.value.pdf_file instanceof File) formData.append('pdf_file', form.value.pdf_file);
 
-    console.log('Saving Book FormData:', {
-      title: form.value.title,
-      type: form.value.type,
-      hasCover: form.value.cover_image instanceof File,
-      hasPdf: form.value.pdf_file instanceof File
-    });
-
     if (isEditing.value && form.value.id) {
-      // Use POST with _method=PUT for FormData
-      formData.append('_method', 'PUT');
       await superadminAPI.updateBook(form.value.id.toString(), formData as any);
       showSuccess('Updated!', 'Book updated successfully');
     } else {

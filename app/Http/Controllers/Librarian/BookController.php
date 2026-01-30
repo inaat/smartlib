@@ -17,11 +17,11 @@ class BookController extends Controller
             // For API, return all books (admins see all, librarians see their library's books)
             $user = Auth::user();
             if (in_array($user->role, ['super_admin', 'admin', 'owner'])) {
-                $books = Book::latest()->get();
+                $books = Book::with('library')->latest()->get();
             } elseif ($user->library_id) {
-                $books = Book::where('library_id', $user->library_id)->latest()->get();
+                $books = Book::where('library_id', $user->library_id)->with('library')->latest()->get();
             } else {
-                $books = Book::latest()->get();
+                $books = Book::with('library')->latest()->get();
             }
             return response()->json($books);
         }
@@ -52,13 +52,14 @@ class BookController extends Controller
             'cover_url' => 'nullable|string',
             'type' => 'required|in:physical,digital',
             'category' => 'required|string',
-            'library_id' => 'required_if:type,physical|nullable|integer',
+            'library_id' => 'nullable|integer',
             'location' => 'nullable|string',
             'pdf_file' => 'required_if:type,digital|nullable|file|max:51200',
             'access_level' => 'nullable|in:free,premium,premium_plus',
             'subscription_required' => 'nullable|boolean',
             'passphrase' => 'nullable|string',
             'status' => 'nullable|in:available,reserved,unavailable',
+            'borrowing_period' => 'nullable|integer|min:1',
         ]);
 
         // Prepare data for Book model (map field names)
@@ -70,6 +71,7 @@ class BookController extends Controller
             'type' => $validated['type'],
             'category' => $validated['category'],
             'availability' => $validated['status'] ?? 'available',
+            'borrowing_period' => $validated['borrowing_period'] ?? 7, // Default to 7 days if not provided
         ];
 
         // Handle cover image upload
@@ -81,7 +83,7 @@ class BookController extends Controller
 
         // Handle type-specific fields
         if ($validated['type'] === 'physical') {
-            $bookData['library_id'] = $validated['library_id'] ?? ($library ? $library->id : null);
+            $bookData['library_id'] = array_key_exists('library_id', $validated) ? $validated['library_id'] : ($library ? $library->id : null);
             $bookData['location'] = $validated['location'] ?? null;
             $bookData['copies_total'] = 1;
             $bookData['copies_available'] = 1;
@@ -166,13 +168,14 @@ class BookController extends Controller
             'cover_url' => 'nullable|string',
             'type' => 'required|in:physical,digital',
             'category' => 'required|string',
-            'library_id' => 'required_if:type,physical|nullable|integer',
+            'library_id' => 'nullable|integer',
             'location' => 'nullable|string',
             'pdf_file' => 'nullable|file|max:51200',
             'access_level' => 'nullable|in:free,premium,premium_plus',
             'subscription_required' => 'nullable|boolean',
             'passphrase' => 'nullable|string',
             'status' => 'nullable|in:available,unavailable',
+            'borrowing_period' => 'nullable|integer|min:1',
         ]);
 
         // Prepare data for Book model (map field names)
@@ -184,6 +187,7 @@ class BookController extends Controller
             'type' => $validated['type'],
             'category' => $validated['category'],
             'availability' => $validated['status'] ?? $book->availability,
+            'borrowing_period' => $validated['borrowing_period'] ?? $book->borrowing_period,
         ];
 
         // Handle cover image upload
@@ -195,11 +199,11 @@ class BookController extends Controller
 
         // Handle type-specific fields
         if ($validated['type'] === 'physical') {
-            $bookData['library_id'] = $validated['library_id'] ?? $book->library_id;
+            $bookData['library_id'] = array_key_exists('library_id', $validated) ? $validated['library_id'] : $book->library_id;
             $bookData['location'] = $validated['location'] ?? $book->location;
         } else {
             // Digital book
-            $bookData['library_id'] = $validated['library_id'] ?? $book->library_id ?? ($user->library_id);
+            $bookData['library_id'] = array_key_exists('library_id', $validated) ? $validated['library_id'] : ($book->library_id ?? $user->library_id);
 
             // Handle PDF upload
             $currentDigitalAccess = $book->digital_access ?? [];

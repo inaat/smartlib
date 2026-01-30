@@ -10,10 +10,7 @@ x <template>
         <button @click="fetchAnalytics" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors" title="Refresh Data">
           <RefreshCw :class="['w-5 h-5', loading ? 'animate-spin' : '']" />
         </button>
-        <button class="flex items-center space-x-2 px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors shadow-sm">
-          <Download class="w-4 h-4" />
-          <span>Download Report</span>
-        </button>
+
       </div>
     </div>
 
@@ -137,7 +134,7 @@ import {
   CreditCard, 
   Activity,
   Calendar,
-  Download,
+
   RefreshCw,
   TrendingUp,
   TrendingDown,

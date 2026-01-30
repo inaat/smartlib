@@ -70,8 +70,20 @@
 
         <!-- Actions -->
         <div class="flex flex-col gap-2 w-full md:w-auto">
+          <!-- Pick Up Action -->
           <button
             v-if="reservation.status === 'reserved'"
+            @click="pickUpBook(reservation)"
+            :disabled="pickingUp === reservation.id"
+            class="px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+          >
+            <span v-if="pickingUp === reservation.id" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+            Pick Up Book
+          </button>
+
+          <!-- Return Action -->
+          <button
+            v-if="reservation.status === 'borrowed' || reservation.status === 'overdue'"
             @click="returnBook(reservation)"
             :disabled="returning === reservation.id"
             class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
@@ -79,6 +91,7 @@
             <span v-if="returning === reservation.id" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
             Return Book
           </button>
+
           <div v-else-if="reservation.status === 'pending_return'" class="text-center text-sm text-gray-500 italic">
             Waiting for approval
           </div>
@@ -118,6 +131,7 @@ const { showConfirm, showSuccess, showError } = useSwal();
 const reservations = ref<any[]>([]);
 const loading = ref(true);
 const returning = ref<number | null>(null);
+const pickingUp = ref<number | null>(null);
 
 const fetchReservations = async () => {
   loading.value = true;
@@ -128,6 +142,22 @@ const fetchReservations = async () => {
     console.error('Error fetching reservations:', error);
   } finally {
     loading.value = false;
+  }
+};
+
+const pickUpBook = async (reservation: any) => {
+  if (!await showConfirm('Pick Up Book', `Confirm that you are picking up "${reservation.book?.title}"?`, 'Confirm Pickup')) return;
+
+  pickingUp.value = reservation.id;
+  try {
+    await studentAPI.pickUpBook(reservation.id);
+    showSuccess('Enjoy!', 'Book status updated to borrowed. Please return it by the due date.');
+    await fetchReservations();
+  } catch (error: any) {
+    console.error('Error picking up book:', error);
+    showError('Action Failed', error.response?.data?.message || 'Failed to update status.');
+  } finally {
+    pickingUp.value = null;
   }
 };
 
@@ -182,9 +212,10 @@ const getDaysRemainingColor = (dueDate: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'reserved': return 'bg-blue-100 text-blue-700';
+    case 'reserved': return 'bg-blue-100 text-blue-700'; // Actually pending pickup
+    case 'borrowed': return 'bg-green-100 text-green-700';
     case 'pending_return': return 'bg-orange-100 text-orange-700';
-    case 'returned': return 'bg-green-100 text-green-700';
+    case 'returned': return 'bg-gray-100 text-gray-500';
     case 'overdue': return 'bg-red-100 text-red-700';
     default: return 'bg-gray-100 text-gray-700';
   }

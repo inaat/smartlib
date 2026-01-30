@@ -64,7 +64,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'crn' => 'required|string|unique:users',
+            'crn' => 'nullable|string|unique:users',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8',
             'role' => 'required|in:student,librarian,super_admin',
@@ -110,7 +110,7 @@ class UserController extends Controller
             'library_id' => 'nullable|exists:libraries,id',
             'ca_level' => 'nullable|string|in:PRC,CAP,Final',
             'phone' => 'nullable|string|max:20',
-            'crn' => 'sometimes|string|unique:users,crn,' . $user->id,
+            'crn' => 'nullable|string|unique:users,crn,' . $user->id,
         ]);
 
         $user->update($request->only(['name', 'email', 'role', 'status', 'library_id', 'ca_level', 'phone', 'crn']));

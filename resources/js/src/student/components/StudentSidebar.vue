@@ -96,7 +96,6 @@ import { useAuth } from '@/shared/composables/useAuth';
 import { 
   BookOpen, 
   Home, 
-  MapPin,
   Calendar,
   QrCode,
   User,
@@ -105,7 +104,6 @@ import {
   ChevronRight,
   CreditCard,
   BarChart3,
-  Gift,
   BookMarked
 } from 'lucide-vue-next';
 
@@ -117,7 +115,7 @@ defineProps<{
 
 defineEmits(['close']);
 
-const { user, logout: authLogout } = useAuth();
+const { logout: authLogout } = useAuth();
 const { showConfirm } = useSwal();
 
 const handleLogout = async () => {
@@ -136,6 +134,7 @@ const mainNavItems = [
 ];
 
 const quickAccessItems = [
+  { path: '/student/analytics', label: 'My Analytics', icon: BarChart3 },
   { path: '/student/subscription', label: 'Subscription', icon: CreditCard },
 ];
 </script>

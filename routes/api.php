@@ -85,6 +85,7 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // Book Reservations (must come before /books/{book} to avoid route conflict)
         Route::get('/books/reservations', [StudentBook::class, 'getMyReservations'])->name('books.reservations');
+        Route::post('/books/reservations/{id}/pick-up', [StudentBook::class, 'pickUpBook'])->name('books.reservations.pickup');
         Route::post('/books/reservations/{id}/return', [StudentBook::class, 'returnBook'])->name('books.reservations.return');
         
         // Book details and actions
@@ -103,6 +104,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/subscription-plans', [\App\Http\Controllers\Student\SubscriptionController::class, 'index'])->name('subscription-plans.index');
         Route::post('/subscriptions', [\App\Http\Controllers\Student\SubscriptionController::class, 'store'])->name('subscriptions.store');
         Route::post('/subscriptions/{subscription}/cancel', [\App\Http\Controllers\Student\SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+
+        // Analytics
+        Route::get('/analytics', [\App\Http\Controllers\Student\AnalyticsController::class, 'index'])->name('analytics');
     });
 
     // Common Profile & Notification Routes (Accessible by all authenticated users)

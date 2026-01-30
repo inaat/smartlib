@@ -83,6 +83,11 @@ const router = createRouter({
                     component: () => import('@/student/components/Subscription/SubscriptionPage.vue')
                 },
                 {
+                    path: 'analytics',
+                    name: 'student-analytics',
+                    component: () => import('@/student/components/Analytics/AnalyticsPage.vue')
+                },
+                {
                     path: '',
                     redirect: { name: 'student-dashboard' }
                 }

@@ -266,10 +266,10 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-2">Booking Confirmed!</h2>
         <p class="text-gray-600 mb-8">Your seat has been reserved. Please check in within 15 minutes of your start time.</p>
         <button 
-          @click="goToDashboard"
+          @click="goToProfile"
           class="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all"
         >
-          Go to Dashboard
+          Go to My Profile
         </button>
       </div>
     </div>
@@ -430,8 +430,8 @@ const confirmBooking = async () => {
   }
 };
 
-const goToDashboard = () => {
-  router.push('/student/dashboard');
+const goToProfile = () => {
+  router.push('/student/profile');
 };
 
 onMounted(fetchSeats);

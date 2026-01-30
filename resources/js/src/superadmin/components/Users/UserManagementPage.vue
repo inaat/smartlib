@@ -142,7 +142,6 @@
             <tr class="bg-gray-50/50">
               <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Student</th>
               <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CRN & Level</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Library</th>
               <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Subscription</th>
               <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
               <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
@@ -168,15 +167,7 @@
                 <div class="text-sm font-medium text-gray-900">{{ user.crn }}</div>
                 <div class="text-xs text-gray-500">{{ user.ca_level || 'No Level' }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div v-if="user.library" class="flex items-center text-sm text-gray-700">
-                  <div class="p-1.5 bg-gray-100 rounded-lg mr-2">
-                    <LibraryIcon class="w-3.5 h-3.5 text-gray-500" />
-                  </div>
-                  {{ user.library.name }}
-                </div>
-                <div v-else class="text-xs text-gray-400 italic">Not assigned</div>
-              </td>
+
               <td class="px-6 py-4 whitespace-nowrap">
                 <div v-if="user.active_subscription" class="flex flex-col">
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">
@@ -187,16 +178,19 @@
                 <div v-else class="text-xs text-gray-400">No active plan</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span
+                <button
+                  @click.stop="cycleUserStatus(user)"
+                  :disabled="statusUpdating === user.id"
                   :class="[
-                    'px-2.5 py-1 inline-flex text-[10px] leading-4 font-bold uppercase tracking-wider rounded-full shadow-sm',
+                    'px-2.5 py-1 inline-flex text-[10px] leading-4 font-bold uppercase tracking-wider rounded-full shadow-sm hover:opacity-80 transition-all disabled:opacity-50 cursor-pointer border-none',
                     user.status === 'approved' ? 'bg-green-100 text-green-700' : 
                     user.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
                     user.status === 'suspended' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
                   ]"
                 >
+                  <RefreshCw v-if="statusUpdating === user.id" class="w-2.5 h-2.5 animate-spin mr-1" />
                   {{ user.status }}
-                </span>
+                </button>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -303,17 +297,6 @@
             />
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div class="space-y-1.5">
-              <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Assign Library</label>
-              <select
-                v-model="form.library_id"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-              >
-                <option :value="null">No Library Assigned</option>
-                <option v-for="lib in libraries" :key="lib.id" :value="lib.id">{{ lib.name }}</option>
-              </select>
-            </div>
             <div class="space-y-1.5">
               <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Account Status</label>
               <select
@@ -326,7 +309,6 @@
                 <option value="banned">Banned</option>
               </select>
             </div>
-          </div>
 
           <div class="flex items-center space-x-4 pt-6">
             <button
@@ -377,6 +359,7 @@ const loading = ref(false);
 const saving = ref(false);
 const showModal = ref(false);
 const isEditing = ref(false);
+const statusUpdating = ref<number | null>(null);
 
 const searchQuery = ref('');
 const filterLibrary = ref('');
@@ -507,6 +490,24 @@ const approveUser = async (user: any) => {
     await fetchUsers();
   } catch (error) {
     console.error('Error approving user:', error);
+  }
+};
+
+const cycleUserStatus = async (user: any) => {
+  if (statusUpdating.value) return;
+  
+  const statuses = ['approved', 'suspended', 'banned', 'pending'];
+  const currentIndex = statuses.indexOf(user.status);
+  const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+  
+  statusUpdating.value = user.id;
+  try {
+    await adminAPI.updateUser(user.id, { status: nextStatus });
+    user.status = nextStatus;
+  } catch (error) {
+    console.error('Error cycling status:', error);
+  } finally {
+    statusUpdating.value = null;
   }
 };
 

@@ -153,18 +153,41 @@ class BookController extends Controller
 
         $reservations = BookReservation::with(['book', 'book.library'])
             ->where('user_id', $user->id)
-            ->whereIn('status', ['reserved', 'pending_return'])
+            ->whereIn('status', ['reserved', 'borrowed', 'pending_return', 'overdue'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         // Update overdue status
         foreach ($reservations as $reservation) {
-            if ($reservation->isOverdue() && $reservation->status === 'reserved') {
+            if ($reservation->isOverdue()) {
                 $reservation->update(['status' => 'overdue']);
             }
         }
 
         return response()->json($reservations);
+    }
+
+    /**
+     * Confirm book pickup
+     */
+    public function pickUpBook(Request $request, $id)
+    {
+        $user = $request->user();
+        
+        $reservation = BookReservation::where('id', $id)
+            ->where('user_id', $user->id)
+            ->where('status', 'reserved')
+            ->firstOrFail();
+
+        // Update status to borrowed
+        $reservation->update([
+            'status' => 'borrowed'
+        ]);
+
+        return response()->json([
+            'message' => 'Book picked up successfully. Happy reading!',
+            'reservation' => $reservation
+        ]);
     }
 
     /**
@@ -176,7 +199,7 @@ class BookController extends Controller
         
         $reservation = BookReservation::where('id', $id)
             ->where('user_id', $user->id)
-            ->whereIn('status', ['reserved', 'overdue'])
+            ->whereIn('status', ['borrowed', 'overdue'])
             ->firstOrFail();
 
         // Update status to pending_return

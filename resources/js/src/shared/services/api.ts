@@ -171,6 +171,11 @@ export const studentAPI = {
     return response.data;
   },
 
+  async pickUpBook(reservationId: number) {
+    const response = await api.post(`/student/books/reservations/${reservationId}/pick-up`);
+    return response.data;
+  },
+
   async getProfile() {
     const response = await api.get('/profile');
     return response.data;
@@ -193,6 +198,10 @@ export const studentAPI = {
 
   async markNotificationRead(notificationId: number) {
     const response = await api.post(`/notifications/${notificationId}/read`);
+    return response.data;
+  },
+  async getAnalytics() {
+    const response = await api.get('/student/analytics');
     return response.data;
   },
 };

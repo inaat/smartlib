@@ -16,7 +16,7 @@
           <span class="text-sm font-medium">{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
         </button>
         <button 
-          @click="isAddModalOpen = true"
+          @click="isEditing = false; resetForm(); isAddModalOpen = true"
           class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center space-x-2"
         >
           <Plus class="w-4 h-4" />
@@ -29,7 +29,7 @@
     <div v-if="isAddModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-          <h2 class="text-2xl font-bold text-gray-900">Add New Book</h2>
+          <h2 class="text-2xl font-bold text-gray-900">{{ isEditing ? 'Edit Book' : 'Add New Book' }}</h2>
           <button @click="isAddModalOpen = false" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <X class="w-5 h-5 text-gray-500" />
           </button>
@@ -96,6 +96,11 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Cover Image</label>
                 <input type="file" @change="handleCoverUpload" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
               </div>
+
+              <div v-if="newBook.type === 'physical'">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Reservation Period (Days)</label>
+                <input v-model.number="newBook.borrowing_period" type="number" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" placeholder="e.g. 7">
+              </div>
             </div>
           </div>
 
@@ -110,7 +115,7 @@
             </button>
             <button type="submit" :disabled="submitting" class="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 flex items-center space-x-2">
               <RefreshCw v-if="submitting" class="w-4 h-4 animate-spin" />
-              <span>{{ submitting ? 'Adding...' : 'Add Book' }}</span>
+              <span>{{ submitting ? (isEditing ? 'Updating...' : 'Adding...') : (isEditing ? 'Update Book' : 'Add Book') }}</span>
             </button>
           </div>
         </form>
@@ -240,10 +245,10 @@
               <span v-else>Digital Access</span>
             </div>
             <div class="flex items-center space-x-2">
-              <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+              <button @click="handleEdit(book)" class="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                 <Edit2 class="w-4 h-4" />
               </button>
-              <button class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+              <button @click="handleDelete(book.id)" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                 <Trash2 class="w-4 h-4" />
               </button>
             </div>
@@ -280,6 +285,8 @@ const books = ref<any[]>([]);
 const loading = ref(false);
 const submitting = ref(false);
 const isAddModalOpen = ref(false);
+const isEditing = ref(false);
+const editingBookId = ref<number | null>(null);
 const searchQuery = ref('');
 const filterType = ref('all');
 const filterCategory = ref('all');
@@ -294,7 +301,8 @@ const newBook = ref({
   location: '',
   cover_image: null as File | null,
   pdf_file: null as File | null,
-  status: 'available'
+  status: 'available',
+  borrowing_period: 7
 });
 
 const handleCoverUpload = (event: any) => {
@@ -319,6 +327,7 @@ const submitBook = async () => {
     formData.append('type', newBook.value.type);
     formData.append('description', newBook.value.description);
     formData.append('status', newBook.value.status);
+    formData.append('borrowing_period', newBook.value.borrowing_period.toString());
     
     if (newBook.value.type === 'physical') {
       formData.append('location', newBook.value.location);
@@ -339,8 +348,13 @@ const submitBook = async () => {
       hasPdf: newBook.value.pdf_file instanceof File
     });
 
-    await librarianAPI.createBook(formData);
-    showSuccess('Added!', 'Book added successfully');
+    if (isEditing.value && editingBookId.value) {
+      await librarianAPI.updateBook(editingBookId.value, formData);
+      showSuccess('Updated!', 'Book updated successfully');
+    } else {
+      await librarianAPI.createBook(formData);
+      showSuccess('Added!', 'Book added successfully');
+    }
     await fetchBooks();
     isAddModalOpen.value = false;
     resetForm();
@@ -361,6 +375,8 @@ const submitBook = async () => {
 };
 
 const resetForm = () => {
+  isEditing.value = false;
+  editingBookId.value = null;
   newBook.value = {
     title: '',
     author: '',
@@ -371,8 +387,42 @@ const resetForm = () => {
     location: '',
     cover_image: null,
     pdf_file: null,
-    status: 'available'
+    status: 'available',
+    borrowing_period: 7
   };
+};
+
+const handleEdit = (book: any) => {
+  isEditing.value = true;
+  editingBookId.value = book.id;
+  newBook.value = {
+    title: book.title,
+    author: book.author,
+    isbn: book.isbn,
+    category: book.category,
+    type: book.type,
+    description: book.description,
+    location: book.location || '',
+    cover_image: null,
+    pdf_file: null,
+    status: book.availability,
+    borrowing_period: book.borrowing_period || 7
+  };
+  isAddModalOpen.value = true;
+};
+
+const { showConfirm } = useSwal();
+const handleDelete = async (id: number) => {
+  const confirmed = await showConfirm('Are you sure?', 'This book will be permanently removed from inventory.');
+  if (confirmed) {
+    try {
+      await librarianAPI.deleteBook(id);
+      showSuccess('Deleted!', 'Book removed successfully');
+      fetchBooks();
+    } catch (error) {
+      showError('Delete Failed', 'Could not delete the book. Please try again.');
+    }
+  }
 };
 
 const fetchBooks = async () => {
