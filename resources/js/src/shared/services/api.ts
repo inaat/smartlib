@@ -139,6 +139,11 @@ export const studentAPI = {
     return response.data;
   },
 
+  async joinQueue(seatId: number) {
+    const response = await api.post('/student/bookings/join-queue', { seat_id: seatId });
+    return response.data;
+  },
+
 
 
   async getEvents() {
@@ -202,6 +207,16 @@ export const studentAPI = {
   },
   async getAnalytics() {
     const response = await api.get('/student/analytics');
+    return response.data;
+  },
+
+  async getSubscriptionPlans() {
+    const response = await api.get('/student/subscription-plans');
+    return response.data;
+  },
+
+  async subscribe(planId: number) {
+    const response = await api.post('/student/subscriptions', { plan_id: planId });
     return response.data;
   },
 };

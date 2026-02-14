@@ -38,22 +38,28 @@ export function useApp() {
             const diff = end.getTime() - now.value.getTime();
             const minutesLeft = diff / 60000;
 
-            // Reset alert flag if booking was extended and we're now more than 5 minutes from end
-            if (minutesLeft > 5 && extensionAlertShown.value[active.id]) {
+            // Reset alert flag if booking was extended and we're now more than 15 minutes from end
+            if (minutesLeft > 15 && extensionAlertShown.value[active.id]) {
                 delete extensionAlertShown.value[active.id];
             }
 
-            // Show alert if 5 minutes or less left, and not already shown for this booking
-            if (minutesLeft <= 5 && minutesLeft > 0 && !extensionAlertShown.value[active.id]) {
+            // Show alert if between 10 and 15 minutes left, and not already shown for this booking
+            if (minutesLeft <= 15 && minutesLeft > 10 && !extensionAlertShown.value[active.id]) {
                 expiredBooking.value = active;
                 showExtensionModal.value = true;
                 extensionAlertShown.value[active.id] = true;
             }
 
-            // Also show if expired
-            if (minutesLeft <= 0 && !showExtensionModal.value) {
+            // Auto-hide alert once it's less than 10 minutes (queue takes priority)
+            if (minutesLeft <= 10 && minutesLeft > 0 && showExtensionModal.value) {
+                showExtensionModal.value = false;
+            }
+
+            // Show if expired
+            if (minutesLeft <= 0 && !showExtensionModal.value && !extensionAlertShown.value[`expired_${active.id}`]) {
                 expiredBooking.value = active;
                 showExtensionModal.value = true;
+                extensionAlertShown.value[`expired_${active.id}`] = true;
             }
         }
     };

@@ -42,6 +42,7 @@ class LibraryController extends Controller
                 'availableSeats' => $library->availableSeats ?? 0,
                 'currentOccupancy' => $library->currentOccupancy ?? 0,
                 'facilities' => $library->facilities->pluck('name')->toArray(),
+                'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
             ];
         });
 
@@ -101,6 +102,7 @@ class LibraryController extends Controller
                     'text' => $rule->rule_text
                 ];
             }),
+            'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
         ];
 
         return response()->json($data);
@@ -116,10 +118,26 @@ class LibraryController extends Controller
             ->orderBy('seat_number')
             ->get();
 
+        // Add remaining time for occupied/booked seats
+        $seats->transform(function($seat) {
+            if ($seat->status !== 'available') {
+                $lastBooking = \App\Models\SeatBooking::where('seat_id', $seat->id)
+                    ->whereIn('status', ['booked', 'checked_in'])
+                    ->latest('scheduled_end_time')
+                    ->first();
+                
+                if ($lastBooking) {
+                    $seat->remaining_minutes = (int) now()->diffInMinutes($lastBooking->scheduled_end_time, false);
+                }
+            }
+            return $seat;
+        });
+
         return response()->json([
             'library' => [
                 'id' => $library->id,
                 'name' => $library->name,
+                'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
             ],
             'floors' => $library->floors,
             'sections' => $library->seatSections,

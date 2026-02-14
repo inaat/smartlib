@@ -79,7 +79,8 @@ class LibraryController extends Controller
             'autoCheckout' => true,
             'sendNotifications' => true,
             'maxBookingDuration' => 4,
-            'advanceBookingDays' => 7
+            'advanceBookingDays' => 7,
+            'minStudyMinutesForStreak' => 0
         ];
         
         $specialFeatures = [
@@ -105,6 +106,7 @@ class LibraryController extends Controller
             'special_features' => $specialFeatures,
             'opening_hours' => $library->opening_hours ?? '',
             'is_active' => $library->is_active ?? true,
+            'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
             'floors_count' => $library->floors_count ?? 0,
             'seat_sections_count' => $library->seat_sections_count ?? 0,
             'total_seats' => $library->seats()->count(),
@@ -137,6 +139,7 @@ class LibraryController extends Controller
             'rules' => 'nullable|array',
             'capacity' => 'sometimes|integer',
             'is_active' => 'sometimes|boolean',
+            'seat_layout_mode' => 'nullable|string|in:layout,grid',
             'special_features' => 'nullable|array',
         ]);
 
@@ -151,6 +154,7 @@ class LibraryController extends Controller
                 'contact_info' => $validated['contact_info'] ?? $library->contact_info,
                 'special_features' => $validated['special_features'] ?? $library->special_features,
                 'is_active' => $validated['is_active'] ?? $library->is_active,
+                'seat_layout_mode' => $validated['seat_layout_mode'] ?? $library->seat_layout_mode,
             ]);
 
             // Update operating hours
@@ -253,6 +257,7 @@ class LibraryController extends Controller
                 'operating_days' => $operatingHours,
                 'facilities' => $library->facilities->pluck('name')->toArray(),
                 'is_active' => $library->is_active,
+                'seat_layout_mode' => $library->seat_layout_mode,
             ]
         ]);
     }

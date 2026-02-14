@@ -410,9 +410,36 @@ export interface PaginatedResponse<T = any> {
   to: number;
 }
 
+// Support Ticket Type
+export interface SupportTicket {
+  id: number;
+  user_id: number;
+  library_id?: number;
+  subject: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  created_at: string;
+  updated_at: string;
+  user?: User;
+  library?: Library;
+  messages?: SupportMessage[];
+}
+
+// Support Message Type
+export interface SupportMessage {
+  id: number;
+  support_ticket_id: number;
+  user_id: number;
+  message: string;
+  created_at: string;
+  updated_at: string;
+  user?: User;
+}
+
 export interface ValidationError {
   message: string;
   errors: {
     [field: string]: string[];
   };
 }
+

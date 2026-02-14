@@ -46,13 +46,34 @@
             <input v-model="qrCode" placeholder="QR Code" class="block w-full p-1" />
         </div>
 
-        <div v-if="!isScanning && !qrCode" class="text-center">
+        <div v-if="!isScanning && !qrCode" class="space-y-4">
             <button
               @click="startScanner"
               class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center space-x-2"
             >
               <Camera class="w-5 h-5" />
-              <span>Start Camera</span>
+              <span>Scan QR Code</span>
+            </button>
+
+            <!-- Direct Check-in Option when bookingId is present -->
+            <div v-if="bookingId" class="relative">
+              <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                <div class="w-full border-t border-gray-200 dark:border-gray-700"></div>
+              </div>
+              <div class="relative flex justify-center text-sm">
+                <span class="px-2 bg-white dark:bg-gray-800 text-gray-500 uppercase font-bold text-[10px] tracking-widest">or</span>
+              </div>
+            </div>
+
+            <button
+              v-if="bookingId"
+              @click="performCheckInManual"
+              :disabled="isCheckingIn"
+              class="w-full py-4 px-6 bg-white dark:bg-gray-700 border-2 border-green-600 text-green-600 dark:text-green-400 font-bold rounded-xl shadow-sm hover:bg-green-50 dark:hover:bg-green-900/20 transition-all flex items-center justify-center space-x-2"
+            >
+              <CheckCircle v-if="!isCheckingIn" class="w-5 h-5" />
+              <span v-else class="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></span>
+              <span>{{ isCheckingIn ? 'Checking In...' : 'Check In Directly' }}</span>
             </button>
         </div>
 
@@ -62,7 +83,7 @@
                 <p class="text-xs break-all">{{ qrCode }}</p>
             </div>
             <button
-              @click="performCheckIn"
+              @click="performCheckInWithScanner"
               :disabled="isCheckingIn"
               class="w-full py-4 px-6 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
@@ -84,7 +105,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
-import { QrCode, MapPin, Camera } from 'lucide-vue-next';
+import { QrCode, MapPin, Camera, CheckCircle } from 'lucide-vue-next';
 import { studentAPI } from '@/student/services/studentApi';
 import { useRouter, useRoute } from 'vue-router';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -296,11 +317,9 @@ const resetScanner = () => {
 import { useSwal } from '@/shared/composables/useSwal';
 const { showSuccess, showError } = useSwal();
 
-const performCheckIn = async () => {
-  if (!bookingId.value) {
-    showError('Missing Info', 'Booking ID missing. Please go back to your profile.');
-    return;
-  }
+const performCheckIn = async (code: string = '') => {
+  // If no booking ID, try "auto" check-in (for queue students scanning the QR)
+  const idToSend = bookingId.value || 'auto';
 
   if (!latitude.value || !longitude.value) {
     showError('Location Missing', 'Location data is missing. Retrying...');
@@ -311,9 +330,9 @@ const performCheckIn = async () => {
     }
   }
 
+  isCheckingIn.value = true;
   try {
-    isCheckingIn.value = true;
-    await studentAPI.checkIn(bookingId.value, qrCode.value, latitude.value, longitude.value);
+    await studentAPI.checkIn(idToSend, code || qrCode.value, latitude.value, longitude.value);
     showSuccess('Checked In!', 'Check-in successful! Welcome to the library.');
     router.push('/student/dashboard');
   } catch (error: any) {
@@ -322,6 +341,14 @@ const performCheckIn = async () => {
   } finally {
     isCheckingIn.value = false;
   }
+};
+
+const performCheckInManual = async () => {
+  await performCheckIn('DIRECT_CHECKIN');
+};
+
+const performCheckInWithScanner = async () => {
+  await performCheckIn(qrCode.value);
 };
 
 onMounted(() => {

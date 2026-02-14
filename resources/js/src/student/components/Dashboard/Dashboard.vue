@@ -61,6 +61,21 @@
             <div class="text-3xl font-bold text-white">{{ libraries.length }}</div>
             <div class="text-xs text-white/70 mt-1">In your area</div>
           </div>
+
+          <!-- Study Streak -->
+          <div class="bg-gradient-to-br from-orange-500/30 to-red-500/20 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform col-span-2 md:col-span-1">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="p-2 bg-white/20 rounded-lg">
+                <Flame class="w-4 h-4 text-white" />
+              </div>
+              <span class="text-sm font-medium text-white/90">Study Streak</span>
+            </div>
+            <div class="flex items-baseline space-x-2">
+              <div class="text-3xl font-bold text-white">{{ studyStreak }}</div>
+              <div class="text-xs text-white/70 font-bold uppercase tracking-widest">Days</div>
+            </div>
+            <div class="text-xs text-white/70 mt-1">Don't break it!</div>
+          </div>
         </div>
       </div>
     </div>
@@ -176,6 +191,9 @@
         <!-- Upcoming Bookings -->
         <UpcomingBookings />
 
+        <!-- Seat Waiting List (Queue) -->
+        <QueueStatus :queues="activeQueues" />
+
         <!-- Achievement Progress -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
@@ -233,6 +251,7 @@ import { studentAPI } from '@/shared/services/api';
 import StatsCard from './StatsCard.vue';
 import RecommendationSlider from './RecommendationSlider.vue';
 import UpcomingBookings from './UpcomingBookings.vue';
+import QueueStatus from './QueueStatus.vue';
 import QuickActions from './QuickActions.vue';
 import { 
   BookMarked, 
@@ -248,7 +267,8 @@ import {
   Lightbulb,
   ChevronRight,
   BookOpen,
-  Users
+  Users,
+  Flame
 } from 'lucide-vue-next';
 
 const { user } = useAuth();
@@ -274,6 +294,7 @@ const dashboardData = ref<any>(null);
 const loading = ref(true);
 
 // Study metrics - will be populated from API
+const studyStreak = ref(0);
 const hoursToday = ref(0);
 const weeklyProgress = ref(0);
 const userRank = ref(0);
@@ -283,6 +304,7 @@ const totalSessions = ref(0);
 const focusScore = ref(0);
 const weeklyStudyData = ref<any[]>([]);
 const recentActivities = ref<any[]>([]);
+const activeQueues = ref<any[]>([]);
 
 // Load dashboard data
 const loadDashboardData = async () => {
@@ -293,6 +315,7 @@ const loadDashboardData = async () => {
 
     // Update analytics
     if (data.analytics) {
+      studyStreak.value = data.analytics.study_streak || 0;
       hoursToday.value = data.analytics.hours_today || 0;
       weeklyProgress.value = data.analytics.weekly_progress || 0;
       totalWeeklyHours.value = data.analytics.weekly_hours || 0;
@@ -300,6 +323,10 @@ const loadDashboardData = async () => {
       totalSessions.value = data.analytics.total_sessions || 0;
       focusScore.value = data.analytics.focus_score || 0;
       weeklyStudyData.value = data.analytics.weekly_study_data || [];
+    }
+
+    if (data.active_queue) {
+      activeQueues.value = data.active_queue;
     }
 
     // Map recent activity

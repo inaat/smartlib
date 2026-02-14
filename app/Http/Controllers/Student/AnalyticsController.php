@@ -22,6 +22,7 @@ class AnalyticsController extends Controller
             'active_reservations' => BookReservation::where('user_id', $user->id)
                 ->whereIn('status', ['reserved', 'borrowed', 'pending_return', 'overdue'])
                 ->count(),
+            'study_streak' => $user->current_streak ?? 0,
             'loyalty_points' => $user->loyalty_points ?? 0,
         ];
 

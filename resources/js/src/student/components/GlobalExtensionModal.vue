@@ -5,9 +5,18 @@
         <Clock class="w-12 h-12" />
       </div>
       <h2 class="text-3xl font-black text-gray-800 mb-3 text-center">{{ isExpired ? "Time's Up!" : "Session Ending Soon" }}</h2>
-      <p class="text-gray-500 mb-10 text-center leading-relaxed">
-        Your session for <strong>Seat {{ expiredBooking?.seat?.seat_number }}</strong> {{ isExpired ? 'has ended' : 'will end in 5 minutes' }}. Would you like to extend your stay?
+      <p class="text-gray-500 mb-6 text-center leading-relaxed">
+        Your session for Seat {{ expiredBooking?.seat?.seat_number }} {{ isExpired ? 'has ended' : 'will end in 15 minutes' }}.
       </p>
+
+      <div v-if="!isExpired" class="p-4 bg-orange-50 rounded-xl border border-orange-100 mb-8 text-center">
+        <p class="text-[10px] text-orange-700 font-bold uppercase tracking-widest leading-tight">
+          Extension Lock Notice
+        </p>
+        <p class="text-xs text-orange-600 mt-1">
+          You must extend now. Within 10 minutes of expiry, priority shifts to the seat queue.
+        </p>
+      </div>
       
       <div class="grid grid-cols-2 gap-4 mb-8">
         <button 

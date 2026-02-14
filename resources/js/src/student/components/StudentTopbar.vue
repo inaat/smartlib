@@ -4,7 +4,7 @@
       <AlertTriangle class="w-4 h-4" />
       <span class="text-sm font-medium">Your subscription has expired. Please renew to continue using all features.</span>
     </div>
-    <router-link to="/student/subscriptions" class="text-xs font-bold underline hover:text-red-100">
+    <router-link to="/student/subscription" class="text-xs font-bold underline hover:text-red-100">
       Renew Now
     </router-link>
   </div>

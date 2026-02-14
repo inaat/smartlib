@@ -177,7 +177,8 @@ import {
   ChevronRight,
   Clock,
   Trophy,
-  BookMarked
+  BookMarked,
+  Flame
 } from 'lucide-vue-next';
 import { studentAPI } from '@/shared/services/api';
 import { format } from 'date-fns';
@@ -211,11 +212,11 @@ const statsCards = computed(() => [
     iconClass: 'text-amber-600'
   },
   {
-    label: 'Loyalty Points',
-    value: analyticsData.value?.loyalty_points || 0,
-    icon: Trophy,
-    bgClass: 'bg-emerald-50',
-    iconClass: 'text-emerald-600'
+    label: 'Study Streak',
+    value: (analyticsData.value?.study_streak || 0) + ' Days',
+    icon: Flame,
+    bgClass: 'bg-orange-50',
+    iconClass: 'text-orange-600'
   }
 ]);
 

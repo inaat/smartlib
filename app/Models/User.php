@@ -33,6 +33,11 @@ class User extends Authenticatable
         'library_id',
         'status',
         'profile_picture',
+        'current_streak',
+        'max_streak',
+        'last_checkin_date',
+        'last_streak_date',
+        'loyalty_points',
     ];
 
     /**

@@ -40,6 +40,10 @@
         </div>
         
         <div class="space-y-2 text-xs text-gray-600">
+          <div v-if="booking.status === 'checked_in' && isEndingSoon(booking)" class="mb-3 p-2 bg-orange-50 border border-orange-200 rounded-lg flex items-center text-orange-700">
+            <AlertTriangle class="w-4 h-4 mr-2" />
+            <span class="font-bold">Session Ending Soon!</span>
+          </div>
           <div class="flex items-center">
             <MapPin class="w-3.5 h-3.5 mr-2 text-gray-400" />
             {{ booking.seat?.library?.name }}
@@ -83,6 +87,13 @@
           >
             Check Out
           </button>
+          <button 
+            v-if="booking.status === 'checked_in' && canExtend(booking)"
+            @click="handleExtend(booking)"
+            class="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            Extend
+          </button>
         </div>
       </div>
     </div>
@@ -93,10 +104,12 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { useApp } from '@/shared/composables/useApp';
-import { Calendar, Clock, MapPin, Armchair, Monitor, Zap, Layout } from 'lucide-vue-next';
+import { Calendar, Clock, MapPin, Armchair, Monitor, Zap, Layout, AlertTriangle } from 'lucide-vue-next';
 
 const { bookings, loadBookings, checkInSeat, checkOutSeat, extendSeatBooking, cancelBooking } = useApp();
+const router = useRouter();
 const now = ref(new Date());
 let timer: any = null;
 
@@ -130,14 +143,10 @@ const formatTime = (dateStr: string) => {
 };
 
 import { useSwal } from '@/shared/composables/useSwal';
-const { showConfirm, showSuccess } = useSwal();
+const { showConfirm, showSuccess, showError } = useSwal();
 
-const handleCheckIn = async (id: number) => {
-  if (await showConfirm('Check In', 'Check in to this seat?', 'Yes, Check In')) {
-    await checkInSeat(id, 'MOCK_QR');
-    await loadBookings();
-    showSuccess('Checked In', 'You have successfully checked in.');
-  }
+const handleCheckIn = (id: number) => {
+  router.push({ name: 'student-qr-checkin', query: { booking_id: id.toString() } });
 };
 
 const handleCheckOut = async (id: number) => {
@@ -152,6 +161,30 @@ const handleCancel = async (id: number) => {
   if (await showConfirm('Cancel Booking', 'Are you sure you want to cancel this booking?', 'Yes, Cancel')) {
     await cancelBooking(id);
     showSuccess('Cancelled', 'Booking cancelled successfully.');
+  }
+};
+
+const isEndingSoon = (booking: any) => {
+  const end = new Date(booking.scheduled_end_time);
+  const diffMinutes = (end.getTime() - now.value.getTime()) / 60000;
+  return diffMinutes > 0 && diffMinutes <= 15;
+};
+
+const canExtend = (booking: any) => {
+  const end = new Date(booking.scheduled_end_time);
+  const diffMinutes = (end.getTime() - now.value.getTime()) / 60000;
+  return diffMinutes >= 10;
+};
+
+const handleExtend = async (booking: any) => {
+  if (await showConfirm('Extend Session', 'Do you want to extend your session by 30 minutes?', 'Yes, Extend')) {
+    try {
+      await extendSeatBooking(booking.id, 30);
+      await loadBookings();
+      showSuccess('Extended', 'Your session has been extended by 30 minutes.');
+    } catch (error: any) {
+      showError('Extension Failed', error.message || 'Could not extend session. The seat might be booked by someone else.');
+    }
   }
 };
 

@@ -134,10 +134,12 @@ import {
   Clock,
   AlertCircle,
   Building2,
-  LayoutGrid
+  LayoutGrid,
+  LifeBuoy
 } from 'lucide-vue-next';
 
 import { useSwal } from '@/shared/composables/useSwal';
+
 
 defineProps<{
   isOpen: boolean;
@@ -168,6 +170,7 @@ const managementItems = [
   { path: '/librarian/reservations', label: 'Reserved Books', icon: BookOpen },
   { path: '/librarian/events', label: 'Events', icon: Calendar },
   { path: '/librarian/attendance', label: 'Attendance', icon: Clock },
+  { path: '/librarian/support', label: 'Support & Complaints', icon: LifeBuoy },
 ];
 
 const reportItems = [

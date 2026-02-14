@@ -22,6 +22,7 @@ class Library extends Model
         'wifi_password',
         'parking_available',                    
         'is_active',
+        'seat_layout_mode',
         'created_by',
     ];
 

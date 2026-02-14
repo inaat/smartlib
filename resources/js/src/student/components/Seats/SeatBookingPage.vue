@@ -25,6 +25,10 @@
           <span class="text-xs font-medium text-gray-600">Occupied</span>
         </div>
         <div class="flex items-center px-3 py-1">
+          <div class="w-3 h-3 rounded-full bg-orange-400 mr-2"></div>
+          <span class="text-xs font-medium text-gray-600">In Queue</span>
+        </div>
+        <div class="flex items-center px-3 py-1">
           <div class="w-3 h-3 rounded-full bg-blue-600 mr-2"></div>
           <span class="text-xs font-medium text-gray-600">Selected</span>
         </div>
@@ -130,42 +134,108 @@
                     <Layout class="w-3.5 h-3.5 mr-2" />
                     {{ sectionName }}
                   </h4>
-                  <span class="text-[10px] text-gray-400 font-medium">{{ seats.length }} Seats Available</span>
+                  <span class="text-[10px] text-gray-400 font-medium">{{ seats.length }} Total Seats</span>
                 </div>
 
-                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
+                <!-- Mode 1: Grid View (Detailed List) -->
+                <div v-if="library?.seat_layout_mode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button 
                     v-for="seat in seats" 
                     :key="seat.id"
                     @click="toggleSeatSelection(seat)"
-                    :disabled="seat.status !== 'available'"
                     :class="[
-                      'aspect-square rounded-xl flex flex-col items-center justify-center transition-all transform hover:scale-105 relative group',
-                      seat.status === 'available' 
-                        ? (selectedSeat?.id === seat.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200')
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                      'p-4 rounded-xl flex items-center justify-between transition-all border group relative',
+                      selectedSeat?.id === seat.id 
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg' 
+                        : (seat.status === 'available' 
+                            ? 'bg-white hover:bg-green-50 border-gray-100 hover:border-green-200' 
+                            : 'bg-gray-50 border-transparent text-gray-400 opacity-80')
                     ]"
                   >
-                    <!-- Feature Indicators -->
-                    <div class="absolute top-1 right-1 flex flex-col items-end space-y-0.5 pointer-events-none">
-                      <Monitor v-if="seat.has_computer" :class="['w-2 h-2', selectedSeat?.id === seat.id ? 'text-white/50' : 'text-blue-500/50']" />
-                      <Zap v-if="seat.socket_count > 0" :class="['w-2 h-2', selectedSeat?.id === seat.id ? 'text-white/50' : 'text-green-500/50']" />
-                      <Wind v-if="seat.near_window" :class="['w-2 h-2', selectedSeat?.id === seat.id ? 'text-white/50' : 'text-yellow-600/50']" />
-                    </div>
-
-                    <Armchair class="w-5 h-5 mb-0.5" />
-                    <span class="text-[10px] font-bold">{{ seat.seat_number }}</span>
-                    
-                    <!-- Tooltip -->
-                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10 shadow-xl border border-white/10">
-                      <div class="font-bold mb-1">{{ seat.seat_type }} - {{ seat.zone || 'General' }}</div>
-                      <div class="flex flex-col gap-1 text-gray-400">
-                        <div v-if="seat.has_computer" class="flex items-center"><Monitor class="w-3 h-3 mr-1 text-blue-400" /> Computer Included</div>
-                        <div v-if="seat.near_window" class="flex items-center"><Layout class="w-3 h-3 mr-1 text-yellow-400" /> Near Window</div>
-                        <div v-if="seat.socket_count > 0" class="flex items-center"><Zap class="w-3 h-3 mr-1 text-green-400" /> {{ seat.socket_count }} Electric Sockets</div>
+                    <div class="flex items-center space-x-3">
+                      <div :class="['p-2 rounded-lg', selectedSeat?.id === seat.id ? 'bg-white/20' : 'bg-gray-100 text-gray-400']">
+                        <Armchair class="w-4 h-4" />
+                      </div>
+                      <div class="text-left">
+                        <p class="font-bold text-sm">Seat {{ seat.seat_number }}</p>
+                        <p class="text-[10px] opacity-70">{{ seat.seat_type }}</p>
                       </div>
                     </div>
+                    <div class="flex items-center space-x-2">
+                      <div class="flex space-x-1 mr-2">
+                        <Monitor v-if="seat.has_computer" class="w-3 h-3 opacity-50" />
+                        <Zap v-if="seat.socket_count > 0" class="w-3 h-3 opacity-50" />
+                      </div>
+                      <span :class="[
+                        'text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md',
+                        selectedSeat?.id === seat.id 
+                          ? 'bg-white/20 text-white' 
+                          : (seat.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500')
+                      ]">
+                        {{ seat.status }}
+                      </span>
+                    </div>
                   </button>
+                </div>
+
+                <!-- Mode 2: Student Layout (Visual Map) -->
+                <div v-else class="relative bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100 overflow-hidden" :style="{ height: '500px' }">
+                  <!-- Empty Layout Placeholder -->
+                  <div v-if="!seats.some(s => s.position_x || s.position_y)" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                    <Layout class="w-12 h-12 mb-3 opacity-20" />
+                    <p class="text-xs font-medium">Layout coordinates not set</p>
+                    <p class="text-[10px] opacity-60">Displaying in auto-grid fallback</p>
+                    <div class="grid grid-cols-6 sm:grid-cols-10 gap-2 mt-6">
+                        <div v-for="seat in seats" :key="seat.id + '-fallback'" class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-[10px] font-bold">
+                            {{ seat.seat_number }}
+                        </div>
+                    </div>
+                  </div>
+
+                  <!-- Interactive Seat Map (No padding to match librarian offsets) -->
+                  <div v-else class="absolute inset-0">
+                    <button 
+                      v-for="seat in seats" 
+                      :key="seat.id"
+                      @click="toggleSeatSelection(seat)"
+                      :class="[
+                        'absolute w-[60px] h-[60px] rounded-xl flex flex-col items-center justify-center transition-all transform hover:scale-110 group',
+                        selectedSeat?.id === seat.id 
+                          ? 'bg-blue-600 text-white shadow-lg z-20 scale-110 border-2 border-white' 
+                          : (seat.status === 'available' 
+                              ? 'bg-white text-green-600 hover:bg-green-50 border-2 border-green-100 hover:border-green-200 shadow-sm' 
+                              : 'bg-gray-100 text-gray-400 border-2 border-transparent grayscale opacity-60')
+                      ]"
+                      :style="{ 
+                        left: seat.position_x + 'px', 
+                        top: seat.position_y + 'px' 
+                      }"
+                    >
+                      <!-- Feature Indicators (Mini) -->
+                      <div class="absolute top-1 right-1 flex flex-col items-end space-y-0.5 pointer-events-none">
+                        <div v-if="seat.has_computer" class="w-1.5 h-1.5 rounded-full bg-blue-400 border border-white"></div>
+                        <div v-if="seat.near_window" class="w-1.5 h-1.5 rounded-full bg-yellow-400 border border-white"></div>
+                        <div v-if="seat.socket_count > 0" class="w-1.5 h-1.5 rounded-full bg-green-400 border border-white"></div>
+                      </div>
+
+                      <Armchair class="w-5 h-5 mb-0.5" />
+                      <span class="text-[10px] font-black">{{ seat.seat_number }}</span>
+                      
+                      <!-- Enhanced Tooltip -->
+                      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-gray-900 text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all shadow-2xl border border-white/10 z-30 whitespace-nowrap">
+                        <div class="flex items-center justify-between gap-4 mb-1">
+                          <span class="font-bold">{{ seat.seat_type }}</span>
+                          <span :class="seat.status === 'available' ? 'text-green-400' : 'text-gray-400'">{{ seat.status }}</span>
+                        </div>
+                        <div class="flex flex-col gap-1 text-gray-400">
+                          <div v-if="seat.has_computer" class="flex items-center"><Monitor class="w-3 h-3 mr-1 text-blue-400" /> Computer</div>
+                          <div v-if="seat.near_window" class="flex items-center"><Wind class="w-3 h-3 mr-1 text-yellow-400" /> Window Side</div>
+                          <div v-if="seat.socket_count > 0" class="flex items-center"><Zap class="w-3 h-3 mr-1 text-green-400" /> {{ seat.socket_count }} Sockets</div>
+                        </div>
+                        <div class="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -227,12 +297,40 @@
             </div>
             <div class="pt-6 border-t border-gray-100">
               <button 
+                v-if="selectedSeat.status === 'available'"
                 @click="confirmBooking"
                 :disabled="submitting"
                 class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {{ submitting ? 'Processing...' : 'Confirm Booking' }}
               </button>
+              <div v-else class="space-y-4">
+                <div v-if="selectedSeat.remaining_minutes > 15" class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-center">
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Currently Occupied</p>
+                    <p class="text-sm text-gray-700">Ends in: {{ Math.floor(selectedSeat.remaining_minutes / 60) }}h {{ Math.floor(selectedSeat.remaining_minutes % 60) }}m</p>
+                    <p class="text-[10px] text-gray-400 mt-2 font-medium italic">Queue opens when 10 mins remain</p>
+                </div>
+                <div v-else-if="selectedSeat.remaining_minutes > 10" class="p-4 bg-orange-50 rounded-xl border border-orange-100 text-center">
+                    <p class="text-xs text-orange-700 font-medium font-bold uppercase tracking-wider mb-2">Session Ending Soon</p>
+                    <p class="text-sm text-gray-700">Ends in: {{ Math.floor(selectedSeat.remaining_minutes / 60) }}h {{ Math.floor(selectedSeat.remaining_minutes % 60) }}m</p>
+                    <p class="text-[10px] text-orange-600 mt-2 font-medium italic">Queue opens in {{ selectedSeat.remaining_minutes - 10 }} mins</p>
+                </div>
+                <template v-else>
+                    <div class="p-4 bg-orange-50 rounded-xl border border-orange-100 text-center">
+                        <p class="text-xs text-orange-700 font-medium font-bold">Session Ending Soon!</p>
+                        <p class="text-[10px] text-orange-600 mt-1">You can now join the queue to claim this seat next.</p>
+                    </div>
+                    <button 
+                        @click="joinQueue"
+                        :disabled="submitting"
+                        class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold hover:bg-orange-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                    >
+                        <Clock v-if="!submitting" class="w-4 h-4" />
+                        <span v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                        <span>{{ submitting ? 'Joining...' : 'Join Waiting List' }}</span>
+                    </button>
+                </template>
+              </div>
             </div>
           </div>
 
@@ -392,7 +490,6 @@ const fetchSeats = async () => {
 };
 
 const toggleSeatSelection = (seat: any) => {
-  if (seat.status !== 'available') return;
   selectedSeat.value = selectedSeat.value?.id === seat.id ? null : seat;
 };
 
@@ -400,7 +497,7 @@ const getFloorName = (id: number) => floors.value.find(f => f.id === id)?.name |
 const getSectionName = (id: number) => sections.value.find(s => s.id === id)?.name || '';
 
 import { useSwal } from '@/shared/composables/useSwal';
-const { showError } = useSwal();
+const { showError, showSuccess } = useSwal();
 
 const confirmBooking = async () => {
   if (!selectedSeat.value) return;
@@ -422,9 +519,26 @@ const confirmBooking = async () => {
     });
     
     showSuccessModal.value = true;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Booking failed:', error);
-    showError('Booking Failed', 'Failed to create booking. Please try again.');
+    showError('Booking Failed', error.message || 'Failed to create booking. Please try again.');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const joinQueue = async () => {
+  if (!selectedSeat.value) return;
+  
+  submitting.value = true;
+  try {
+    const response = await studentAPI.joinQueue(selectedSeat.value.id);
+    showSuccess('Queue Joined', `You are at position #${response.position} in the queue. We'll notify you when the seat is free.`);
+    selectedSeat.value = null;
+    fetchSeats();
+  } catch (error: any) {
+    console.error('Queue joining failed:', error);
+    showError('Queue Error', error.message || 'Could not join the queue.');
   } finally {
     submitting.value = false;
   }

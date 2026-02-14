@@ -78,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/bookings/{booking}/checkin', [BookingController::class, 'checkIn'])->name('bookings.checkin');
         Route::post('/bookings/{booking}/checkout', [BookingController::class, 'checkOut'])->name('bookings.checkout');
         Route::post('/bookings/{booking}/extend', [BookingController::class, 'extend'])->name('bookings.extend');
+        Route::post('/bookings/join-queue', [BookingController::class, 'joinQueue'])->name('bookings.join-queue');
         Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
 
         // Books
@@ -107,6 +108,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Analytics
         Route::get('/analytics', [\App\Http\Controllers\Student\AnalyticsController::class, 'index'])->name('analytics');
+
+        // Support Tickets
+        Route::get('/support-tickets', [\App\Http\Controllers\SupportTicketController::class, 'index'])->name('support-tickets.index');
+        Route::post('/support-tickets', [\App\Http\Controllers\SupportTicketController::class, 'store'])->name('support-tickets.store');
+        Route::get('/support-tickets/{supportTicket}', [\App\Http\Controllers\SupportTicketController::class, 'show'])->name('support-tickets.show');
+        Route::post('/support-tickets/{supportTicket}/messages', [\App\Http\Controllers\SupportTicketController::class, 'sendMessage'])->name('support-tickets.messages.store');
+        Route::put('/support-tickets/{supportTicket}/status', [\App\Http\Controllers\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
     });
 
     // Common Profile & Notification Routes (Accessible by all authenticated users)
@@ -200,6 +208,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'index'])->name('settings.index');
         Route::put('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'update'])->name('settings.update');
         Route::post('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'store'])->name('settings.store');
+
+        // Support Tickets
+        Route::get('/support-tickets', [\App\Http\Controllers\SupportTicketController::class, 'index'])->name('support-tickets.index');
+        Route::get('/support-tickets/{supportTicket}', [\App\Http\Controllers\SupportTicketController::class, 'show'])->name('support-tickets.show');
+        Route::post('/support-tickets/{supportTicket}/messages', [\App\Http\Controllers\SupportTicketController::class, 'sendMessage'])->name('support-tickets.messages.store');
+        Route::put('/support-tickets/{supportTicket}/status', [\App\Http\Controllers\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
     });
 
     // Librarian Routes
@@ -276,5 +290,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/attendance', [\App\Http\Controllers\Librarian\AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('/attendance/stats', [\App\Http\Controllers\Librarian\AttendanceController::class, 'stats'])->name('attendance.stats');
         Route::post('/attendance/mark', [\App\Http\Controllers\Librarian\AttendanceController::class, 'markAttendance'])->name('attendance.mark');
+
+        // Support Tickets
+        Route::get('/support-tickets', [\App\Http\Controllers\SupportTicketController::class, 'index'])->name('support-tickets.index');
+        Route::get('/support-tickets/{supportTicket}', [\App\Http\Controllers\SupportTicketController::class, 'show'])->name('support-tickets.show');
+        Route::post('/support-tickets/{supportTicket}/messages', [\App\Http\Controllers\SupportTicketController::class, 'sendMessage'])->name('support-tickets.messages.store');
+        Route::put('/support-tickets/{supportTicket}/status', [\App\Http\Controllers\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
     });
 });

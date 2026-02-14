@@ -104,7 +104,8 @@ import {
   ChevronRight,
   CreditCard,
   BarChart3,
-  BookMarked
+  BookMarked,
+  LifeBuoy
 } from 'lucide-vue-next';
 
 import { useSwal } from '@/shared/composables/useSwal';
@@ -136,5 +137,7 @@ const mainNavItems = [
 const quickAccessItems = [
   { path: '/student/analytics', label: 'My Analytics', icon: BarChart3 },
   { path: '/student/subscription', label: 'Subscription', icon: CreditCard },
+  { path: '/student/support', label: 'Support & Complaints', icon: LifeBuoy },
 ];
 </script>
+

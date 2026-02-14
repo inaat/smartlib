@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\SeatBooking;
 use App\Models\Seat;
+use App\Models\SmartQueue;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class BookingController extends Controller
 {
@@ -132,10 +135,70 @@ class BookingController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        $booking = SeatBooking::with('seat.library.floors')->findOrFail($id);
+        $user = $request->user();
+        
+        if ($id === 'auto') {
+            $queueEntry = SmartQueue::where('user_id', $user->id)
+                ->whereIn('status', ['notified', 'waiting'])
+                ->orderBy('queue_position', 'asc')
+                ->first();
 
-        if ($booking->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            if (!$queueEntry) {
+                return response()->json(['message' => 'No active seat notification found or you are not in queue.'], 404);
+            }
+
+            // If still waiting, check if they are first and the 10min window is open
+            if ($queueEntry->status === 'waiting') {
+                $firstInQueue = SmartQueue::where('seat_id', $queueEntry->seat_id)
+                    ->whereIn('status', ['waiting', 'notified'])
+                    ->orderBy('queue_position', 'asc')
+                    ->first();
+
+                if ($firstInQueue->id !== $queueEntry->id) {
+                    return response()->json(['message' => 'You are not first in the queue. Please wait for your turn.'], 400);
+                }
+
+                $activeBooking = SeatBooking::where('seat_id', $queueEntry->seat_id)
+                    ->whereIn('status', ['booked', 'checked_in'])
+                    ->orderBy('scheduled_end_time', 'desc')
+                    ->first();
+
+                if ($activeBooking) {
+                    $remainingMinutes = now()->diffInMinutes($activeBooking->scheduled_end_time, false);
+                    if ($remainingMinutes > 10) {
+                        return response()->json(['message' => 'Cannot check in yet. More than 10 minutes remaining for current occupant.'], 400);
+                    }
+                    
+                    // Force checkout previous user as their time is almost up and next student is checking in
+                    $activeBooking->update([
+                        'status' => 'checked_out',
+                        'check_out_time' => now(),
+                        'total_minutes' => $activeBooking->check_in_time ? now()->diffInMinutes($activeBooking->check_in_time) : 0
+                    ]);
+
+                    // Verify seat becomes available (logic update below will set it occupied)
+                    $activeBooking->seat->update(['status' => 'available']);
+                }
+            }
+
+            // Create a booking for this user
+            $booking = SeatBooking::create([
+                'user_id' => $user->id,
+                'seat_id' => $queueEntry->seat_id,
+                'library_id' => $queueEntry->library_id,
+                'booking_time' => now(),
+                'scheduled_end_time' => now()->addHours(2), // Default 2h for queue assigned seats
+                'status' => 'booked',
+            ]);
+
+            $queueEntry->update(['status' => 'assigned']);
+            $booking = $booking->load('seat.library');
+        } else {
+            $booking = SeatBooking::with('seat.library.floors')->findOrFail($id);
+
+            if ($booking->user_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
         }
 
         $library = $booking->seat->library;
@@ -167,7 +230,22 @@ class BookingController extends Controller
 
         $booking->seat->update(['status' => 'occupied']);
 
-        return response()->json(['success' => true, 'booking' => $booking]);
+        // Track arrival for today and update streak
+        $user->last_checkin_date = now()->toDateString();
+        
+        // Increment streak for every check-in as requested
+        $user->current_streak = ($user->current_streak ?? 0) + 1;
+        if ($user->current_streak > $user->max_streak) {
+            $user->max_streak = $user->current_streak;
+        }
+        $user->last_streak_date = now()->toDateString();
+        
+        $user->save();
+
+        return response()->json([
+            'success' => true, 
+            'booking' => $booking
+        ]);
     }
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
@@ -188,9 +266,10 @@ class BookingController extends Controller
 
     public function checkOut(Request $request, $id)
     {
-        $booking = SeatBooking::findOrFail($id);
+        $user = $request->user();
+        $booking = SeatBooking::with('seat.library')->findOrFail($id);
 
-        if ($booking->user_id !== $request->user()->id) {
+        if ($booking->user_id !== $user->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -207,7 +286,53 @@ class BookingController extends Controller
             $booking->save();
         }
 
-        return response()->json(['success' => true, 'booking' => $booking]);
+        // Streak Logic: Check if they hit the library's target today
+        $library = $booking->seat->library;
+        $minMinutes = $library->special_features['settings']['minStudyMinutesForStreak'] ?? 0;
+        $today = now()->toDateString();
+
+        if ($user->last_streak_date !== $today) {
+            $totalMinutesToday = SeatBooking::where('user_id', $user->id)
+                ->whereDate('check_out_time', $today)
+                ->sum('total_minutes');
+
+            if ($totalMinutesToday >= $minMinutes) {
+                $yesterday = now()->subDay()->toDateString();
+                if ($user->last_streak_date === $yesterday) {
+                    $user->current_streak += 1;
+                } else {
+                    $user->current_streak = 1;
+                }
+
+                if ($user->current_streak > $user->max_streak) {
+                    $user->max_streak = $user->current_streak;
+                }
+
+                $user->last_streak_date = $today;
+                $user->save();
+            }
+        }
+
+        // Notify next person in queue
+        $nextInQueue = SmartQueue::where('seat_id', $booking->seat_id)
+            ->where('status', 'waiting')
+            ->orderBy('queue_position', 'asc')
+            ->first();
+
+        if ($nextInQueue) {
+            $nextInQueue->update(['status' => 'notified']);
+            
+            Notification::create([
+                'user_id' => $nextInQueue->user_id,
+                'type' => 'seat_available',
+                'title' => 'Seat Available!',
+                'message' => "Seat {$booking->seat->seat_number} is now free. You have 10 minutes to check in.",
+                'related_type' => 'App\Models\Seat',
+                'related_id' => $booking->seat_id,
+            ]);
+        }
+
+        return response()->json(['success' => true, 'booking' => $booking, 'streak' => $user->current_streak]);
     }
     public function extend(Request $request, $id)
     {
@@ -223,6 +348,14 @@ class BookingController extends Controller
 
         if ($booking->status !== 'checked_in') {
             return response()->json(['message' => 'Only active bookings can be extended'], 400);
+        }
+
+        // Rule: Cannot extend if less than 10 minutes remaining
+        $remainingMinutes = now()->diffInMinutes($booking->scheduled_end_time, false);
+        if ($remainingMinutes < 10) {
+            return response()->json([
+                'message' => 'Cannot extend booking with less than 10 minutes remaining. Priority is given to the queue.'
+            ], 400);
         }
 
         $newEndTime = $booking->scheduled_end_time->addMinutes($request->minutes);
@@ -264,5 +397,64 @@ class BookingController extends Controller
         $booking->seat->update(['status' => 'available']);
 
         return response()->json(['success' => true, 'message' => 'Booking cancelled successfully']);
+    }
+
+    public function joinQueue(Request $request)
+    {
+        $request->validate([
+            'seat_id' => 'required|exists:seats,id',
+        ]);
+
+        $user = $request->user();
+        $seat = Seat::with('floor.library')->findOrFail($request->seat_id);
+
+        if ($seat->status === 'available') {
+            return response()->json(['message' => 'Seat is currently available. You can book it directly.'], 400);
+        }
+
+        // Rule: Can only join queue if less than 10 minutes remaining for the current session
+        $activeBooking = SeatBooking::where('seat_id', $seat->id)
+            ->whereIn('status', ['booked', 'checked_in'])
+            ->orderBy('scheduled_end_time', 'desc')
+            ->first();
+
+        if ($activeBooking) {
+            $remainingMinutes = now()->diffInMinutes($activeBooking->scheduled_end_time, false);
+            if ($remainingMinutes > 10) {
+                return response()->json([
+                    'message' => "You can only join the queue when less than 10 minutes are remaining for the current session. Session ends in {$remainingMinutes} minutes."
+                ], 400);
+            }
+        }
+
+        // Check if already in queue for this seat
+        $existingQueue = SmartQueue::where('user_id', $user->id)
+            ->where('seat_id', $seat->id)
+            ->where('status', 'waiting')
+            ->first();
+
+        if ($existingQueue) {
+            return response()->json(['message' => 'You are already in the queue for this seat.'], 400);
+        }
+
+        // Get last position
+        $lastPosition = SmartQueue::where('seat_id', $seat->id)
+            ->where('status', 'waiting')
+            ->max('queue_position') ?? 0;
+
+        $queue = SmartQueue::create([
+            'user_id' => $user->id,
+            'library_id' => $seat->library_id ?? $seat->floor->library_id,
+            'seat_id' => $seat->id,
+            'queue_position' => $lastPosition + 1,
+            'status' => 'waiting',
+            'joined_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Successfully joined the queue.',
+            'position' => $queue->queue_position
+        ]);
     }
 }

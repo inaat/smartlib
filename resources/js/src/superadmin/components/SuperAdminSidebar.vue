@@ -117,8 +117,10 @@ import {
   Calendar,
   ClipboardList,
   Square,
-  ShoppingBag
+  ShoppingBag,
+  LifeBuoy
 } from 'lucide-vue-next';
+
 
 defineProps<{
   isOpen: boolean;
@@ -145,6 +147,7 @@ const systemNavItems = [
   { path: '/superadmin/subscription-plans', label: 'Subscription Plans', icon: CreditCard },
   { path: '/superadmin/orders', label: 'Orders', icon: ShoppingBag },
   { path: '/superadmin/analytics', label: 'Analytics', icon: BarChart3 },
+  { path: '/superadmin/support', label: 'Support & Complaints', icon: LifeBuoy },
   { path: '/superadmin/settings', label: 'System Settings', icon: Settings },
 ];
 </script>

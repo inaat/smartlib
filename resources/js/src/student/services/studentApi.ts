@@ -78,6 +78,25 @@ export const studentAPI = {
     }
   },
 
+  async extendBooking(bookingId: string, minutes: number): Promise<any> {
+    try {
+      const response = await api.post(`/student/bookings/${bookingId}/extend`, { minutes });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async joinQueue(seatId: number): Promise<any> {
+    try {
+      const response = await api.post('/student/bookings/join-queue', { seat_id: seatId });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
   async checkIn(bookingId: string, qrCode: string, latitude?: number, longitude?: number): Promise<{ success: boolean }> {
     try {
       const response = await api.post(`/student/bookings/${bookingId}/checkin`, {

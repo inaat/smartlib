@@ -17,6 +17,19 @@
         </button>
         <button
           v-if="selectedLibraryId"
+          @click="isLayoutMode = !isLayoutMode"
+          :class="[
+            'px-4 py-2 rounded-lg transition-all flex items-center space-x-2 border shadow-sm',
+            isLayoutMode 
+              ? 'bg-indigo-600 text-white border-indigo-600' 
+              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+          ]"
+        >
+          <Move class="w-4 h-4" />
+          <span class="text-sm font-medium">{{ isLayoutMode ? 'Grid View' : 'Layout Mode' }}</span>
+        </button>
+        <button
+          v-if="selectedLibraryId"
           @click="openCreateModal"
           class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center space-x-2"
         >
@@ -183,13 +196,31 @@
               <span class="text-xs text-gray-400 font-medium">{{ seats.length }} Seats</span>
             </div>
 
-            <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
+            <div 
+              :class="[
+                isLayoutMode 
+                  ? 'relative h-[600px] bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden' 
+                  : 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3'
+              ]"
+              @dragover.prevent
+              @drop="onDrop($event, seats)"
+            >
               <button
                 v-for="seat in seats"
                 :key="seat.id"
-                @click="selectSeat(seat)"
+                @click="!isLayoutMode && selectSeat(seat)"
+                :draggable="isLayoutMode"
+                @dragstart="onDragStart($event, seat)"
+                :style="isLayoutMode ? {
+                  position: 'absolute',
+                  left: `${seat.position_x}px`,
+                  top: `${seat.position_y}px`,
+                  width: '60px',
+                  height: '60px'
+                } : {}"
                 :class="[
-                  'aspect-square rounded-lg border-2 flex flex-col items-center justify-center transition-all hover:scale-105 relative',
+                  'rounded-lg border-2 flex flex-col items-center justify-center transition-all relative',
+                  !isLayoutMode ? 'aspect-square hover:scale-105' : 'cursor-move shadow-md',
                   seat.status === 'available' ? 'bg-green-50 border-green-500 hover:bg-green-100' :
                   seat.status === 'occupied' ? 'bg-red-50 border-red-500 hover:bg-red-100' :
                   seat.status === 'reserved' ? 'bg-orange-50 border-orange-500 hover:bg-orange-100' :
@@ -419,8 +450,12 @@ import {
   Wrench,
   Printer,
   User,
-  Lock
+  Lock,
+  Move
 } from 'lucide-vue-next';
+import { useSwal } from '@/shared/composables/useSwal';
+
+const { toast } = useSwal();
 import { superadminAPI } from '../../services/superadminApi';
 import LibrarySelector from '../Shared/LibrarySelector.vue';
 
@@ -432,7 +467,10 @@ const sections = ref<any[]>([]);
 const showCreateModal = ref(false);
 const selectedSeat = ref<any>(null);
 const loading = ref(false);
+const isLayoutMode = ref(false);
 const activeSectionId = ref<number | null>(null);
+const draggedSeat = ref<any>(null);
+const dragOffset = ref({ x: 0, y: 0 });
 
 const form = ref({
   seat_number: '',
@@ -587,6 +625,48 @@ const confirmDelete = async (seat: any) => {
   }
 };
 
+const onDragStart = (event: DragEvent, seat: any) => {
+  if (!isLayoutMode.value) return;
+  draggedSeat.value = seat;
+  const rect = (event.target as HTMLElement).getBoundingClientRect();
+  dragOffset.value = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  };
+  event.dataTransfer?.setData('text/plain', seat.id.toString());
+};
+
+const onDrop = async (event: DragEvent, sectionSeats: any[]) => {
+  if (!isLayoutMode.value || !draggedSeat.value) return;
+  
+  const container = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const x = Math.round(event.clientX - container.left - dragOffset.value.x);
+  const y = Math.round(event.clientY - container.top - dragOffset.value.y);
+
+  // Clamp values inside container
+  const finalX = Math.max(0, Math.min(x, container.width - 60));
+  const finalY = Math.max(0, Math.min(y, container.height - 60));
+
+  try {
+    // Optimistic update
+    draggedSeat.value.position_x = finalX;
+    draggedSeat.value.position_y = finalY;
+
+    await superadminAPI.updateSeat(draggedSeat.value.id, {
+      position_x: finalX,
+      position_y: finalY
+    });
+    
+    toast('Layout Updated', `Seat ${draggedSeat.value.seat_number} repositioned`, 'success');
+  } catch (error) {
+    console.error('Error saving seat position:', error);
+    toast('Error', 'Could not save seat position', 'error');
+    fetchData();
+  } finally {
+    draggedSeat.value = null;
+  }
+};
+
 const printQRCode = (seat: any) => {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
@@ -620,13 +700,17 @@ const printQRCode = (seat: any) => {
 };
 
 const printActiveSectionQRs = () => {
-  if (!activeSectionId.value) return;
-  
-  const section = sections.value.find(s => s.id === activeSectionId.value);
-  if (!section) return;
+  const section = activeSectionId.value 
+    ? sections.value.find(s => s.id === activeSectionId.value)
+    : { name: 'All Sections' };
+    
+  if (!section && activeSectionId.value) return;
 
   const printWindow = window.open('', '_blank');
-  if (!printWindow) return;
+  if (!printWindow) {
+    toast('Error', 'Popup blocked! Please allow popups to print.', 'error');
+    return;
+  }
 
   const sectionSeats = filteredSectionSeats.value;
   let html = `
@@ -661,11 +745,12 @@ const printActiveSectionQRs = () => {
   `;
 
   sectionSeats.forEach((seat: any) => {
+    const seatSectionName = seat.seat_section?.name || section.name;
     html += `
       <div class="qr-item">
-        <img src="${seat.qr_code_url}" class="qr-image" />
+        <img src="${seat.qr_code_url}" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
         <div class="seat-number">Seat ${seat.seat_number}</div>
-        <div class="section-info">${section.name}</div>
+        <div class="section-info">${seatSectionName}</div>
       </div>
     `;
   });

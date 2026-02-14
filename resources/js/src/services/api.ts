@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { User, Library, Seat, Book, Event, Booking, Reservation, Notification, Analytics } from '../types';
+import { User, Library, Seat, Book, Event, Booking, Reservation, Notification, Analytics, SupportTicket, SupportMessage } from '../shared/types';
+
 
 // Create axios instance with default config
 const api: AxiosInstance = axios.create({
@@ -153,6 +154,16 @@ export const studentAPI = {
   async getBookings(): Promise<Booking[]> {
     try {
       const response = await api.get('/student/bookings');
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async joinQueue(seatId: number): Promise<any> {
+    try {
+      const response = await api.post('/student/bookings/join-queue', { seat_id: seatId });
       return response.data;
     } catch (error) {
       handleApiError(error);
@@ -596,4 +607,58 @@ export const librarianAPI = {
   },
 };
 
+// ============= Support API =============
+export const supportAPI = {
+  async getTickets(role: 'student' | 'librarian' | 'admin'): Promise<SupportTicket[]> {
+    try {
+      const response = await api.get(`/${role}/support-tickets`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async createTicket(ticket: { subject: string; message: string; priority: string; library_id?: number }): Promise<SupportTicket> {
+    try {
+      const response = await api.post('/student/support-tickets', ticket);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async getTicket(role: 'student' | 'librarian' | 'admin', id: number): Promise<SupportTicket> {
+    try {
+      const response = await api.get(`/${role}/support-tickets/${id}`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async sendMessage(role: 'student' | 'librarian' | 'admin', ticketId: number, message: string): Promise<SupportMessage> {
+    try {
+      const response = await api.post(`/${role}/support-tickets/${ticketId}/messages`, { message });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async updateStatus(role: 'student' | 'librarian' | 'admin', ticketId: number, status: string): Promise<SupportTicket> {
+    try {
+      const response = await api.put(`/${role}/support-tickets/${ticketId}/status`, { status });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+};
+
 export default api;
+

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SeatBooking;
 use App\Models\BookReservation;
 use App\Models\Event;
+use App\Models\SmartQueue;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -118,19 +119,12 @@ class DashboardController extends Controller
             ];
         }
 
-        // Calculate study streak
-        $studyStreak = 0;
-        $currentDate = now()->startOfDay();
-        while (true) {
-            $hasStudy = SeatBooking::where('user_id', $user->id)
-                ->where('status', 'checked_out')
-                ->whereDate('check_out_time', $currentDate)
-                ->exists();
-            
-            if (!$hasStudy) break;
-            $studyStreak++;
-            $currentDate = $currentDate->subDay();
+        // Update and get stored streak
+        if ($user->last_streak_date && $user->last_streak_date < now()->subDay()->toDateString()) {
+            $user->current_streak = 0;
+            $user->save();
         }
+        $studyStreak = $user->current_streak;
 
         // Session statistics
         $totalSessions = $completedBookings->count();
@@ -140,6 +134,10 @@ class DashboardController extends Controller
         return response()->json([
             'stats' => $stats,
             'active_booking' => $activeBooking,
+            'active_queue' => SmartQueue::with('seat.library')
+                ->where('user_id', $user->id)
+                ->whereIn('status', ['waiting', 'notified'])
+                ->get(),
             'recent_activity' => $recentActivity,
             'upcoming_events' => $upcomingEvents,
             'analytics' => [

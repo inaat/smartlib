@@ -23,6 +23,15 @@ const router = createRouter({
             meta: { guestOnly: true }
         },
         {
+            path: '/qr-checkin',
+            redirect: to => {
+                return {
+                    name: 'student-qr-checkin',
+                    query: to.query
+                };
+            }
+        },
+        {
             path: '/student',
             component: () => import('@/student/StudentApp.vue'),
             meta: { requiresAuth: true, role: 'student' },
@@ -86,6 +95,11 @@ const router = createRouter({
                     path: 'analytics',
                     name: 'student-analytics',
                     component: () => import('@/student/components/Analytics/AnalyticsPage.vue')
+                },
+                {
+                    path: 'support',
+                    name: 'student-support',
+                    component: () => import('@/student/components/Support/SupportPage.vue')
                 },
                 {
                     path: '',
@@ -162,6 +176,11 @@ const router = createRouter({
                     path: 'profile',
                     name: 'librarian-profile',
                     component: () => import('@/librarian/components/Profile/ProfilePage.vue')
+                },
+                {
+                    path: 'support',
+                    name: 'librarian-support',
+                    component: () => import('@/librarian/components/Support/SupportPage.vue')
                 },
                 {
                     path: '',
@@ -253,6 +272,11 @@ const router = createRouter({
                     path: 'profile',
                     name: 'superadmin-profile',
                     component: () => import('@/superadmin/components/Profile/ProfilePage.vue')
+                },
+                {
+                    path: 'support',
+                    name: 'superadmin-support',
+                    component: () => import('@/superadmin/components/Support/SupportPage.vue')
                 },
                 {
                     path: '',
