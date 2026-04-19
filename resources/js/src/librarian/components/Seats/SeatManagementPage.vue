@@ -20,8 +20,18 @@
             <ChevronDown class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
           </div>
 
-          <!-- Section Tabs -->
-          <div class="flex items-center bg-gray-50 p-1 rounded-lg border border-gray-200 max-w-[280px] sm:max-w-sm overflow-x-auto no-scrollbar">
+          <div class="flex items-center bg-gray-50 p-1 rounded-lg border border-gray-200 max-w-[400px] overflow-x-auto no-scrollbar gap-1">
+            <button
+              @click="activeSectionId = null"
+              :class="[
+                'px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap',
+                activeSectionId === null
+                  ? 'bg-white text-purple-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              ]"
+            >
+              All Seats
+            </button>
             <button
               v-for="section in currentFloorSections"
               :key="section.id"
@@ -38,7 +48,7 @@
           </div>
         </div>
       </div>
-      <div class="flex items-center">
+      <div class="flex items-center space-x-3">
         <button
           @click="isLayoutMode = !isLayoutMode"
           :class="[
@@ -80,6 +90,47 @@
       </div>
     </div>
 
+    <!-- Layout Toolbar (Above the Widget) -->
+    <transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="transform -translate-y-4 opacity-0"
+      enter-to-class="transform translate-y-0 opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="transform translate-y-0 opacity-100"
+      leave-to-class="transform -translate-y-4 opacity-0"
+    >
+      <div v-if="isLayoutMode" class="bg-white p-2 rounded-xl border border-purple-100 shadow-sm flex items-center justify-between">
+        <div class="flex items-center space-x-1">
+          <div class="px-3 border-r border-gray-100 mr-2 py-1">
+            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-widest whitespace-nowrap">Layout Toolbar</span>
+          </div>
+          
+          <button 
+            @click="autoArrangeLayout"
+            :disabled="isArranging"
+            class="px-4 py-2 hover:bg-purple-50 text-gray-700 hover:text-purple-600 rounded-lg transition-all flex items-center space-x-2 group disabled:opacity-50"
+          >
+            <Wand2 :class="['w-4 h-4 transition-transform group-hover:rotate-12', isArranging ? 'animate-pulse' : '']" />
+            <span class="text-sm font-semibold whitespace-nowrap">{{ isArranging ? 'Arranging...' : 'Auto-Arrange' }}</span>
+          </button>
+
+          <div class="w-px h-6 bg-gray-100 mx-2"></div>
+
+          <button 
+            class="p-2 hover:bg-gray-50 text-gray-400 rounded-lg transition-all relative group"
+            title="Add specialized props..."
+          >
+            <Plus class="w-4 h-4" />
+          </button>
+        </div>
+
+        <div class="text-[10px] text-gray-400 font-medium px-4 italic flex items-center">
+          <Info class="w-3 h-3 mr-1" />
+          Drag seats to reposition or use auto-arrange for standard layouts
+        </div>
+      </div>
+    </transition>
+
     <!-- Main Seat Map Card -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-visible flex flex-col min-h-[600px]">
       <!-- Sub-header -->
@@ -89,7 +140,8 @@
       </div>
 
       <!-- Scrollable Map Area -->
-      <div class="flex-1 overflow-visible bg-gray-50 relative p-12">
+      <div class="flex-1 overflow-visible bg-gray-50 relative p-12 min-h-[600px]">
+        
         <!-- Floor Plan Outline Elements -->
         <div class="absolute inset-0 pointer-events-none opacity-20">
           <div class="absolute top-0 bottom-0 left-[5%] w-[2px] bg-gray-300"></div>
@@ -252,19 +304,64 @@
           <!-- When in Layout Mode -->
           <div 
             v-else 
-            class="relative w-full h-[600px] bg-white/50 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden transition-all"
-            @dragover.prevent
-            @drop="onDrop($event)"
+            class="relative w-full overflow-x-auto bg-gray-50/50 flex flex-col items-center justify-start p-8 rounded-2xl border border-gray-100 shadow-inner"
           >
             <div
-              v-for="seat in sectionSeats"
+              class="relative flex-none w-[800px] h-[600px] bg-white rounded-2xl border-[6px] border-gray-900 shadow-md overflow-hidden transition-all"
+              @dragover.prevent
+              @drop="onDrop($event)"
+            >
+            <!-- E-Shaped Floor Plan Backdrop -->
+            <div class="absolute inset-0 pointer-events-none">
+              <!-- Top Windows -->
+              <div class="absolute top-0 left-[25%] w-[15%] h-2 bg-blue-100 border-x border-b border-gray-400 rounded-b-sm"></div>
+              <div class="absolute top-0 right-[25%] w-[15%] h-2 bg-blue-100 border-x border-b border-gray-400 rounded-b-sm"></div>
+              
+              <!-- Side Windows -->
+              <div class="absolute top-[45%] left-0 w-2 h-[15%] bg-blue-100 border-y border-r border-gray-400 rounded-r-sm"></div>
+              <div class="absolute top-[20%] right-0 w-2 h-[40%] bg-blue-100 border-y border-l border-gray-400 rounded-l-sm"></div>
+
+              <!-- Top Left Door Swing -->
+              <div class="absolute top-0 left-0 w-20 h-20 border-b-2 border-r-2 border-gray-800 rounded-br-full opacity-40"></div>
+              <!-- Bottom Right Door Swing -->
+              <div class="absolute bottom-0 right-0 w-20 h-20 border-t-2 border-l-2 border-gray-800 rounded-tl-full opacity-40"></div>
+
+              <!-- The E-Shaped Table Structure -->
+              <div class="absolute top-[80px] left-[10%] right-[10%] h-[60px] bg-white border-[2px] border-gray-600 shadow-sm z-10"></div>
+              <div class="absolute top-[140px] left-[15%] w-[60px] h-[300px] bg-white border-[2px] border-t-0 border-gray-600 shadow-sm z-0"></div>
+              <div class="absolute top-[140px] left-1/2 -translate-x-1/2 w-[60px] h-[300px] bg-white border-[2px] border-t-0 border-gray-600 shadow-sm z-0"></div>
+              <div class="absolute top-[140px] right-[15%] w-[60px] h-[300px] bg-white border-[2px] border-t-0 border-gray-600 shadow-sm z-0"></div>
+              <div class="absolute bottom-[20px] left-[12%] right-[25%] h-[40px] bg-white border-[2px] border-gray-600 shadow-sm"></div>
+
+              <!-- Decor: Plants -->
+              <svg class="absolute top-[220px] left-[32%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+                <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+              </svg>
+              <svg class="absolute top-[380px] left-[32%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+                <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+              </svg>
+              <svg class="absolute top-[220px] right-[32%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+                <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+              </svg>
+              <svg class="absolute top-[380px] right-[32%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+                <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+              </svg>
+              <svg class="absolute bottom-[20px] left-[3%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+                <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+              </svg>
+              <svg class="absolute bottom-[20px] right-[13%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+                <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+              </svg>
+            </div>
+            <div
+              v-for="(seat, idx) in sectionSeats"
               :key="seat.id"
               :draggable="true"
               @dragstart="onDragStart($event, seat)"
               :style="{
                 position: 'absolute',
-                left: `${seat.position_x}px`,
-                top: `${seat.position_y}px`,
+                left: (seat.position_x || seat.position_y) ? `${seat.position_x}px` : `${eShapeCoordinates[idx]?.x || 20 + ((idx * 60) % 700)}px`,
+                top: (seat.position_x || seat.position_y) ? `${seat.position_y}px` : `${eShapeCoordinates[idx]?.y || 500}px`
               }"
               :class="[
                 'w-10 h-10 flex items-center justify-center transition-all cursor-move hover:scale-110 active:scale-95 drop-shadow-sm',
@@ -285,6 +382,7 @@
                   <span class="block text-[9px] font-bold text-gray-700 leading-none">{{ String(seat.seat_number).replace(/\D/g, '') || seat.seat_number }}</span>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </div>
@@ -440,7 +538,8 @@ import {
   Move,
   ChevronDown,
   Plus,
-  BookOpen
+  BookOpen,
+  Wand2
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 import { useSwal } from '@/shared/composables/useSwal';
@@ -450,7 +549,7 @@ const { toast } = useSwal();
 const seats = ref<any[]>([]);
 const loading = ref(false);
 const isLayoutMode = ref(false);
-
+const isArranging = ref(false);
 const activeFloorId = ref<number | null>(null);
 const activeSectionId = ref<number | null>(null);
 
@@ -458,6 +557,79 @@ const selectedSeat = ref<any>(null);
 const hoveredSeat = ref<any>(null);
 const draggedSeat = ref<any>(null);
 const dragOffset = ref({ x: 0, y: 0 });
+
+interface Coordinate { x: number; y: number; }
+
+const eShapeCoordinates: Coordinate[] = [
+  // Top Row (0-19) - 20 seats
+  { x: 50, y: 30 }, { x: 85, y: 30 }, { x: 120, y: 30 }, { x: 155, y: 30 }, { x: 190, y: 30 }, 
+  { x: 225, y: 30 }, { x: 260, y: 30 }, { x: 295, y: 30 }, { x: 330, y: 30 }, { x: 365, y: 30 },
+  { x: 400, y: 30 }, { x: 435, y: 30 }, { x: 470, y: 30 }, { x: 505, y: 30 }, { x: 540, y: 30 },
+  { x: 575, y: 30 }, { x: 610, y: 30 }, { x: 645, y: 30 }, { x: 680, y: 30 }, { x: 715, y: 30 },
+  
+  // Left Desk Column (20-45) - 26 seats
+  { x: 75, y: 150 }, { x: 185, y: 150 }, { x: 75, y: 185 }, { x: 185, y: 185 },
+  { x: 75, y: 220 }, { x: 185, y: 220 }, { x: 75, y: 255 }, { x: 185, y: 255 },
+  { x: 75, y: 290 }, { x: 185, y: 290 }, { x: 75, y: 325 }, { x: 185, y: 325 },
+  { x: 75, y: 360 }, { x: 185, y: 360 }, { x: 75, y: 395 }, { x: 185, y: 395 },
+  { x: 60, y: 445 }, { x: 95, y: 445 }, { x: 130, y: 445 }, { x: 165, y: 445 }, { x: 200, y: 445 },
+  
+  // Center Desk Column (46-71) - 26 seats
+  { x: 325, y: 150 }, { x: 435, y: 150 }, { x: 325, y: 185 }, { x: 435, y: 185 },
+  { x: 325, y: 220 }, { x: 435, y: 220 }, { x: 325, y: 255 }, { x: 435, y: 255 },
+  { x: 325, y: 290 }, { x: 435, y: 290 }, { x: 325, y: 325 }, { x: 435, y: 325 },
+  { x: 325, y: 360 }, { x: 435, y: 360 }, { x: 325, y: 395 }, { x: 435, y: 395 },
+  { x: 310, y: 445 }, { x: 345, y: 445 }, { x: 380, y: 445 }, { x: 415, y: 445 }, { x: 450, y: 445 },
+  
+  // Right Desk Column (72-97) - 26 seats
+  { x: 575, y: 150 }, { x: 685, y: 150 }, { x: 575, y: 185 }, { x: 685, y: 185 },
+  { x: 575, y: 220 }, { x: 685, y: 220 }, { x: 575, y: 255 }, { x: 685, y: 255 },
+  { x: 575, y: 290 }, { x: 685, y: 290 }, { x: 575, y: 325 }, { x: 685, y: 325 },
+  { x: 575, y: 360 }, { x: 685, y: 360 }, { x: 575, y: 395 }, { x: 685, y: 395 },
+  { x: 560, y: 445 }, { x: 595, y: 445 }, { x: 630, y: 445 }, { x: 665, y: 445 }, { x: 700, y: 445 }
+];
+
+
+const autoArrangeLayout = async () => {
+  const seatsToUpdate = sectionSeats.value;
+  if (!seatsToUpdate.length) return;
+  
+  const SwalInstance = (await import('sweetalert2')).default;
+  const result = await SwalInstance.fire({
+    title: `Auto-Arrange Layout?`,
+    text: `This will automatically set X/Y positions for ${sectionSeats.value.length} seats to fit a standard desk layout. Existing manual positions will be overwritten.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, arrange them!',
+    confirmButtonColor: '#7C3AED',
+  });
+
+  if (!result.isConfirmed) return;
+
+  isArranging.value = true;
+  try {
+    const coords = eShapeCoordinates;
+
+    const seatsToUpdate = sectionSeats.value.slice(0, coords.length);
+    const promises = seatsToUpdate.map((seat: any, index: number) => {
+      const coord = coords[index];
+      seat.position_x = coord.x;
+      seat.position_y = coord.y;
+      return librarianAPI.updateSeat(seat.id, {
+        position_x: coord.x,
+        position_y: coord.y
+      });
+    });
+
+    await Promise.all(promises);
+    toast('Arrangement Complete', `${seatsToUpdate.length} seats snapped into layout.`, 'success');
+  } catch (error) {
+    console.error('Error auto-arranging seats:', error);
+    toast('Error', 'Failed to auto-arrange some seats', 'error');
+  } finally {
+    isArranging.value = false;
+  }
+};
 
 const floors = ref<any[]>([]);
 const sections = ref<any[]>([]);
@@ -468,6 +640,7 @@ const currentFloorSections = computed(() => {
 });
 
 const activeSectionName = computed(() => {
+  if (activeSectionId.value === null) return 'All Floor Sections';
   const section = sections.value.find((s: any) => s.id === activeSectionId.value);
   return section ? section.name : 'Unknown Section';
 });
@@ -481,9 +654,7 @@ watch(floors, (newFloors) => {
 }, { immediate: true });
 
 watch(currentFloorSections, (newSections) => {
-  if (newSections.length > 0 && (!activeSectionId.value || !newSections.find((s: any) => s.id === activeSectionId.value))) {
-    activeSectionId.value = newSections[0].id;
-  }
+  // We no longer force select the first section automatically so "All Seats" can be default
 }, { immediate: true });
 
 const sectionSeats = computed(() => {
@@ -493,8 +664,6 @@ const sectionSeats = computed(() => {
   }
   if (activeSectionId.value) {
     filtered = filtered.filter(seat => seat.section_id === activeSectionId.value);
-  } else if (currentFloorSections.value.length > 0) {
-    filtered = filtered.filter(seat => seat.section_id === currentFloorSections.value[0].id);
   }
   return filtered;
 });
@@ -697,7 +866,11 @@ const printActiveSectionQRs = () => {
   printWindow.document.close();
 };
 
+
 onMounted(() => {
   fetchSeats();
 });
+
+
+
 </script>

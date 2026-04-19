@@ -496,47 +496,47 @@ export const librarianAPI = {
     return response.data;
   },
 
-  async getFloors(libraryId: number) {
-    const response = await api.get(`/librarian/libraries/${libraryId}/floors`);
+  async getFloors() {
+    const response = await api.get('/librarian/floors');
     return response.data;
   },
 
-  async createFloor(libraryId: number, data: FormData) {
-    const response = await api.post(`/librarian/libraries/${libraryId}/floors`, data);
+  async createFloor(data: FormData) {
+    const response = await api.post('/librarian/floors', data);
     return response.data;
   },
 
-  async updateFloor(libraryId: number, floorId: number, data: FormData) {
+  async updateFloor(floorId: number, data: FormData) {
     // Use POST with _method=PUT for FormData support
     data.append('_method', 'PUT');
-    const response = await api.post(`/librarian/libraries/${libraryId}/floors/${floorId}`, data);
+    const response = await api.post(`/librarian/floors/${floorId}`, data);
     return response.data;
   },
 
-  async deleteFloor(libraryId: number, floorId: number) {
-    const response = await api.delete(`/librarian/libraries/${libraryId}/floors/${floorId}`);
+  async deleteFloor(floorId: number) {
+    const response = await api.delete(`/librarian/floors/${floorId}`);
     return response.data;
   },
 
-  async getSections(libraryId: number, floorId?: number) {
-    const response = await api.get(`/librarian/libraries/${libraryId}/sections`, {
+  async getSections(floorId?: number) {
+    const response = await api.get('/librarian/sections', {
       params: { floor_id: floorId }
     });
     return response.data;
   },
 
-  async createSection(libraryId: number, data: any) {
-    const response = await api.post(`/librarian/libraries/${libraryId}/sections`, data);
+  async createSection(data: any) {
+    const response = await api.post('/librarian/sections', data);
     return response.data;
   },
 
-  async updateSection(libraryId: number, sectionId: number, data: any) {
-    const response = await api.put(`/librarian/libraries/${libraryId}/sections/${sectionId}`, data);
+  async updateSection(sectionId: number, data: any) {
+    const response = await api.put(`/librarian/sections/${sectionId}`, data);
     return response.data;
   },
 
-  async deleteSection(libraryId: number, sectionId: number) {
-    const response = await api.delete(`/librarian/libraries/${libraryId}/sections/${sectionId}`);
+  async deleteSection(sectionId: number) {
+    const response = await api.delete(`/librarian/sections/${sectionId}`);
     return response.data;
   },
 

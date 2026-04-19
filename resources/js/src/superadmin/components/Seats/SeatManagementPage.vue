@@ -21,13 +21,14 @@
           :class="[
             'px-4 py-2 rounded-lg transition-all flex items-center space-x-2 border shadow-sm',
             isLayoutMode 
-              ? 'bg-indigo-600 text-white border-indigo-600' 
+              ? 'bg-purple-600 text-white border-purple-600' 
               : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
           ]"
         >
           <Move class="w-4 h-4" />
-          <span class="text-sm font-medium">{{ isLayoutMode ? 'Grid View' : 'Layout Mode' }}</span>
+          <span class="text-sm font-medium">{{ isLayoutMode ? 'View Mode' : 'Layout Mode' }}</span>
         </button>
+
         <button
           v-if="selectedLibraryId"
           @click="openCreateModal"
@@ -139,8 +140,48 @@
       </button>
     </div>
 
+    <transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="transform -translate-y-4 opacity-0"
+      enter-to-class="transform translate-y-0 opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="transform translate-y-0 opacity-100"
+      leave-to-class="transform -translate-y-4 opacity-0"
+    >
+      <div v-if="isLayoutMode && selectedLibraryId" class="bg-white p-2 rounded-xl border border-purple-100 shadow-sm flex items-center justify-between mt-4">
+        <div class="flex items-center space-x-1">
+          <div class="px-3 border-r border-gray-100 mr-2 py-1">
+            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-widest whitespace-nowrap">Layout Toolbar</span>
+          </div>
+          
+          <button 
+            @click="autoArrangeLayout"
+            :disabled="isArranging"
+            class="px-4 py-2 hover:bg-purple-50 text-gray-700 hover:text-purple-600 rounded-lg transition-all flex items-center space-x-2 group disabled:opacity-50"
+          >
+            <Wand2 :class="['w-4 h-4 transition-transform group-hover:rotate-12', isArranging ? 'animate-pulse' : '']" />
+            <span class="text-sm font-semibold whitespace-nowrap">{{ isArranging ? 'Arranging...' : 'Auto-Arrange' }}</span>
+          </button>
+
+          <div class="w-px h-6 bg-gray-100 mx-2"></div>
+
+          <button 
+            class="p-2 hover:bg-gray-50 text-gray-400 rounded-lg transition-all relative group"
+            title="More tools coming soon..."
+          >
+            <Plus class="w-4 h-4" />
+          </button>
+        </div>
+
+        <div class="text-[10px] text-gray-400 font-medium px-4 italic flex items-center">
+          <Info class="w-3 h-3 mr-1" />
+          Drag seats to reposition or use auto-arrange for standard layouts
+        </div>
+      </div>
+    </transition>
+
     <!-- Seat Map (Visual) -->
-    <div v-if="selectedLibraryId">
+    <div v-if="selectedLibraryId" class="relative mt-4">
       <SeatMap
         :seats="seats"
         :floors="floors"
@@ -350,7 +391,9 @@ import {
   Printer,
   User,
   Lock,
-  Move
+  Move,
+  Wand2,
+  Info
 } from 'lucide-vue-next';
 import { useSwal } from '@/shared/composables/useSwal';
 
@@ -368,9 +411,32 @@ const showCreateModal = ref(false);
 const selectedSeat = ref<any>(null);
 const loading = ref(false);
 const isLayoutMode = ref(false);
+const isArranging = ref(false);
 const activeSectionId = ref<number | null>(null);
 const draggedSeat = ref<any>(null);
 const dragOffset = ref({ x: 0, y: 0 });
+
+const eShapeCoordinates = [
+  { x: 50, y: 30 }, { x: 85, y: 30 }, { x: 120, y: 30 }, { x: 155, y: 30 }, { x: 190, y: 30 }, 
+  { x: 225, y: 30 }, { x: 260, y: 30 }, { x: 295, y: 30 }, { x: 330, y: 30 }, { x: 365, y: 30 },
+  { x: 400, y: 30 }, { x: 435, y: 30 }, { x: 470, y: 30 }, { x: 505, y: 30 }, { x: 540, y: 30 },
+  { x: 575, y: 30 }, { x: 610, y: 30 }, { x: 645, y: 30 }, { x: 680, y: 30 }, { x: 715, y: 30 },
+  { x: 75, y: 150 }, { x: 185, y: 150 }, { x: 75, y: 185 }, { x: 185, y: 185 },
+  { x: 75, y: 220 }, { x: 185, y: 220 }, { x: 75, y: 255 }, { x: 185, y: 255 },
+  { x: 75, y: 290 }, { x: 185, y: 290 }, { x: 75, y: 325 }, { x: 185, y: 325 },
+  { x: 75, y: 360 }, { x: 185, y: 360 }, { x: 75, y: 395 }, { x: 185, y: 395 },
+  { x: 60, y: 445 }, { x: 95, y: 445 }, { x: 130, y: 445 }, { x: 165, y: 445 }, { x: 200, y: 445 },
+  { x: 325, y: 150 }, { x: 435, y: 150 }, { x: 325, y: 185 }, { x: 435, y: 185 },
+  { x: 325, y: 220 }, { x: 435, y: 220 }, { x: 325, y: 255 }, { x: 435, y: 255 },
+  { x: 325, y: 290 }, { x: 435, y: 290 }, { x: 325, y: 325 }, { x: 435, y: 325 },
+  { x: 325, y: 360 }, { x: 435, y: 360 }, { x: 325, y: 395 }, { x: 435, y: 395 },
+  { x: 310, y: 445 }, { x: 345, y: 445 }, { x: 380, y: 445 }, { x: 415, y: 445 }, { x: 450, y: 445 },
+  { x: 575, y: 150 }, { x: 685, y: 150 }, { x: 575, y: 185 }, { x: 685, y: 185 },
+  { x: 575, y: 220 }, { x: 685, y: 220 }, { x: 575, y: 255 }, { x: 685, y: 255 },
+  { x: 575, y: 290 }, { x: 685, y: 290 }, { x: 575, y: 325 }, { x: 685, y: 325 },
+  { x: 575, y: 360 }, { x: 685, y: 360 }, { x: 575, y: 395 }, { x: 685, y: 395 },
+  { x: 560, y: 445 }, { x: 595, y: 445 }, { x: 630, y: 445 }, { x: 665, y: 445 }, { x: 700, y: 445 }
+];
 
 const form = ref({
   seat_number: '',
@@ -414,7 +480,6 @@ const fetchData = async () => {
     floors.value = floorsData;
     sections.value = sectionsData;
 
-    // Default to All Seats (null)
     if (!activeSectionId.value) {
       activeSectionId.value = null;
     }
@@ -425,21 +490,51 @@ const fetchData = async () => {
   }
 };
 
+
+
 watch(selectedLibraryId, () => {
   activeSectionId.value = null;
   fetchData();
 });
 
-let searchTimeout: any = null;
-const debounceSearch = () => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(fetchData, 500);
-};
+const autoArrangeLayout = async () => {
+  if (!selectedLibraryId.value) return;
+  const SwalInstance = (await import('sweetalert2')).default;
+  const result = await SwalInstance.fire({
+    title: `Auto-Arrange Layout?`,
+    text: `This will automatically set X/Y positions for ${seats.value.length} seats to fit a standard desk layout. Existing manual positions will be overwritten.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, arrange them!',
+    confirmButtonColor: '#7C3AED',
+  });
 
-const filteredSectionSeats = computed(() => {
-  if (!activeSectionId.value) return seats.value;
-  return seats.value.filter(s => s.section_id === activeSectionId.value);
-});
+  if (!result.isConfirmed) return;
+
+  isArranging.value = true;
+  try {
+    const coords = eShapeCoordinates;
+
+    const seatsToUpdate = seats.value.slice(0, coords.length);
+    const promises = seatsToUpdate.map((seat: any, index: number) => {
+      const coord = coords[index];
+      seat.position_x = coord.x;
+      seat.position_y = coord.y;
+      return superadminAPI.updateSeat(seat.id, {
+        position_x: coord.x,
+        position_y: coord.y
+      });
+    });
+
+    await Promise.all(promises);
+    toast('Arrangement Complete', `${seatsToUpdate.length} seats snapped into layout.`, 'success');
+  } catch (error) {
+    console.error('Error auto-arranging seats:', error);
+    toast('Error', 'Failed to auto-arrange some seats', 'error');
+  } finally {
+    isArranging.value = false;
+  }
+};
 
 const groupedSeats = computed(() => {
   const groups: any = {};

@@ -177,7 +177,6 @@
     <SectionManagementModal
       :is-open="showSectionsModal"
       :floor="selectedFloor"
-      :library-id="libraryId"
       @close="showSectionsModal = false"
       @updated="fetchFloors"
     />
@@ -228,9 +227,8 @@ const form = ref({
 });
 
 const fetchFloors = async () => {
-  if (!libraryId.value) return;
   try {
-    const data = await librarianAPI.getFloors(libraryId.value);
+    const data = await librarianAPI.getFloors();
     floors.value = data;
   } catch (error) {
     console.error('Error fetching floors:', error);
@@ -296,9 +294,9 @@ const saveFloor = async () => {
     }
 
     if (isEditing.value && form.value.id) {
-      await librarianAPI.updateFloor(libraryId.value, form.value.id, formData);
+      await librarianAPI.updateFloor(form.value.id, formData);
     } else {
-      await librarianAPI.createFloor(libraryId.value, formData);
+      await librarianAPI.createFloor(formData);
     }
     await fetchFloors();
     closeModal();
@@ -312,7 +310,7 @@ const saveFloor = async () => {
 const confirmDelete = async (floor: Floor) => {
   if (confirm('Are you sure you want to delete this floor?')) {
     try {
-      await librarianAPI.deleteFloor(libraryId.value, floor.id);
+      await librarianAPI.deleteFloor(floor.id);
       await fetchFloors();
     } catch (error) {
       console.error('Error deleting floor:', error);

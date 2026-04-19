@@ -239,7 +239,7 @@ const form = ref({
 
 const fetchFloors = async () => {
   try {
-    const data = await librarianAPI.getFloors(libraryId.value);
+    const data = await librarianAPI.getFloors();
     floors.value = data;
   } catch (error) {
     console.error('Error fetching floors:', error);
@@ -249,7 +249,7 @@ const fetchFloors = async () => {
 const fetchSections = async () => {
   loading.value = true;
   try {
-    const data = await librarianAPI.getSections(libraryId.value, selectedFloorId.value || undefined);
+    const data = await librarianAPI.getSections(selectedFloorId.value || undefined);
     sections.value = data;
   } catch (error) {
     console.error('Error fetching sections:', error);
@@ -290,9 +290,9 @@ const saveSection = async () => {
   loading.value = true;
   try {
     if (isEditing.value && form.value.id) {
-      await librarianAPI.updateSection(libraryId.value, form.value.id, form.value);
+      await librarianAPI.updateSection(form.value.id, form.value);
     } else {
-      await librarianAPI.createSection(libraryId.value, form.value);
+      await librarianAPI.createSection(form.value);
     }
     await fetchSections();
     showModal.value = false;
@@ -306,7 +306,7 @@ const saveSection = async () => {
 const confirmDelete = async (section: any) => {
   if (confirm(`Are you sure you want to delete section "${section.name}"? This will also delete all seats in this section.`)) {
     try {
-      await librarianAPI.deleteSection(libraryId.value, section.id);
+      await librarianAPI.deleteSection(section.id);
       await fetchSections();
     } catch (error) {
       console.error('Error deleting section:', error);

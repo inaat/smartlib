@@ -282,49 +282,51 @@
                     />
                   </div>
 
-                  <div class="md:col-span-2 p-6 bg-purple-50 rounded-xl border border-purple-100">
-                    <h4 class="font-bold text-gray-900 mb-4 flex items-center">
-                      <Layout class="w-5 h-5 mr-2 text-purple-600" />
-                      Seat Layout Display Mode
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div 
-                        @click="libraryData.seat_layout_mode = 'layout'"
-                        :class="[
-                          'p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center space-x-4',
-                          libraryData.seat_layout_mode === 'layout' 
-                            ? 'bg-white border-purple-600 shadow-md scale-[1.02]' 
-                            : 'bg-white/50 border-transparent hover:border-purple-200'
-                        ]"
-                      >
-                        <div :class="['p-3 rounded-lg', libraryData.seat_layout_mode === 'layout' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-400']">
-                          <Map class="w-6 h-6" />
+                    <div class="md:col-span-2 p-6 bg-purple-50 rounded-xl border border-purple-100">
+                      <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                        <Layout class="w-5 h-5 mr-2 text-purple-600" />
+                        Seat Layout Display Mode
+                      </h4>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div 
+                          @click="libraryData.seat_layout_mode = 'layout'"
+                          :class="[
+                            'p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center space-x-4',
+                            libraryData.seat_layout_mode === 'layout' 
+                              ? 'bg-white border-purple-600 shadow-md scale-[1.02]' 
+                              : 'bg-white/50 border-transparent hover:border-purple-200'
+                          ]"
+                        >
+                          <div :class="['p-3 rounded-lg', libraryData.seat_layout_mode === 'layout' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-400']">
+                            <Map class="w-6 h-6" />
+                          </div>
+                          <div>
+                            <p class="font-bold text-gray-900">Student Layout Mode</p>
+                            <p class="text-xs text-gray-500">Visual map with XY positions</p>
+                          </div>
                         </div>
-                        <div>
-                          <p class="font-bold text-gray-900">Student Layout Mode</p>
-                          <p class="text-xs text-gray-500">Visual map with XY positions</p>
+
+                        <div 
+                          @click="libraryData.seat_layout_mode = 'grid'"
+                          :class="[
+                            'p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center space-x-4',
+                            libraryData.seat_layout_mode === 'grid' 
+                              ? 'bg-white border-purple-600 shadow-md scale-[1.02]' 
+                              : 'bg-white/50 border-transparent hover:border-purple-200'
+                          ]"
+                        >
+                          <div :class="['p-3 rounded-lg', libraryData.seat_layout_mode === 'grid' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-400']">
+                            <Grid class="w-6 h-6" />
+                          </div>
+                          <div>
+                            <p class="font-bold text-gray-900">Grid View</p>
+                            <p class="text-xs text-gray-500">Organized row-by-row list</p>
+                          </div>
                         </div>
                       </div>
 
-                      <div 
-                        @click="libraryData.seat_layout_mode = 'grid'"
-                        :class="[
-                          'p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center space-x-4',
-                          libraryData.seat_layout_mode === 'grid' 
-                            ? 'bg-white border-purple-600 shadow-md scale-[1.02]' 
-                            : 'bg-white/50 border-transparent hover:border-purple-200'
-                        ]"
-                      >
-                        <div :class="['p-3 rounded-lg', libraryData.seat_layout_mode === 'grid' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-400']">
-                          <Grid class="w-6 h-6" />
-                        </div>
-                        <div>
-                          <p class="font-bold text-gray-900">Grid View</p>
-                          <p class="text-xs text-gray-500">Organized row-by-row list</p>
-                        </div>
-                      </div>
+
                     </div>
-                  </div>
               </div>
             </div>
           </div>

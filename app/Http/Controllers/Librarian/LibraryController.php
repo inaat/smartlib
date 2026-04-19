@@ -140,6 +140,7 @@ class LibraryController extends Controller
             'capacity' => 'sometimes|integer',
             'is_active' => 'sometimes|boolean',
             'seat_layout_mode' => 'nullable|string|in:layout,grid',
+
             'special_features' => 'nullable|array',
         ]);
 

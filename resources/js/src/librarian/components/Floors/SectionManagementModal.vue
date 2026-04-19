@@ -146,7 +146,6 @@ import { librarianAPI } from '@/shared/services/api';
 const props = defineProps<{
   isOpen: boolean;
   floor: any;
-  libraryId: number;
 }>();
 
 const emit = defineEmits(['close', 'updated']);
@@ -167,7 +166,7 @@ const form = ref({
 const fetchSections = async () => {
   if (!props.floor) return;
   try {
-    const data = await librarianAPI.getSections(props.libraryId, props.floor.id);
+    const data = await librarianAPI.getSections(props.floor.id);
     sections.value = data;
   } catch (error) {
     console.error('Error fetching sections:', error);
@@ -207,9 +206,9 @@ const saveSection = async () => {
     };
 
     if (isEditing.value && form.value.id) {
-      await librarianAPI.updateSection(props.libraryId, form.value.id, payload);
+      await librarianAPI.updateSection(form.value.id, payload);
     } else {
-      await librarianAPI.createSection(props.libraryId, payload);
+      await librarianAPI.createSection(payload);
     }
     await fetchSections();
     resetForm();
@@ -224,7 +223,7 @@ const saveSection = async () => {
 const deleteSection = async (id: number) => {
   if (confirm('Are you sure? This will also delete all seats in this section.')) {
     try {
-      await librarianAPI.deleteSection(props.libraryId, id);
+      await librarianAPI.deleteSection(id);
       await fetchSections();
       emit('updated');
     } catch (error) {

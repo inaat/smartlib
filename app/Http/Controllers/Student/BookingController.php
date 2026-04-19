@@ -174,8 +174,10 @@ class BookingController extends Controller
         $closeAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day);
 
         if ($bookingTime->lt($openAt) || $endTime->gt($closeAt)) {
+            $formattedOpen = $openAt->format('H:i');
+            $formattedClose = $closeAt->format('H:i');
             return response()->json([
-                'message' => "Requested time is outside library operating hours on {$dayOfWeek}s ({$operatingHour->open_time} - {$operatingHour->close_time})."
+                'message' => "Requested time is outside library operating hours on {$dayOfWeek}s ({$formattedOpen} - {$formattedClose})."
             ], 400);
         }
 

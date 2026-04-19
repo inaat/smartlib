@@ -20,6 +20,7 @@ use App\Http\Controllers\Librarian\FloorController;
 use App\Http\Controllers\Librarian\StudentController;
 use App\Http\Controllers\Librarian\LibraryController as LibrarianLibrary;
 use App\Http\Controllers\Librarian\BookingController as LibrarianBooking;
+use App\Http\Controllers\Librarian\SeatSectionController as LibrarianSection;
 use App\Http\Controllers\Student\DashboardController as StudentDashboard;
 use App\Http\Controllers\Student\LibraryController as StudentLibrary;
 use App\Http\Controllers\Student\BookingController;
@@ -263,18 +264,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         // Floors
-        Route::get('/libraries/{library}/floors', [FloorController::class, 'index'])->name('libraries.floors.index');
-        Route::post('/libraries/{library}/floors', [FloorController::class, 'store'])->name('libraries.floors.store');
-        Route::get('/libraries/{library}/floors/{floor}', [FloorController::class, 'show'])->name('libraries.floors.show');
-        Route::put('/libraries/{library}/floors/{floor}', [FloorController::class, 'update'])->name('libraries.floors.update');
-        Route::post('/libraries/{library}/floors/{floor}', [FloorController::class, 'update'])->name('libraries.floors.update.post');
-        Route::delete('/libraries/{library}/floors/{floor}', [FloorController::class, 'destroy'])->name('libraries.floors.destroy');
+        Route::get('/floors', [FloorController::class, 'index'])->name('floors.index');
+        Route::post('/floors', [FloorController::class, 'store'])->name('floors.store');
+        Route::get('/floors/{floor}', [FloorController::class, 'show'])->name('floors.show');
+        Route::put('/floors/{floor}', [FloorController::class, 'update'])->name('floors.update');
+        Route::post('/floors/{floor}', [FloorController::class, 'update'])->name('floors.update.post');
+        Route::delete('/floors/{floor}', [FloorController::class, 'destroy'])->name('floors.destroy');
 
         // Seat Sections
-        Route::get('/libraries/{library}/sections', [SeatSectionController::class, 'index'])->name('libraries.sections.index');
-        Route::post('/libraries/{library}/sections', [SeatSectionController::class, 'store'])->name('libraries.sections.store');
-        Route::put('/libraries/{library}/sections/{section}', [SeatSectionController::class, 'update'])->name('libraries.sections.update');
-        Route::delete('/libraries/{library}/sections/{section}', [SeatSectionController::class, 'destroy'])->name('libraries.sections.destroy');
+        Route::get('/sections', [LibrarianSection::class, 'index'])->name('sections.index');
+        Route::post('/sections', [LibrarianSection::class, 'store'])->name('sections.store');
+        Route::put('/sections/{section}', [LibrarianSection::class, 'update'])->name('sections.update');
+        Route::delete('/sections/{section}', [LibrarianSection::class, 'destroy'])->name('sections.destroy');
 
         // Seats
         Route::get('/active-floors', [SeatController::class, 'activeFloors'])->name('floors.active');

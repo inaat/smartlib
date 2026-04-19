@@ -118,23 +118,78 @@
           </div>
         </div>
 
-        <!-- Layout mode (absolute positions) -->
         <div
           v-else
-          class="relative w-full min-h-[500px]"
-          :class="draggable ? 'h-[600px] bg-white/50 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden' : ''"
-          @dragover.prevent
-          @drop="$emit('drop', $event)"
+          class="relative w-full overflow-x-auto bg-gray-50/50 flex flex-col items-center justify-start p-8 rounded-2xl border border-gray-100 shadow-inner"
         >
+          <div 
+            class="relative flex-none w-[800px] h-[600px] bg-white rounded-2xl border-[6px] border-gray-900 shadow-md overflow-hidden"
+            @dragover.prevent
+            @drop="$emit('drop', $event)"
+          >
+          <!-- E-Shaped Floor Plan Backdrop -->
+          <div class="absolute inset-0 pointer-events-none">
+            <!-- Top Windows -->
+            <div class="absolute top-0 left-[25%] w-[15%] h-2 bg-blue-100 border-x border-b border-gray-400 rounded-b-sm"></div>
+            <div class="absolute top-0 right-[25%] w-[15%] h-2 bg-blue-100 border-x border-b border-gray-400 rounded-b-sm"></div>
+            
+            <!-- Side Windows -->
+            <div class="absolute top-[45%] left-0 w-2 h-[15%] bg-blue-100 border-y border-r border-gray-400 rounded-r-sm"></div>
+            <div class="absolute top-[20%] right-0 w-2 h-[40%] bg-blue-100 border-y border-l border-gray-400 rounded-l-sm"></div>
+
+            <!-- Top Left Door Swing -->
+            <div class="absolute top-0 left-0 w-20 h-20 border-b-2 border-r-2 border-gray-800 rounded-br-full opacity-40"></div>
+            <!-- Bottom Right Door Swing -->
+            <div class="absolute bottom-0 right-0 w-20 h-20 border-t-2 border-l-2 border-gray-800 rounded-tl-full opacity-40"></div>
+
+            <!-- The E-Shaped Table Structure -->
+            <!-- Top Horizontal Main Table -->
+            <div class="absolute top-[80px] left-[10%] right-[10%] h-[60px] bg-white border-[2px] border-gray-600 shadow-sm z-10"></div>
+            
+            <!-- Left Vertical Desk -->
+            <div class="absolute top-[140px] left-[15%] w-[60px] h-[300px] bg-white border-[2px] border-t-0 border-gray-600 shadow-sm z-0"></div>
+            <!-- Center Vertical Desk -->
+            <div class="absolute top-[140px] left-1/2 -translate-x-1/2 w-[60px] h-[300px] bg-white border-[2px] border-t-0 border-gray-600 shadow-sm z-0"></div>
+            <!-- Right Vertical Desk -->
+            <div class="absolute top-[140px] right-[15%] w-[60px] h-[300px] bg-white border-[2px] border-t-0 border-gray-600 shadow-sm z-0"></div>
+
+            <!-- Bottom Presentation Desk/Counter -->
+            <div class="absolute bottom-[20px] left-[12%] right-[25%] h-[40px] bg-white border-[2px] border-gray-600 shadow-sm"></div>
+
+            <!-- Decor: Plants -->
+            <svg class="absolute top-[220px] left-[32%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+              <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+            </svg>
+            <svg class="absolute top-[380px] left-[32%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+              <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+            </svg>
+            <svg class="absolute top-[220px] right-[32%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+              <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+            </svg>
+            <svg class="absolute top-[380px] right-[32%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+              <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+            </svg>
+            <svg class="absolute bottom-[20px] left-[3%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+              <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+            </svg>
+            <svg class="absolute bottom-[20px] right-[13%] w-14 h-14 text-green-700/70 drop-shadow-sm" viewBox="0 0 100 100" fill="currentColor">
+              <path d="M50 20Q65 35 50 50Q35 35 50 20Z"/><path d="M50 80Q65 65 50 50Q35 65 50 80Z"/><path d="M20 50Q35 65 50 50Q35 35 20 50Z"/><path d="M80 50Q65 65 50 50Q65 35 80 50Z"/><path d="M28 28Q50 35 50 50Q35 50 28 28Z"/><path d="M72 72Q50 65 50 50Q65 50 72 72Z"/><path d="M28 72Q35 50 50 50Q50 65 28 72Z"/><path d="M72 28Q65 50 50 50Q50 35 72 28Z"/><circle cx="50" cy="50" r="4" fill="#064e3b"/>
+            </svg>
+          </div>
+
           <div
-            v-for="seat in sectionSeats"
+            v-for="(seat, idx) in sectionSeats"
             :key="seat.id"
             :draggable="draggable"
             @dragstart="$emit('drag-start', $event, seat)"
             @mouseenter="hoveredSeatId = seat.id"
             @mouseleave="hoveredSeatId = null"
             @click="$emit('seat-click', seat)"
-            :style="{ position: 'absolute', left: `${seat.position_x}px`, top: `${seat.position_y}px` }"
+            :style="{ 
+              position: 'absolute', 
+              left: (seat.position_x || seat.position_y) ? `${seat.position_x}px` : `${eShapeCoordinates[idx]?.x || 20 + ((idx * 60) % 700)}px`, 
+              top: (seat.position_x || seat.position_y) ? `${seat.position_y}px` : `${eShapeCoordinates[idx]?.y || 500}px`
+            }"
             :class="[
               'w-[52px] h-[52px] flex items-center justify-center transition-all drop-shadow-sm relative',
               draggable ? 'cursor-move active:scale-95' : (seatClickable ? 'cursor-pointer hover:scale-110' : ''),
@@ -152,6 +207,7 @@
             <SeatPopover v-if="hoveredSeatId === seat.id" :seat="seat" :section-name="activeSectionName" position="top" />
           </div>
         </div>
+      </div>
       </div>
 
       <!-- Footer Legend -->
@@ -183,9 +239,10 @@ const props = defineProps<{
   floors: any[];
   sections: any[];
   selectedSeat?: any;
+  activeSectionName?: string;
   draggable?: boolean;
   seatClickable?: boolean;
-  layoutMode?: string;
+  layoutMode?: 'grid' | 'layout';
 }>();
 
 const emit = defineEmits<{
@@ -269,4 +326,33 @@ const isSelected = (seat: any) => props.selectedSeat?.id === seat.id;
 
 // Expose active section for parent
 defineExpose({ activeFloorId, activeSectionId });
+
+const eShapeCoordinates = [
+  // Top Row (0-19) - 20 seats
+  { x: 50, y: 30 }, { x: 85, y: 30 }, { x: 120, y: 30 }, { x: 155, y: 30 }, { x: 190, y: 30 }, 
+  { x: 225, y: 30 }, { x: 260, y: 30 }, { x: 295, y: 30 }, { x: 330, y: 30 }, { x: 365, y: 30 },
+  { x: 400, y: 30 }, { x: 435, y: 30 }, { x: 470, y: 30 }, { x: 505, y: 30 }, { x: 540, y: 30 },
+  { x: 575, y: 30 }, { x: 610, y: 30 }, { x: 645, y: 30 }, { x: 680, y: 30 }, { x: 715, y: 30 },
+  
+  // Left Desk Column (20-45) - 26 seats
+  { x: 75, y: 150 }, { x: 185, y: 150 }, { x: 75, y: 185 }, { x: 185, y: 185 },
+  { x: 75, y: 220 }, { x: 185, y: 220 }, { x: 75, y: 255 }, { x: 185, y: 255 },
+  { x: 75, y: 290 }, { x: 185, y: 290 }, { x: 75, y: 325 }, { x: 185, y: 325 },
+  { x: 75, y: 360 }, { x: 185, y: 360 }, { x: 75, y: 395 }, { x: 185, y: 395 },
+  { x: 60, y: 445 }, { x: 95, y: 445 }, { x: 130, y: 445 }, { x: 165, y: 445 }, { x: 200, y: 445 },
+  
+  // Center Desk Column (46-71) - 26 seats
+  { x: 325, y: 150 }, { x: 435, y: 150 }, { x: 325, y: 185 }, { x: 435, y: 185 },
+  { x: 325, y: 220 }, { x: 435, y: 220 }, { x: 325, y: 255 }, { x: 435, y: 255 },
+  { x: 325, y: 290 }, { x: 435, y: 290 }, { x: 325, y: 325 }, { x: 435, y: 325 },
+  { x: 325, y: 360 }, { x: 435, y: 360 }, { x: 325, y: 395 }, { x: 435, y: 395 },
+  { x: 310, y: 445 }, { x: 345, y: 445 }, { x: 380, y: 445 }, { x: 415, y: 445 }, { x: 450, y: 445 },
+  
+  // Right Desk Column (72-97) - 26 seats
+  { x: 575, y: 150 }, { x: 685, y: 150 }, { x: 575, y: 185 }, { x: 685, y: 185 },
+  { x: 575, y: 220 }, { x: 685, y: 220 }, { x: 575, y: 255 }, { x: 685, y: 255 },
+  { x: 575, y: 290 }, { x: 685, y: 290 }, { x: 575, y: 325 }, { x: 685, y: 325 },
+  { x: 575, y: 360 }, { x: 685, y: 360 }, { x: 575, y: 395 }, { x: 685, y: 395 },
+  { x: 560, y: 445 }, { x: 595, y: 445 }, { x: 630, y: 445 }, { x: 665, y: 445 }, { x: 700, y: 445 }
+];
 </script>

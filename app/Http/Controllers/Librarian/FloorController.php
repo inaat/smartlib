@@ -9,13 +9,16 @@ use Illuminate\Http\Request;
 
 class FloorController extends Controller
 {
-    public function index(Library $library)
+    public function index()
     {
-        return response()->json($library->floors()->orderBy('level')->get());
+        $libraryId = auth()->user()->library_id;
+        return response()->json(Floor::where('library_id', $libraryId)->orderBy('level')->get());
     }
 
-    public function store(Request $request, Library $library)
+    public function store(Request $request)
     {
+        $libraryId = auth()->user()->library_id;
+        $library = Library::findOrFail($libraryId);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'level' => 'required|integer',
@@ -36,18 +39,20 @@ class FloorController extends Controller
         return response()->json($floor, 201);
     }
 
-    public function show(Library $library, Floor $floor)
+    public function show(Floor $floor)
     {
-        if ($floor->library_id !== $library->id) {
-            return response()->json(['message' => 'Floor not found in this library'], 404);
+        $libraryId = auth()->user()->library_id;
+        if ($floor->library_id !== $libraryId) {
+            return response()->json(['message' => 'Floor not found in your library'], 403);
         }
         return response()->json($floor);
     }
 
-    public function update(Request $request, Library $library, Floor $floor)
+    public function update(Request $request, Floor $floor)
     {
-        if ($floor->library_id !== $library->id) {
-            return response()->json(['message' => 'Floor not found in this library'], 404);
+        $libraryId = auth()->user()->library_id;
+        if ($floor->library_id !== $libraryId) {
+            return response()->json(['message' => 'Floor not found in your library'], 403);
         }
 
         $validated = $request->validate([
@@ -70,10 +75,11 @@ class FloorController extends Controller
         return response()->json($floor);
     }
 
-    public function destroy(Library $library, Floor $floor)
+    public function destroy(Floor $floor)
     {
-        if ($floor->library_id !== $library->id) {
-            return response()->json(['message' => 'Floor not found in this library'], 404);
+        $libraryId = auth()->user()->library_id;
+        if ($floor->library_id !== $libraryId) {
+            return response()->json(['message' => 'Floor not found in your library'], 403);
         }
 
         $floor->delete();

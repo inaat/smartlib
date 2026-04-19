@@ -155,19 +155,18 @@
                 </span>
               </div>
             </div>
-            <a
-              :href="`https://www.google.com/maps/dir/?api=1&destination=${lib.latitude},${lib.longitude}`"
-              target="_blank"
+            <router-link
+              :to="`/student/libraries/${lib.id}/seats`"
               class="flex-shrink-0 p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-              title="Get Directions"
+              title="Book a Seat"
             >
-              <Navigation class="w-4 h-4" />
-            </a>
+              <ArrowRight class="w-4 h-4" />
+            </router-link>
           </div>
         </div>
 
         <div class="px-5 py-3 bg-gray-50 border-t border-gray-100">
-          <p class="text-xs text-gray-400 text-center">Tap <Navigation class="w-3 h-3 inline text-blue-600" /> to get directions from your current location.</p>
+          <p class="text-xs text-gray-400 text-center">Tap <ArrowRight class="w-3 h-3 inline text-blue-600" /> to view and book a seat at the library.</p>
         </div>
       </div>
     </transition>
@@ -177,7 +176,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
-import { QrCode, MapPin, Camera, CheckCircle, Navigation, X } from 'lucide-vue-next';
+import { QrCode, MapPin, Camera, CheckCircle, Navigation, ArrowRight, X } from 'lucide-vue-next';
 import { studentAPI } from '@/student/services/studentApi';
 import { useRouter, useRoute } from 'vue-router';
 import { Html5Qrcode } from 'html5-qrcode';
