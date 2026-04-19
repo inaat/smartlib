@@ -54,6 +54,7 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section Name</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Floor</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seats</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
@@ -71,6 +72,18 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm text-gray-900">{{ section.total_seats }} total</div>
               <div class="text-xs text-green-600">{{ section.available_seats }} available</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                :class="[
+                  'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
+                  section.gender === 'male' ? 'bg-blue-100 text-blue-800' :
+                  section.gender === 'female' ? 'bg-pink-100 text-pink-800' :
+                  'bg-purple-100 text-purple-800'
+                ]"
+              >
+                {{ section.gender === 'male' ? 'Male Only' : section.gender === 'female' ? 'Female Only' : 'Mixed' }}
+              </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span
@@ -132,6 +145,18 @@
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
               placeholder="e.g. Zone A"
             />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gender Restriction</label>
+            <select
+              v-model="form.gender"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="mixed">Mixed (All)</option>
+              <option value="male">Male Only</option>
+              <option value="female">Female Only</option>
+            </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Total Seats</label>
@@ -206,6 +231,7 @@ const form = ref({
   id: null as number | null,
   floor_id: null as number | null,
   name: '',
+  gender: 'mixed',
   total_seats: 0,
   description: '',
   is_active: true
@@ -238,6 +264,7 @@ const openCreateModal = () => {
     id: null,
     floor_id: floors.value[0]?.id || null,
     name: '',
+    gender: 'mixed',
     total_seats: 0,
     description: '',
     is_active: true
@@ -251,6 +278,7 @@ const editSection = (section: any) => {
     id: section.id,
     floor_id: section.floor_id,
     name: section.name,
+    gender: section.gender || 'mixed',
     total_seats: section.total_seats,
     description: section.description || '',
     is_active: section.is_active
@@ -325,7 +353,7 @@ const printSectionQRs = (section: any) => {
   seats.forEach((seat: any) => {
     html += `
       <div class="qr-item">
-        <img src="/storage/qrcodes/seats/seat-${seat.id}.png" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
+        <img src="${seat.qr_code_url || '/storage/qrcodes/seats/seat-' + seat.id + '.svg'}" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
         <div class="seat-number">Seat ${seat.seat_number}</div>
         <div class="section-info">${section.name} - ${section.floor?.name || ''}</div>
       </div>
@@ -391,7 +419,7 @@ const printAllQRs = () => {
     section.seats.forEach((seat: any) => {
       html += `
         <div class="qr-item">
-          <img src="/storage/qrcodes/seats/seat-${seat.id}.png" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
+          <img src="${seat.qr_code_url || '/storage/qrcodes/seats/seat-' + seat.id + '.svg'}" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
           <div class="seat-number">Seat ${seat.seat_number}</div>
           <div class="section-info">${section.name} - ${section.floor?.name || ''}</div>
         </div>

@@ -28,9 +28,16 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { useAuth } from '@/shared/composables/useAuth';
+import { useSettings } from '@/shared/composables/useSettings';
 
 const { user, isLoading } = useAuth();
+const { fetchPublicSettings } = useSettings();
+
+onMounted(() => {
+  fetchPublicSettings();
+});
 
 const refreshPage = () => {
   window.location.reload();

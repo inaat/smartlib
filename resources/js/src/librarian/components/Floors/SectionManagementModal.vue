@@ -36,6 +36,18 @@
               placeholder="e.g. 10"
             />
           </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Gender Restriction</label>
+            <select
+              v-model="form.gender"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="mixed">Mixed (All)</option>
+              <option value="male">Male Only</option>
+              <option value="female">Female Only</option>
+            </select>
+          </div>
           <div class="flex items-end space-x-2">
             <button
               type="submit"
@@ -72,6 +84,7 @@
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Seats</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gender</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
               <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
@@ -85,6 +98,18 @@
               <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ section.total_seats }} total
                 <div class="text-xs text-green-600">{{ section.available_seats }} available</div>
+              </td>
+              <td class="px-4 py-4 whitespace-nowrap">
+                <span
+                  :class="[
+                    'px-2 py-1 text-xs font-semibold rounded-full capitalize',
+                    section.gender === 'male' ? 'bg-blue-100 text-blue-800' : 
+                    section.gender === 'female' ? 'bg-pink-100 text-pink-800' : 
+                    'bg-gray-100 text-gray-800'
+                  ]"
+                >
+                  {{ section.gender || 'mixed' }}
+                </span>
               </td>
               <td class="px-4 py-4 whitespace-nowrap">
                 <span
@@ -133,6 +158,7 @@ const isEditing = ref(false);
 const form = ref({
   id: null as number | null,
   name: '',
+  gender: 'mixed',
   total_seats: 0,
   description: '',
   is_active: true
@@ -152,6 +178,7 @@ const resetForm = () => {
   form.value = {
     id: null,
     name: '',
+    gender: 'mixed',
     total_seats: 0,
     description: '',
     is_active: true
@@ -164,6 +191,7 @@ const editSection = (section: any) => {
   form.value = {
     id: section.id,
     name: section.name,
+    gender: section.gender || 'mixed',
     total_seats: section.total_seats,
     description: section.description || '',
     is_active: section.is_active

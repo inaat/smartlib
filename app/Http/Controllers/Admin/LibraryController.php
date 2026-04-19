@@ -11,9 +11,16 @@ class LibraryController extends Controller
 {
     public function index()
     {
+        $query = Library::withCount('seats');
+        
+        // Filter for SuperAdmins
+        if (auth()->user()->role === 'super_admin') {
+            $query->where('created_by', auth()->id());
+        }
+
         // Check if API request
         if (request()->expectsJson() || request()->is('api/*')) {
-            $libraries = Library::withCount('seats')->latest()->get()->map(function ($library) {
+            $libraries = $query->latest()->get()->map(function ($library) {
                 // Calculate available and occupied seats
                 $totalSeats = $library->seats_count ?? $library->capacity ?? 0;
                 $occupiedSeats = $library->seats()->where('status', '!=', 'available')->count();
@@ -30,7 +37,7 @@ class LibraryController extends Controller
             return response()->json($libraries);
         }
 
-        $libraries = Library::withCount('seats')->latest()->paginate(20);
+        $libraries = $query->latest()->paginate(20);
         return view('admin.libraries.index', compact('libraries'));
     }
 
@@ -66,6 +73,7 @@ class LibraryController extends Controller
             $validated['photo'] = $request->file('photo')->store('libraries', 'public');
         }
 
+        $validated['created_by'] = auth()->id();
         $library = Library::create($validated);
 
         // Check if API request

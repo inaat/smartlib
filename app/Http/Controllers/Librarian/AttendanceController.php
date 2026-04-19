@@ -14,10 +14,14 @@ class AttendanceController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $library = $user->library;
-
-        $query = Attendance::with(['user'])
-            ->where('library_id', $library->id);
+        $query = Attendance::with(['user', 'library']);
+ 
+        if ($user->role !== 'super_admin') {
+            $library = $user->library;
+            $query->where('library_id', $library->id);
+        } elseif ($request->has('library_id')) {
+            $query->where('library_id', $request->library_id);
+        }
 
         // Filter by date
         $date = $request->get('date', Carbon::today()->toDateString());
@@ -49,22 +53,74 @@ class AttendanceController extends Controller
     public function stats(Request $request)
     {
         $user = Auth::user();
-        $library = $user->library;
         $date = $request->get('date', Carbon::today()->toDateString());
-
+        
+        $query = Attendance::where('date', $date);
+        
+        if ($user->role !== 'super_admin') {
+            $library = $user->library;
+            $query->where('library_id', $library->id);
+        } elseif ($request->has('library_id')) {
+            $query->where('library_id', $request->library_id);
+        }
+ 
         $stats = [
-            'total_today' => Attendance::where('library_id', $library->id)->where('date', $date)->count(),
-            'currently_present' => Attendance::where('library_id', $library->id)
-                ->where('date', $date)
-                ->whereNull('check_out_time')
-                ->count(),
-            'avg_minutes' => (int) Attendance::where('library_id', $library->id)
-                ->where('date', $date)
-                ->whereNotNull('check_out_time')
-                ->avg('total_minutes'),
+            'total_today' => (clone $query)->count(),
+            'currently_present' => (clone $query)->whereNull('check_out_time')->count(),
+            'avg_minutes' => (int) (clone $query)->whereNotNull('check_out_time')->avg('total_minutes'),
         ];
 
         return response()->json($stats);
+    }
+
+    public function calendar(Request $request)
+    {
+        $user = Auth::user();
+        $year  = $request->get('year',  Carbon::today()->year);
+        $month = $request->get('month', Carbon::today()->month);
+
+        $startOfMonth = Carbon::create($year, $month, 1)->startOfDay();
+        $endOfMonth   = $startOfMonth->copy()->endOfMonth();
+
+        $query = Attendance::whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()]);
+
+        if ($user->role !== 'super_admin') {
+            $query->where('library_id', $user->library_id);
+        } elseif ($request->has('library_id')) {
+            $query->where('library_id', $request->library_id);
+        }
+
+        // Optional: filter by student user_id
+        if ($request->has('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        // Group and count attendance per day
+        $records = $query->selectRaw('date, COUNT(DISTINCT user_id) as student_count')
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        // Build a full calendar map for the month
+        $days = [];
+        $totalDays = $startOfMonth->daysInMonth;
+        $totalAttended = 0;
+
+        for ($d = 1; $d <= $totalDays; $d++) {
+            $dateStr = Carbon::create($year, $month, $d)->toDateString();
+            $count = $records->get($dateStr)?->student_count ?? 0;
+            if ($count > 0) $totalAttended++;
+            $days[$dateStr] = $count;
+        }
+
+        return response()->json([
+            'year'           => (int)$year,
+            'month'          => (int)$month,
+            'days_in_month'  => $totalDays,
+            'days'           => $days,
+            'total_attended' => $totalAttended,
+            'total_days'     => $totalDays,
+        ]);
     }
 
     public function markAttendance(Request $request)
@@ -80,6 +136,23 @@ class AttendanceController extends Controller
 
         if (!$student) {
             return response()->json(['message' => 'Student not found with this CRN'], 404);
+        }
+
+        // Check for active ban
+        if ($student->isBannedFrom($library->id)) {
+            $ban = $student->bans()
+                ->where(function ($q) use ($library) {
+                    $q->where('library_id', $library->id)->orWhereNotNull('super_admin_id');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                })
+                ->first();
+
+            $expiry = $ban->expires_at ? " until " . $ban->expires_at->format('M d, Y') : " for lifetime";
+            return response()->json([
+                'message' => "This student is restricted from accessing this library{$expiry}. Reason: " . ($ban->reason ?? 'No reason provided.')
+            ], 403);
         }
 
         $today = Carbon::today()->toDateString();

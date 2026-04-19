@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'phone',
         'crn',
+        'gender',
         'role',
         'ca_level',
         'is_active',
@@ -175,6 +176,27 @@ class User extends Authenticatable
     public function loyaltyTransactions()
     {
         return $this->hasMany(LoyaltyTransaction::class);
+    }
+
+    public function bans()
+    {
+        return $this->hasMany(Ban::class, 'user_id');
+    }
+
+    /**
+     * Check if user is banned from a specific library or globally by their SuperAdmin.
+     */
+    public function isBannedFrom($libraryId)
+    {
+        $query = $this->bans()->where(function ($q) use ($libraryId) {
+            $q->where('library_id', $libraryId)
+              ->orWhereNotNull('super_admin_id'); // Global ban by SuperAdmin
+        })->where(function ($q) {
+            $q->whereNull('expires_at')
+              ->orWhere('expires_at', '>', now());
+        });
+
+        return $query->exists();
     }
 }
 

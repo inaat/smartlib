@@ -210,6 +210,13 @@
                     <Edit2 class="w-4 h-4" />
                   </button>
                   <button 
+                    @click="openBanModal(user)" 
+                    class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                    title="Ban Student"
+                  >
+                    <Ban class="w-4 h-4" />
+                  </button>
+                  <button 
                     @click="confirmDelete(user)" 
                     class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Delete Student"
@@ -297,6 +304,7 @@
             />
           </div>
 
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="space-y-1.5">
               <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Account Status</label>
               <select
@@ -309,6 +317,18 @@
                 <option value="banned">Banned</option>
               </select>
             </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Gender</label>
+              <select
+                v-model="form.gender"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+          </div>
 
           <div class="flex items-center space-x-4 pt-6">
             <button
@@ -325,6 +345,61 @@
             >
               <RefreshCw v-if="saving" class="w-4 h-4 animate-spin" />
               <span>{{ saving ? 'Saving...' : (isEditing ? 'Update Student' : 'Create Student') }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Ban Modal -->
+    <div v-if="showBanModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-red-600 text-white flex items-center justify-between">
+          <div>
+            <h3 class="text-xl font-bold">Ban Student</h3>
+            <p class="text-orange-100 text-xs mt-1">Restrict {{ banForm.userName }} from accessing libraries</p>
+          </div>
+          <button @click="showBanModal = false" class="p-2 hover:bg-white/20 rounded-xl transition-colors">
+            <X class="w-6 h-6" />
+          </button>
+        </div>
+
+        <form @submit.prevent="submitBan" class="p-8 space-y-5">
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Ban Duration (Days)</label>
+            <input
+              v-model="banForm.days"
+              type="number"
+              min="1"
+              placeholder="Leave empty for lifetime ban"
+              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all outline-none"
+            />
+          </div>
+          
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Reason</label>
+            <textarea
+              v-model="banForm.reason"
+              rows="3"
+              placeholder="Reason for banning"
+              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all outline-none resize-none"
+            ></textarea>
+          </div>
+
+          <div class="flex items-center space-x-4 pt-4">
+            <button
+              type="button"
+              @click="showBanModal = false"
+              class="flex-1 px-6 py-3 border border-gray-200 text-gray-700 rounded-2xl hover:bg-gray-50 font-bold transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="banning"
+              class="flex-1 px-6 py-3 bg-red-600 text-white rounded-2xl hover:bg-red-700 font-bold shadow-lg shadow-red-200 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+            >
+              <RefreshCw v-if="banning" class="w-4 h-4 animate-spin" />
+              <span>{{ banning ? 'Banning...' : 'Confirm Ban' }}</span>
             </button>
           </div>
         </form>
@@ -348,7 +423,8 @@ import {
   Plus,
   TrendingUp,
   Calendar,
-  Library as LibraryIcon
+  Library as LibraryIcon,
+  Ban
 } from 'lucide-vue-next';
 import { adminAPI } from '@/shared/services/api';
 import { format, isSameMonth, parseISO } from 'date-fns';
@@ -361,6 +437,15 @@ const showModal = ref(false);
 const isEditing = ref(false);
 const statusUpdating = ref<number | null>(null);
 
+const showBanModal = ref(false);
+const banning = ref(false);
+const banForm = ref({
+  userId: null as number | null,
+  userName: '',
+  days: null as number | null,
+  reason: ''
+});
+
 const searchQuery = ref('');
 const filterLibrary = ref('');
 const filterStatus = ref('');
@@ -371,6 +456,7 @@ const form = ref({
   email: '',
   crn: '',
   ca_level: '',
+  gender: '',
   password: '',
   status: 'approved',
   library_id: null as number | null,
@@ -443,6 +529,7 @@ const openCreateModal = () => {
     email: '',
     crn: '',
     ca_level: '',
+    gender: '',
     password: '',
     status: 'approved',
     library_id: null,
@@ -459,12 +546,52 @@ const editUser = (user: any) => {
     email: user.email,
     crn: user.crn || '',
     ca_level: user.ca_level || '',
+    gender: user.gender || '',
     password: '',
     status: user.status,
     library_id: user.library_id,
     role: 'student'
   };
   showModal.value = true;
+};
+
+const openBanModal = (user: any) => {
+  banForm.value = {
+    userId: user.id,
+    userName: user.name,
+    days: null,
+    reason: ''
+  };
+  showBanModal.value = true;
+};
+
+const submitBan = async () => {
+  if (!banForm.value.userId) return;
+  banning.value = true;
+  try {
+    await adminAPI.banUser(banForm.value.userId, {
+      days: banForm.value.days || undefined,
+      reason: banForm.value.reason
+    });
+    showBanModal.value = false;
+    alert(`User ${banForm.value.userName} banned successfully.`);
+    // Optionally refetch users if API injects ban info into user object
+  } catch (error) {
+    console.error('Error banning user:', error);
+    alert('Failed to ban user.');
+  } finally {
+    banning.value = false;
+  }
+};
+
+const unbanUser = async (user: any) => {
+  if (!confirm(`Are you sure you want to unban ${user.name}?`)) return;
+  try {
+    await adminAPI.unbanUser(user.id);
+    alert(`User ${user.name} unbanned successfully.`);
+  } catch (error) {
+    console.error('Error unbanning user:', error);
+  }
 };
 
 const saveUser = async () => {

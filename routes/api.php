@@ -52,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
     Route::post('/auth/logout-all', [AuthController::class, 'logoutAll'])->name('api.auth.logout-all');
+    Route::get('/auth/sessions', [AuthController::class, 'sessions'])->name('api.auth.sessions');
+    Route::delete('/auth/sessions/{id}', [AuthController::class, 'revokeSession'])->name('api.auth.sessions.revoke');
     Route::get('/auth/user', function (Request $request) {
         return response()->json($request->user());
     })->name('api.auth.user');
@@ -63,7 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Libraries
         Route::get('/libraries', [StudentLibrary::class, 'index'])->name('libraries.index');
-        
+        Route::get('/libraries/nearby', [StudentLibrary::class, 'nearby'])->name('libraries.nearby');
         Route::get('/libraries/{library}', [StudentLibrary::class, 'show'])->name('libraries.show');
 
         // Seats
@@ -115,6 +117,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/support-tickets/{supportTicket}', [\App\Http\Controllers\SupportTicketController::class, 'show'])->name('support-tickets.show');
         Route::post('/support-tickets/{supportTicket}/messages', [\App\Http\Controllers\SupportTicketController::class, 'sendMessage'])->name('support-tickets.messages.store');
         Route::put('/support-tickets/{supportTicket}/status', [\App\Http\Controllers\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
+ 
+        // Attendance
+        Route::get('/attendance', [\App\Http\Controllers\Student\AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('/attendance/stats', [\App\Http\Controllers\Student\AttendanceController::class, 'stats'])->name('attendance.stats');
+        Route::get('/attendance/calendar', [\App\Http\Controllers\Student\AttendanceController::class, 'calendar'])->name('attendance.calendar');
     });
 
     // Common Profile & Notification Routes (Accessible by all authenticated users)
@@ -132,11 +139,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Users
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
         Route::get('/users/pending', [UserController::class, 'pending'])->name('users.pending');
         Route::post('/users/{user}/approve', [UserController::class, 'approve'])->name('users.approve');
         Route::delete('/users/{user}/reject', [UserController::class, 'reject'])->name('users.reject');
         Route::get('/users/students', [UserController::class, 'students'])->name('users.students');
         Route::get('/users/librarians', [UserController::class, 'librarians'])->name('users.librarians');
+        Route::post('/users/{user}/ban', [UserController::class, 'ban'])->name('users.ban');
+        Route::post('/users/{user}/unban', [UserController::class, 'unban'])->name('users.unban');
         Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
@@ -188,21 +198,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
         Route::get('/analytics/reports', [AnalyticsController::class, 'reports'])->name('analytics.reports');
 
-        // Subscription Plans
-        Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
-        Route::post('/subscription-plans', [SubscriptionPlanController::class, 'store'])->name('subscription-plans.store');
-        Route::get('/subscription-plans/{plan}', [SubscriptionPlanController::class, 'show'])->name('subscription-plans.show');
-        Route::put('/subscription-plans/{plan}', [SubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
-        Route::delete('/subscription-plans/{plan}', [SubscriptionPlanController::class, 'destroy'])->name('subscription-plans.destroy');
+        // Subscription Plans (MOVED TO OWNER)
+        // Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
+        // Route::post('/subscription-plans', [SubscriptionPlanController::class, 'store'])->name('subscription-plans.store');
+        // Route::get('/subscription-plans/{plan}', [SubscriptionPlanController::class, 'show'])->name('subscription-plans.show');
+        // Route::put('/subscription-plans/{plan}', [SubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
+        // Route::delete('/subscription-plans/{plan}', [SubscriptionPlanController::class, 'destroy'])->name('subscription-plans.destroy');
 
         // Subscriptions
         Route::get('/subscriptions', [AdminSubscription::class, 'index'])->name('subscriptions.index');
 
-        // Orders
-        Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
-        Route::post('/orders/{id}/approve', [\App\Http\Controllers\Admin\OrderController::class, 'approve'])->name('orders.approve');
-        Route::post('/orders/{id}/reject', [\App\Http\Controllers\Admin\OrderController::class, 'reject'])->name('orders.reject');
-        Route::get('/user-subscriptions', [\App\Http\Controllers\Admin\OrderController::class, 'subscriptions'])->name('user-subscriptions.index');
+        // Orders (MOVED TO OWNER)
+        // Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+        // Route::post('/orders/{id}/approve', [\App\Http\Controllers\Admin\OrderController::class, 'approve'])->name('orders.approve');
+        // Route::post('/orders/{id}/reject', [\App\Http\Controllers\Admin\OrderController::class, 'reject'])->name('orders.reject');
+        // Route::get('/user-subscriptions', [\App\Http\Controllers\Admin\OrderController::class, 'subscriptions'])->name('user-subscriptions.index');
 
         // System Settings
         Route::get('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'index'])->name('settings.index');
@@ -214,6 +224,35 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/support-tickets/{supportTicket}', [\App\Http\Controllers\SupportTicketController::class, 'show'])->name('support-tickets.show');
         Route::post('/support-tickets/{supportTicket}/messages', [\App\Http\Controllers\SupportTicketController::class, 'sendMessage'])->name('support-tickets.messages.store');
         Route::put('/support-tickets/{supportTicket}/status', [\App\Http\Controllers\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
+    });
+
+    // Owner Routes
+    Route::prefix('owner')->middleware(['role:owner'])->name('api.owner.')->group(function () {
+        // SuperAdmins
+        Route::get('/superadmins', [\App\Http\Controllers\Owner\SuperAdminController::class, 'index'])->name('superadmins.index');
+        Route::post('/superadmins', [\App\Http\Controllers\Owner\SuperAdminController::class, 'store'])->name('superadmins.store');
+        Route::put('/superadmins/{id}', [\App\Http\Controllers\Owner\SuperAdminController::class, 'update'])->name('superadmins.update');
+        Route::delete('/superadmins/{id}', [\App\Http\Controllers\Owner\SuperAdminController::class, 'destroy'])->name('superadmins.destroy');
+
+        // Analytics
+        Route::get('/analytics', [\App\Http\Controllers\Owner\AnalyticsController::class, 'index'])->name('analytics');
+
+        // Subscription Plans
+        Route::get('/subscription-plans', [\App\Http\Controllers\Owner\SubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
+        Route::post('/subscription-plans', [\App\Http\Controllers\Owner\SubscriptionPlanController::class, 'store'])->name('subscription-plans.store');
+        Route::get('/subscription-plans/{plan}', [\App\Http\Controllers\Owner\SubscriptionPlanController::class, 'show'])->name('subscription-plans.show');
+        Route::put('/subscription-plans/{plan}', [\App\Http\Controllers\Owner\SubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
+        Route::delete('/subscription-plans/{plan}', [\App\Http\Controllers\Owner\SubscriptionPlanController::class, 'destroy'])->name('subscription-plans.destroy');
+
+        // Orders & Subscriptions
+        Route::get('/orders', [\App\Http\Controllers\Owner\OrderController::class, 'index'])->name('orders.index');
+        Route::post('/orders/{id}/approve', [\App\Http\Controllers\Owner\OrderController::class, 'approve'])->name('orders.approve');
+        Route::post('/orders/{id}/reject', [\App\Http\Controllers\Owner\OrderController::class, 'reject'])->name('orders.reject');
+        Route::get('/user-subscriptions', [\App\Http\Controllers\Owner\OrderController::class, 'subscriptions'])->name('user-subscriptions.index');
+
+        // App Settings
+        Route::get('/settings', [\App\Http\Controllers\Owner\SettingController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [\App\Http\Controllers\Owner\SettingController::class, 'update'])->name('settings.update');
     });
 
     // Librarian Routes
@@ -238,6 +277,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/libraries/{library}/sections/{section}', [SeatSectionController::class, 'destroy'])->name('libraries.sections.destroy');
 
         // Seats
+        Route::get('/active-floors', [SeatController::class, 'activeFloors'])->name('floors.active');
+        Route::get('/active-sections', [SeatController::class, 'activeSections'])->name('sections.active');
         Route::get('/seats', [SeatController::class, 'index'])->name('seats.index');
         Route::post('/seats', [SeatController::class, 'store'])->name('seats.store');
         Route::get('/seats/{seat}', [SeatController::class, 'show'])->name('seats.show');
@@ -272,6 +313,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/students', [StudentController::class, 'index'])->name('students.index');
         Route::get('/students/stats', [StudentController::class, 'stats'])->name('students.stats');
         Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+        Route::post('/students/{id}/ban', [StudentController::class, 'ban'])->name('students.ban');
+        Route::post('/students/{id}/unban', [StudentController::class, 'unban'])->name('students.unban');
         Route::put('/students/{id}', [StudentController::class, 'update'])->name('students.update');
         Route::delete('/students/{id}', [StudentController::class, 'destroy'])->name('students.destroy');
 
@@ -289,6 +332,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Attendance
         Route::get('/attendance', [\App\Http\Controllers\Librarian\AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('/attendance/stats', [\App\Http\Controllers\Librarian\AttendanceController::class, 'stats'])->name('attendance.stats');
+        Route::get('/attendance/calendar', [\App\Http\Controllers\Librarian\AttendanceController::class, 'calendar'])->name('attendance.calendar');
         Route::post('/attendance/mark', [\App\Http\Controllers\Librarian\AttendanceController::class, 'markAttendance'])->name('attendance.mark');
 
         // Support Tickets

@@ -1,6 +1,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Library, Seat, Book, Booking, Event, Reservation, Analytics, AIRecommendation, Payment } from '@/shared/types';
 import { studentAPI, adminAPI, librarianAPI } from '@/shared/services/api';
+import { parseISO } from 'date-fns';
 
 const libraries = ref<Library[]>([]);
 const seats = ref<Seat[]>([]);
@@ -17,7 +18,7 @@ const searchQuery = ref('');
 // Global Extension Modal State
 const showExtensionModal = ref(false);
 const expiredBooking = ref<any>(null);
-const extensionAlertShown = ref<Record<number, boolean>>({});
+const extensionAlertShown = ref<Record<string | number, boolean>>({});
 
 export function useApp() {
     const now = ref(new Date());
@@ -28,13 +29,16 @@ export function useApp() {
         globalTimer = setInterval(() => {
             now.value = new Date();
             checkBookingsForExtension();
+            autoReleaseExpiredBookings();
         }, 10000); // Check every 10 seconds
     };
 
     const checkBookingsForExtension = () => {
         const active = bookings.value.find(b => b.status === 'checked_in');
         if (active) {
-            const end = new Date(active.scheduled_end_time);
+            const end = parseISO(active.scheduled_end_time || active.endTime || '');
+            if (isNaN(end.getTime())) return;
+
             const diff = end.getTime() - now.value.getTime();
             const minutesLeft = diff / 60000;
 
@@ -231,14 +235,14 @@ export function useApp() {
     };
 
     const autoReleaseExpiredBookings = () => {
-        const now = new Date();
+        const currentTime = new Date();
 
         bookings.value = bookings.value.map(booking => {
             if (
-                booking.status === 'upcoming' &&
+                (booking.status === 'upcoming' || booking.status === 'booked') &&
                 !booking.checkedIn &&
                 booking.autoReleaseTime &&
-                new Date(booking.autoReleaseTime) < now
+                new Date(booking.autoReleaseTime) < currentTime
             ) {
                 if (booking.seatId) updateSeatStatus(booking.seatId, 'available');
                 libraries.value = libraries.value.map(lib =>
@@ -249,9 +253,14 @@ export function useApp() {
                 return { ...booking, status: 'no_show' as const };
             }
 
-            if (booking.status === 'active' && booking.checkedIn) {
-                const endTime = new Date(`${booking.date}T${booking.endTime}`);
-                if (endTime < now) {
+            if ((booking.status === 'active' || booking.status === 'checked_in') && (booking.checkedIn || booking.status === 'checked_in')) {
+                const endStr = booking.scheduled_end_time || (booking.date && booking.endTime ? `${booking.date}T${booking.endTime}` : null);
+                if (!endStr) return booking;
+
+                const endTime = new Date(endStr);
+                if (isNaN(endTime.getTime())) return booking;
+
+                if (endTime < currentTime) {
                     if (booking.seatId) updateSeatStatus(booking.seatId, 'available');
                     libraries.value = libraries.value.map(lib =>
                         lib.id === booking.libraryId
@@ -278,9 +287,9 @@ export function useApp() {
 
             if (activeBooking) {
                 const endTime = new Date(`${activeBooking.date}T${activeBooking.endTime}`);
-                const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000);
+                const thirtyMinutesFromNow = new Date(currentTime.getTime() + 30 * 60 * 1000);
 
-                if (endTime <= thirtyMinutesFromNow && endTime > now) {
+                if (endTime <= thirtyMinutesFromNow && endTime > currentTime) {
                     return {
                         ...seat,
                         status: 'free_soon' as const,

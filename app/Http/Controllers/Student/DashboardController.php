@@ -17,7 +17,7 @@ class DashboardController extends Controller
 
         $stats = [
             'active_bookings' => SeatBooking::where('user_id', $user->id)
-                ->whereIn('status', ['pending', 'active'])
+                ->whereIn('status', ['booked', 'checked_in'])
                 ->count(),
             'total_bookings' => SeatBooking::where('user_id', $user->id)->count(),
             'active_reservations' => BookReservation::where('user_id', $user->id)
@@ -37,7 +37,7 @@ class DashboardController extends Controller
 
         $activeBooking = SeatBooking::with(['seat.library'])
             ->where('user_id', $user->id)
-            ->whereIn('status', ['pending', 'active'])
+            ->whereIn('status', ['booked', 'checked_in'])
             ->latest()
             ->first();
 

@@ -103,11 +103,9 @@ import {
   Library,
   Users,
   UserCheck,
-  CreditCard,
   BarChart3,
   Settings,
   ShieldCheck,
-  User,
   LogOut,
   X,
   ChevronRight,
@@ -117,8 +115,8 @@ import {
   Calendar,
   ClipboardList,
   Square,
-  ShoppingBag,
-  LifeBuoy
+  LifeBuoy,
+  CalendarCheck
 } from 'lucide-vue-next';
 
 
@@ -128,7 +126,7 @@ defineProps<{
 
 defineEmits(['close']);
 
-const { user, logout, settings } = useAuth();
+const { logout, settings } = useAuth();
 
 const mainNavItems = [
   { path: '/superadmin/dashboard', label: 'Dashboard', icon: Home },
@@ -141,11 +139,10 @@ const mainNavItems = [
   { path: '/superadmin/events', label: 'Events', icon: Calendar },
   { path: '/superadmin/bookings', label: 'Bookings', icon: ClipboardList },
   { path: '/superadmin/seats', label: 'Seats', icon: Square },
+  { path: '/superadmin/attendance', label: 'Attendance', icon: CalendarCheck },
 ];
 
 const systemNavItems = [
-  { path: '/superadmin/subscription-plans', label: 'Subscription Plans', icon: CreditCard },
-  { path: '/superadmin/orders', label: 'Orders', icon: ShoppingBag },
   { path: '/superadmin/analytics', label: 'Analytics', icon: BarChart3 },
   { path: '/superadmin/support', label: 'Support & Complaints', icon: LifeBuoy },
   { path: '/superadmin/settings', label: 'System Settings', icon: Settings },

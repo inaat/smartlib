@@ -16,12 +16,12 @@ class SystemSettingController extends Controller
 
     public function publicSettings()
     {
-        $settings = SystemSetting::whereIn('group', ['general', 'appearance'])->get();
-        $public = [];
-        foreach ($settings as $setting) {
-            $public[$setting->key] = $setting->value;
-        }
-        return response()->json($public);
+        $settings = SystemSetting::whereIn('key', ['app_name', 'app_logo'])->get()->keyBy('key');
+        
+        return response()->json([
+            'app_name' => $settings->get('app_name')?->value ?? config('app.name'),
+            'app_logo' => $settings->get('app_logo')?->value ? asset('storage/' . $settings->get('app_logo')->value) : null,
+        ]);
     }
 
     public function update(Request $request)

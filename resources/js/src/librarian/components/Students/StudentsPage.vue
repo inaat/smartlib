@@ -116,6 +116,10 @@
               <Calendar class="w-4 h-4" />
               <span>Joined {{ formatDate(student.created_at) }}</span>
             </div>
+            <div v-if="student.gender" class="flex items-center space-x-2 text-sm text-gray-600">
+              <User class="w-4 h-4" />
+              <span class="capitalize">{{ student.gender }}</span>
+            </div>
           </div>
 
           <div class="mt-4 pt-4 border-t border-gray-200">
@@ -136,11 +140,11 @@
           </div>
 
           <div class="mt-4 flex items-center space-x-2">
-            <button class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
+            <button @click="openEditModal(student)" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
               View Profile
             </button>
-            <button class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <MoreVertical class="w-4 h-4 text-gray-600" />
+            <button @click="openBanModal(student)" class="p-2 border border-orange-200 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors" title="Ban Student">
+              <BanIcon class="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -191,24 +195,37 @@
               </select>
             </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-            <input
-              v-model="form.email"
-              type="email"
-              required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="email@example.com"
-            />
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <input
+                v-model="form.email"
+                type="email"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="email@example.com"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <input
+                v-model="form.phone"
+                type="tel"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="+92 3XX XXXXXXX"
+              />
+            </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-            <input
-              v-model="form.phone"
-              type="tel"
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+            <select
+              v-model="form.gender"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="+92 3XX XXXXXXX"
-            />
+            >
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
           </div>
           <div v-if="!isEditing || changePassword">
             <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
@@ -249,6 +266,58 @@
         </form>
       </div>
     </div>
+
+    <!-- Ban Modal -->
+    <div v-if="showBanModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="p-6 bg-gradient-to-r from-orange-500 to-red-600 text-white flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold">Ban Student</h2>
+            <p class="text-orange-100 text-xs mt-1">Restrict access for {{ banForm.userName }}</p>
+          </div>
+          <button @click="showBanModal = false" class="p-2 hover:bg-white/20 rounded-full transition-colors">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+        <form @submit.prevent="submitBan" class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Duration (Days)</label>
+            <input
+              v-model="banForm.days"
+              type="number"
+              min="1"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder="Leave empty for lifetime ban"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+            <textarea
+              v-model="banForm.reason"
+              rows="3"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder="Enter reason for ban"
+            ></textarea>
+          </div>
+          <div class="pt-4 flex items-center space-x-3">
+            <button
+              type="button"
+              @click="showBanModal = false"
+              class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="banning"
+              class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-lg transition-all disabled:opacity-50"
+            >
+              {{ banning ? 'Banning...' : 'Confirm Ban' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -268,7 +337,8 @@ import {
   MoreVertical,
   X,
   Edit2,
-  Trash2
+  Trash2,
+  Ban as BanIcon
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 
@@ -280,6 +350,15 @@ const showModal = ref(false);
 const isEditing = ref(false);
 const changePassword = ref(false);
 const currentStudentId = ref<number | null>(null);
+
+const showBanModal = ref(false);
+const banning = ref(false);
+const banForm = ref({
+  userId: null as number | null,
+  userName: '',
+  days: null as number | null,
+  reason: ''
+});
 
 const stats = ref({
   total: 0,
@@ -302,6 +381,7 @@ const form = ref({
   email: '',
   phone: '',
   crn: '',
+  gender: '',
   ca_level: '',
   password: '',
   is_active: true
@@ -357,6 +437,7 @@ const openAddModal = () => {
     email: '',
     phone: '',
     crn: '',
+    gender: '',
     ca_level: '',
     password: '',
     is_active: true
@@ -373,6 +454,7 @@ const openEditModal = (student: any) => {
     email: student.email,
     phone: student.phone || '',
     crn: student.crn || '',
+    gender: student.gender || '',
     ca_level: student.ca_level || '',
     password: '',
     is_active: !!student.is_active
@@ -416,6 +498,34 @@ const confirmDelete = async (student: any) => {
       console.error('Error deleting student:', error);
       showError('Delete Failed', 'Failed to delete student');
     }
+  }
+};
+
+const openBanModal = (student: any) => {
+  banForm.value = {
+    userId: student.id,
+    userName: student.name,
+    days: null,
+    reason: ''
+  };
+  showBanModal.value = true;
+};
+
+const submitBan = async () => {
+  if (!banForm.value.userId) return;
+  try {
+    banning.value = true;
+    await librarianAPI.banStudent(banForm.value.userId, {
+      days: banForm.value.days || undefined,
+      reason: banForm.value.reason
+    });
+    showBanModal.value = false;
+    showSuccess('Banned', `${banForm.value.userName} has been restricted`);
+    fetchStudents();
+  } catch (error) {
+    showError('Ban Failed', 'Failed to restrict student');
+  } finally {
+    banning.value = false;
   }
 };
 

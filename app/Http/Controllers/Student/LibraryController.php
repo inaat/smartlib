@@ -8,6 +8,50 @@ use Illuminate\Http\Request;
 
 class LibraryController extends Controller
 {
+    /**
+     * Return libraries sorted by proximity to the given coordinates.
+     * Accepts: lat, lng, radius_km (default 50)
+     */
+    public function nearby(Request $request)
+    {
+        $lat  = (float) $request->query('lat');
+        $lng  = (float) $request->query('lng');
+        $radius = (float) ($request->query('radius_km', 50));
+
+        // Haversine formula via raw SQL
+        $libraries = Library::where('is_active', true)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->selectRaw("
+                *,
+                ( 6371 * acos(
+                    cos( radians(?) ) *
+                    cos( radians( latitude ) ) *
+                    cos( radians( longitude ) - radians(?) ) +
+                    sin( radians(?) ) *
+                    sin( radians( latitude ) )
+                ) ) AS distance_km
+            ", [$lat, $lng, $lat])
+            ->having('distance_km', '<=', $radius)
+            ->orderBy('distance_km')
+            ->get();
+
+        $data = $libraries->map(function ($library) {
+            return [
+                'id'           => $library->id,
+                'name'         => $library->name,
+                'address'      => $library->address,
+                'photo_url'    => $library->photo_url,
+                'latitude'     => $library->latitude,
+                'longitude'    => $library->longitude,
+                'is_active'    => $library->is_active,
+                'distance_km'  => round($library->distance_km, 2),
+            ];
+        });
+
+        return response()->json($data);
+    }
+
     public function index(Request $request)
     {
         $libraries = Library::with(['facilities'])
@@ -110,7 +154,7 @@ class LibraryController extends Controller
 
     public function seats($id)
     {
-        $library = Library::with(['floors', 'seatSections'])->findOrFail($id);
+        $library = Library::with(['floors', 'seatSections', 'operatingHours'])->findOrFail($id);
         
         $seats = $library->seats()
             ->select(['seats.id', 'seats.floor_id', 'seats.section_id', 'seats.seat_number', 'seats.seat_type', 'seats.zone', 'seats.status', 'seats.position_x', 'seats.position_y', 'seats.has_computer', 'seats.near_window', 'seats.socket_count'])
@@ -133,11 +177,25 @@ class LibraryController extends Controller
             return $seat;
         });
 
+        // Format operating hours
+        $daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        $hoursMap = collect($library->operatingHours)->keyBy('day_of_week');
+        $formattedHours = collect($daysOrder)->map(function ($day) use ($hoursMap) {
+            $hour = $hoursMap->get($day);
+            return [
+                'day' => $day,
+                'isOpen' => $hour ? (bool)$hour->is_open : false,
+                'openTime' => $hour && $hour->open_time ? substr($hour->open_time, 0, 5) : '',
+                'closeTime' => $hour && $hour->close_time ? substr($hour->close_time, 0, 5) : '',
+            ];
+        });
+
         return response()->json([
             'library' => [
                 'id' => $library->id,
                 'name' => $library->name,
                 'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+                'operating_days' => $formattedHours,
             ],
             'floors' => $library->floors,
             'sections' => $library->seatSections,

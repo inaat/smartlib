@@ -1,20 +1,44 @@
 <template>
   <div class="p-6 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Seat Management</h1>
-        <p class="text-gray-600 mt-1">Monitor and manage library seats in real-time</p>
+    <!-- Top Header -->
+    <div class="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex items-center space-x-4">
+        <h1 class="text-2xl font-bold text-gray-900">Seat Map</h1>
+        <div class="h-6 w-px bg-gray-200"></div>
+        <div class="flex items-center space-x-2">
+          <!-- Floor Selector -->
+          <div class="relative">
+            <select
+              v-model="activeFloorId"
+              class="appearance-none flex items-center bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700 py-1.5 pl-9 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option v-for="floor in floors" :key="floor.id" :value="floor.id">
+                {{ floor.name }}
+              </option>
+            </select>
+            <Building2 class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+            <ChevronDown class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+          </div>
+
+          <!-- Section Tabs -->
+          <div class="flex items-center bg-gray-50 p-1 rounded-lg border border-gray-200 max-w-[280px] sm:max-w-sm overflow-x-auto no-scrollbar">
+            <button
+              v-for="section in currentFloorSections"
+              :key="section.id"
+              @click="activeSectionId = section.id"
+              :class="[
+                'px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap',
+                activeSectionId === section.id
+                  ? 'bg-white text-purple-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              ]"
+            >
+              {{ section.name }}
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="flex items-center space-x-3">
-        <button
-          @click="fetchSeats"
-          :disabled="loading"
-          class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 disabled:opacity-50"
-        >
-          <RefreshCw :class="['w-4 h-4', loading ? 'animate-spin' : '']" />
-          <span class="text-sm font-medium">{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
-        </button>
+      <div class="flex items-center">
         <button
           @click="isLayoutMode = !isLayoutMode"
           :class="[
@@ -25,215 +49,270 @@
           ]"
         >
           <Move class="w-4 h-4" />
-          <span class="text-sm font-medium">{{ isLayoutMode ? 'Grid View' : 'Layout Mode' }}</span>
+          <span class="text-sm font-medium">{{ isLayoutMode ? 'View Mode' : 'Layout Mode' }}</span>
+          <Settings v-if="isLayoutMode" class="w-3.5 h-3.5 ml-1" />
         </button>
-        <router-link
-          to="/librarian/sections"
-          class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center space-x-2"
-        >
-          <Settings class="w-4 h-4" />
-          <span class="text-sm font-medium">Configure Seats</span>
-        </router-link>
       </div>
     </div>
 
-    <!-- Stats Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-      <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-blue-100 rounded-lg">
-            <Building2 class="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-600">Total Seats</p>
-            <p class="text-xl font-bold text-gray-900">{{ seatStats.total }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-green-100 rounded-lg">
-            <CheckCircle class="w-5 h-5 text-green-600" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-600">Available</p>
-            <p class="text-xl font-bold text-green-600">{{ seatStats.available }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-red-100 rounded-lg">
-            <X class="w-5 h-5 text-red-600" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-600">Occupied</p>
-            <p class="text-xl font-bold text-red-600">{{ seatStats.occupied }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-orange-100 rounded-lg">
-            <AlertTriangle class="w-5 h-5 text-orange-600" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-600">Reserved</p>
-            <p class="text-xl font-bold text-orange-600">{{ seatStats.reserved }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-gray-100 rounded-lg">
-            <Tool class="w-5 h-5 text-gray-600" />
-          </div>
-          <div>
-            <p class="text-xs text-gray-600">Maintenance</p>
-            <p class="text-xl font-bold text-gray-600">{{ seatStats.maintenance }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section Tabs -->
-    <div v-if="sections.length > 0" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center justify-between">
-      <div class="flex items-center space-x-2 overflow-x-auto pb-1">
-        <button
-          @click="activeSectionId = null"
-          :class="[
-            'px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap',
-            activeSectionId === null
-              ? 'bg-purple-100 text-purple-700'
-              : 'text-gray-600 hover:bg-gray-100'
-          ]"
-        >
-          All Seats
-        </button>
-        <button
-          v-for="section in sections"
-          :key="section.id"
-          @click="activeSectionId = section.id"
-          :class="[
-            'px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap',
-            activeSectionId === section.id
-              ? 'bg-purple-100 text-purple-700'
-              : 'text-gray-600 hover:bg-gray-100'
-          ]"
-        >
-          {{ section.name }}
-        </button>
-      </div>
-      <button
-        @click="printActiveSectionQRs"
-        class="ml-4 px-4 py-2 text-sm font-medium text-purple-600 hover:bg-purple-50 rounded-lg transition-colors flex items-center space-x-2 border border-purple-200"
+    <!-- Stats Bar -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+      <div 
+        v-for="(stat, key) in [
+          { label: 'Total Seats', count: seatStats.total, delta: 3, color: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' },
+          { label: 'Available', count: seatStats.available, delta: 20, color: 'green', bg: 'bg-green-50', text: 'text-green-600' },
+          { label: 'Occupied', count: seatStats.occupied, delta: 13, color: 'orange', bg: 'bg-orange-50', text: 'text-orange-600' },
+          { label: 'Reserved', count: seatStats.reserved, delta: 5, color: 'indigo', bg: 'bg-indigo-50', text: 'text-indigo-600' },
+          { label: 'Overstay', count: seatStats.overstay, delta: 3, color: 'yellow', bg: 'bg-yellow-50', text: 'text-yellow-600' },
+          { label: 'Serious Overstay', count: seatStats.serious_overstay, delta: 1, color: 'red', bg: 'bg-red-50', text: 'text-red-600' },
+          { label: 'Maintenance', count: seatStats.maintenance, delta: 2, color: 'gray', bg: 'bg-gray-100', text: 'text-gray-600' }
+        ]" 
+        :key="key"
+        class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center space-x-4"
       >
-        <Printer class="w-4 h-4" />
-        <span class="hidden sm:inline">Print Section QR</span>
-      </button>
+        <div :class="['w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg', stat.bg, stat.text]">
+          {{ stat.count }}
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-gray-500 whitespace-nowrap">{{ stat.label }}</p>
+          <p class="text-[10px] text-gray-400 font-medium">{{ stat.delta }}</p>
+        </div>
+      </div>
     </div>
 
-    <!-- Seat Grid (Grouped) -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div class="mb-6">
-        <h2 class="text-lg font-bold text-gray-900">{{ activeSectionName }} - Seat Layout</h2>
-        <p class="text-sm text-gray-600 mt-1">Seats are grouped by floor and section</p>
+    <!-- Main Seat Map Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-visible flex flex-col min-h-[600px]">
+      <!-- Sub-header -->
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="font-bold text-gray-800">Seat Map - <span class="text-gray-500">{{ activeSectionName }}</span></h2>
+        <div class="text-sm font-medium text-gray-400">{{ activeSectionName }}</div>
       </div>
 
-      <!-- Legend -->
-      <div class="flex items-center space-x-6 mb-8 pb-4 border-b border-gray-200">
-        <div class="flex items-center space-x-2">
-          <div class="w-4 h-4 bg-green-500 rounded"></div>
-          <span class="text-sm text-gray-600">Available</span>
+      <!-- Scrollable Map Area -->
+      <div class="flex-1 overflow-visible bg-gray-50 relative p-12">
+        <!-- Floor Plan Outline Elements -->
+        <div class="absolute inset-0 pointer-events-none opacity-20">
+          <div class="absolute top-0 bottom-0 left-[5%] w-[2px] bg-gray-300"></div>
+          <div class="absolute top-[10%] bottom-[10%] left-0 w-[5%] border-y-2 border-r-2 border-gray-300 rounded-r-3xl"></div>
+          <div class="absolute top-0 bottom-0 right-[5%] w-[2px] bg-gray-300"></div>
+          <div class="absolute top-[40%] bottom-[40%] right-0 w-[5%] border-y-2 border-l-2 border-gray-300 rounded-l-3xl"></div>
         </div>
-        <div class="flex items-center space-x-2">
-          <div class="w-4 h-4 bg-red-500 rounded"></div>
-          <span class="text-sm text-gray-600">Occupied</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <div class="w-4 h-4 bg-orange-500 rounded"></div>
-          <span class="text-sm text-gray-600">Reserved</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <div class="w-4 h-4 bg-gray-400 rounded"></div>
-          <span class="text-sm text-gray-600">Maintenance</span>
-        </div>
-      </div>
 
-      <!-- Grouped Seat Layout -->
-      <div v-if="Object.keys(groupedSeats).length > 0" class="space-y-10">
-        <div v-for="(sections, floorName) in groupedSeats" :key="floorName" class="space-y-6">
-          <div class="flex items-center space-x-4">
-            <div class="h-px flex-1 bg-gray-200"></div>
-            <h3 class="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">{{ floorName }}</h3>
-            <div class="h-px flex-1 bg-gray-200"></div>
-          </div>
-          
-          <div v-for="(seats, sectionName) in sections" :key="sectionName" class="space-y-4">
-            <div class="flex items-center justify-between px-2">
-              <h4 class="text-sm font-bold text-purple-600 flex items-center">
-                <Layout class="w-4 h-4 mr-2" />
-                {{ sectionName }}
-              </h4>
-              <span class="text-xs text-gray-400 font-medium">{{ seats.length }} Seats</span>
-            </div>
+        <!-- Exit Labels -->
+        <div class="absolute top-[10%] left-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Exit</div>
+        <div class="absolute bottom-[10%] left-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Exit</div>
+        <div class="absolute top-[40%] right-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Exit</div>
+        <div class="absolute bottom-[40%] right-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Exit</div>
 
-            <div 
-              :class="[
-                isLayoutMode 
-                  ? 'relative h-[500px] bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden' 
-                  : 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3'
-              ]"
-              @dragover.prevent
-              @drop="onDrop($event, seats)"
-            >
-              <button
-                v-for="seat in seats"
-                :key="seat.id"
-                @click="!isLayoutMode && selectSeat(seat)"
-                :draggable="isLayoutMode"
-                @dragstart="onDragStart($event, seat)"
-                :style="isLayoutMode ? {
-                  position: 'absolute',
-                  left: `${seat.position_x}px`,
-                  top: `${seat.position_y}px`,
-                  width: '60px',
-                  height: '60px'
-                } : {}"
-                :class="[
-                  'rounded-lg border-2 flex flex-col items-center justify-center transition-all relative',
-                  !isLayoutMode ? 'aspect-square hover:scale-105' : 'cursor-move shadow-md',
-                  seat.status === 'available' ? 'bg-green-50 border-green-500 hover:bg-green-100' :
-                  seat.status === 'occupied' ? 'bg-red-50 border-red-500 hover:bg-red-100' :
-                  seat.status === 'reserved' ? 'bg-orange-50 border-orange-500 hover:bg-orange-100' :
-                  'bg-gray-50 border-gray-400 hover:bg-gray-100'
-                ]"
-              >
-                <!-- Feature Indicators -->
-                <div class="absolute top-1 right-1 flex flex-col items-end space-y-0.5 pointer-events-none">
-                  <Monitor v-if="seat.has_computer" class="w-2 h-2 text-gray-500/50" />
-                  <Zap v-if="seat.socket_count > 0" class="w-2 h-2 text-blue-500/50" />
-                  <Wind v-if="seat.near_window" class="w-2 h-2 text-yellow-600/50" />
+        <!-- Desk Container Layer -->
+        <div class="relative w-full h-full min-h-[500px]">
+          <!-- When in Grid View -->
+          <div v-if="!isLayoutMode" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-16 p-8 justify-items-center">
+            <!-- Simulated Tables/Desks by grouping seats -->
+            <div v-for="tableIndex in Math.ceil(sectionSeats.length / 8)" :key="tableIndex" class="space-y-1">
+              <!-- Top Row of Chairs -->
+              <div class="flex items-center space-x-1 justify-center">
+                <div 
+                  v-for="seat in sectionSeats.slice((tableIndex-1)*8, (tableIndex-1)*8 + 4)" 
+                  :key="seat.id" 
+                  class="relative group"
+                  @mouseenter="hoveredSeat = seat"
+                  @mouseleave="hoveredSeat = null"
+                >
+                  <!-- Chair Icon -->
+                  <div 
+                    :class="[
+                      'w-10 h-10 flex items-center justify-center transition-all cursor-pointer hover:scale-110 drop-shadow-sm',
+                      getStatusColors(seat.status).text
+                    ]"
+                  >
+                    <svg viewBox="0 0 100 100" class="w-10 h-10" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M 20 15 Q 50 5 80 15 L 75 30 Q 50 20 25 30 Z" fill="currentColor" style="filter: brightness(0.85);"/>
+                      <rect x="10" y="25" width="12" height="40" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5" />
+                      <rect x="78" y="25" width="12" height="40" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5" />
+                      <rect x="12" y="30" width="8" height="30" rx="3" fill="#F1F5F9" />
+                      <rect x="80" y="30" width="8" height="30" rx="3" fill="#F1F5F9" />
+                      <rect x="22" y="25" width="56" height="45" rx="10" fill="currentColor" />
+                      <rect x="26" y="33" width="48" height="30" rx="6" fill="#FFFFFF" opacity="0.15" />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="mt-3 px-1.5 py-0.5 rounded shadow-sm border border-black/5 bg-white/95">
+                        <span class="block text-[9px] font-bold text-gray-700 leading-none">{{ String(seat.seat_number).replace(/\D/g, '') || seat.seat_number }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hover Detail Popover -->
+                  <transition name="fade">
+                    <div
+                      v-if="hoveredSeat?.id === seat.id"
+                      class="absolute bottom-[110%] left-1/2 -translate-x-1/2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100]"
+                    >
+                      <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                        <span class="text-sm font-bold text-gray-800">Seat {{ seat.seat_number }}</span>
+                        <div :class="['w-2 h-2 rounded-full', getStatusColors(seat.status).dotBg]"></div>
+                      </div>
+                      <div class="p-4 space-y-4">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                            <User class="w-5 h-5" />
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-gray-900 truncate">{{ seat.current_booking?.user_name || 'Available' }}</p>
+                            <p class="text-xs font-medium text-gray-500">
+                              {{ seat.current_booking?.minutes_left ? seat.current_booking.minutes_left + ' mins Left' : 'Available' }}
+                            </p>
+                          </div>
+                        </div>
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2 border-t border-gray-50">
+                          {{ activeSectionName }}
+                        </div>
+                      </div>
+                    </div>
+                  </transition>
                 </div>
+              </div>
 
-                <span class="text-xs font-bold text-gray-900">{{ seat.seat_number }}</span>
-                <component
-                  :is="getSeatIcon(seat.status)"
-                  class="w-3.5 h-3.5 mt-0.5"
-                  :class="[
-                    seat.status === 'available' ? 'text-green-600' :
-                    seat.status === 'occupied' ? 'text-red-600' :
-                    seat.status === 'reserved' ? 'text-orange-600' :
-                    'text-gray-600'
-                  ]"
-                />
-              </button>
+              <!-- Table Visual -->
+              <div class="w-48 h-10 bg-white border-2 border-gray-100 rounded-sm shadow-sm flex items-center justify-center relative mx-auto">
+                <div class="absolute inset-x-4 h-[2px] bg-gray-50 top-2"></div>
+                <div class="absolute inset-x-4 h-[2px] bg-gray-50 bottom-2"></div>
+                <!-- Table Decoration -->
+                <div class="flex space-x-4 opacity-10">
+                   <div v-for="i in 3" :key="i" class="w-8 h-1 bg-gray-400 rounded-full"></div>
+                </div>
+              </div>
+
+              <!-- Bottom Row of Chairs -->
+              <div class="flex items-center space-x-1 justify-center">
+                <div 
+                  v-for="seat in sectionSeats.slice((tableIndex-1)*8 + 4, (tableIndex-1)*8 + 8)" 
+                  :key="seat.id" 
+                  class="relative group"
+                  @mouseenter="hoveredSeat = seat"
+                  @mouseleave="hoveredSeat = null"
+                >
+                  <!-- Chair Icon (Flipped) -->
+                  <div 
+                    :class="[
+                      'w-10 h-10 flex items-center justify-center transition-all cursor-pointer hover:scale-110 drop-shadow-sm',
+                      getStatusColors(seat.status).text
+                    ]"
+                  >
+                    <svg viewBox="0 0 100 100" class="w-10 h-10 rotate-180" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M 20 15 Q 50 5 80 15 L 75 30 Q 50 20 25 30 Z" fill="currentColor" style="filter: brightness(0.85);"/>
+                      <rect x="10" y="25" width="12" height="40" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5" />
+                      <rect x="78" y="25" width="12" height="40" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5" />
+                      <rect x="12" y="30" width="8" height="30" rx="3" fill="#F1F5F9" />
+                      <rect x="80" y="30" width="8" height="30" rx="3" fill="#F1F5F9" />
+                      <rect x="22" y="25" width="56" height="45" rx="10" fill="currentColor" />
+                      <rect x="26" y="33" width="48" height="30" rx="6" fill="#FFFFFF" opacity="0.15" />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="mb-3 px-1.5 py-0.5 rounded shadow-sm border border-black/5 bg-white/95">
+                        <span class="block text-[9px] font-bold text-gray-700 leading-none">{{ String(seat.seat_number).replace(/\D/g, '') || seat.seat_number }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hover Detail Popover -->
+                  <transition name="fade">
+                    <div
+                      v-if="hoveredSeat?.id === seat.id"
+                      class="absolute top-[110%] left-1/2 -translate-x-1/2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100]"
+                    >
+                      <!-- same popover content -->
+                      <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                        <span class="text-sm font-bold text-gray-800">Seat {{ seat.seat_number }}</span>
+                        <div :class="['w-2 h-2 rounded-full', getStatusColors(seat.status).dotBg]"></div>
+                      </div>
+                      <div class="p-4 space-y-4">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                            <User class="w-5 h-5" />
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-gray-900 truncate">{{ seat.current_booking?.user_name || 'Available' }}</p>
+                            <p class="text-xs font-medium text-gray-500">
+                              {{ seat.current_booking?.minutes_left ? seat.current_booking.minutes_left + ' mins Left' : 'Available' }}
+                            </p>
+                          </div>
+                        </div>
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2 border-t border-gray-50">
+                          {{ activeSectionName }}
+                        </div>
+                      </div>
+                    </div>
+                  </transition>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- When in Layout Mode -->
+          <div 
+            v-else 
+            class="relative w-full h-[600px] bg-white/50 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden transition-all"
+            @dragover.prevent
+            @drop="onDrop($event)"
+          >
+            <div
+              v-for="seat in sectionSeats"
+              :key="seat.id"
+              :draggable="true"
+              @dragstart="onDragStart($event, seat)"
+              :style="{
+                position: 'absolute',
+                left: `${seat.position_x}px`,
+                top: `${seat.position_y}px`,
+              }"
+              :class="[
+                'w-10 h-10 flex items-center justify-center transition-all cursor-move hover:scale-110 active:scale-95 drop-shadow-sm',
+                getStatusColors(seat.status).text
+              ]"
+            >
+              <svg viewBox="0 0 100 100" class="w-10 h-10" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 20 15 Q 50 5 80 15 L 75 30 Q 50 20 25 30 Z" fill="currentColor" style="filter: brightness(0.85);"/>
+                <rect x="10" y="25" width="12" height="40" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5" />
+                <rect x="78" y="25" width="12" height="40" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5" />
+                <rect x="12" y="30" width="8" height="30" rx="3" fill="#F1F5F9" />
+                <rect x="80" y="30" width="8" height="30" rx="3" fill="#F1F5F9" />
+                <rect x="22" y="25" width="56" height="45" rx="10" fill="currentColor" />
+                <rect x="26" y="33" width="48" height="30" rx="6" fill="#FFFFFF" opacity="0.15" />
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="mt-3 px-1.5 py-0.5 rounded shadow-sm border border-black/5 bg-white/95">
+                  <span class="block text-[9px] font-bold text-gray-700 leading-none">{{ String(seat.seat_number).replace(/\D/g, '') || seat.seat_number }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div v-else class="py-12 text-center text-gray-500">
-        No seats found.
+
+      <!-- Footer Legend Bar -->
+      <div class="bg-gray-50/80 backdrop-blur-sm border-t border-gray-100 px-8 py-4 flex items-center justify-center space-x-12">
+        <span class="text-sm font-bold text-gray-400 uppercase tracking-widest mr-4">Seat</span>
+        
+        <div v-for="item in [
+          { label: 'Available', status: 'available' },
+          { label: 'Reserved', status: 'reserved' },
+          { label: 'Occupied', status: 'occupied' },
+          { label: 'Overstay', status: 'overstay' },
+          { label: 'Serious Overstay', status: 'serious_overstay' },
+          { label: 'Maintenance', status: 'maintenance' }
+        ]" :key="item.label" class="flex items-center space-x-2">
+          <svg viewBox="0 0 100 100" :class="['w-6 h-6', getStatusColors(item.status).text]" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 20 15 Q 50 5 80 15 L 75 30 Q 50 20 25 30 Z" fill="currentColor" style="filter: brightness(0.85);"/>
+            <rect x="10" y="25" width="12" height="40" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5" />
+            <rect x="78" y="25" width="12" height="40" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5" />
+            <rect x="12" y="30" width="8" height="30" rx="3" fill="#F1F5F9" />
+            <rect x="80" y="30" width="8" height="30" rx="3" fill="#F1F5F9" />
+            <rect x="22" y="25" width="56" height="45" rx="10" fill="currentColor" />
+            <rect x="26" y="33" width="48" height="30" rx="6" fill="#FFFFFF" opacity="0.15" />
+          </svg>
+          <span class="text-xs font-semibold text-gray-500">{{ item.label }}</span>
+        </div>
       </div>
     </div>
 
@@ -342,7 +421,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import {
   Building2,
   CheckCircle,
@@ -358,7 +437,10 @@ import {
   Printer,
   Monitor,
   Zap,
-  Move
+  Move,
+  ChevronDown,
+  Plus,
+  BookOpen
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 import { useSwal } from '@/shared/composables/useSwal';
@@ -368,83 +450,122 @@ const { toast } = useSwal();
 const seats = ref<any[]>([]);
 const loading = ref(false);
 const isLayoutMode = ref(false);
+
+const activeFloorId = ref<number | null>(null);
 const activeSectionId = ref<number | null>(null);
+
 const selectedSeat = ref<any>(null);
+const hoveredSeat = ref<any>(null);
 const draggedSeat = ref<any>(null);
 const dragOffset = ref({ x: 0, y: 0 });
 
+const floors = ref<any[]>([]);
+const sections = ref<any[]>([]);
+
+const currentFloorSections = computed(() => {
+  if (!activeFloorId.value) return sections.value;
+  return sections.value.filter((s: any) => s.floor_id === activeFloorId.value);
+});
+
+const activeSectionName = computed(() => {
+  const section = sections.value.find((s: any) => s.id === activeSectionId.value);
+  return section ? section.name : 'Unknown Section';
+});
+
+
+
+watch(floors, (newFloors) => {
+  if (newFloors.length > 0 && (!activeFloorId.value || !newFloors.find((f: any) => f.id === activeFloorId.value))) {
+    activeFloorId.value = newFloors[0].id;
+  }
+}, { immediate: true });
+
+watch(currentFloorSections, (newSections) => {
+  if (newSections.length > 0 && (!activeSectionId.value || !newSections.find((s: any) => s.id === activeSectionId.value))) {
+    activeSectionId.value = newSections[0].id;
+  }
+}, { immediate: true });
+
+const sectionSeats = computed(() => {
+  let filtered = seats.value;
+  if (activeFloorId.value) {
+    filtered = filtered.filter(seat => seat.floor_id === activeFloorId.value);
+  }
+  if (activeSectionId.value) {
+    filtered = filtered.filter(seat => seat.section_id === activeSectionId.value);
+  } else if (currentFloorSections.value.length > 0) {
+    filtered = filtered.filter(seat => seat.section_id === currentFloorSections.value[0].id);
+  }
+  return filtered;
+});
+
 const seatStats = computed(() => {
-  const stats = {
+  return {
     total: seats.value.length,
     available: seats.value.filter(s => s.status === 'available').length,
     occupied: seats.value.filter(s => s.status === 'occupied').length,
     reserved: seats.value.filter(s => s.status === 'reserved').length,
+    overstay: seats.value.filter(s => s.status === 'overstay').length,
+    serious_overstay: seats.value.filter(s => s.status === 'serious_overstay').length,
     maintenance: seats.value.filter(s => s.status === 'maintenance').length
   };
-  return stats;
-});
-
-const sections = computed(() => {
-  const uniqueSections = new Map();
-  seats.value.forEach(seat => {
-    if (seat.seat_section) {
-      uniqueSections.set(seat.seat_section.id, seat.seat_section);
-    }
-  });
-  return Array.from(uniqueSections.values());
 });
 
 const fetchSeats = async () => {
   loading.value = true;
   try {
-    const data = await librarianAPI.getSeats();
-    seats.value = data;
-    // Default to All Seats (null)
-    if (!activeSectionId.value) {
-      activeSectionId.value = null;
-    }
+    const [seatsData, floorsData, sectionsData] = await Promise.all([
+      librarianAPI.getSeats(),
+      librarianAPI.getActiveFloors(),
+      librarianAPI.getActiveSections()
+    ]);
+    seats.value = seatsData;
+    floors.value = floorsData.sort((a: any, b: any) => a.level - b.level);
+    sections.value = sectionsData;
   } catch (error) {
-    console.error('Error fetching seats:', error);
+    console.error('Error fetching layout data:', error);
   } finally {
     loading.value = false;
   }
 };
 
-const sectionSeats = computed(() => {
-  if (!activeSectionId.value) return seats.value;
-  return seats.value.filter(s => s.section_id === activeSectionId.value);
-});
-
-const groupedSeats = computed(() => {
-  const groups: any = {};
-  sectionSeats.value.forEach(seat => {
-    const floorName = seat.floor?.name || 'Unknown Floor';
-    const sectionName = seat.seat_section?.name || 'No Section';
-    if (!groups[floorName]) groups[floorName] = {};
-    if (!groups[floorName][sectionName]) groups[floorName][sectionName] = [];
-    groups[floorName][sectionName].push(seat);
-  });
-  return groups;
-});
-
-const activeSectionName = computed(() => {
-  if (!activeSectionId.value) return 'All Seats';
-  const section = sections.value.find(s => s.id === activeSectionId.value);
-  return section ? section.name : 'All Seats';
-});
-
-const getSeatIcon = (status: string) => {
+const getStatusColors = (status: string) => {
   switch (status) {
-    case 'available':
-      return CheckCircle;
-    case 'occupied':
-      return User;
-    case 'reserved':
-      return Lock;
-    case 'maintenance':
-      return Wrench;
-    default:
-      return CheckCircle;
+    case 'available': return { 
+      text: 'text-[#29B072]', 
+      bg: 'bg-[#E7F7F0]', 
+      dotBg: 'bg-[#29B072]' 
+    };
+    case 'occupied': return { 
+      text: 'text-[#FF9D43]', 
+      bg: 'bg-[#FFF3E8]', 
+      dotBg: 'bg-[#FF9D43]' 
+    };
+    case 'reserved': return { 
+      text: 'text-[#617DFF]', 
+      bg: 'bg-[#EEF2FF]', 
+      dotBg: 'bg-[#617DFF]' 
+    };
+    case 'overstay': return { 
+      text: 'text-[#F4D339]', 
+      bg: 'bg-[#FFFCE8]', 
+      dotBg: 'bg-[#F4D339]' 
+    };
+    case 'serious_overstay': return { 
+      text: 'text-[#E95252]', 
+      bg: 'bg-[#FFE8E8]', 
+      dotBg: 'bg-[#E95252]' 
+    };
+    case 'maintenance': return { 
+      text: 'text-[#9CA3AF]', 
+      bg: 'bg-[#F3F4F6]', 
+      dotBg: 'bg-[#9CA3AF]' 
+    };
+    default: return { 
+      text: 'text-gray-400', 
+      bg: 'bg-white', 
+      dotBg: 'bg-gray-400' 
+    };
   }
 };
 
@@ -479,7 +600,7 @@ const onDragStart = (event: DragEvent, seat: any) => {
   event.dataTransfer?.setData('text/plain', seat.id.toString());
 };
 
-const onDrop = async (event: DragEvent, sectionSeats: any[]) => {
+const onDrop = async (event: DragEvent) => {
   if (!isLayoutMode.value || !draggedSeat.value) return;
   
   const container = (event.currentTarget as HTMLElement).getBoundingClientRect();
@@ -487,8 +608,8 @@ const onDrop = async (event: DragEvent, sectionSeats: any[]) => {
   const y = Math.round(event.clientY - container.top - dragOffset.value.y);
 
   // Clamp values inside container
-  const finalX = Math.max(0, Math.min(x, container.width - 60));
-  const finalY = Math.max(0, Math.min(y, container.height - 60));
+  const finalX = Math.max(0, Math.min(x, container.width - 48));
+  const finalY = Math.max(0, Math.min(y, container.height - 40));
 
   try {
     // Optimistic update
@@ -504,7 +625,6 @@ const onDrop = async (event: DragEvent, sectionSeats: any[]) => {
   } catch (error) {
     console.error('Error saving seat position:', error);
     toast('Error', 'Could not save seat position', 'error');
-    // Revert on error? Or just refresh
     fetchSeats();
   } finally {
     draggedSeat.value = null;
@@ -560,7 +680,7 @@ const printActiveSectionQRs = () => {
     const seatSectionName = seat.seat_section?.name || section.name;
     html += `
       <div class="qr-item">
-        <img src="/storage/qrcodes/seats/seat-${seat.id}.png" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
+        <img src="${seat.qr_code_url || '/storage/qrcodes/seats/seat-' + seat.id + '.svg'}" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
         <div class="seat-number">Seat ${seat.seat_number}</div>
         <div class="section-info">${seatSectionName}</div>
       </div>

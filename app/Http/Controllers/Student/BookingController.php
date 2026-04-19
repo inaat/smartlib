@@ -31,7 +31,47 @@ class BookingController extends Controller
         ]);
 
         $user = $request->user();
-        $seat = Seat::with('floor.library')->findOrFail($request->seat_id);
+        $seat = Seat::with(['floor.library', 'seatSection'])->findOrFail($request->seat_id);
+        $libraryId = $seat->floor->library_id;
+
+        // Check for active ban
+        if ($user->isBannedFrom($libraryId)) {
+            $ban = $user->bans()
+                ->where(function ($q) use ($libraryId) {
+                    $q->where('library_id', $libraryId)->orWhereNotNull('super_admin_id');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                })
+                ->first();
+
+            $expiry = $ban->expires_at ? " until " . $ban->expires_at->format('M d, Y') : " for lifetime";
+            return response()->json([
+                'message' => "You are restricted from booking in this library{$expiry}. Reason: " . ($ban->reason ?? 'No reason provided.')
+            ], 403);
+        }
+
+        $section = $seat->seatSection;
+
+        // Check gender restriction if section has one
+        if ($section && $section->gender && $section->gender !== 'mixed') {
+            if (!$user->gender || $user->gender !== $section->gender) {
+                return response()->json([
+                    'message' => "This section is restricted to {$section->gender} students only. Please ensure your profile gender is set correctly."
+                ], 400);
+            }
+        }
+
+        // Check if user already has an active or pending booking
+        $activeBookingForUser = SeatBooking::where('user_id', $user->id)
+            ->whereIn('status', ['booked', 'checked_in'])
+            ->exists();
+ 
+        if ($activeBookingForUser) {
+            return response()->json([
+                'message' => 'You already have an active or pending booking. You cannot book multiple seats at once.'
+            ], 400);
+        }
 
         // Load active subscription with plan details
         $activeSubscription = $user->activeSubscription()->with('subscriptionPlan')->first();
@@ -113,6 +153,32 @@ class BookingController extends Controller
             return response()->json(['message' => 'Seat is already booked for this time'], 400);
         }
 
+        // Check if library is open on that day and within opening hours
+        $bookingTime = Carbon::parse($request->booking_time);
+        $endTime = Carbon::parse($request->scheduled_end_time);
+        $dayOfWeek = $bookingTime->format('l'); // e.g., 'Monday', 'Tuesday'
+        
+        $operatingHour = \App\Models\LibraryOperatingHour::where('library_id', $seat->floor->library_id)
+            ->where('day_of_week', $dayOfWeek)
+            ->first();
+
+        if (!$operatingHour || !$operatingHour->is_open) {
+            return response()->json(['message' => "The library is closed on {$dayOfWeek}s."], 400);
+        }
+
+        $openAt = Carbon::createFromFormat('H:i:s', $operatingHour->open_time, $bookingTime->timezone);
+        $closeAt = Carbon::createFromFormat('H:i:s', $operatingHour->close_time, $bookingTime->timezone);
+        
+        // We set the date to match the booking date for comparison
+        $openAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day);
+        $closeAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day);
+
+        if ($bookingTime->lt($openAt) || $endTime->gt($closeAt)) {
+            return response()->json([
+                'message' => "Requested time is outside library operating hours on {$dayOfWeek}s ({$operatingHour->open_time} - {$operatingHour->close_time})."
+            ], 400);
+        }
+
         $booking = SeatBooking::create([
             'user_id' => $user->id,
             'seat_id' => $seat->id,
@@ -136,6 +202,29 @@ class BookingController extends Controller
         ]);
 
         $user = $request->user();
+
+        // Check for active ban before check-in
+        $libraryId = null;
+        if ($id !== 'auto') {
+            $checkBooking = SeatBooking::find($id);
+            if ($checkBooking) $libraryId = $checkBooking->library_id;
+        }
+
+        if ($libraryId && $user->isBannedFrom($libraryId)) {
+            $ban = $user->bans()
+                ->where(function ($q) use ($libraryId) {
+                    $q->where('library_id', $libraryId)->orWhereNotNull('super_admin_id');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                })
+                ->first();
+
+            $expiry = $ban->expires_at ? " until " . $ban->expires_at->format('M d, Y') : " for lifetime";
+            return response()->json([
+                'message' => "Your access is restricted in this library{$expiry}."
+            ], 403);
+        }
         
         if ($id === 'auto') {
             $queueEntry = SmartQueue::where('user_id', $user->id)
@@ -241,6 +330,16 @@ class BookingController extends Controller
         $user->last_streak_date = now()->toDateString();
         
         $user->save();
+ 
+        // Auto mark attendance
+        \App\Models\Attendance::create([
+            'user_id' => $user->id,
+            'library_id' => $booking->seat->floor->library_id,
+            'seat_booking_id' => $booking->id,
+            'date' => now()->toDateString(),
+            'check_in_time' => now(),
+            'marked_manually' => false,
+        ]);
 
         return response()->json([
             'success' => true, 
@@ -276,7 +375,17 @@ class BookingController extends Controller
         $booking->update([
             'status' => 'checked_out',
             'check_out_time' => now(),
+            'total_minutes' => $booking->check_in_time ? now()->diffInMinutes($booking->check_in_time) : 0
         ]);
+ 
+        // Update attendance record
+        $attendance = \App\Models\Attendance::where('seat_booking_id', $booking->id)->first();
+        if ($attendance) {
+            $attendance->update([
+                'check_out_time' => now(),
+                'total_minutes' => $attendance->check_in_time ? now()->diffInMinutes($attendance->check_in_time) : 0
+            ]);
+        }
 
         $booking->seat->update(['status' => 'available']);
 
@@ -406,10 +515,32 @@ class BookingController extends Controller
         ]);
 
         $user = $request->user();
+        
+        // Check if user already has an active or pending booking
+        $activeBookingForUser = SeatBooking::where('user_id', $user->id)
+            ->whereIn('status', ['booked', 'checked_in'])
+            ->exists();
+
+        if ($activeBookingForUser) {
+            return response()->json([
+                'message' => 'You already have an active or pending booking. You cannot join the queue while having an active seat.'
+            ], 400);
+        }
+
         $seat = Seat::with('floor.library')->findOrFail($request->seat_id);
 
         if ($seat->status === 'available') {
             return response()->json(['message' => 'Seat is currently available. You can book it directly.'], 400);
+        }
+
+        $section = $seat->seatSection;
+        // Check gender restriction
+        if ($section && $section->gender && $section->gender !== 'mixed') {
+            if (!$user->gender || $user->gender !== $section->gender) {
+                return response()->json([
+                    'message' => "This section is restricted to {$section->gender} students only."
+                ], 400);
+            }
         }
 
         // Rule: Can only join queue if less than 10 minutes remaining for the current session

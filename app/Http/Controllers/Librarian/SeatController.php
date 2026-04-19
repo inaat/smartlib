@@ -11,6 +11,26 @@ use Illuminate\Support\Facades\Storage;
 
 class SeatController extends Controller
 {
+    public function activeFloors(Request $request)
+    {
+        $user = Auth::user();
+        $libraryId = $user->library_id;
+        if ($request->has('library_id')) $libraryId = $request->library_id;
+        
+        $floors = \App\Models\Floor::where('library_id', $libraryId)->orderBy('level')->get();
+        return response()->json($floors);
+    }
+
+    public function activeSections(Request $request)
+    {
+        $user = Auth::user();
+        $libraryId = $user->library_id;
+        if ($request->has('library_id')) $libraryId = $request->library_id;
+        
+        $sections = \App\Models\SeatSection::where('library_id', $libraryId)->get();
+        return response()->json($sections);
+    }
+
     public function index(Request $request)
     {
         // Check if API request
@@ -40,23 +60,70 @@ class SeatController extends Controller
             $seats = $query->latest()->get();
 
             $data = $seats->map(function ($seat) {
+                // Find current active booking
+                $currentBooking = $seat->bookings()
+                    ->whereNull('check_out_time')
+                    ->where(function($q) {
+                        $q->whereNotNull('check_in_time')
+                          ->orWhere('status', 'reserved');
+                    })
+                    ->with('user')
+                    ->first();
+
+                $status = $seat->status;
+                $bookingData = null;
+
+                if ($currentBooking) {
+                    $endTime = $currentBooking->extended_until ?? $currentBooking->scheduled_end_time;
+                    $now = now();
+                    
+                    if ($currentBooking->check_in_time && $endTime && $now->gt($endTime)) {
+                        $overstayMinutes = $now->diffInMinutes($endTime);
+                        if ($overstayMinutes > 30) {
+                            $status = 'serious_overstay';
+                        } else {
+                            $status = 'overstay';
+                        }
+                    } elseif ($currentBooking->status === 'reserved') {
+                        $status = 'reserved';
+                    } elseif ($currentBooking->check_in_time) {
+                        $status = 'occupied';
+                    }
+
+                    $bookingData = [
+                        'id' => $currentBooking->id,
+                        'user_name' => $currentBooking->user->name ?? 'Unknown',
+                        'user_email' => $currentBooking->user->email ?? '',
+                        'check_in_time' => $currentBooking->check_in_time,
+                        'scheduled_end_time' => $currentBooking->scheduled_end_time,
+                        'extended_until' => $currentBooking->extended_until,
+                        'end_time' => $endTime,
+                        'minutes_left' => $endTime ? $now->diffInMinutes($endTime, false) : null,
+                    ];
+                }
+
                 return [
                     'id' => $seat->id,
                     'seat_number' => $seat->seat_number,
                     'seat_type' => $seat->seat_type,
                     'zone' => $seat->zone,
-                    'status' => $seat->status,
+                    'status' => $status,
+                    'original_status' => $seat->status,
                     'position_x' => $seat->position_x,
                     'position_y' => $seat->position_y,
-                    'is_maintenance' => $seat->is_maintenance,
+                    'is_maintenance' => $seat->is_maintenance || $seat->status === 'maintenance',
                     'is_active' => $seat->is_active,
                     'section_id' => $seat->section_id,
+                    'floor_id' => $seat->floor->id ?? null,
+                    'floor' => $seat->floor,
+                    'seat_section' => $seat->seatSection,
                     'has_computer' => $seat->has_computer,
                     'near_window' => $seat->near_window,
                     'socket_count' => $seat->socket_count,
-                    'qr_code_url' => Storage::disk('public')->exists("qrcodes/seats/seat-{$seat->id}.png") 
-                        ? "/storage/qrcodes/seats/seat-{$seat->id}.png" 
-                        : null,
+                    'current_booking' => $bookingData,
+                    'qr_code_url' => Storage::disk('public')->exists("qrcodes/seats/seat-{$seat->id}.svg") 
+                        ? "/storage/qrcodes/seats/seat-{$seat->id}.svg" 
+                        : (Storage::disk('public')->exists("qrcodes/seats/seat-{$seat->id}.png") ? "/storage/qrcodes/seats/seat-{$seat->id}.png" : null),
                     'floor' => $seat->floor ? [
                         'id' => $seat->floor->id,
                         'name' => $seat->floor->name,
@@ -137,8 +204,8 @@ class SeatController extends Controller
 
         // Generate QR image
         try {
-            $qrImage = QrCode::format('png')->size(300)->generate($qrContent);
-            Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.png", $qrImage);
+            $qrImage = QrCode::format('svg')->size(300)->generate($qrContent);
+            Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.svg", $qrImage);
         } catch (\Exception $e) {
             // Log error but continue
             \Log::error("QR Code generation failed: " . $e->getMessage());
@@ -212,8 +279,8 @@ class SeatController extends Controller
             
             // Regenerate image
             try {
-                $qrImage = QrCode::format('png')->size(300)->generate($qrContent);
-                Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.png", $qrImage);
+                $qrImage = QrCode::format('svg')->size(300)->generate($qrContent);
+                Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.svg", $qrImage);
             } catch (\Exception $e) {
                 \Log::error("QR Code regeneration failed: " . $e->getMessage());
             }

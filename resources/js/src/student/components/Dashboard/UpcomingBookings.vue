@@ -59,7 +59,7 @@
             <span v-if="booking.seat?.near_window" class="flex items-center text-[9px] bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded-md">
               <Layout class="w-2.5 h-2.5 mr-1" /> Window
             </span>
-            <span v-if="booking.seat?.socket_count > 0" class="flex items-center text-[9px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded-md">
+            <span v-if="booking.seat && (booking.seat.socket_count ?? 0) > 0" class="flex items-center text-[9px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded-md">
               <Zap class="w-2.5 h-2.5 mr-1" /> {{ booking.seat.socket_count }} Sockets
             </span>
           </div>
@@ -107,6 +107,7 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useApp } from '@/shared/composables/useApp';
 import { Calendar, Clock, MapPin, Armchair, Monitor, Zap, Layout, AlertTriangle } from 'lucide-vue-next';
+import { parseISO } from 'date-fns';
 
 const { bookings, loadBookings, checkInSeat, checkOutSeat, extendSeatBooking, cancelBooking } = useApp();
 const router = useRouter();
@@ -126,16 +127,25 @@ const activeBookings = computed(() =>
 
 
 const getRemainingTime = (booking: any) => {
-  const end = new Date(booking.scheduled_end_time);
-  const diff = end.getTime() - now.value.getTime();
+  const endTimeStr = booking.scheduled_end_time || booking.endTime;
+  if (!endTimeStr) return '00:00:00';
   
-  if (diff <= 0) return '00:00:00';
-  
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  const s = Math.floor((diff % 60000) / 1000);
-  
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  try {
+    const end = new Date(endTimeStr);
+    if (isNaN(end.getTime())) return '00:00:00';
+    
+    const diff = end.getTime() - now.value.getTime();
+    
+    if (diff <= 0) return '00:00:00';
+    
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  } catch (e) {
+    return '00:00:00';
+  }
 };
 
 const formatTime = (dateStr: string) => {
@@ -165,13 +175,17 @@ const handleCancel = async (id: number) => {
 };
 
 const isEndingSoon = (booking: any) => {
-  const end = new Date(booking.scheduled_end_time);
+  const endTimeStr = booking.scheduled_end_time || booking.endTime;
+  if (!endTimeStr) return false;
+  const end = new Date(endTimeStr);
   const diffMinutes = (end.getTime() - now.value.getTime()) / 60000;
   return diffMinutes > 0 && diffMinutes <= 15;
 };
 
 const canExtend = (booking: any) => {
-  const end = new Date(booking.scheduled_end_time);
+  const endTimeStr = booking.scheduled_end_time || booking.endTime;
+  if (!endTimeStr) return false;
+  const end = new Date(endTimeStr);
   const diffMinutes = (end.getTime() - now.value.getTime()) / 60000;
   return diffMinutes >= 10;
 };

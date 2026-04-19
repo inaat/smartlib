@@ -123,7 +123,7 @@ export const superadminAPI = {
     }
   },
 
-  async createSeatSection(libraryId: string, section: { name: string; total_seats: number; description?: string }): Promise<any> {
+  async createSeatSection(libraryId: string, section: { name: string; total_seats: number; gender: string; description?: string; floor_id: number }): Promise<any> {
     try {
       const response = await api.post(`/admin/libraries/${libraryId}/sections`, section);
       return response.data;

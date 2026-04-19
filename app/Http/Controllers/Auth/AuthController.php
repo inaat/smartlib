@@ -38,7 +38,14 @@ class AuthController extends Controller
         }
 
         // Create token for API authentication
-        $token = $user->createToken('auth-token')->plainTextToken;
+        $tokenResult = $user->createToken('auth-token');
+        $token = $tokenResult->plainTextToken;
+ 
+        // Save metadata
+        $tokenResult->accessToken->forceFill([
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ])->save();
 
         // Load relationships
         $user->load(['userSubscriptions' => function($query) {
@@ -66,6 +73,7 @@ class AuthController extends Controller
                 'library_id' => $libraryId,
                 'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
                 'profile_picture' => $user->profile_picture,
+                'gender' => $user->gender,
             ],
             'token' => $token,
             'message' => 'Login successful'
@@ -83,6 +91,7 @@ class AuthController extends Controller
             'phone' => 'required|string|regex:/^03\d{9}$/',
             'crn' => 'required|string|regex:/^CRN\d{6}$/|unique:users,crn',
             'ca_level' => 'required|in:PRC,CAP,Final',
+            'gender' => 'required|in:male,female',
             'password' => 'required|string|min:8',
             'password_confirmation' => 'required|same:password',
             'plan_id' => 'nullable|exists:subscription_plans,id',
@@ -110,6 +119,7 @@ class AuthController extends Controller
             'crn' => $request->crn,
             'role' => 'student',
             'ca_level' => $request->ca_level,
+            'gender' => $request->gender,
             'password' => Hash::make($request->password),
             'is_active' => true,
             'trial_used' => true,
@@ -148,7 +158,14 @@ class AuthController extends Controller
 
 
         // Create token
-        $token = $user->createToken('auth-token')->plainTextToken;
+        $tokenResult = $user->createToken('auth-token');
+        $token = $tokenResult->plainTextToken;
+ 
+        // Save metadata
+        $tokenResult->accessToken->forceFill([
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ])->save();
 
         return response()->json([
             'user' => [
@@ -168,6 +185,7 @@ class AuthController extends Controller
                 'library_id' => null,
                 'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
                 'profile_picture' => $user->profile_picture,
+                'gender' => $user->gender,
             ],
             'token' => $token,
             'message' => 'Registration successful! Welcome to SMART LIB.'
@@ -253,6 +271,7 @@ class AuthController extends Controller
             'library_id' => $libraryId,
             'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
             'profile_picture' => $user->profile_picture,
+            'gender' => $user->gender,
         ]);
     }
 
@@ -280,6 +299,35 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Logged out from all devices successfully'
         ]);
+    }
+
+    /**
+     * Get all active sessions (tokens) for the current user
+     */
+    public function sessions(Request $request)
+    {
+        $sessions = $request->user()->tokens()->get()->map(function($token) use ($request) {
+            return [
+                'id' => $token->id,
+                'name' => $token->name,
+                'ip_address' => $token->ip_address,
+                'user_agent' => $token->user_agent,
+                'last_used_at' => $token->last_used_at,
+                'created_at' => $token->created_at,
+                'is_current' => $token->id === $request->user()->currentAccessToken()->id,
+            ];
+        });
+
+        return response()->json($sessions);
+    }
+
+    /**
+     * Revoke a specific session
+     */
+    public function revokeSession(Request $request, $id)
+    {
+        $request->user()->tokens()->where('id', $id)->delete();
+        return response()->json(['message' => 'Session revoked successfully']);
     }
 
     /**

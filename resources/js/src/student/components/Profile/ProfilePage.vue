@@ -299,6 +299,11 @@
             </router-link>
           </div>
         </div>
+ 
+        <!-- Session Management Section -->
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <SessionManagement />
+        </div>
 
         <!-- Quick Actions -->
         
@@ -331,6 +336,7 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/shared/composables/useAuth';
 import { useApp } from '@/shared/composables/useApp';
+import SessionManagement from '@/shared/components/Profile/SessionManagement.vue';
 import { 
   Camera, Mail, Phone, User as UserIcon, Trophy, 
   Armchair, MapPin, Clock, ChevronRight, Zap,
@@ -338,6 +344,7 @@ import {
   Monitor, Layout
 } from 'lucide-vue-next';
 import { studentAPI } from '@/shared/services/api';
+import { parseISO } from 'date-fns';
 
 const { user, checkAuth } = useAuth();
 const router = useRouter();
@@ -414,16 +421,27 @@ const filteredHistory = computed(() => {
 
 
 const getRemainingTime = (booking: any) => {
-  const end = new Date(booking.scheduled_end_time);
-  const diff = end.getTime() - now.value.getTime();
+  const endTimeStr = booking.scheduled_end_time || booking.end_time || booking.endTime;
+  if (!endTimeStr) return '00:00:00';
   
-  if (diff <= 0) return '00:00:00';
-  
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  const s = Math.floor((diff % 60000) / 1000);
-  
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  try {
+    // parseISO handles ISO 8601 strings (like those returned by Laravel) accurately
+    const end = parseISO(endTimeStr);
+    if (isNaN(end.getTime())) return '00:00:00';
+    
+    // Compare with current time
+    const diff = end.getTime() - now.value.getTime();
+    
+    if (diff <= 0) return '00:00:00';
+    
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  } catch (e) {
+    return '00:00:00';
+  }
 };
 
 const formatDate = (date: string | undefined) => {

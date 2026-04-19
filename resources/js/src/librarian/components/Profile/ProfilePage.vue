@@ -159,19 +159,29 @@
         </div>
       </form>
     </div>
+ 
+    <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+      <h2 class="text-xl font-bold text-gray-800 flex items-center mb-6">
+        <ShieldCheck class="w-5 h-5 mr-2 text-purple-600" />
+        Device & Session Management
+      </h2>
+      <SessionManagement />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useAuth } from '@/shared/composables/useAuth';
-import { studentAPI } from '@/shared/services/api'; // Reusing studentAPI for profile updates as endpoints are likely shared or similar
+import { studentAPI } from '@/shared/services/api';
+import SessionManagement from '@/shared/components/Profile/SessionManagement.vue';
 import { 
   User as UserIcon, 
   Mail, 
   Phone, 
   Lock, 
-  Camera
+  Camera,
+  ShieldCheck
 } from 'lucide-vue-next';
 
 const { user, checkAuth } = useAuth();

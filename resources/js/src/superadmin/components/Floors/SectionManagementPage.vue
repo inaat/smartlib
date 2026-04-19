@@ -27,6 +27,7 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Floor</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Seats</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Available</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -43,6 +44,18 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-500">{{ section.total_seats }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  :class="[
+                    'px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize',
+                    section.gender === 'male' ? 'bg-blue-100 text-blue-800' : 
+                    section.gender === 'female' ? 'bg-pink-100 text-pink-800' : 
+                    'bg-gray-100 text-gray-800'
+                  ]"
+                >
+                  {{ section.gender || 'mixed' }}
+                </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-500">{{ section.available_seats }}</div>
@@ -107,6 +120,18 @@
               <option v-for="floor in floors" :key="floor.id" :value="floor.id">
                 {{ floor.name }} (Level {{ floor.level }})
               </option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gender Restriction</label>
+            <select
+              v-model="form.gender"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="mixed">Mixed (All)</option>
+              <option value="male">Male Only</option>
+              <option value="female">Female Only</option>
             </select>
           </div>
           <div v-if="!isEditing">
@@ -179,6 +204,7 @@ const form = ref({
   id: null as number | null,
   name: '',
   floor_id: null as number | null,
+  gender: 'mixed',
   total_seats: 10,
   description: '',
   is_active: true
@@ -210,6 +236,7 @@ const openCreateModal = () => {
     id: null,
     name: '',
     floor_id: floors.value.length > 0 ? floors.value[0].id : null,
+    gender: 'mixed',
     total_seats: 10,
     description: '',
     is_active: true
@@ -223,6 +250,7 @@ const editSection = (section: any) => {
     id: section.id,
     name: section.name,
     floor_id: section.floor_id,
+    gender: section.gender || 'mixed',
     total_seats: section.total_seats,
     description: section.description,
     is_active: section.is_active
@@ -243,17 +271,12 @@ const saveSection = async () => {
   try {
     if (isEditing.value && form.value.id) {
       await superadminAPI.updateSeatSection(selectedLibraryId.value.toString(), form.value.id.toString(), {
-        name: form.value.name,
-        description: form.value.description,
-        floor_id: form.value.floor_id,
-        is_active: form.value.is_active
+        ...form.value
       });
       showSuccess('Updated!', 'Section updated successfully');
     } else {
       await superadminAPI.createSeatSection(selectedLibraryId.value.toString(), {
-        name: form.value.name,
-        total_seats: form.value.total_seats,
-        description: form.value.description,
+        ...form.value,
         floor_id: form.value.floor_id as any
       });
       showSuccess('Created!', 'Section created successfully');

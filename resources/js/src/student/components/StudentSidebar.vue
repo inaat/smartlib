@@ -105,7 +105,8 @@ import {
   CreditCard,
   BarChart3,
   BookMarked,
-  LifeBuoy
+  LifeBuoy,
+  CalendarCheck
 } from 'lucide-vue-next';
 
 import { useSwal } from '@/shared/composables/useSwal';
@@ -135,6 +136,7 @@ const mainNavItems = [
 ];
 
 const quickAccessItems = [
+  { path: '/student/attendance', label: 'My Attendance', icon: CalendarCheck },
   { path: '/student/analytics', label: 'My Analytics', icon: BarChart3 },
   { path: '/student/subscription', label: 'Subscription', icon: CreditCard },
   { path: '/student/support', label: 'Support & Complaints', icon: LifeBuoy },

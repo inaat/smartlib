@@ -154,6 +154,7 @@
         <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
           <p class="text-xs font-semibold text-blue-900 mb-2">Demo Credentials:</p>
           <div class="space-y-1 text-xs text-blue-700">
+            <p>• System Owner: owner@smartlib.com</p>
             <p>• Super Admin: superadmin1@smartlib.com</p>
             <p>• Librarian: librarian1@smartlib.com</p>
             <p>• Student: student1@smartlib.com</p>

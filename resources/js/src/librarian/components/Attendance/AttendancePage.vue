@@ -344,7 +344,6 @@ const handleManualCheckOut = (crn: string) => {
 
 const formatTime = (time: string) => {
   if (!time) return '-';
-  // Assuming time is in HH:mm:ss format from MySQL
   try {
     const [hours, minutes] = time.split(':');
     const date = new Date();

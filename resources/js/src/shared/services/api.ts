@@ -85,6 +85,16 @@ export const authAPI = {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('smart-lib-user');
   },
+
+  async getSessions() {
+    const response = await api.get('/auth/sessions');
+    return response.data;
+  },
+
+  async revokeSession(id: number) {
+    const response = await api.delete(`/auth/sessions/${id}`);
+    return response.data;
+  },
 };
 
 // Student API
@@ -219,6 +229,21 @@ export const studentAPI = {
     const response = await api.post('/student/subscriptions', { plan_id: planId });
     return response.data;
   },
+
+  async getAttendance() {
+    const response = await api.get('/student/attendance');
+    return response.data;
+  },
+
+  async getAttendanceStats() {
+    const response = await api.get('/student/attendance/stats');
+    return response.data;
+  },
+
+  async getAttendanceCalendar(year: number, month: number) {
+    const response = await api.get('/student/attendance/calendar', { params: { year, month } });
+    return response.data;
+  },
 };
 
 // Admin API
@@ -250,6 +275,16 @@ export const adminAPI = {
 
   async rejectUser(userId: number) {
     const response = await api.delete(`/admin/users/${userId}/reject`);
+    return response.data;
+  },
+
+  async banUser(userId: number, data: { days?: number, reason?: string }) {
+    const response = await api.post(`/admin/users/${userId}/ban`, data);
+    return response.data;
+  },
+
+  async unbanUser(userId: number) {
+    const response = await api.post(`/admin/users/${userId}/unban`);
     return response.data;
   },
 
@@ -386,6 +421,16 @@ export const librarianAPI = {
     return response.data;
   },
 
+  async getActiveFloors() {
+    const response = await api.get('/librarian/active-floors');
+    return response.data;
+  },
+
+  async getActiveSections() {
+    const response = await api.get('/librarian/active-sections');
+    return response.data;
+  },
+
   async createSeat(data: any) {
     const response = await api.post('/librarian/seats', data);
     return response.data;
@@ -516,6 +561,14 @@ export const librarianAPI = {
     const response = await api.delete(`/librarian/students/${id}`);
     return response.data;
   },
+  async banStudent(id: number, data: { days?: number, reason?: string }) {
+    const response = await api.post(`/librarian/students/${id}/ban`, data);
+    return response.data;
+  },
+  async unbanStudent(id: number) {
+    const response = await api.post(`/librarian/students/${id}/unban`);
+    return response.data;
+  },
   async getLibraryInfo() {
     const response = await api.get('/librarian/library');
     return response.data;
@@ -554,6 +607,83 @@ export const librarianAPI = {
   },
   async markAttendance(data: { crn: string, type: 'check_in' | 'check_out' }) {
     const response = await api.post('/librarian/attendance/mark', data);
+    return response.data;
+  },
+  async getAttendanceCalendar(params: { year: number, month: number, user_id?: number }) {
+    const response = await api.get('/librarian/attendance/calendar', { params });
+    return response.data;
+  },
+};
+
+// Owner API
+export const ownerAPI = {
+  // SuperAdmins
+  async getSuperAdmins() {
+    const response = await api.get('/owner/superadmins');
+    return response.data;
+  },
+  async createSuperAdmin(data: any) {
+    const response = await api.post('/owner/superadmins', data);
+    return response.data;
+  },
+  async updateSuperAdmin(id: number, data: any) {
+    const response = await api.put(`/owner/superadmins/${id}`, data);
+    return response.data;
+  },
+  async deleteSuperAdmin(id: number) {
+    const response = await api.delete(`/owner/superadmins/${id}`);
+    return response.data;
+  },
+
+  // Analytics
+  async getAnalytics() {
+    const response = await api.get('/owner/analytics');
+    return response.data;
+  },
+
+  // Subscription Plans
+  async getSubscriptionPlans() {
+    const response = await api.get('/owner/subscription-plans');
+    return response.data;
+  },
+  async createSubscriptionPlan(data: any) {
+    const response = await api.post('/owner/subscription-plans', data);
+    return response.data;
+  },
+  async updateSubscriptionPlan(id: number, data: any) {
+    const response = await api.put(`/owner/subscription-plans/${id}`, data);
+    return response.data;
+  },
+  async deleteSubscriptionPlan(id: number) {
+    const response = await api.delete(`/owner/subscription-plans/${id}`);
+    return response.data;
+  },
+
+  // Orders
+  async getOrders(params: any = {}) {
+    const response = await api.get('/owner/orders', { params });
+    return response.data;
+  },
+  async approveOrder(id: number) {
+    const response = await api.post(`/owner/orders/${id}/approve`);
+    return response.data;
+  },
+  async rejectOrder(id: number, data: any) {
+    const response = await api.post(`/owner/orders/${id}/reject`, data);
+    return response.data;
+  },
+  async getSubscriptions(params: any = {}) {
+    const response = await api.get('/owner/user-subscriptions', { params });
+    return response.data;
+  },
+
+  // App Settings
+  async getSettings() {
+    const response = await api.get('/owner/settings');
+    return response.data;
+  },
+  async updateSettings(data: FormData) {
+    const response = await api.post('/owner/settings', data);
     return response.data;
   },
 };

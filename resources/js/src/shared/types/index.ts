@@ -93,6 +93,7 @@ export interface Seat {
   libraryId?: number;
   nextAvailableTime?: string;
   position?: { x: number; y: number }; // Computed for seat map
+  library?: Library;
 }
 
 // Book Type - Matches Laravel Book Model
@@ -130,15 +131,16 @@ export interface Booking {
   user_id: number;
   seat_id: number;
   library_id: number;
-  booking_date: string;
-  start_time: string;
-  end_time: string;
-  status: 'pending' | 'active' | 'completed' | 'cancelled' | 'no_show' | 'upcoming' | 'booked' | 'checked_in' | 'checked_out' | 'expired';
+  booking_time: string;
+  scheduled_end_time: string;
   check_in_time?: string;
   check_out_time?: string;
-  qr_code?: string;
-  total_amount?: number;
-  payment_status?: 'pending' | 'paid' | 'refunded';
+  extended_until?: string;
+  extension_count: number;
+  status: 'pending' | 'active' | 'completed' | 'cancelled' | 'no_show' | 'upcoming' | 'booked' | 'checked_in' | 'checked_out' | 'expired';
+  qr_scanned: boolean;
+  qr_scanned_at?: string;
+  total_minutes: number;
   created_at: string;
   updated_at: string;
 
@@ -154,6 +156,9 @@ export interface Booking {
   checkedOutAt?: string;
   totalCost?: number;
   autoReleaseTime?: string;
+  user?: User;
+  seat?: Seat;
+  library?: Library;
 }
 
 // Event Type - Matches Laravel Event Model
@@ -184,7 +189,6 @@ export interface Event {
   registered?: number;
   waitlist?: number;
   isActive?: boolean;
-  registered_count?: number;
 }
 
 // Book Reservation Type - Matches Laravel BookReservation Model

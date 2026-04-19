@@ -20,8 +20,16 @@ class BookingController extends Controller
         $query = SeatBooking::with(['user', 'seat.floor']);
 
         if ($user->role === 'super_admin') {
+            $myLibraryIds = \App\Models\Library::where('created_by', $user->id)->pluck('id');
             if ($request->has('library_id')) {
-                $query->where('library_id', $request->library_id);
+                // Only allow filtering by a library they own
+                if ($myLibraryIds->contains($request->library_id)) {
+                    $query->where('library_id', $request->library_id);
+                } else {
+                    $query->whereIn('library_id', $myLibraryIds);
+                }
+            } else {
+                $query->whereIn('library_id', $myLibraryIds);
             }
         } else {
             if (!$library) {
@@ -79,21 +87,28 @@ class BookingController extends Controller
         $user = Auth::user();
         $library = $user->library;
 
-        $libraryId = $request->library_id ?? ($library ? $library->id : null);
-
-        if (!$libraryId && $user->role !== 'super_admin') {
-            return response()->json(['message' => 'No library assigned to this librarian'], 404);
-        }
-
         $baseQuery = SeatBooking::query();
-        if ($libraryId) {
+
+        if ($user->role === 'super_admin') {
+            $myLibraryIds = \App\Models\Library::where('created_by', $user->id)->pluck('id');
+            $libraryId = $request->library_id;
+            if ($libraryId && $myLibraryIds->contains($libraryId)) {
+                $baseQuery->where('library_id', $libraryId);
+            } else {
+                $baseQuery->whereIn('library_id', $myLibraryIds);
+            }
+        } else {
+            $libraryId = $request->library_id ?? ($library ? $library->id : null);
+            if (!$libraryId) {
+                return response()->json(['message' => 'No library assigned to this librarian'], 404);
+            }
             $baseQuery->where('library_id', $libraryId);
         }
 
         $stats = [
-            'all' => (clone $baseQuery)->count(),
-            'active' => (clone $baseQuery)->where('status', 'checked_in')->count(),
-            'pending' => (clone $baseQuery)->where('status', 'booked')->count(),
+            'all'       => (clone $baseQuery)->count(),
+            'active'    => (clone $baseQuery)->where('status', 'checked_in')->count(),
+            'pending'   => (clone $baseQuery)->where('status', 'booked')->count(),
             'completed' => (clone $baseQuery)->where('status', 'checked_out')->count(),
             'cancelled' => (clone $baseQuery)->where('status', 'cancelled')->count(),
         ];

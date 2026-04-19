@@ -139,120 +139,20 @@
       </button>
     </div>
 
-    <!-- Seat Grid (Grouped) -->
-    <div v-if="selectedLibraryId" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <div>
-          <h2 class="text-lg font-bold text-gray-900">{{ activeSectionName }} - Seat Layout</h2>
-          <p class="text-sm text-gray-600 mt-1">Seats are grouped by floor and section</p>
-        </div>
-        <div class="relative w-full md:w-64">
-          <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search seat number..."
-            class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-all"
-            @input="debounceSearch"
-          />
-        </div>
-      </div>
-
-      <!-- Legend -->
-      <div class="flex flex-wrap items-center gap-6 mb-8 pb-4 border-b border-gray-200">
-        <div class="flex items-center space-x-2">
-          <div class="w-4 h-4 bg-green-500 rounded"></div>
-          <span class="text-sm text-gray-600">Available</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <div class="w-4 h-4 bg-red-500 rounded"></div>
-          <span class="text-sm text-gray-600">Occupied</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <div class="w-4 h-4 bg-orange-500 rounded"></div>
-          <span class="text-sm text-gray-600">Reserved</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <div class="w-4 h-4 bg-gray-400 rounded"></div>
-          <span class="text-sm text-gray-600">Maintenance</span>
-        </div>
-      </div>
-
-      <!-- Grouped Seat Layout -->
-      <div v-if="Object.keys(groupedSeats).length > 0" class="space-y-10">
-        <div v-for="(sections, floorName) in groupedSeats" :key="floorName" class="space-y-6">
-          <div class="flex items-center space-x-4">
-            <div class="h-px flex-1 bg-gray-200"></div>
-            <h3 class="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">{{ floorName }}</h3>
-            <div class="h-px flex-1 bg-gray-200"></div>
-          </div>
-          
-          <div v-for="(seats, sectionName) in sections" :key="sectionName" class="space-y-4">
-            <div class="flex items-center justify-between px-2">
-              <h4 class="text-sm font-bold text-indigo-600 flex items-center">
-                <Layout class="w-4 h-4 mr-2" />
-                {{ sectionName }}
-              </h4>
-              <span class="text-xs text-gray-400 font-medium">{{ seats.length }} Seats</span>
-            </div>
-
-            <div 
-              :class="[
-                isLayoutMode 
-                  ? 'relative h-[600px] bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden' 
-                  : 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3'
-              ]"
-              @dragover.prevent
-              @drop="onDrop($event, seats)"
-            >
-              <button
-                v-for="seat in seats"
-                :key="seat.id"
-                @click="!isLayoutMode && selectSeat(seat)"
-                :draggable="isLayoutMode"
-                @dragstart="onDragStart($event, seat)"
-                :style="isLayoutMode ? {
-                  position: 'absolute',
-                  left: `${seat.position_x}px`,
-                  top: `${seat.position_y}px`,
-                  width: '60px',
-                  height: '60px'
-                } : {}"
-                :class="[
-                  'rounded-lg border-2 flex flex-col items-center justify-center transition-all relative',
-                  !isLayoutMode ? 'aspect-square hover:scale-105' : 'cursor-move shadow-md',
-                  seat.status === 'available' ? 'bg-green-50 border-green-500 hover:bg-green-100' :
-                  seat.status === 'occupied' ? 'bg-red-50 border-red-500 hover:bg-red-100' :
-                  seat.status === 'reserved' ? 'bg-orange-50 border-orange-500 hover:bg-orange-100' :
-                  'bg-gray-50 border-gray-400 hover:bg-gray-100'
-                ]"
-              >
-                <!-- Feature Indicators -->
-                <div class="absolute top-1 right-1 flex flex-col items-end space-y-0.5 pointer-events-none">
-                  <Monitor v-if="seat.has_computer" class="w-2 h-2 text-gray-500/50" />
-                  <Zap v-if="seat.socket_count > 0" class="w-2 h-2 text-blue-500/50" />
-                  <Wind v-if="seat.near_window" class="w-2 h-2 text-yellow-600/50" />
-                </div>
-
-                <span class="text-xs font-bold text-gray-900">{{ seat.seat_number }}</span>
-                <component
-                  :is="getSeatIcon(seat.status)"
-                  class="w-3.5 h-3.5 mt-0.5"
-                  :class="[
-                    seat.status === 'available' ? 'text-green-600' :
-                    seat.status === 'occupied' ? 'text-red-600' :
-                    seat.status === 'reserved' ? 'text-orange-600' :
-                    'text-gray-600'
-                  ]"
-                />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-else class="py-12 text-center text-gray-500">
-        No seats found matching your criteria.
-      </div>
+    <!-- Seat Map (Visual) -->
+    <div v-if="selectedLibraryId">
+      <SeatMap
+        :seats="seats"
+        :floors="floors"
+        :sections="sections"
+        :selected-seat="selectedSeat"
+        :draggable="isLayoutMode"
+        :seat-clickable="!isLayoutMode"
+        :layout-mode="isLayoutMode ? 'layout' : 'grid'"
+        @seat-click="selectSeat"
+        @drag-start="onDragStart"
+        @drop="onDrop"
+      />
     </div>
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-gray-500">
       Please select a library to monitor its seats.
@@ -440,7 +340,6 @@ import {
   Zap, 
   Wind, 
   X as XIcon, 
-  Search, 
   RefreshCw, 
   Plus, 
   Building2, 
@@ -458,6 +357,7 @@ import { useSwal } from '@/shared/composables/useSwal';
 const { toast } = useSwal();
 import { superadminAPI } from '../../services/superadminApi';
 import LibrarySelector from '../Shared/LibrarySelector.vue';
+import SeatMap from '@/shared/components/SeatMap.vue';
 
 const selectedLibraryId = ref<number | null>(null);
 const searchQuery = ref('');

@@ -16,33 +16,69 @@ class DashboardController extends Controller
         $range = request('range', 'today');
         $dateRange = $this->getDateRange($range);
 
+        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $myId = auth()->id();
+        $myLibraryIds = Library::where('created_by', $myId)->pluck('id');
+
+        $studentsQuery = User::where('role', 'student');
+        if ($isSuperAdmin) {
+            $studentsQuery->where(function($q) use ($myId, $myLibraryIds) {
+                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
+            });
+        }
+
+        $librariesQuery = Library::query();
+        if ($isSuperAdmin) {
+            $librariesQuery->where('created_by', $myId);
+        }
+
+        $subscriptionQuery = UserSubscription::query();
+        if ($isSuperAdmin) {
+            $subscriptionQuery->whereHas('user', function($q) use ($myId, $myLibraryIds) {
+                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
+            });
+        }
+
+        $bookingQuery = SeatBooking::query();
+        if ($isSuperAdmin) {
+            $bookingQuery->whereIn('library_id', $myLibraryIds);
+        }
+
         $stats = [
-            'total_students' => User::where('role', 'student')->count(),
-            'active_students' => User::where('role', 'student')
-                ->where('is_active', true)->count(),
-            'total_libraries' => Library::count(),
-            'active_libraries' => Library::where('is_active', true)->count(),
-            'total_seats' => Seat::count(),
-            'active_bookings' => SeatBooking::whereIn('status', ['booked', 'checked_in'])
+            'total_students' => (clone $studentsQuery)->count(),
+            'active_students' => (clone $studentsQuery)->where('is_active', true)->count(),
+            'total_libraries' => (clone $librariesQuery)->count(),
+            'active_libraries' => (clone $librariesQuery)->where('is_active', true)->count(),
+            'total_seats' => Seat::whereHas('floor', function($q) use ($myLibraryIds) { $q->whereIn('library_id', $myLibraryIds); })->count(),
+            'active_bookings' => (clone $bookingQuery)->whereIn('status', ['booked', 'active', 'checked_in'])
                 ->whereBetween('created_at', $dateRange)
                 ->count(),
-            'today_bookings' => SeatBooking::whereDate('created_at', today())->count(),
-            'total_revenue' => (float) UserSubscription::whereBetween('created_at', $dateRange)->sum('amount_paid'),
-            'revenue_growth' => $this->calculateRevenueGrowth(),
+            'today_bookings' => (clone $bookingQuery)->whereDate('created_at', today())->count(),
+            'total_revenue' => (float) (clone $subscriptionQuery)->whereBetween('created_at', $dateRange)->sum('amount_paid'),
+            'revenue_growth' => $this->calculateRevenueGrowth($subscriptionQuery),
         ];
 
         $pendingUsers = User::where('is_active', false)
-            ->where('role', 'student')
-            ->latest()
-            ->take(5)
-            ->get();
+            ->where('role', 'student');
+        if ($isSuperAdmin) {
+            $pendingUsers->where(function($q) use ($myId, $myLibraryIds) {
+                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
+            });
+        }
+        $pendingUsers = $pendingUsers->latest()->take(5)->get();
 
-        $pendingCount = User::where('is_active', false)->count();
+        $pendingCount = User::where('is_active', false);
+        if ($isSuperAdmin) {
+            $pendingCount->where(function($q) use ($myId, $myLibraryIds) {
+                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
+            });
+        }
+        $pendingCount = $pendingCount->count();
 
         $recentActivity = collect();
 
         // Recent Bookings
-        $recentBookings = SeatBooking::with(['user', 'seat.seatSection.library'])
+        $recentBookings = (clone $bookingQuery)->with(['user', 'seat.seatSection.library'])
             ->whereBetween('created_at', $dateRange)
             ->latest()
             ->take(5)
@@ -62,7 +98,7 @@ class DashboardController extends Controller
             });
 
         // Recent Registrations
-        $recentUsers = User::where('role', 'student')
+        $recentUsers = (clone $studentsQuery)
             ->whereBetween('created_at', $dateRange)
             ->latest()
             ->take(5)
@@ -121,31 +157,60 @@ class DashboardController extends Controller
         $range = request('range', 'today');
         $dateRange = $this->getDateRange($range);
 
+        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $myId = auth()->id();
+        $myLibraryIds = Library::where('created_by', $myId)->pluck('id');
+
+        $studentsQuery = User::where('role', 'student');
+        if ($isSuperAdmin) {
+            $studentsQuery->where(function($q) use ($myId, $myLibraryIds) {
+                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
+            });
+        }
+
+        $librariesQuery = Library::query();
+        if ($isSuperAdmin) {
+            $librariesQuery->where('created_by', $myId);
+        }
+
+        $subscriptionQuery = UserSubscription::query();
+        if ($isSuperAdmin) {
+            $subscriptionQuery->whereHas('user', function($q) use ($myId, $myLibraryIds) {
+                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
+            });
+        }
+
+        $bookingQuery = SeatBooking::query();
+        if ($isSuperAdmin) {
+            $bookingQuery->whereIn('library_id', $myLibraryIds);
+        }
+
         $stats = [
-            'total_students' => User::where('role', 'student')->count(),
-            'active_students' => User::where('role', 'student')
-                ->where('is_active', true)->count(),
-            'total_libraries' => Library::count(),
-            'active_libraries' => Library::where('is_active', true)->count(),
-            'total_seats' => Seat::count(),
-            'active_bookings' => SeatBooking::whereIn('status', ['booked', 'checked_in'])
+            'total_students' => (clone $studentsQuery)->count(),
+            'active_students' => (clone $studentsQuery)->where('is_active', true)->count(),
+            'total_libraries' => (clone $librariesQuery)->count(),
+            'active_libraries' => (clone $librariesQuery)->where('is_active', true)->count(),
+            'total_seats' => Seat::whereHas('floor', function($q) use ($myLibraryIds) { $q->whereIn('library_id', $myLibraryIds); })->count(),
+            'active_bookings' => (clone $bookingQuery)->whereIn('status', ['booked', 'active', 'checked_in'])
                 ->whereBetween('created_at', $dateRange)
                 ->count(),
-            'today_bookings' => SeatBooking::whereDate('created_at', today())->count(),
-            'total_revenue' => (float) UserSubscription::whereBetween('created_at', $dateRange)->sum('amount_paid'),
-            'revenue_growth' => $this->calculateRevenueGrowth(),
+            'today_bookings' => (clone $bookingQuery)->whereDate('created_at', today())->count(),
+            'total_revenue' => (float) (clone $subscriptionQuery)->whereBetween('created_at', $dateRange)->sum('amount_paid'),
+            'revenue_growth' => $this->calculateRevenueGrowth($subscriptionQuery),
         ];
 
         return response()->json($stats);
     }
 
-    private function calculateRevenueGrowth()
+    private function calculateRevenueGrowth($query = null)
     {
-        $currentMonth = UserSubscription::whereMonth('created_at', now()->month)
+        $baseQuery = $query ? clone $query : UserSubscription::query();
+
+        $currentMonth = (clone $baseQuery)->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('amount_paid');
 
-        $lastMonth = UserSubscription::whereMonth('created_at', now()->subMonth()->month)
+        $lastMonth = (clone $baseQuery)->whereMonth('created_at', now()->subMonth()->month)
             ->whereYear('created_at', now()->subMonth()->year)
             ->sum('amount_paid');
 

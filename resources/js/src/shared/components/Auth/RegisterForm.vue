@@ -159,24 +159,44 @@
               </div>
             </div>
 
-            <!-- CA Level -->
-            <div>
-              <label for="ca_level" class="block text-sm font-medium text-gray-700 mb-2">
-                CA Level
-              </label>
-              <select
-                id="ca_level"
-                name="ca_level"
-                v-model="formData.ca_level"
-                @change="clearError('ca_level')"
-                :class="['block w-full px-3 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-all', errors.ca_level ? 'border-red-300' : 'border-gray-300']"
-              >
-                <option value="">Select CA Level</option>
-                <option value="PRC">PRC</option>
-                <option value="CAP">CAP</option>
-                <option value="Final">Final</option>
-              </select>
-              <p v-if="errors.ca_level" class="mt-1 text-sm text-red-600">{{ errors.ca_level }}</p>
+            <!-- CA Level & Gender -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="ca_level" class="block text-sm font-medium text-gray-700 mb-2">
+                  CA Level
+                </label>
+                <select
+                  id="ca_level"
+                  name="ca_level"
+                  v-model="formData.ca_level"
+                  @change="clearError('ca_level')"
+                  :class="['block w-full px-3 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-all', errors.ca_level ? 'border-red-300' : 'border-gray-300']"
+                >
+                  <option value="">Select CA Level</option>
+                  <option value="PRC">PRC</option>
+                  <option value="CAP">CAP</option>
+                  <option value="Final">Final</option>
+                </select>
+                <p v-if="errors.ca_level" class="mt-1 text-sm text-red-600">{{ errors.ca_level }}</p>
+              </div>
+
+              <div>
+                <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">
+                  Gender
+                </label>
+                <select
+                  id="gender"
+                  name="gender"
+                  v-model="formData.gender"
+                  @change="clearError('gender')"
+                  :class="['block w-full px-3 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-all', errors.gender ? 'border-red-300' : 'border-gray-300']"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+                <p v-if="errors.gender" class="mt-1 text-sm text-red-600">{{ errors.gender }}</p>
+              </div>
             </div>
 
             <!-- Password Fields -->
@@ -308,6 +328,7 @@ const formData = reactive({
   email: '',
   phone: '',
   crn: '',
+  gender: '',
   ca_level: '',
   password: '',
   password_confirmation: '',
@@ -328,6 +349,7 @@ const errors = reactive<any>({
   email: undefined,
   phone: undefined,
   crn: undefined,
+  gender: undefined,
   ca_level: undefined,
   password: undefined,
   password_confirmation: undefined,
@@ -401,6 +423,7 @@ const validate = () => {
     newErrors.crn = 'CRN must be in format CRN000000';
   }
   if (!formData.ca_level) newErrors.ca_level = 'CA Level is required';
+  if (!formData.gender) newErrors.gender = 'Gender is required';
   if (!formData.password) {
     newErrors.password = 'Password is required';
   } else if (formData.password.length < 8) {

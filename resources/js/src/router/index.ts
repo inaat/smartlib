@@ -102,6 +102,11 @@ const router = createRouter({
                     component: () => import('@/student/components/Support/SupportPage.vue')
                 },
                 {
+                    path: 'attendance',
+                    name: 'student-attendance',
+                    component: () => import('@/student/components/Attendance/AttendancePage.vue')
+                },
+                {
                     path: '',
                     redirect: { name: 'student-dashboard' }
                 }
@@ -219,11 +224,6 @@ const router = createRouter({
                     component: () => import('@/superadmin/components/Users/UserManagementPage.vue')
                 },
                 {
-                    path: 'subscription-plans',
-                    name: 'superadmin-subscription-plans',
-                    component: () => import('@/superadmin/components/Subscriptions/SubscriptionPlanManagementPage.vue')
-                },
-                {
                     path: 'floors',
                     name: 'superadmin-floors',
                     component: () => import('@/superadmin/components/Floors/FloorManagementPage.vue')
@@ -259,11 +259,6 @@ const router = createRouter({
                     component: () => import('@/superadmin/components/Settings/SystemSettingsPage.vue')
                 },
                 {
-                    path: 'orders',
-                    name: 'superadmin-orders',
-                    component: () => import('@/superadmin/components/Orders/OrdersPage.vue')
-                },
-                {
                     path: 'analytics',
                     name: 'superadmin-analytics',
                     component: () => import('@/superadmin/components/Analytics/AnalyticsPage.vue')
@@ -279,8 +274,54 @@ const router = createRouter({
                     component: () => import('@/superadmin/components/Support/SupportPage.vue')
                 },
                 {
+                    path: 'attendance',
+                    name: 'superadmin-attendance',
+                    component: () => import('@/librarian/components/Attendance/AttendancePage.vue')
+                },
+                {
                     path: '',
                     redirect: { name: 'superadmin-dashboard' }
+                }
+            ]
+        },
+        {
+            path: '/owner',
+            component: () => import('@/owner/OwnerApp.vue'),
+            meta: { requiresAuth: true, role: 'owner' },
+            children: [
+                {
+                    path: 'analytics',
+                    name: 'owner-analytics',
+                    component: () => import('@/owner/components/Analytics/AnalyticsPage.vue')
+                },
+                {
+                    path: 'superadmins',
+                    name: 'owner-superadmins',
+                    component: () => import('@/owner/components/SuperAdmins/SuperAdminManagementPage.vue')
+                },
+                {
+                    path: 'subscription-plans',
+                    name: 'owner-subscription-plans',
+                    component: () => import('@/owner/components/Subscriptions/SubscriptionPlanManagementPage.vue')
+                },
+                {
+                    path: 'orders',
+                    name: 'owner-orders',
+                    component: () => import('@/owner/components/Orders/OrdersPage.vue')
+                },
+                {
+                    path: 'settings',
+                    name: 'owner-settings',
+                    component: () => import('@/owner/components/Settings/SettingsPage.vue')
+                },
+                {
+                    path: 'profile',
+                    name: 'owner-profile',
+                    component: () => import('@/superadmin/components/Profile/ProfilePage.vue')
+                },
+                {
+                    path: '',
+                    redirect: { name: 'owner-analytics' }
                 }
             ]
         },
@@ -289,6 +330,7 @@ const router = createRouter({
             redirect: to => {
                 const { user } = useAuth();
                 if (!user.value) return '/';
+                if (user.value.role === 'owner') return '/owner';
                 if (user.value.role === 'super_admin') return '/superadmin';
                 if (user.value.role === 'librarian') return '/librarian';
                 return '/student';
@@ -315,6 +357,7 @@ router.beforeEach((to, from, next) => {
 
     if (to.meta.guestOnly && user.value) {
         const role = user.value.role;
+        if (role === 'owner') return next('/owner');
         if (role === 'super_admin') return next('/superadmin');
         if (role === 'librarian') return next('/librarian');
         return next('/student');

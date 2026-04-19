@@ -166,6 +166,7 @@ const managementItems = [
   { path: '/librarian/seats', label: 'Seat Management', icon: UserCheck },
   { path: '/librarian/floors', label: 'Floor Management', icon: Building2 },
   { path: '/librarian/sections', label: 'Section Management', icon: LayoutGrid },
+  { path: '/librarian/students', label: 'Students', icon: Users },
   { path: '/librarian/books', label: 'Book Inventory', icon: BookMarked },
   { path: '/librarian/reservations', label: 'Reserved Books', icon: BookOpen },
   { path: '/librarian/events', label: 'Events', icon: Calendar },

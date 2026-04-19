@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Librarian;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\Library;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,6 +17,9 @@ class EventController extends Controller
             // For API, return all events (admins see all, librarians see their library's events)
             $user = Auth::user();
             if ($user->role === 'super_admin') {
+                $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
+                $events = Event::withCount('registrations')->whereIn('library_id', $myLibraryIds)->latest()->get();
+            } elseif (in_array($user->role, ['admin', 'owner'])) {
                 $events = Event::withCount('registrations')->latest()->get();
             } elseif ($user->library_id) {
                 $events = Event::withCount('registrations')->where('library_id', $user->library_id)->latest()->get();
@@ -93,10 +97,11 @@ class EventController extends Controller
     public function show(Event $event)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
-            if ($event->library_id !== $user->library_id) {
-                abort(403);
-            }
+        if ($user->role === 'super_admin') {
+            $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
+            if (!$myLibraryIds->contains($event->library_id)) abort(403);
+        } elseif (!in_array($user->role, ['admin', 'owner'])) {
+            if ($event->library_id !== $user->library_id) abort(403);
         }
 
         $event->load('registrations.user');
@@ -106,10 +111,11 @@ class EventController extends Controller
     public function edit(Event $event)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
-            if ($event->library_id !== $user->library_id) {
-                abort(403);
-            }
+        if ($user->role === 'super_admin') {
+            $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
+            if (!$myLibraryIds->contains($event->library_id)) abort(403);
+        } elseif (!in_array($user->role, ['admin', 'owner'])) {
+            if ($event->library_id !== $user->library_id) abort(403);
         }
 
         return view('librarian.events.edit', compact('event'));
@@ -118,10 +124,11 @@ class EventController extends Controller
     public function update(Request $request, Event $event)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
-            if ($event->library_id !== $user->library_id) {
-                abort(403);
-            }
+        if ($user->role === 'super_admin') {
+            $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
+            if (!$myLibraryIds->contains($event->library_id)) abort(403);
+        } elseif (!in_array($user->role, ['admin', 'owner'])) {
+            if ($event->library_id !== $user->library_id) abort(403);
         }
 
         $validated = $request->validate([
@@ -161,10 +168,11 @@ class EventController extends Controller
     public function destroy(Event $event)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
-            if ($event->library_id !== $user->library_id) {
-                abort(403);
-            }
+        if ($user->role === 'super_admin') {
+            $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
+            if (!$myLibraryIds->contains($event->library_id)) abort(403);
+        } elseif (!in_array($user->role, ['admin', 'owner'])) {
+            if ($event->library_id !== $user->library_id) abort(403);
         }
 
         $event->delete();

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Librarian;
 
 use App\Http\Controllers\Controller;
 use App\Models\Book;
+use App\Models\Library;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +17,10 @@ class BookController extends Controller
         if (request()->expectsJson() || request()->is('api/*')) {
             // For API, return all books (admins see all, librarians see their library's books)
             $user = Auth::user();
-            if (in_array($user->role, ['super_admin', 'admin', 'owner'])) {
+            if ($user->role === 'super_admin') {
+                $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
+                $books = Book::whereIn('library_id', $myLibraryIds)->with('library')->latest()->get();
+            } elseif (in_array($user->role, ['admin', 'owner'])) {
                 $books = Book::with('library')->latest()->get();
             } elseif ($user->library_id) {
                 $books = Book::where('library_id', $user->library_id)->with('library')->latest()->get();
@@ -126,10 +130,11 @@ class BookController extends Controller
     public function show(Book $book)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
-            if ($book->library_id !== $user->library_id) {
-                abort(403);
-            }
+        if ($user->role === 'super_admin') {
+            $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
+            if (!$myLibraryIds->contains($book->library_id)) abort(403);
+        } elseif (!in_array($user->role, ['admin', 'owner'])) {
+            if ($book->library_id !== $user->library_id) abort(403);
         }
 
         $book->load('reservations.user');
@@ -139,10 +144,11 @@ class BookController extends Controller
     public function edit(Book $book)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
-            if ($book->library_id !== $user->library_id) {
-                abort(403);
-            }
+        if ($user->role === 'super_admin') {
+            $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
+            if (!$myLibraryIds->contains($book->library_id)) abort(403);
+        } elseif (!in_array($user->role, ['admin', 'owner'])) {
+            if ($book->library_id !== $user->library_id) abort(403);
         }
 
         return view('librarian.books.edit', compact('book'));
@@ -152,11 +158,12 @@ class BookController extends Controller
     {
         $user = Auth::user();
 
-        // Allow super_admin to update any book, librarians only their library's books
-        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
-            if ($book->library_id !== $user->library_id) {
-                abort(403);
-            }
+        // Allow owner/admin to update any book; super_admin only their libraries'; librarians only their library's books
+        if ($user->role === 'super_admin') {
+            $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
+            if (!$myLibraryIds->contains($book->library_id)) abort(403);
+        } elseif (!in_array($user->role, ['admin', 'owner'])) {
+            if ($book->library_id !== $user->library_id) abort(403);
         }
 
         $validated = $request->validate([
@@ -241,11 +248,12 @@ class BookController extends Controller
     {
         $user = Auth::user();
 
-        // Allow super_admin to delete any book, librarians only their library's books
-        if (!in_array($user->role, ['super_admin', 'admin', 'owner'])) {
-            if ($book->library_id !== $user->library_id) {
-                abort(403);
-            }
+        // Allow owner/admin to delete any book; super_admin only their libraries'; librarians only their library's books
+        if ($user->role === 'super_admin') {
+            $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
+            if (!$myLibraryIds->contains($book->library_id)) abort(403);
+        } elseif (!in_array($user->role, ['admin', 'owner'])) {
+            if ($book->library_id !== $user->library_id) abort(403);
         }
 
         $book->delete();

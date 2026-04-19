@@ -24,6 +24,15 @@ class SeatSectionController extends Controller
             ->map(function ($section) {
                 $section->available_seats = $section->seats()->where('status', 'available')->count();
                 $section->occupied_seats = $section->seats()->whereIn('status', ['reserved', 'occupied'])->count();
+                
+                // Add QR code URLs to seats
+                $section->seats->transform(function($seat) {
+                    $seat->qr_code_url = \Illuminate\Support\Facades\Storage::disk('public')->exists("qrcodes/seats/seat-{$seat->id}.svg") 
+                        ? "/storage/qrcodes/seats/seat-{$seat->id}.svg" 
+                        : (\Illuminate\Support\Facades\Storage::disk('public')->exists("qrcodes/seats/seat-{$seat->id}.png") ? "/storage/qrcodes/seats/seat-{$seat->id}.png" : null);
+                    return $seat;
+                });
+                
                 return $section;
             });
 
@@ -34,6 +43,7 @@ class SeatSectionController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'gender' => 'required|string|in:male,female,mixed',
             'total_seats' => 'required|integer|min:1',
             'description' => 'nullable|string',
             'floor_id' => 'required|exists:floors,id',
@@ -45,6 +55,7 @@ class SeatSectionController extends Controller
         $section = SeatSection::create([
             'library_id' => $libraryId,
             'name' => $validated['name'],
+            'gender' => $validated['gender'],
             'total_seats' => $validated['total_seats'],
             'description' => $validated['description'] ?? null,
             'floor_id' => $validated['floor_id'] ?? null,
@@ -71,8 +82,8 @@ class SeatSectionController extends Controller
 
             // Generate QR image
             try {
-                $qrImage = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')->size(300)->generate($qrContent);
-                \Illuminate\Support\Facades\Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.png", $qrImage);
+                $qrImage = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(300)->generate($qrContent);
+                \Illuminate\Support\Facades\Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.svg", $qrImage);
             } catch (\Exception $e) {
                 \Log::error("QR Code generation failed for seat {$seat->id}: " . $e->getMessage());
             }
@@ -93,6 +104,7 @@ class SeatSectionController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
+            'gender' => 'sometimes|string|in:male,female,mixed',
             'description' => 'nullable|string',
             'is_active' => 'sometimes|boolean',
             'floor_id' => 'nullable|exists:floors,id',
