@@ -13,6 +13,7 @@ class SupportTicket extends Model
         'user_id',
         'library_id',
         'subject',
+        'ticket_type',
         'status',
         'priority',
     ];

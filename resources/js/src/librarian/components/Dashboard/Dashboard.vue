@@ -68,21 +68,27 @@
         </div>
       </div>
 
-      <!-- Available Seats -->
-      <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+      <!-- Pending Complaints -->
+      <div 
+        @click="$router.push('/librarian/support')"
+        class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all cursor-pointer group"
+      >
         <div class="flex items-center justify-between mb-4">
-          <div class="p-3 bg-blue bg-opacity-20 rounded-lg">
-            <Building2 class="w-6 h-6" />
+          <div class="p-3 bg-white bg-opacity-20 rounded-lg group-hover:scale-110 transition-transform">
+            <MessageSquare class="w-6 h-6" />
           </div>
-          <span class="text-sm font-medium bg-blue bg-opacity-20 px-3 py-1 rounded-full">Available</span>
+          <span v-if="stats.pending_tickets > 0" class="flex h-2 w-2 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+          </span>
         </div>
         <div class="space-y-1">
-          <h3 class="text-2xl font-bold">{{ stats.availableSeats }}</h3>
-          <p class="text-purple-100 text-sm">Seats Available</p>
+          <h3 class="text-2xl font-bold">{{ stats.pending_tickets }}</h3>
+          <p class="text-red-100 text-sm">Pending Complaints</p>
         </div>
         <div class="mt-4 flex items-center text-sm">
-          <BarChart3 class="w-4 h-4 mr-1" />
-          <span>{{ occupancyRate }}% occupancy</span>
+          <AlertCircle class="w-4 h-4 mr-1" />
+          <span>Need immediate attention</span>
         </div>
       </div>
     </div>
@@ -273,7 +279,8 @@ import {
   MoreVertical,
   BookOpen,
   Settings,
-  Coffee
+  Coffee,
+  MessageSquare
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 import { format } from 'date-fns';

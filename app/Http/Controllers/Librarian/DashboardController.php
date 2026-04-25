@@ -43,6 +43,10 @@ class DashboardController extends Controller
                       });
                 })->count(),
             'maintenance_seats' => $library->seats()->where('is_maintenance', true)->count(),
+            'pending_tickets' => \App\Models\SupportTicket::where('library_id', $library->id)
+                ->where('ticket_type', 'library')
+                ->whereIn('status', ['open', 'in_progress'])
+                ->count(),
         ];
 
         $recentBookings = $library->seatBookings()

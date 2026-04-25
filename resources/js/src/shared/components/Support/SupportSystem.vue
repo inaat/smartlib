@@ -107,14 +107,22 @@
           >
             <div class="flex justify-between items-start mb-1">
               <h3 class="font-semibold text-gray-900 truncate pr-2">{{ ticket.subject }}</h3>
+            <div class="flex flex-wrap gap-1 mb-2">
               <span :class="[
-                'text-[10px] px-2 py-0.5 rounded-full font-medium uppercase',
+                'text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider',
+                ticket.ticket_type === 'library' ? 'bg-indigo-100 text-indigo-700' : 'bg-purple-100 text-purple-700'
+              ]">
+                {{ ticket.ticket_type }}
+              </span>
+              <span :class="[
+                'text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider',
                 getStatusClass(ticket.status)
               ]">
                 {{ ticket.status }}
               </span>
             </div>
-            <div class="flex justify-between items-center text-xs text-gray-500">
+          </div>
+          <div class="flex justify-between items-center text-xs text-gray-500">
               <span class="flex items-center">
                 <User class="w-3 h-3 mr-1" />
                 {{ ticket.user?.name || 'User' }}
@@ -139,7 +147,13 @@
               <h3 class="font-bold text-gray-900">{{ selectedTicket.subject }}</h3>
               <p class="text-xs text-gray-500">
                 Ticket #{{ selectedTicket.id }} • From: {{ selectedTicket.user?.name }} 
-                <span v-if="selectedTicket.library"> • Library: {{ selectedTicket.library.name }}</span>
+                <span :class="[
+                  'ml-2 px-2 py-0.5 rounded text-[10px] uppercase font-bold',
+                  selectedTicket.ticket_type === 'library' ? 'bg-indigo-50 text-indigo-600' : 'bg-purple-50 text-purple-600'
+                ]">
+                  {{ selectedTicket.ticket_type === 'library' ? 'Library Issue' : 'System Issue' }}
+                </span>
+                <span v-if="selectedTicket.library" class="ml-2 font-medium text-gray-700"> • {{ selectedTicket.library.name }}</span>
               </p>
             </div>
           </div>
@@ -244,8 +258,9 @@
         </button>
       </div>
     </div>
+  </div>
 
-    <!-- Create Ticket Modal -->
+  <!-- Create Ticket Modal -->
     <div v-if="showCreateModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showCreateModal = false"></div>
       <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -273,6 +288,16 @@
 
           <div class="grid grid-cols-2 gap-4">
             <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Category</label>
+              <select 
+                v-model="createForm.ticket_type"
+                class="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="library">Library Issue</option>
+                <option value="system">System Issue</option>
+              </select>
+            </div>
+            <div>
               <label class="block text-sm font-semibold text-gray-700 mb-1">Priority</label>
               <select 
                 v-model="createForm.priority"
@@ -284,16 +309,18 @@
                 <option value="urgent">Urgent</option>
               </select>
             </div>
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1">Library (Optional)</label>
-              <select 
-                v-model="createForm.library_id"
-                class="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option :value="null">General Support</option>
-                <option v-for="lib in libraries" :key="lib.id" :value="lib.id">{{ lib.name }}</option>
-              </select>
-            </div>
+          </div>
+
+          <div v-if="createForm.ticket_type === 'library'">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Select Library</label>
+            <select 
+              v-model="createForm.library_id"
+              required
+              class="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option :value="null" disabled>Select a library</option>
+              <option v-for="lib in libraries" :key="lib.id" :value="lib.id">{{ lib.name }}</option>
+            </select>
           </div>
 
           <div>
@@ -326,7 +353,6 @@
           </div>
         </form>
       </div>
-    </div>
     </div>
   </div>
 </template>
@@ -383,6 +409,7 @@ const createForm = ref({
   subject: '',
   message: '',
   priority: 'medium',
+  ticket_type: 'library' as 'library' | 'system',
   library_id: null as number | null,
 });
 
@@ -465,13 +492,24 @@ const handleSendMessage = async () => {
 };
 
 const handleCreateTicket = async () => {
+  if (createForm.value.ticket_type === 'library' && !createForm.value.library_id) {
+    toast('Wait', 'Please select a library for library issues', 'warning');
+    return;
+  }
+
   try {
     creating.value = true;
     const ticket = await supportAPI.createTicket(createForm.value);
     tickets.value.unshift(ticket);
     selectedTicket.value = ticket;
     showCreateModal.value = false;
-    createForm.value = { subject: '', message: '', priority: 'medium', library_id: null };
+    createForm.value = { 
+      subject: '', 
+      message: '', 
+      priority: 'medium', 
+      ticket_type: 'library',
+      library_id: null 
+    };
     toast('Success', 'Ticket created successfully', 'success');
   } catch (error) {
     toast('Error', 'Could not create ticket', 'error');

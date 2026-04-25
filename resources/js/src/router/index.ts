@@ -62,6 +62,16 @@ const router = createRouter({
                     component: () => import('@/student/components/Books/BooksPage.vue')
                 },
                 {
+                    path: 'my-bookings',
+                    name: 'student-bookings',
+                    component: () => import('@/student/components/Seats/MyBookingsPage.vue')
+                },
+                {
+                    path: 'my-queue',
+                    name: 'student-queue',
+                    component: () => import('@/student/components/Seats/MyQueuePage.vue')
+                },
+                {
                     path: 'my-reservations',
                     name: 'student-reservations',
                     component: () => import('@/student/components/Books/MyReservationsPage.vue')
@@ -107,6 +117,11 @@ const router = createRouter({
                     component: () => import('@/student/components/Attendance/AttendancePage.vue')
                 },
                 {
+                    path: 'notifications',
+                    name: 'student-notifications',
+                    component: () => import('@/student/components/Profile/NotificationsPage.vue')
+                },
+                {
                     path: '',
                     redirect: { name: 'student-dashboard' }
                 }
@@ -132,6 +147,12 @@ const router = createRouter({
                     name: 'librarian-students',
                     component: () => import('@/librarian/components/Students/StudentsPage.vue')
                 },
+                {
+                    path: 'students/:id',
+                    name: 'librarian-student-details',
+                    component: () => import('@/librarian/components/Students/StudentDetailsPage.vue')
+                },
+
                 {
                     path: 'seats',
                     name: 'librarian-seats',
@@ -367,8 +388,8 @@ router.beforeEach((to, from, next) => {
         return next('/');
     }
 
-    // Redirect student to subscription page if plan is expired
-    if (user.value?.role === 'student' && isPlanExpired.value && to.name !== 'student-subscription') {
+    // Redirect student to subscription page if plan is expired, but allow events, support and notifications
+    if (user.value?.role === 'student' && isPlanExpired.value && !['student-subscription', 'student-events', 'student-support', 'student-notifications'].includes(to.name as string)) {
         return next({ name: 'student-subscription' });
     }
 

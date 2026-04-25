@@ -105,8 +105,14 @@ class EventController extends Controller
         }
 
         $event->load('registrations.user');
+
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json($event);
+        }
+
         return view('librarian.events.show', compact('event'));
     }
+
 
     public function edit(Event $event)
     {

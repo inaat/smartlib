@@ -12,6 +12,60 @@ use Carbon\Carbon;
 
 class BookingController extends Controller
 {
+    public function myQueue(Request $request)
+    {
+        $queueEntries = SmartQueue::with(['seat.library', 'seat.floor'])
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['waiting', 'notified'])
+            ->orderBy('joined_at', 'desc')
+            ->get();
+
+        // Calculate estimated wait time for each entry
+        foreach ($queueEntries as $entry) {
+            $activeBooking = SeatBooking::where('seat_id', $entry->seat_id)
+                ->whereIn('status', ['booked', 'checked_in'])
+                ->orderBy('scheduled_end_time', 'desc')
+                ->first();
+
+            if ($activeBooking) {
+                $minutesRemaining = now()->diffInMinutes($activeBooking->scheduled_end_time, false);
+                $entry->estimated_wait_time = max(0, $minutesRemaining > 0 ? $minutesRemaining : 0);
+                
+                // Add factor for people ahead in queue
+                $aheadInQueue = SmartQueue::where('seat_id', $entry->seat_id)
+                    ->where('status', 'waiting')
+                    ->where('queue_position', '<', $entry->queue_position)
+                    ->count();
+                
+                // Assuming 2 hours (120 mins) per person if seat is just starting, but here we just look at current booking.
+                // If there are people ahead, we add their expected duration (default 2h)
+                $entry->estimated_wait_time += ($aheadInQueue * 120);
+            } else {
+                $entry->estimated_wait_time = 0; // Should be notified soon
+            }
+        }
+
+        return response()->json($queueEntries);
+    }
+
+    public function leaveQueue(Request $request, $id)
+    {
+        $queue = SmartQueue::where('user_id', $request->user()->id)->findOrFail($id);
+        $queue->delete();
+
+        // Optional: Re-position others in queue for this seat
+        $others = SmartQueue::where('seat_id', $queue->seat_id)
+            ->where('status', 'waiting')
+            ->orderBy('queue_position', 'asc')
+            ->get();
+        
+        foreach ($others as $index => $other) {
+            $other->update(['queue_position' => $index + 1]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
     public function index(Request $request)
     {
         $bookings = SeatBooking::with(['seat.library', 'user'])
@@ -190,8 +244,15 @@ class BookingController extends Controller
             'status' => 'booked',
         ]);
 
-        // Update seat status to reserved (will become occupied on check-in)
         $seat->update(['status' => 'reserved']);
+
+        Notification::send(
+            $user->id,
+            'booking',
+            'Seat Booked!',
+            "Your seat {$seat->seat_number} has been reserved. Don't forget to check in on time!",
+            $booking
+        );
 
         return response()->json($booking->load('seat.library'), 201);
     }
@@ -321,27 +382,37 @@ class BookingController extends Controller
 
         $booking->seat->update(['status' => 'occupied']);
 
-        // Track arrival for today and update streak
-        $user->last_checkin_date = now()->toDateString();
-        
-        // Increment streak for every check-in as requested
-        $user->current_streak = ($user->current_streak ?? 0) + 1;
-        if ($user->current_streak > $user->max_streak) {
-            $user->max_streak = $user->current_streak;
+        // Track arrival for today and update streak once per day
+        $today = now()->toDateString();
+        if ($user->last_checkin_date !== $today) {
+            $yesterday = now()->subDay()->toDateString();
+            if ($user->last_streak_date === $yesterday) {
+                $user->current_streak += 1;
+            } else {
+                $user->current_streak = 1;
+            }
+
+            if ($user->current_streak > $user->max_streak) {
+                $user->max_streak = $user->current_streak;
+            }
+            $user->last_streak_date = $today;
+            $user->last_checkin_date = $today;
+            $user->save();
         }
-        $user->last_streak_date = now()->toDateString();
-        
-        $user->save();
  
-        // Auto mark attendance
-        \App\Models\Attendance::create([
-            'user_id' => $user->id,
-            'library_id' => $booking->seat->floor->library_id,
-            'seat_booking_id' => $booking->id,
-            'date' => now()->toDateString(),
-            'check_in_time' => now(),
-            'marked_manually' => false,
-        ]);
+        // Auto mark attendance - ensure only one per day
+        \App\Models\Attendance::firstOrCreate(
+            [
+                'user_id' => $user->id,
+                'date' => $today,
+            ],
+            [
+                'library_id' => $booking->seat->floor->library_id,
+                'seat_booking_id' => $booking->id,
+                'check_in_time' => now(),
+                'marked_manually' => false,
+            ]
+        );
 
         return response()->json([
             'success' => true, 
@@ -397,31 +468,13 @@ class BookingController extends Controller
             $booking->save();
         }
 
-        // Streak Logic: Check if they hit the library's target today
-        $library = $booking->seat->library;
-        $minMinutes = $library->special_features['settings']['minStudyMinutesForStreak'] ?? 0;
-        $today = now()->toDateString();
-
-        if ($user->last_streak_date !== $today) {
-            $totalMinutesToday = SeatBooking::where('user_id', $user->id)
-                ->whereDate('check_out_time', $today)
-                ->sum('total_minutes');
-
-            if ($totalMinutesToday >= $minMinutes) {
-                $yesterday = now()->subDay()->toDateString();
-                if ($user->last_streak_date === $yesterday) {
-                    $user->current_streak += 1;
-                } else {
-                    $user->current_streak = 1;
-                }
-
-                if ($user->current_streak > $user->max_streak) {
-                    $user->max_streak = $user->current_streak;
-                }
-
-                $user->last_streak_date = $today;
-                $user->save();
-            }
+        // Attendance update
+        $attendance = \App\Models\Attendance::where('seat_booking_id', $booking->id)->first();
+        if ($attendance) {
+            $attendance->update([
+                'check_out_time' => now(),
+                'total_minutes' => $attendance->total_minutes + (now()->diffInMinutes($attendance->check_in_time ?: now()))
+            ]);
         }
 
         // Notify next person in queue
@@ -433,14 +486,13 @@ class BookingController extends Controller
         if ($nextInQueue) {
             $nextInQueue->update(['status' => 'notified']);
             
-            Notification::create([
-                'user_id' => $nextInQueue->user_id,
-                'type' => 'seat_available',
-                'title' => 'Seat Available!',
-                'message' => "Seat {$booking->seat->seat_number} is now free. You have 10 minutes to check in.",
-                'related_type' => 'App\Models\Seat',
-                'related_id' => $booking->seat_id,
-            ]);
+            Notification::send(
+                $nextInQueue->user_id,
+                'queue',
+                'Seat Available!',
+                "Seat {$booking->seat->seat_number} is now free. You have 10 minutes to check in.",
+                $booking->seat
+            );
         }
 
         return response()->json(['success' => true, 'booking' => $booking, 'streak' => $user->current_streak]);
@@ -507,6 +559,14 @@ class BookingController extends Controller
         $booking->update(['status' => 'cancelled']);
         $booking->seat->update(['status' => 'available']);
 
+        Notification::send(
+            $request->user()->id,
+            'booking',
+            'Booking Cancelled',
+            "Your booking for seat {$booking->seat->seat_number} has been cancelled.",
+            $booking
+        );
+
         return response()->json(['success' => true, 'message' => 'Booking cancelled successfully']);
     }
 
@@ -545,20 +605,6 @@ class BookingController extends Controller
             }
         }
 
-        // Rule: Can only join queue if less than 10 minutes remaining for the current session
-        $activeBooking = SeatBooking::where('seat_id', $seat->id)
-            ->whereIn('status', ['booked', 'checked_in'])
-            ->orderBy('scheduled_end_time', 'desc')
-            ->first();
-
-        if ($activeBooking) {
-            $remainingMinutes = now()->diffInMinutes($activeBooking->scheduled_end_time, false);
-            if ($remainingMinutes > 10) {
-                return response()->json([
-                    'message' => "You can only join the queue when less than 10 minutes are remaining for the current session. Session ends in {$remainingMinutes} minutes."
-                ], 400);
-            }
-        }
 
         // Check if already in queue for this seat
         $existingQueue = SmartQueue::where('user_id', $user->id)
@@ -583,6 +629,14 @@ class BookingController extends Controller
             'status' => 'waiting',
             'joined_at' => now(),
         ]);
+
+        Notification::send(
+            $user->id,
+            'queue',
+            'Joined Queue',
+            "You are now at position #{$queue->queue_position} for seat {$seat->seat_number}.",
+            $queue
+        );
 
         return response()->json([
             'success' => true, 

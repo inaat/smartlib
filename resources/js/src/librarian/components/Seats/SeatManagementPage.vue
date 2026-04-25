@@ -170,6 +170,7 @@
                   class="relative group"
                   @mouseenter="hoveredSeat = seat"
                   @mouseleave="hoveredSeat = null"
+                  @click="selectSeat(seat)"
                 >
                   <!-- Chair Icon -->
                   <div 
@@ -216,7 +217,23 @@
                             </p>
                           </div>
                         </div>
-                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2 border-t border-gray-50">
+
+                        <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-50">
+                          <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.has_computer ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-50 text-gray-400']">
+                            <Monitor class="w-4 h-4 mb-1" />
+                            <span class="text-[8px] font-black uppercase tracking-tighter">PC</span>
+                          </div>
+                          <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.near_window ? 'bg-sky-50 text-sky-600' : 'bg-gray-50 text-gray-400']">
+                            <Layout class="w-4 h-4 mb-1" />
+                            <span class="text-[8px] font-black uppercase tracking-tighter">Window</span>
+                          </div>
+                          <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.socket_count > 0 ? 'bg-orange-50 text-orange-600' : 'bg-gray-50 text-gray-400']">
+                            <Zap class="w-4 h-4 mb-1" />
+                            <span class="text-[8px] font-black uppercase tracking-tighter">{{ seat.socket_count }} Slots</span>
+                          </div>
+                        </div>
+
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2">
                           {{ activeSectionName }}
                         </div>
                       </div>
@@ -243,6 +260,7 @@
                   class="relative group"
                   @mouseenter="hoveredSeat = seat"
                   @mouseleave="hoveredSeat = null"
+                  @click="selectSeat(seat)"
                 >
                   <!-- Chair Icon (Flipped) -->
                   <div 
@@ -273,7 +291,6 @@
                       v-if="hoveredSeat?.id === seat.id"
                       class="absolute top-[110%] left-1/2 -translate-x-1/2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100]"
                     >
-                      <!-- same popover content -->
                       <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                         <span class="text-sm font-bold text-gray-800">Seat {{ seat.seat_number }}</span>
                         <div :class="['w-2 h-2 rounded-full', getStatusColors(seat.status).dotBg]"></div>
@@ -290,7 +307,24 @@
                             </p>
                           </div>
                         </div>
-                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2 border-t border-gray-50">
+
+                        <!-- Amenities Section -->
+                        <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-50">
+                          <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.has_computer ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-50 text-gray-400']">
+                            <Monitor class="w-4 h-4 mb-1" />
+                            <span class="text-[8px] font-black uppercase tracking-tighter">PC</span>
+                          </div>
+                          <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.near_window ? 'bg-sky-50 text-sky-600' : 'bg-gray-50 text-gray-400']">
+                            <Layout class="w-4 h-4 mb-1" />
+                            <span class="text-[8px] font-black uppercase tracking-tighter">Window</span>
+                          </div>
+                          <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.socket_count > 0 ? 'bg-orange-50 text-orange-600' : 'bg-gray-50 text-gray-400']">
+                            <Zap class="w-4 h-4 mb-1" />
+                            <span class="text-[8px] font-black uppercase tracking-tighter">{{ seat.socket_count }} Slots</span>
+                          </div>
+                        </div>
+
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2">
                           {{ activeSectionName }}
                         </div>
                       </div>
@@ -358,6 +392,9 @@
               :key="seat.id"
               :draggable="true"
               @dragstart="onDragStart($event, seat)"
+              @click="selectSeat(seat)"
+              @mouseenter="hoveredSeat = seat"
+              @mouseleave="hoveredSeat = null"
               :style="{
                 position: 'absolute',
                 left: (seat.position_x || seat.position_y) ? `${seat.position_x}px` : `${eShapeCoordinates[idx]?.x || 20 + ((idx * 60) % 700)}px`,
@@ -382,6 +419,52 @@
                   <span class="block text-[9px] font-bold text-gray-700 leading-none">{{ String(seat.seat_number).replace(/\D/g, '') || seat.seat_number }}</span>
                 </div>
               </div>
+
+              <!-- Hover Detail Popover -->
+              <transition name="fade">
+                <div
+                  v-if="hoveredSeat?.id === seat.id"
+                  class="absolute bottom-[130%] left-1/2 -translate-x-1/2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] cursor-default pointer-events-none"
+                >
+                  <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                    <span class="text-sm font-bold text-gray-800">Seat {{ seat.seat_number }}</span>
+                    <div :class="['w-2 h-2 rounded-full', getStatusColors(seat.status).dotBg]"></div>
+                  </div>
+                  <div class="p-4 space-y-4">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                        <User class="w-5 h-5" />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-gray-900 truncate">{{ seat.current_booking?.user_name || 'Available' }}</p>
+                        <p class="text-xs font-medium text-gray-500">
+                          {{ seat.current_booking?.minutes_left ? seat.current_booking.minutes_left + ' mins Left' : 'Available' }}
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- Amenities Section -->
+                    <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-50">
+                      <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.has_computer ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-50 text-gray-400']">
+                        <Monitor class="w-4 h-4 mb-1" />
+                        <span class="text-[8px] font-black uppercase tracking-tighter">PC</span>
+                      </div>
+                      <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.near_window ? 'bg-sky-50 text-sky-600' : 'bg-gray-50 text-gray-400']">
+                        <Layout class="w-4 h-4 mb-1" />
+                        <span class="text-[8px] font-black uppercase tracking-tighter">Window</span>
+                      </div>
+                      <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.socket_count > 0 ? 'bg-orange-50 text-orange-600' : 'bg-gray-50 text-gray-400']">
+                        <Zap class="w-4 h-4 mb-1" />
+                        <span class="text-[8px] font-black uppercase tracking-tighter">{{ seat.socket_count }} Slots</span>
+                      </div>
+                    </div>
+
+                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2">
+                      {{ activeSectionName }}
+                    </div>
+                  </div>
+                </div>
+              </transition>
             </div>
             </div>
           </div>
@@ -415,106 +498,117 @@
     </div>
 
     <!-- Selected Seat Details Modal -->
-    <div
-      v-if="selectedSeat"
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-      @click="selectedSeat = null"
-    >
+    <transition name="fade">
       <div
-        class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6"
-        @click.stop
+        v-if="selectedSeat"
+        class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+        @click="selectedSeat = null"
       >
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-bold text-gray-900">Seat {{ selectedSeat.seat_number }}</h3>
-          <button
-            @click="selectedSeat = null"
-            class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X class="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
-
-        <div class="space-y-4">
-          <div>
-            <label class="text-sm font-medium text-gray-700">Status</label>
-            <select
-              v-model="selectedSeat.status"
-              class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="available">Available</option>
-              <option value="occupied">Occupied</option>
-              <option value="reserved">Reserved</option>
-              <option value="maintenance">Maintenance</option>
-            </select>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-medium text-gray-700 flex items-center">
-                <Monitor class="w-4 h-4 mr-2 text-gray-400" />
-                Computer
-              </label>
-              <select
-                v-model="selectedSeat.has_computer"
-                class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              >
-                <option :value="true">Yes</option>
-                <option :value="false">No</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-700 flex items-center">
-                <Layout class="w-4 h-4 mr-2 text-gray-400" />
-                Near Window
-              </label>
-              <select
-                v-model="selectedSeat.near_window"
-                class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              >
-                <option :value="true">Yes</option>
-                <option :value="false">No</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label class="text-sm font-medium text-gray-700 flex items-center">
-              <Zap class="w-4 h-4 mr-2 text-gray-400" />
-              Electric Sockets
-            </label>
-            <input
-              type="number"
-              v-model="selectedSeat.socket_count"
-              min="0"
-              class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-          </div>
-
-          <div v-if="selectedSeat.currentUser">
-            <label class="text-sm font-medium text-gray-700">Current User</label>
-            <div class="mt-1 p-3 bg-gray-50 rounded-lg">
-              <p class="font-medium text-gray-900">{{ selectedSeat.currentUser }}</p>
-              <p class="text-sm text-gray-600">{{ selectedSeat.bookingTime }}</p>
-            </div>
-          </div>
-
-          <div class="flex items-center space-x-3 pt-4">
-            <button
-              @click="updateSeat"
-              class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              Update Seat
-            </button>
+        <div
+          class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all border border-gray-100"
+          @click.stop
+        >
+          <!-- Header -->
+          <div class="relative h-32 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 p-6 flex flex-col justify-end">
             <button
               @click="selectedSeat = null"
-              class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              class="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all text-white backdrop-blur-md"
             >
-              Cancel
+              <X class="w-5 h-5" />
             </button>
+            <div class="flex items-end space-x-3">
+              <div class="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center text-indigo-600 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+                <Armchair class="w-8 h-8" />
+              </div>
+              <div>
+                <h3 class="text-2xl font-black text-white tracking-tight">Seat {{ selectedSeat.seat_number }}</h3>
+                <p class="text-indigo-100 text-[10px] font-bold uppercase tracking-widest">{{ activeSectionName }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-8 space-y-8">
+            <!-- Properties Section -->
+            <div class="grid grid-cols-2 gap-4">
+              <div 
+                @click="selectedSeat.has_computer = !selectedSeat.has_computer"
+                :class="[
+                  'p-4 rounded-2xl border-2 transition-all cursor-pointer text-center group',
+                  selectedSeat.has_computer ? 'border-indigo-600 bg-indigo-50/50' : 'border-gray-100 bg-gray-50'
+                ]"
+              >
+                <Monitor :class="['w-8 h-8 mx-auto mb-2 transition-transform group-hover:scale-110', selectedSeat.has_computer ? 'text-indigo-600' : 'text-gray-400']" />
+                <span :class="['text-[10px] font-black uppercase tracking-widest', selectedSeat.has_computer ? 'text-indigo-700' : 'text-gray-500']">Computer</span>
+              </div>
+              
+              <div 
+                @click="selectedSeat.near_window = !selectedSeat.near_window"
+                :class="[
+                  'p-4 rounded-2xl border-2 transition-all cursor-pointer text-center group',
+                  selectedSeat.near_window ? 'border-sky-600 bg-sky-50/50' : 'border-gray-100 bg-gray-50'
+                ]"
+              >
+                <Layout :class="['w-8 h-8 mx-auto mb-2 transition-transform group-hover:scale-110', selectedSeat.near_window ? 'text-sky-600' : 'text-gray-400']" />
+                <span :class="['text-[10px] font-black uppercase tracking-widest', selectedSeat.near_window ? 'text-sky-700' : 'text-gray-500']">Window View</span>
+              </div>
+            </div>
+
+            <!-- Socket Count Section -->
+            <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-2">
+                  <div class="p-2 bg-white rounded-lg shadow-sm">
+                    <Zap class="w-4 h-4 text-orange-500" />
+                  </div>
+                  <span class="text-xs font-black uppercase tracking-widest text-gray-500">Power Sockets</span>
+                </div>
+                <div class="flex items-center bg-white rounded-xl border border-gray-200 p-1">
+                  <button @click="selectedSeat.socket_count = Math.max(0, selectedSeat.socket_count - 1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-50 rounded-lg text-gray-500">-</button>
+                  <span class="w-10 text-center font-bold text-gray-800">{{ selectedSeat.socket_count }}</span>
+                  <button @click="selectedSeat.socket_count++" class="w-8 h-8 flex items-center justify-center hover:bg-gray-50 rounded-lg text-gray-500">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Status Section -->
+            <div class="space-y-3">
+              <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Current Status</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  v-for="status in ['available', 'maintenance']"
+                  :key="status"
+                  @click="selectedSeat.status = status"
+                  :class="[
+                    'px-4 py-3 rounded-xl text-xs font-bold transition-all border-2 capitalize',
+                    selectedSeat.status === status 
+                      ? 'border-indigo-600 bg-indigo-600 text-white shadow-lg shadow-indigo-100' 
+                      : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
+                  ]"
+                >
+                  {{ status }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col space-y-3 pt-4">
+              <button
+                @click="updateSeat"
+                class="w-full py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-200 active:scale-[0.98]"
+              >
+                Save Configuration
+              </button>
+              <button
+                @click="selectedSeat = null"
+                class="w-full py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest"
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 

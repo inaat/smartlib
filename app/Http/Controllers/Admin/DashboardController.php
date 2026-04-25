@@ -56,6 +56,9 @@ class DashboardController extends Controller
             'today_bookings' => (clone $bookingQuery)->whereDate('created_at', today())->count(),
             'total_revenue' => (float) (clone $subscriptionQuery)->whereBetween('created_at', $dateRange)->sum('amount_paid'),
             'revenue_growth' => $this->calculateRevenueGrowth($subscriptionQuery),
+            'pending_tickets' => \App\Models\SupportTicket::where('ticket_type', 'system')
+                ->whereIn('status', ['open', 'in_progress'])
+                ->count(),
         ];
 
         $pendingUsers = User::where('is_active', false)

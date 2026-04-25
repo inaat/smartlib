@@ -52,14 +52,14 @@
             <span>Scan QR Code</span>
           </button>
 
-          <div v-if="bookingId" class="relative flex items-center my-1">
+          <div v-if="bookingId || route.query.auto_checkin" class="relative flex items-center my-1">
             <div class="flex-1 border-t border-gray-200"></div>
             <span class="px-3 text-[10px] uppercase font-bold text-gray-400 tracking-widest">or</span>
             <div class="flex-1 border-t border-gray-200"></div>
           </div>
 
           <button
-            v-if="bookingId"
+            v-if="bookingId || route.query.auto_checkin"
             @click="performCheckInManual"
             :disabled="isCheckingIn"
             class="w-full py-3.5 px-6 bg-white border-2 border-green-500 text-green-600 font-bold rounded-xl hover:bg-green-50 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"

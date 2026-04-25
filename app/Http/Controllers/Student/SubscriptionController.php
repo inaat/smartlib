@@ -28,13 +28,24 @@ class SubscriptionController extends Controller
         $user = $request->user();
         $plan = SubscriptionPlan::findOrFail($request->plan_id);
 
-        // Check if user already has an active subscription
-        $activeSubscription = $user->activeSubscription;
-        if ($activeSubscription) {
+        // Check if user already has an active subscription of the SAME plan
+        $activeSubscription = $user->active_subscription;
+        if ($activeSubscription && $activeSubscription->subscription_plan_id == $plan->id) {
             return response()->json([
-                'message' => 'You already have an active subscription.'
+                'message' => 'You already have an active subscription for this plan.'
             ], 400);
         }
+
+        // Check if user already has a pending order
+        $pendingOrder = \App\Models\Order::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->first();
+        if ($pendingOrder) {
+            return response()->json([
+                'message' => 'You already have a pending subscription request. Please wait for admin approval.'
+            ], 400);
+        }
+
 
         // Create new order
         $order = \App\Models\Order::create([

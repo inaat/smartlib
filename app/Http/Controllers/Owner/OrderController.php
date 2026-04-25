@@ -32,6 +32,11 @@ class OrderController extends Controller
         try {
             $order->update(['status' => 'approved']);
             if ($order->plan_id) {
+                // Deactivate existing active subscriptions
+                UserSubscription::where('user_id', $order->user_id)
+                    ->where('status', 'active')
+                    ->update(['status' => 'inactive']);
+
                 $plan = $order->plan;
                 UserSubscription::create([
                     'user_id' => $order->user_id,
@@ -46,6 +51,15 @@ class OrderController extends Controller
                 ]);
             }
             DB::commit();
+
+            \App\Models\Notification::send(
+                $order->user_id,
+                'subscription',
+                'Subscription Approved',
+                "Your subscription to {$plan->name} has been approved. Enjoy your benefits!",
+                $order
+            );
+
             return response()->json(['message' => 'Order approved successfully']);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -53,11 +67,21 @@ class OrderController extends Controller
         }
     }
 
+
     public function reject(Request $request, $id)
     {
         $order = Order::findOrFail($id);
         if ($order->status !== 'pending') return response()->json(['message' => 'Order is already ' . $order->status], 400);
         $order->update(['status' => 'rejected', 'notes' => $request->notes ?? $order->notes]);
+
+        \App\Models\Notification::send(
+            $order->user_id,
+            'subscription',
+            'Subscription Rejected',
+            "Your subscription request has been rejected. Reason: " . ($request->notes ?? 'Not specified'),
+            $order
+        );
+
         return response()->json(['message' => 'Order rejected successfully']);
     }
 

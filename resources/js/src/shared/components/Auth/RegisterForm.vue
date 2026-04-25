@@ -174,7 +174,7 @@
                 >
                   <option value="">Select CA Level</option>
                   <option value="PRC">PRC</option>
-                  <option value="CAP">CAP</option>
+                  <option value="CAF">CAF</option>
                   <option value="Final">Final</option>
                 </select>
                 <p v-if="errors.ca_level" class="mt-1 text-sm text-red-600">{{ errors.ca_level }}</p>

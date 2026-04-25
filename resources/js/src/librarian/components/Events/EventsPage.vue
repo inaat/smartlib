@@ -160,6 +160,12 @@
               {{ event.registered_count || 0 }} / {{ event.capacity || '∞' }}
             </div>
             <div class="flex items-center space-x-2">
+              <button 
+                @click="viewDetails(event)" 
+                class="px-3 py-1 text-xs font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors border border-purple-100"
+              >
+                Details
+              </button>
               <button @click="editEvent(event)" class="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                 <Edit2 class="w-4 h-4" />
               </button>
@@ -171,6 +177,79 @@
         </div>
       </div>
     </div>
+
+    <!-- Event Details & Participants Modal -->
+    <div v-if="isDetailsModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+          <div>
+            <h2 class="text-2xl font-bold">{{ selectedEvent?.title }}</h2>
+            <p class="text-purple-100 text-sm mt-1">Participants List</p>
+          </div>
+          <button @click="isDetailsModalOpen = false" class="p-2 hover:bg-white/20 rounded-lg transition-colors">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-0">
+          <div v-if="loadingDetails" class="flex flex-col items-center justify-center py-20 bg-gray-50">
+            <RefreshCw class="w-8 h-8 text-purple-600 animate-spin mb-4" />
+            <p class="text-gray-500 font-medium">Loading participants...</p>
+          </div>
+          
+          <template v-else-if="selectedEvent?.registrations?.length">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead class="bg-gray-50 sticky top-0 z-10">
+                  <tr>
+                    <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Student</th>
+                    <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Level</th>
+                    <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Registered At</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="reg in selectedEvent.registrations" :key="reg.id" class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4">
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs mr-3">
+                          {{ reg.user?.name?.charAt(0) || '?' }}
+                        </div>
+                        <div>
+                          <p class="text-sm font-bold text-gray-900">{{ reg.user?.name }}</p>
+                          <p class="text-xs text-gray-500">{{ reg.user?.email }}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600">
+                      {{ reg.user?.ca_level || 'N/A' }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 italic">
+                      {{ formatDate(reg.created_at) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
+
+          <div v-else class="py-20 text-center bg-gray-50">
+            <Users class="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h3 class="text-lg font-medium text-gray-900">No participants yet</h3>
+            <p class="text-gray-500">When students register, they will appear here.</p>
+          </div>
+        </div>
+
+        <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center">
+          <div class="text-sm font-medium text-gray-600">
+             Total: <span class="text-purple-600 font-bold">{{ selectedEvent?.registrations?.length || 0 }}</span>
+          </div>
+          <button @click="isDetailsModalOpen = false" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-bold">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
 
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-200 py-20 text-center">
       <Calendar class="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -200,6 +279,27 @@ const submitting = ref(false);
 const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
+
+// Details & Participants
+const isDetailsModalOpen = ref(false);
+const loadingDetails = ref(false);
+const selectedEvent = ref<any>(null);
+
+const viewDetails = async (event: Event) => {
+  selectedEvent.value = { ...event };
+  isDetailsModalOpen.value = true;
+  loadingDetails.value = true;
+  try {
+    const data = await librarianAPI.getEvent(event.id);
+    selectedEvent.value = data;
+  } catch (error) {
+    console.error('Error fetching event details:', error);
+    showError('Error', 'Failed to load participant list');
+  } finally {
+    loadingDetails.value = false;
+  }
+};
+
 
 const eventForm = ref({
   title: '',

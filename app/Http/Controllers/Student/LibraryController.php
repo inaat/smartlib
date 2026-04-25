@@ -46,6 +46,7 @@ class LibraryController extends Controller
                 'longitude'    => $library->longitude,
                 'is_active'    => $library->is_active,
                 'distance_km'  => round($library->distance_km, 2),
+                'average_rating' => $library->average_rating,
             ];
         });
 
@@ -87,6 +88,7 @@ class LibraryController extends Controller
                 'currentOccupancy' => $library->currentOccupancy ?? 0,
                 'facilities' => $library->facilities->pluck('name')->toArray(),
                 'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+                'average_rating' => $library->average_rating,
             ];
         });
 
@@ -147,6 +149,7 @@ class LibraryController extends Controller
                 ];
             }),
             'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+            'average_rating' => $library->average_rating,
         ];
 
         return response()->json($data);

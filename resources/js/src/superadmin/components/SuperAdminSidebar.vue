@@ -133,14 +133,10 @@ const mainNavItems = [
   { path: '/superadmin/libraries', label: 'Libraries', icon: Library },
   { path: '/superadmin/librarians', label: 'Librarians', icon: UserCheck },
   { path: '/superadmin/users', label: 'Students', icon: Users },
-  { path: '/superadmin/floors', label: 'Floors', icon: Layers },
-  { path: '/superadmin/sections', label: 'Sections', icon: Layout },
-  { path: '/superadmin/books', label: 'Books', icon: BookOpen },
   { path: '/superadmin/events', label: 'Events', icon: Calendar },
-  { path: '/superadmin/bookings', label: 'Bookings', icon: ClipboardList },
-  { path: '/superadmin/seats', label: 'Seats', icon: Square },
-  { path: '/superadmin/attendance', label: 'Attendance', icon: CalendarCheck },
 ];
+
+
 
 const systemNavItems = [
   { path: '/superadmin/analytics', label: 'Analytics', icon: BarChart3 },

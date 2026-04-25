@@ -274,9 +274,9 @@ export const studentAPI = {
     }
   },
 
-  async updateProfile(userData: Partial<User>): Promise<User> {
+  async updateProfile(userData: any): Promise<User> {
     try {
-      const response = await api.put('/student/profile', userData);
+      const response = await api.post('/student/profile', userData);
       return response.data;
     } catch (error) {
       handleApiError(error);

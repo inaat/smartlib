@@ -72,6 +72,7 @@ class AuthController extends Controller
                 'role' => $user->role, // For frontend compatibility
                 'library_id' => $libraryId,
                 'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
+                'pending_order' => $user->pendingOrder()->with('plan')->first(),
                 'profile_picture' => $user->profile_picture,
                 'gender' => $user->gender,
             ],
@@ -90,7 +91,7 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|string|regex:/^03\d{9}$/',
             'crn' => 'required|string|regex:/^CRN\d{6}$/|unique:users,crn',
-            'ca_level' => 'required|in:PRC,CAP,Final',
+            'ca_level' => 'required|in:PRC,CAF,Final',
             'gender' => 'required|in:male,female',
             'password' => 'required|string|min:8',
             'password_confirmation' => 'required|same:password',
@@ -126,6 +127,8 @@ class AuthController extends Controller
             'trial_started_at' => now(),
             'trial_ends_at' => $trialEndsAt,
         ]);
+
+        $user->assignRole('student');
 
         // Create subscription if plan selected
         if ($plan) {
@@ -184,6 +187,7 @@ class AuthController extends Controller
                 'role' => 'student',
                 'library_id' => null,
                 'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
+                'pending_order' => $user->pendingOrder()->with('plan')->first(),
                 'profile_picture' => $user->profile_picture,
                 'gender' => $user->gender,
             ],
@@ -270,6 +274,7 @@ class AuthController extends Controller
             'role' => $user->role,
             'library_id' => $libraryId,
             'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
+            'pending_order' => $user->pendingOrder()->with('plan')->first(),
             'profile_picture' => $user->profile_picture,
             'gender' => $user->gender,
         ]);

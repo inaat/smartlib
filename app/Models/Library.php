@@ -36,7 +36,17 @@ class Library extends Model
         'longitude' => 'float',
     ];
 
-    protected $appends = ['photo_url'];
+    protected $appends = ['photo_url', 'average_rating'];
+
+    public function reviews()
+    {
+        return $this->hasMany(LibraryReview::class);
+    }
+
+    public function getAverageRatingAttribute()
+    {
+        return round($this->reviews()->avg('rating') ?: 0, 1);
+    }
 
     public function getPhotoUrlAttribute()
     {

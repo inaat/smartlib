@@ -158,14 +158,18 @@ class AttendanceController extends Controller
         $today = Carbon::today()->toDateString();
 
         if ($request->type === 'check_in') {
-            // Check if already checked in
+            // Check if already has ANY attendance today (even if checked out)
             $existing = Attendance::where('user_id', $student->id)
                 ->where('date', $today)
-                ->whereNull('check_out_time')
                 ->first();
 
-            if ($existing) {
+            if ($existing && !$existing->check_out_time) {
                 return response()->json(['message' => 'Student is already checked in'], 400);
+            }
+            
+            if ($existing) {
+                $existing->update(['check_out_time' => null]);
+                return response()->json(['message' => 'Attendance resumed successfully', 'attendance' => $existing]);
             }
 
             $attendance = Attendance::create([

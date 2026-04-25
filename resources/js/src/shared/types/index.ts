@@ -419,6 +419,7 @@ export interface SupportTicket {
   id: number;
   user_id: number;
   library_id?: number;
+  ticket_type: 'library' | 'system';
   subject: string;
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
   priority: 'low' | 'medium' | 'high' | 'urgent';

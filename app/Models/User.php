@@ -7,10 +7,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -109,6 +110,13 @@ class User extends Authenticatable
             ->where('expires_at', '>', now());
     }
 
+    public function pendingOrder()
+    {
+        return $this->hasOne(Order::class)
+            ->where('status', 'pending');
+    }
+
+
     public function seatBookings()
     {
         return $this->hasMany(SeatBooking::class);
@@ -157,6 +165,18 @@ class User extends Authenticatable
             ->withPivot('earned_at', 'progress_value', 'notified')
             ->withTimestamps();
     }
+
+    public function eventRegistrations()
+    {
+        return $this->hasMany(EventRegistration::class);
+    }
+
+    public function bookReservations()
+    {
+        return $this->hasMany(BookReservation::class);
+    }
+
+
 
     public function violations()
     {

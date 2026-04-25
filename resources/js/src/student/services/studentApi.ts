@@ -254,4 +254,35 @@ export const studentAPI = {
       throw error;
     }
   },
+
+  // Reviews
+  async getLibraryReviews(libraryId: string): Promise<any[]> {
+    try {
+      const response = await api.get(`/student/libraries/${libraryId}/reviews`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async submitReview(libraryId: string, review: { rating: number; comment: string }): Promise<any> {
+    try {
+      const response = await api.post(`/student/libraries/${libraryId}/reviews`, review);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async deleteReview(reviewId: number): Promise<any> {
+    try {
+      const response = await api.delete(`/student/reviews/${reviewId}`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
 };

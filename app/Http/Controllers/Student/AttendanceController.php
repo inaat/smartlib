@@ -29,7 +29,7 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
         
-        $totalDays = Attendance::where('user_id', $user->id)->count();
+        $totalDays = Attendance::where('user_id', $user->id)->distinct('date')->count('date');
         $totalMinutes = Attendance::where('user_id', $user->id)->sum('total_minutes');
         
         // This Month
@@ -38,7 +38,8 @@ class AttendanceController extends Controller
         $monthDays = Attendance::where('user_id', $user->id)
             ->whereMonth('date', $thisMonth)
             ->whereYear('date', $thisYear)
-            ->count();
+            ->distinct('date')
+            ->count('date');
 
         return response()->json([
             'total_days' => $totalDays,

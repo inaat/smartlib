@@ -20,11 +20,15 @@ class SupportTicketController extends Controller
         if ($user->role === 'student') {
             $query->where('user_id', $user->id);
         } elseif ($user->role === 'librarian') {
-            // Get tickets for the librarian's library
-            $libraryId = $user->library_id;
-            $query->where('library_id', $libraryId);
-        } 
-        // super_admin or admin can see all
+            // Get library tickets for the librarian's library
+            $query->where('library_id', $user->library_id)
+                  ->where('ticket_type', 'library');
+        } elseif ($user->role === 'super_admin') {
+            // Super admin can see all, but might want to filter or prioritize 'system' tickets
+            if ($request->has('type')) {
+                $query->where('ticket_type', $request->type);
+            }
+        }
 
         $tickets = $query->latest()->get();
         return response()->json($tickets);
@@ -38,7 +42,8 @@ class SupportTicketController extends Controller
         $request->validate([
             'subject' => 'required|string|max:255',
             'message' => 'required|string',
-            'library_id' => 'nullable|exists:libraries,id',
+            'ticket_type' => 'required|in:library,system',
+            'library_id' => 'required_if:ticket_type,library|exists:libraries,id',
             'priority' => 'required|in:low,medium,high,urgent',
         ]);
 
@@ -46,7 +51,8 @@ class SupportTicketController extends Controller
 
         $ticket = SupportTicket::create([
             'user_id' => $user->id,
-            'library_id' => $request->library_id ?? $user->library_id,
+            'library_id' => $request->ticket_type === 'library' ? $request->library_id : null,
+            'ticket_type' => $request->ticket_type,
             'subject' => $request->subject,
             'priority' => $request->priority,
             'status' => 'open',

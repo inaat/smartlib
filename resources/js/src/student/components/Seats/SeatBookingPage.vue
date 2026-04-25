@@ -119,31 +119,40 @@
                 </button>
 
                 <div v-else class="space-y-4">
-                  <div v-if="selectedSeat.remaining_minutes > 15" class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-center">
-                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Currently Occupied</p>
-                    <p class="text-sm text-gray-700">Ends in: {{ Math.floor(selectedSeat.remaining_minutes / 60) }}h {{ Math.floor(selectedSeat.remaining_minutes % 60) }}m</p>
-                    <p class="text-[10px] text-gray-400 mt-2 font-medium italic">Queue opens when 10 mins remain</p>
-                  </div>
-                  <div v-else-if="selectedSeat.remaining_minutes > 10" class="p-4 bg-orange-50 rounded-xl border border-orange-100 text-center">
-                    <p class="text-xs text-orange-700 font-medium font-bold uppercase tracking-wider mb-2">Session Ending Soon</p>
-                    <p class="text-sm text-gray-700">Ends in: {{ Math.floor(selectedSeat.remaining_minutes / 60) }}h {{ Math.floor(selectedSeat.remaining_minutes % 60) }}m</p>
-                    <p class="text-[10px] text-orange-600 mt-2 font-medium italic">Queue opens in {{ selectedSeat.remaining_minutes - 10 }} mins</p>
-                  </div>
-                  <template v-else>
-                    <div class="p-4 bg-orange-50 rounded-xl border border-orange-100 text-center">
-                      <p class="text-xs text-orange-700 font-medium font-bold">Session Ending Soon!</p>
-                      <p class="text-[10px] text-orange-600 mt-1">You can now join the queue to claim this seat next.</p>
+                  <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-100 text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-orange-500/5 rounded-full -mr-8 -mt-8"></div>
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-3">Seat Occupied</p>
+                    <div class="flex items-center justify-center space-x-2 mb-4">
+                      <Clock class="w-5 h-5 text-orange-500" />
+                      <p class="text-2xl font-black text-gray-800">
+                        {{ Math.floor(selectedSeat.remaining_minutes / 60) }}h {{ Math.floor(selectedSeat.remaining_minutes % 60) }}m
+                      </p>
                     </div>
-                    <button
-                      @click="joinQueue"
-                      :disabled="submitting"
-                      class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold hover:bg-orange-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                    >
-                      <Clock v-if="!submitting" class="w-4 h-4" />
-                      <span v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-                      <span>{{ submitting ? 'Joining...' : 'Join Waiting List' }}</span>
-                    </button>
-                  </template>
+                    
+                    <div class="space-y-3">
+                      <div class="p-3 bg-orange-100 rounded-xl border border-orange-200 mb-4">
+                        <p class="text-xs text-orange-800 font-black uppercase tracking-widest">Waitlist Active</p>
+                        <p class="text-[10px] text-orange-700 font-medium uppercase">Join now to secure this seat next</p>
+                      </div>
+                      
+                      <button
+                        @click="joinQueue"
+                        :disabled="submitting"
+                        class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold hover:bg-orange-700 transition-all shadow-xl shadow-orange-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 active:scale-95"
+                      >
+                        <Zap v-if="!submitting" class="w-5 h-5" />
+                        <span v-else class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                        <span>{{ submitting ? 'Joining...' : 'Claim Priority Spot' }}</span>
+                      </button>
+
+                      <button 
+                        @click="router.push('/student/my-queue')"
+                        class="text-[10px] text-blue-600 font-bold hover:underline uppercase tracking-tighter w-full text-center mt-2"
+                      >
+                        View My Active Waitlists →
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </template>
@@ -179,10 +188,10 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-2">Booking Confirmed!</h2>
         <p class="text-gray-600 mb-8">Your seat has been reserved. Please check in within 15 minutes of your start time.</p>
         <button
-          @click="goToProfile"
+          @click="goToBookings"
           class="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all"
         >
-          Go to My Profile
+          View My Bookings
         </button>
       </div>
     </div>
@@ -354,8 +363,8 @@ const joinQueue = async () => {
   }
 };
 
-const goToProfile = () => {
-  router.push('/student/profile');
+const goToBookings = () => {
+  router.push('/student/my-bookings');
 };
 
 onMounted(fetchSeats);

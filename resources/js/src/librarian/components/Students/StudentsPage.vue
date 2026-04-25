@@ -92,9 +92,9 @@
             </div>
             <span :class="[
               'px-3 py-1 rounded-full text-xs font-medium',
-              student.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+              student.is_banned ? 'bg-red-100 text-red-700' : (student.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700')
             ]">
-              {{ student.is_active ? 'Active' : 'Inactive' }}
+              {{ student.is_banned ? 'Banned' : (student.is_active ? 'Active' : 'Inactive') }}
             </span>
           </div>
 
@@ -140,11 +140,22 @@
           </div>
 
           <div class="mt-4 flex items-center space-x-2">
-            <button @click="openEditModal(student)" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
+            <button @click="$router.push({ name: 'librarian-student-details', params: { id: student.id } })" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
               View Profile
             </button>
-            <button @click="openBanModal(student)" class="p-2 border border-orange-200 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors" title="Ban Student">
-              <BanIcon class="w-4 h-4" />
+
+            <button 
+              @click="student.is_banned ? unbanStudent(student) : openBanModal(student)" 
+              :class="[
+                'p-2 border rounded-lg transition-colors',
+                student.is_banned 
+                  ? 'border-green-200 text-green-600 hover:bg-green-50' 
+                  : 'border-orange-200 text-orange-600 hover:bg-orange-50'
+              ]" 
+              :title="student.is_banned ? 'Unban Student' : 'Ban Student'"
+            >
+              <UserCheck v-if="student.is_banned" class="w-4 h-4" />
+              <BanIcon v-else class="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -190,7 +201,7 @@
               >
                 <option value="">Select Level</option>
                 <option value="PRC">PRC</option>
-                <option value="CAP">CAP</option>
+                <option value="CAF">CAF</option>
                 <option value="Final">Final</option>
               </select>
             </div>
@@ -526,6 +537,18 @@ const submitBan = async () => {
     showError('Ban Failed', 'Failed to restrict student');
   } finally {
     banning.value = false;
+  }
+};
+
+const unbanStudent = async (student: any) => {
+  if (await showConfirm('Unban Student', `Are you sure you want to lift the restriction for ${student.name}?`, 'Yes, Unban')) {
+    try {
+      await librarianAPI.unbanStudent(student.id);
+      showSuccess('Unbanned', `${student.name} can now access the library again`);
+      fetchStudents();
+    } catch (error) {
+      showError('Unban Failed', 'Failed to lift restriction');
+    }
   }
 };
 

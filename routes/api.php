@@ -82,6 +82,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/bookings/{booking}/checkout', [BookingController::class, 'checkOut'])->name('bookings.checkout');
         Route::post('/bookings/{booking}/extend', [BookingController::class, 'extend'])->name('bookings.extend');
         Route::post('/bookings/join-queue', [BookingController::class, 'joinQueue'])->name('bookings.join-queue');
+        Route::get('/my-queue', [BookingController::class, 'myQueue'])->name('bookings.my-queue');
+        Route::delete('/my-queue/{id}', [BookingController::class, 'leaveQueue'])->name('bookings.leave-queue');
         Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
 
         // Books
@@ -123,6 +125,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/attendance', [\App\Http\Controllers\Student\AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('/attendance/stats', [\App\Http\Controllers\Student\AttendanceController::class, 'stats'])->name('attendance.stats');
         Route::get('/attendance/calendar', [\App\Http\Controllers\Student\AttendanceController::class, 'calendar'])->name('attendance.calendar');
+
+        // Reviews
+        Route::get('/libraries/{library}/reviews', [\App\Http\Controllers\Student\ReviewController::class, 'index'])->name('libraries.reviews.index');
+        Route::post('/libraries/{library}/reviews', [\App\Http\Controllers\Student\ReviewController::class, 'store'])->name('libraries.reviews.store');
+        Route::delete('/reviews/{review}', [\App\Http\Controllers\Student\ReviewController::class, 'destroy'])->name('reviews.destroy');
     });
 
     // Common Profile & Notification Routes (Accessible by all authenticated users)
@@ -313,6 +320,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Students
         Route::get('/students', [StudentController::class, 'index'])->name('students.index');
         Route::get('/students/stats', [StudentController::class, 'stats'])->name('students.stats');
+        Route::get('/students/{id}', [StudentController::class, 'show'])->name('students.show');
+
         Route::post('/students', [StudentController::class, 'store'])->name('students.store');
         Route::post('/students/{id}/ban', [StudentController::class, 'ban'])->name('students.ban');
         Route::post('/students/{id}/unban', [StudentController::class, 'unban'])->name('students.unban');

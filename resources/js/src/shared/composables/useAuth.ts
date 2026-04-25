@@ -8,7 +8,7 @@ interface User {
     phone?: string;
     crn?: string;
     role: 'owner' | 'super_admin' | 'librarian' | 'student';
-    ca_level?: 'PRC' | 'CAP' | 'Final';
+    ca_level?: 'PRC' | 'CAF' | 'Final';
     is_active: boolean;
     trial_used: boolean;
     trial_started_at?: string;
@@ -27,7 +27,7 @@ interface Notification {
     type: string;
     title: string;
     message: string;
-    isRead: boolean;
+    is_read: boolean;
     created_at: string;
 }
 
@@ -126,18 +126,19 @@ export function useAuth() {
         }
     };
 
-    const markNotificationAsRead = async (notificationId: string) => {
+    const markNotificationAsRead = async (notificationId: string | number) => {
         try {
-            await studentAPI.markNotificationRead(notificationId);
+            const idAsString = notificationId.toString();
+            await studentAPI.markNotificationRead(idAsString);
             notifications.value = notifications.value.map(notif =>
-                notif.id === notificationId ? { ...notif, isRead: true } : notif
+                notif.id.toString() === idAsString ? { ...notif, is_read: true } : notif
             );
         } catch (error) {
             console.error('Failed to mark notification as read:', error);
         }
     };
 
-    const unreadCount = computed(() => notifications.value.filter(n => !n.isRead).length);
+    const unreadCount = computed(() => notifications.value.filter(n => !n.is_read).length);
 
     const fetchSettings = async () => {
         try {
@@ -172,7 +173,7 @@ export function useAuth() {
 
     const isPlanExpired = computed(() => {
         if (!user.value || user.value.role !== 'student') return false;
-        
+
         const now = new Date();
 
         // 1. Check active subscription if it exists
@@ -183,11 +184,11 @@ export function useAuth() {
             }
             console.log('Subscription expired:', { expiryDate: expiryDate.toISOString(), now: now.toISOString() });
         }
-        
+
         // 2. If no valid subscription, check trial status
         const trialActive = isTrialActive.value;
         if (trialActive) return false;
-        
+
         console.log('Plan marked as expired for student:', user.value.name, {
             hasSubscription: !!user.value.active_subscription,
             trialActive,

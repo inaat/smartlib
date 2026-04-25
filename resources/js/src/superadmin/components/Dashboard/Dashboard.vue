@@ -23,7 +23,7 @@
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
       <div v-for="stat in statsCards" :key="stat.label" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-4">
           <div :class="['p-2.5 rounded-xl', stat.bgClass]">
@@ -148,11 +148,9 @@ import {
   Users, 
   Library, 
   BookOpen, 
-  CreditCard, 
   TrendingUp, 
   TrendingDown,
   Calendar,
-  Download,
   Activity,
   UserCheck,
   User,
@@ -161,9 +159,9 @@ import {
   Plus,
   Settings,
   Shield,
-  FileText,
   UserPlus,
-  ChevronDown
+  ChevronDown,
+  LifeBuoy
 } from 'lucide-vue-next';
 import { superadminAPI } from '../../services/superadminApi';
 
@@ -205,20 +203,19 @@ const statsCards = computed(() => [
     iconClass: 'text-purple-600'
   },
   {
-    label: 'Total Revenue',
-    value: `PKR ${stats.value?.total_revenue?.toLocaleString() || 0}`,
-    icon: CreditCard,
-    trend: stats.value?.revenue_growth || 0,
-    bgClass: 'bg-green-50',
-    iconClass: 'text-green-600'
-  },
-  {
     label: 'Active Bookings',
     value: stats.value?.active_bookings || 0,
     icon: BookOpen,
     trend: -2,
     bgClass: 'bg-amber-50',
     iconClass: 'text-amber-600'
+  },
+  {
+    label: 'System Complaints',
+    value: stats.value?.pending_tickets || 0,
+    icon: LifeBuoy,
+    bgClass: 'bg-red-50',
+    iconClass: 'text-red-600'
   }
 ]);
 

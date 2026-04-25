@@ -29,4 +29,17 @@ class Notification extends Model
     {
         return $this->morphTo();
     }
+
+    public static function send($userId, $type, $title, $message, $related = null)
+    {
+        return self::create([
+            'user_id' => $userId,
+            'type' => $type,
+            'title' => $title,
+            'message' => $message,
+            'related_type' => $related ? get_class($related) : null,
+            'related_id' => $related ? $related->id : null,
+            'is_read' => false,
+        ]);
+    }
 }

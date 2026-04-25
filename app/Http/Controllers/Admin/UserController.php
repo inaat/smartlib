@@ -104,7 +104,7 @@ class UserController extends Controller
             'password' => 'required|min:8',
             'role' => 'required|in:student,librarian,super_admin',
             'library_id' => 'nullable|exists:libraries,id',
-            'ca_level' => 'nullable|string|in:PRC,CAP,Final',
+            'ca_level' => 'nullable|string|in:PRC,CAF,Final',
             'phone' => 'nullable|string|max:20',
         ]);
 
@@ -148,12 +148,16 @@ class UserController extends Controller
             'role' => 'sometimes|in:student,librarian,super_admin',
             'status' => 'sometimes|in:pending,approved,suspended,banned',
             'library_id' => 'nullable|exists:libraries,id',
-            'ca_level' => 'nullable|string|in:PRC,CAP,Final',
+            'ca_level' => 'nullable|string|in:PRC,CAF,Final',
             'phone' => 'nullable|string|max:20',
             'crn' => 'nullable|string|unique:users,crn,' . $user->id,
         ]);
 
         $user->update($request->only(['name', 'email', 'role', 'status', 'library_id', 'ca_level', 'phone', 'crn']));
+        
+        if ($request->filled('role')) {
+            $user->syncRoles($request->role);
+        }
 
         if ($request->filled('password')) {
             $user->update(['password' => Hash::make($request->password)]);

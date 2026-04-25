@@ -129,8 +129,12 @@ export const studentAPI = {
     return response.data;
   },
 
-  async checkIn(bookingId: number, qrCode: string) {
-    const response = await api.post(`/student/bookings/${bookingId}/checkin`, { qr_code: qrCode });
+  async checkIn(bookingId: any, qrCode: string, latitude?: number, longitude?: number) {
+    const response = await api.post(`/student/bookings/${bookingId}/checkin`, {
+      qr_code: qrCode,
+      latitude,
+      longitude
+    });
     return response.data;
   },
 
@@ -151,6 +155,16 @@ export const studentAPI = {
 
   async joinQueue(seatId: number) {
     const response = await api.post('/student/bookings/join-queue', { seat_id: seatId });
+    return response.data;
+  },
+
+  async getMyQueue() {
+    const response = await api.get('/student/my-queue');
+    return response.data;
+  },
+
+  async leaveQueue(id: number) {
+    const response = await api.delete(`/student/my-queue/${id}`);
     return response.data;
   },
 
@@ -242,6 +256,21 @@ export const studentAPI = {
 
   async getAttendanceCalendar(year: number, month: number) {
     const response = await api.get('/student/attendance/calendar', { params: { year, month } });
+    return response.data;
+  },
+
+  async getLibraryReviews(libraryId: number) {
+    const response = await api.get(`/student/libraries/${libraryId}/reviews`);
+    return response.data;
+  },
+
+  async submitReview(libraryId: number, data: { rating: number, comment: string }) {
+    const response = await api.post(`/student/libraries/${libraryId}/reviews`, data);
+    return response.data;
+  },
+
+  async deleteReview(reviewId: number) {
+    const response = await api.delete(`/student/reviews/${reviewId}`);
     return response.data;
   },
 };
@@ -549,6 +578,11 @@ export const librarianAPI = {
     const response = await api.get('/librarian/students/stats');
     return response.data;
   },
+  async getStudent(id: number) {
+    const response = await api.get(`/librarian/students/${id}`);
+    return response.data;
+  },
+
   async createStudent(data: any) {
     const response = await api.post('/librarian/students', data);
     return response.data;

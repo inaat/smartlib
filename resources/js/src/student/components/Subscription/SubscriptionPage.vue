@@ -201,27 +201,40 @@
             <button
               v-if="isCurrentPlan(plan.id)"
               disabled
-              class="w-full bg-green-600 text-white rounded-lg px-4 py-3 font-semibold cursor-default shadow-md"
+              class="w-full bg-green-600 text-white rounded-lg px-4 py-3 font-semibold cursor-default shadow-md flex items-center justify-center space-x-2"
             >
-              Activated
-            </button>
-            <button
-              v-else-if="hasActiveSubscription"
-              disabled
-              class="w-full bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg px-4 py-3 font-semibold cursor-not-allowed"
-            >
-              Switch Plan (Contact Support)
+              <CheckCircle class="w-4 h-4" />
+              <span>Current Plan</span>
             </button>
             <button
               v-else
               @click="subscribe(plan)"
-              :disabled="subscribingPlanId !== null"
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-3 font-semibold transition-colors shadow-md hover:shadow-lg"
+              :disabled="subscribingPlanId !== null || !!user?.pending_order"
+              :class="[
+                'w-full rounded-lg px-4 py-3 font-semibold transition-all shadow-md flex items-center justify-center space-x-2',
+                user?.pending_order?.plan_id === plan.id
+                  ? 'bg-orange-100 text-orange-600 cursor-not-allowed border border-orange-200'
+                  : (!!user?.pending_order
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg active:scale-[0.98]')
+              ]"
             >
-              <span v-if="subscribingPlanId === plan.id">Processing...</span>
-              <span v-else>Subscribe Now</span>
+              <template v-if="subscribingPlanId === plan.id">
+                <Loader2 class="w-4 h-4 animate-spin" />
+                <span>Processing...</span>
+              </template>
+              <template v-else-if="user?.pending_order?.plan_id === plan.id">
+                <Clock class="w-4 h-4" />
+                <span>Pending Approval</span>
+              </template>
+              <template v-else>
+                <Zap v-if="!hasActiveSubscription" class="w-4 h-4" />
+                <RefreshCw v-else class="w-4 h-4" />
+                <span>{{ hasActiveSubscription ? 'Switch Plan' : 'Subscribe Now' }}</span>
+              </template>
             </button>
           </div>
+
         </div>
       </div>
     </div>
@@ -233,7 +246,16 @@ import { ref, onMounted, computed } from 'vue';
 import { studentAPI } from '@/student/services/studentApi';
 import { useAuth } from '@/shared/composables/useAuth';
 import { useRouter } from 'vue-router';
-import { Calendar, CreditCard, AlertTriangle } from 'lucide-vue-next';
+import { 
+  Calendar, 
+  CreditCard, 
+  AlertTriangle, 
+  CheckCircle, 
+  Loader2, 
+  Clock, 
+  RefreshCw, 
+  Zap 
+} from 'lucide-vue-next';
 
 const { user, checkAuth, isPlanExpired } = useAuth();
 const router = useRouter();
@@ -299,9 +321,9 @@ const subscribe = async (plan: any) => {
 
   try {
     subscribingPlanId.value = plan.id;
-    await studentAPI.subscribe(plan.id);
+    const response = await studentAPI.subscribe(plan.id);
     await checkAuth(); // Refresh user to get updated subscription status
-    showSuccess('Subscribed!', 'Subscription activated successfully!');
+    showSuccess('Request Sent!', response.message || 'Subscription request submitted successfully!');
   } catch (error: any) {
     console.error('Subscription error:', error);
     showError('Subscription Failed', error.message || 'Failed to subscribe. Please try again.');

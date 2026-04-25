@@ -287,7 +287,7 @@
               >
                 <option value="">Select Level</option>
                 <option value="PRC">PRC</option>
-                <option value="CAP">CAP</option>
+                <option value="CAF">CAF</option>
                 <option value="Final">Final</option>
               </select>
             </div>

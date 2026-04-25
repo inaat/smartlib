@@ -113,6 +113,17 @@ export const librarianAPI = {
     }
   },
 
+  async getEvent(eventId: number): Promise<Event> {
+    try {
+      const response = await api.get(`/librarian/events/${eventId}`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+
   async createEvent(event: Partial<Event> | FormData): Promise<Event> {
     try {
       const response = await api.post('/librarian/events', event, {

@@ -51,13 +51,6 @@ class EventController extends Controller
         $user = $request->user();
         $event = Event::with('library')->findOrFail($id);
 
-        // Check if user has active subscription
-        $activeSubscription = $user->activeSubscription()->first();
-
-        if (!$activeSubscription) {
-            return response()->json(['message' => 'You need an active subscription to register for events'], 400);
-        }
-
         // Check if already registered
         $existingRegistration = EventRegistration::where('user_id', $user->id)
             ->where('event_id', $event->id)
@@ -78,6 +71,14 @@ class EventController extends Controller
             'registered_at' => now(),
             'amount_paid' => $event->is_paid ? $event->price : 0,
         ]);
+
+        \App\Models\Notification::send(
+            $user->id,
+            'event',
+            'Event Registered!',
+            "You have successfully registered for the event: {$event->title}.",
+            $event
+        );
 
         return response()->json($registration, 201);
     }

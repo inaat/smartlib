@@ -45,11 +45,20 @@ class StudentController extends Controller
                   });
             });
         } elseif ($library) {
-            // Strategy 3: Fallback — students in this library only + global students
+            // Strategy 3: Fallback — students in this library only + global students + students with interactions
             $query->where(function ($q) use ($library) {
                 $q->where('library_id', $library->id)
                   ->orWhere(function($sub) {
                       $sub->whereNull('library_id')->whereNull('created_by');
+                  })
+                  ->orWhereHas('seatBookings.seat', function($qs) use ($library) {
+                      $qs->where('library_id', $library->id);
+                  })
+                  ->orWhereHas('attendance', function($qa) use ($library) {
+                      $qa->where('library_id', $library->id);
+                  })
+                  ->orWhereHas('eventRegistrations.event', function($qe) use ($library) {
+                      $qe->where('library_id', $library->id);
                   });
             });
         }
@@ -98,7 +107,7 @@ class StudentController extends Controller
             'phone' => 'nullable|string|max:20',
             'crn' => 'required|string|unique:users',
             'gender' => 'nullable|string|in:male,female',
-            'ca_level' => 'nullable|in:PRC,CAP,Final',
+            'ca_level' => 'nullable|in:PRC,CAF,Final',
             'password' => 'required|string|min:8',
         ]);
 
@@ -114,6 +123,8 @@ class StudentController extends Controller
             'is_active' => true,
             'created_by' => Auth::id(),
         ]);
+
+        $student->assignRole('student');
 
         return response()->json($student, 201);
     }
@@ -132,7 +143,7 @@ class StudentController extends Controller
             'phone' => 'nullable|string|max:20',
             'crn' => 'sometimes|string|unique:users,crn,' . $student->id,
             'gender' => 'nullable|string|in:male,female',
-            'ca_level' => 'nullable|in:PRC,CAP,Final',
+            'ca_level' => 'nullable|in:PRC,CAF,Final',
             'is_active' => 'sometimes|boolean',
             'password' => 'nullable|string|min:8',
         ]);
@@ -144,6 +155,24 @@ class StudentController extends Controller
         }
 
         $student->update($validated);
+
+        return response()->json($student);
+    }
+
+    public function show($id)
+    {
+        $student = User::with([
+            'seatBookings.seat.library',
+            'attendance.library',
+            'eventRegistrations.event',
+            'bookReservations.book.library',
+            'activeSubscription.subscriptionPlan',
+            'creator'
+        ])->findOrFail($id);
+
+        if ($student->role !== 'student') {
+            return response()->json(['message' => 'User is not a student'], 403);
+        }
 
         return response()->json($student);
     }
@@ -190,6 +219,15 @@ class StudentController extends Controller
                 $q->where('library_id', $library->id)
                   ->orWhere(function($sub) {
                       $sub->whereNull('library_id')->whereNull('created_by');
+                  })
+                  ->orWhereHas('seatBookings.seat', function($qs) use ($library) {
+                      $qs->where('library_id', $library->id);
+                  })
+                  ->orWhereHas('attendance', function($qa) use ($library) {
+                      $qa->where('library_id', $library->id);
+                  })
+                  ->orWhereHas('eventRegistrations.event', function($qe) use ($library) {
+                      $qe->where('library_id', $library->id);
                   });
             });
         }

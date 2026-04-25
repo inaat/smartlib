@@ -15,7 +15,7 @@ x <template>
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
       <div v-for="stat in statsCards" :key="stat.label" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-4">
           <div :class="['p-2.5 rounded-xl', stat.bgClass]">
@@ -157,13 +157,6 @@ const statsCards = computed(() => [
     icon: Users,
     bgClass: 'bg-blue-50',
     iconClass: 'text-blue-600'
-  },
-  {
-    label: 'Total Revenue',
-    value: `PKR ${analyticsData.value?.total_revenue?.toLocaleString() || 0}`,
-    icon: CreditCard,
-    bgClass: 'bg-green-50',
-    iconClass: 'text-green-600'
   },
   {
     label: 'Total Bookings',
