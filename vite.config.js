@@ -18,4 +18,16 @@ export default defineConfig({
             'vue': 'vue/dist/vue.esm-bundler.js'
         },
     },
+    build: {
+        minify: false,
+        cssMinify: false,
+        sourcemap: false,
+        rollupOptions: {
+            maxParallelFileOps: 1,
+            output: {
+                manualChunks: undefined
+            }
+        }
+    }
 });
+
