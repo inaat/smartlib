@@ -1,0 +1,32 @@
+
+.logo[data-v-5538648f] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #212121;
+  text-decoration: none;
+}
+.logo-icon[data-v-5538648f] {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+}
+@keyframes shake-5538648f {
+0%, 100% { transform: translateX(0);
+}
+10%, 30%, 50%, 70%, 90% { transform: translateX(-4px);
+}
+20%, 40%, 60%, 80% { transform: translateX(4px);
+}
+}
+.animate-shake[data-v-5538648f] {
+  animation: shake-5538648f 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}

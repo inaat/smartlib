@@ -1,0 +1,14 @@
+
+.animate-in[data-v-43764173] {
+  animation: animate-in-43764173 0.2s ease-out;
+}
+@keyframes animate-in-43764173 {
+from {
+    opacity: 0;
+    transform: scale(0.95);
+}
+to {
+    opacity: 1;
+    transform: scale(1);
+}
+}
