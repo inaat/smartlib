@@ -29,43 +29,14 @@ export function useApp() {
         globalTimer = setInterval(() => {
             now.value = new Date();
             checkBookingsForExtension();
-            autoReleaseExpiredBookings();
+            // autoReleaseExpiredBookings(); // Disabled to prevent frontend from prematurely hiding active bookings
         }, 10000); // Check every 10 seconds
     };
 
     const checkBookingsForExtension = () => {
-        const active = bookings.value.find(b => b.status === 'checked_in');
-        if (active) {
-            const end = parseISO(active.scheduled_end_time || active.endTime || '');
-            if (isNaN(end.getTime())) return;
-
-            const diff = end.getTime() - now.value.getTime();
-            const minutesLeft = diff / 60000;
-
-            // Reset alert flag if booking was extended and we're now more than 15 minutes from end
-            if (minutesLeft > 15 && extensionAlertShown.value[active.id]) {
-                delete extensionAlertShown.value[active.id];
-            }
-
-            // Show alert if between 10 and 15 minutes left, and not already shown for this booking
-            if (minutesLeft <= 15 && minutesLeft > 10 && !extensionAlertShown.value[active.id]) {
-                expiredBooking.value = active;
-                showExtensionModal.value = true;
-                extensionAlertShown.value[active.id] = true;
-            }
-
-            // Auto-hide alert once it's less than 10 minutes (queue takes priority)
-            if (minutesLeft <= 10 && minutesLeft > 0 && showExtensionModal.value) {
-                showExtensionModal.value = false;
-            }
-
-            // Show if expired
-            if (minutesLeft <= 0 && !showExtensionModal.value && !extensionAlertShown.value[`expired_${active.id}`]) {
-                expiredBooking.value = active;
-                showExtensionModal.value = true;
-                extensionAlertShown.value[`expired_${active.id}`] = true;
-            }
-        }
+        // Auto-extension modal disabled as per user request.
+        // Students should use the "Extend Time" button in My Bookings instead.
+        return;
     };
     const loadLibraries = async () => {
         try {
@@ -216,7 +187,7 @@ export function useApp() {
             return false;
         } catch (error) {
             console.error('Extension failed:', error);
-            return false;
+            throw error; // Re-throw so the component can show the backend error message
         }
     };
 

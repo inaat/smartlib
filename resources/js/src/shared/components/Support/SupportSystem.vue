@@ -499,7 +499,10 @@ const handleCreateTicket = async () => {
 
   try {
     creating.value = true;
-    const ticket = await supportAPI.createTicket(createForm.value);
+    const payload = { ...createForm.value };
+    if (payload.ticket_type === 'system') payload.library_id = null;
+    
+    const ticket = await supportAPI.createTicket(payload);
     tickets.value.unshift(ticket);
     selectedTicket.value = ticket;
     showCreateModal.value = false;

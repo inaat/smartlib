@@ -89,8 +89,8 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|regex:/^03\d{9}$/',
-            'crn' => 'required|string|regex:/^CRN\d{6}$/|unique:users,crn',
+            'phone' => 'required|regex:/^03\d{9}$/',
+            'crn' => 'required|regex:/^\d+$/|unique:users,crn',
             'ca_level' => 'required|in:PRC,CAF,Final',
             'gender' => 'required|in:male,female',
             'password' => 'required|string|min:8',
@@ -202,8 +202,8 @@ class AuthController extends Controller
     public function sendOTP(Request $request)
     {
         $request->validate([
-            'phone' => 'required|string|regex:/^03\d{9}$/',
-            'crn' => 'required|string|regex:/^CRN\d{6}$/',
+            'phone' => 'required|regex:/^03\d{9}$/',
+            'crn' => 'required|regex:/^\d+$/',
         ]);
 
 
@@ -342,7 +342,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'field' => 'required|string|in:email,crn',
-            'value' => 'required|string',
+            'value' => 'required',
         ]);
 
         $field = $request->field;

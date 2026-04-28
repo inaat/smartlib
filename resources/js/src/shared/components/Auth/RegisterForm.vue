@@ -148,12 +148,12 @@
                 <input
                   id="crn"
                   name="crn"
-                  type="text"
+                  type="number"
                   v-model="formData.crn"
                   @input="handleInput('crn')"
                   @blur="validateField('crn')"
                   :class="['block w-full px-3 py-3 border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-all', errors.crn ? 'border-red-300' : 'border-gray-300']"
-                  placeholder="CRN000001"
+                  placeholder="e.g. 123456"
                 />
                 <p v-if="errors.crn" class="mt-1 text-sm text-red-600">{{ errors.crn }}</p>
               </div>
@@ -385,13 +385,13 @@ const validateField = async (field: 'email' | 'crn') => {
     errors.email = 'Email is invalid';
     return;
   }
-  if (field === 'crn' && !/^CRN\d{6}$/.test(value)) {
-    errors.crn = 'CRN must be in format CRN000000';
+  if (field === 'crn' && !/^\d+$/.test(value)) {
+    errors.crn = 'CRN must be a valid number';
     return;
   }
 
   try {
-    const response = await checkUniqueness(field, value);
+    const response = await checkUniqueness(field, String(value));
     console.log(`Uniqueness check for ${field}:`, response);
     if (response.exists) {
       errors[field] = response.message;
@@ -419,8 +419,8 @@ const validate = () => {
   }
   if (!formData.crn) {
     newErrors.crn = 'CRN is required';
-  } else if (!/^CRN\d{6}$/.test(formData.crn)) {
-    newErrors.crn = 'CRN must be in format CRN000000';
+  } else if (!/^\d+$/.test(formData.crn)) {
+    newErrors.crn = 'CRN must be a valid number';
   }
   if (!formData.ca_level) newErrors.ca_level = 'CA Level is required';
   if (!formData.gender) newErrors.gender = 'Gender is required';

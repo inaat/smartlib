@@ -87,7 +87,7 @@
             class="flex-1 flex flex-col items-center"
           >
             <div class="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t-lg transition-all hover:opacity-80"
-                 :style="{ height: (day.value / Math.max(...bookingTrends.map(d => d.value)) * 100) + '%' }">
+                 :style="{ height: (day.value / (Math.max(...bookingTrends.map(d => d.value)) || 1) * 100) + '%' }">
             </div>
             <span class="text-xs text-gray-600 mt-2">{{ day.label }}</span>
           </div>
@@ -126,7 +126,12 @@
         </div>
         <div class="p-6">
           <div class="space-y-4">
+            <div v-if="topStudents.length === 0" class="text-center py-8">
+              <Award class="w-10 h-10 text-gray-200 mx-auto mb-2" />
+              <p class="text-sm text-gray-500">No active students found in this period</p>
+            </div>
             <div
+              v-else
               v-for="(student, index) in topStudents"
               :key="student.id"
               class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -137,12 +142,12 @@
                 </div>
                 <div>
                   <h4 class="font-medium text-gray-900">{{ student.name }}</h4>
-                  <p class="text-sm text-gray-500">{{ student.hours }} hours studied</p>
+                  <p class="text-sm text-gray-500">{{ student.hours || 0 }} hours studied</p>
                 </div>
               </div>
               <div class="flex items-center space-x-2">
                 <Award class="w-5 h-5 text-yellow-500" />
-                <span class="text-sm font-medium text-gray-900">{{ student.points }} pts</span>
+                <span class="text-sm font-medium text-gray-900">{{ student.points || 0 }} pts</span>
               </div>
             </div>
           </div>
@@ -156,7 +161,12 @@
         </div>
         <div class="p-6">
           <div class="space-y-4">
+            <div v-if="popularSeats.length === 0" class="text-center py-8">
+              <MapPin class="w-10 h-10 text-gray-200 mx-auto mb-2" />
+              <p class="text-sm text-gray-500">No seat data available for this period</p>
+            </div>
             <div
+              v-else
               v-for="seat in popularSeats"
               :key="seat.number"
               class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"

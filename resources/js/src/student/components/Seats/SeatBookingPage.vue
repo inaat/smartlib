@@ -226,14 +226,20 @@ const bookingDuration = ref(2);
 
 const { user, isTrialActive } = useAuth();
 
-const selectedDate = ref(new Date().toISOString().split('T')[0]);
+// Helper: get local date string YYYY-MM-DD without UTC conversion
+const toLocalDateStr = (d: Date) => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+const selectedDate = ref(toLocalDateStr(new Date()));
 const selectedTime = ref(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
 
-const minDate = computed(() => new Date().toISOString().split('T')[0]);
+const minDate = computed(() => toLocalDateStr(new Date()));
 
 const maxDate = computed(() => {
   const today = new Date();
-  if (!user.value) return today.toISOString().split('T')[0];
+  if (!user.value) return toLocalDateStr(today);
 
   let allowedDays = 0;
 
@@ -242,7 +248,7 @@ const maxDate = computed(() => {
     if (planDays === -1) {
       const nextYear = new Date(today);
       nextYear.setFullYear(today.getFullYear() + 1);
-      return nextYear.toISOString().split('T')[0];
+      return toLocalDateStr(nextYear);
     }
     allowedDays = planDays;
   } else if (isTrialActive.value) {
@@ -251,7 +257,7 @@ const maxDate = computed(() => {
 
   const max = new Date(today);
   max.setDate(today.getDate() + allowedDays);
-  return max.toISOString().split('T')[0];
+  return toLocalDateStr(max);
 });
 
 const fetchSeats = async () => {
@@ -325,14 +331,17 @@ const confirmBooking = async () => {
 
   submitting.value = true;
   try {
+    // Helper: format date as local "YYYY-MM-DD HH:mm:ss" (no UTC conversion)
+    const formatLocalDatetime = (d: Date) => {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    };
+
     await studentAPI.createBooking({
       seat_id: selectedSeat.value.id,
       library_id: library.value.id,
-      booking_time: startTime.toISOString(),
-      scheduled_end_time: endTime.toISOString(),
-      start_time: selectedTime.value,
-      end_time: endTime.toTimeString().split(' ')[0].substring(0, 5),
-      date: selectedDate.value
+      booking_time: formatLocalDatetime(startTime),
+      scheduled_end_time: formatLocalDatetime(endTime),
     });
 
     showSuccessModal.value = true;

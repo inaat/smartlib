@@ -34,8 +34,8 @@
             </div>
           </div>
           <div class="text-right">
-            <p class="text-[10px] text-gray-400 font-bold uppercase">Remaining</p>
-            <p class="text-sm font-black text-blue-600 font-mono">{{ getRemainingTime(booking) }}</p>
+            <p class="text-[10px] font-bold uppercase" :class="isOverdue(booking) ? 'text-red-400' : 'text-gray-400'">{{ getTimerLabel(booking) }}</p>
+            <p class="text-sm font-black font-mono" :class="isOverdue(booking) ? 'text-red-500' : 'text-blue-600'">{{ getRemainingTime(booking) }}</p>
           </div>
         </div>
         
@@ -88,13 +88,13 @@
             Check Out
           </button>
           <button 
-            v-if="booking.status === 'checked_in' && canExtend(booking)"
+            v-if="booking.status === 'checked_in'"
             @click="handleExtend(booking)"
             class="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm"
           >
             Extend
           </button>
-        </div>
+        </div> 
       </div>
     </div>
 
@@ -126,26 +126,51 @@ const activeBookings = computed(() =>
 
 
 
-const getRemainingTime = (booking: any) => {
-  const endTimeStr = booking.scheduled_end_time || booking.endTime;
-  if (!endTimeStr) return '00:00:00';
-  
+const getTargetTime = (booking: any): Date | null => {
+  const timeStr = booking.status === 'checked_in'
+    ? (booking.scheduled_end_time || booking.endTime)
+    : (booking.booking_time || booking.startTime);
+  if (!timeStr) return null;
   try {
-    const end = new Date(endTimeStr);
-    if (isNaN(end.getTime())) return '00:00:00';
-    
-    const diff = end.getTime() - now.value.getTime();
-    
-    if (diff <= 0) return '00:00:00';
-    
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  } catch (e) {
-    return '00:00:00';
+    const normalized = timeStr.includes('T') ? timeStr : timeStr.replace(' ', 'T');
+    const d = new Date(normalized);
+    return isNaN(d.getTime()) ? null : d;
+  } catch { return null; }
+};
+
+const isOverdue = (booking: any): boolean => {
+  const t = getTargetTime(booking);
+  if (!t) return false;
+  return t.getTime() <= now.value.getTime();
+};
+
+const getTimerLabel = (booking: any): string => {
+  if (booking.status === 'checked_in') {
+    return isOverdue(booking) ? 'Overtime' : 'Remaining';
   }
+  return isOverdue(booking) ? 'Started' : 'Starts In';
+};
+
+const getRemainingTime = (booking: any) => {
+  const target = getTargetTime(booking);
+  if (!target) return '--:--:--';
+
+  const diff = target.getTime() - now.value.getTime();
+  if (diff <= 0) {
+    if (booking.status === 'checked_in') {
+      const elapsed = Math.abs(diff);
+      const h = Math.floor(elapsed / 3600000);
+      const m = Math.floor((elapsed % 3600000) / 60000);
+      const s = Math.floor((elapsed % 60000) / 1000);
+      return `+${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return '--:--:--';
+  }
+
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
 const formatTime = (dateStr: string) => {

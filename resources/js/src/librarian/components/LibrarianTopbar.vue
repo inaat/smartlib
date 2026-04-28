@@ -35,7 +35,7 @@
           </router-link>
         </div>
 
-        <div class="relative">
+        <div class="relative" ref="userMenuRef">
           <button
             @click="showUserMenu = !showUserMenu"
             class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/shared/composables/useAuth';
 import { useSwal } from '@/shared/composables/useSwal';
@@ -143,10 +143,29 @@ const getProfilePictureUrl = (path: string) => {
   return `/storage/${path}`;
 };
 
+// Click outside handling
+const userMenuRef = ref<HTMLElement | null>(null);
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (userMenuRef.value && !userMenuRef.value.contains(event.target as Node)) {
+    showUserMenu.value = false;
+  }
+};
+
 onMounted(() => {
   fetchStats();
   // Refresh stats every 30 seconds
   const interval = setInterval(fetchStats, 30000);
-  return () => clearInterval(interval);
+  
+  document.addEventListener('mousedown', handleClickOutside);
+  
+  return () => {
+    clearInterval(interval);
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+});
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside);
 });
 </script>

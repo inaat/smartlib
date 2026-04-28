@@ -98,8 +98,6 @@ import {
   Home, 
   Calendar,
   MapPin,
-  Bell,
-  QrCode,
   User,
   LogOut,
   X,
@@ -137,9 +135,7 @@ const mainNavItems = [
   { path: '/student/my-bookings', label: 'My Bookings', icon: Armchair },
   { path: '/student/my-queue', label: 'Waitlist', icon: Clock },
   { path: '/student/events', label: 'Events & Seminars', icon: Calendar },
-  { path: '/student/notifications', label: 'Notifications', icon: Bell },
   { path: '/student/libraries', label: 'Find Library', icon: MapPin },
-  { path: '/student/qr-checkin', label: 'Check In', icon: QrCode },
   { path: '/student/profile', label: 'My Profile', icon: User },
 ];
 

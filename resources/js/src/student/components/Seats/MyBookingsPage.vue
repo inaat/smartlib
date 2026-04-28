@@ -89,8 +89,8 @@
 
             <div class="flex flex-col lg:items-end gap-6 border-t lg:border-t-0 pt-6 lg:pt-0 border-gray-50">
               <div class="lg:text-right">
-                <p class="text-xs text-gray-400 font-black uppercase tracking-widest mb-1">{{ booking.status === 'checked_in' ? 'Session Ends In' : 'Starts In' }}</p>
-                <p class="text-4xl font-black text-gray-800 font-mono tracking-tighter">
+                <p class="text-xs font-black uppercase tracking-widest mb-1" :class="isOverdue(booking) ? 'text-red-400' : 'text-gray-400'">{{ getTimerLabel(booking) }}</p>
+                <p class="text-4xl font-black font-mono tracking-tighter" :class="isOverdue(booking) ? 'text-red-500' : 'text-gray-800'">
                   {{ getRemainingTime(booking) }}
                 </p>
               </div>
@@ -116,9 +116,72 @@
                 >
                   Check Out
                 </button>
+                <button 
+                  v-if="booking.status === 'checked_in'"
+                  @click="handleExtend(booking)"
+                  class="flex-1 lg:flex-none px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95 whitespace-nowrap"
+                >
+                  Extend Time
+                </button>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extend Session Modal -->
+    <div v-if="extendModal.show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="extendModal.show = false">
+      <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-black text-gray-900">Extend Session</h3>
+            <p class="text-sm text-gray-500 mt-1">How long would you like to extend?</p>
+          </div>
+          <button @click="extendModal.show = false" class="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Duration selector -->
+        <div class="grid grid-cols-3 gap-3 mb-6">
+          <button
+            v-for="opt in extendOptions"
+            :key="opt.value"
+            @click="extendModal.selectedMinutes = opt.value"
+            :class="[
+              'py-3 rounded-2xl font-bold text-sm transition-all border-2',
+              extendModal.selectedMinutes === opt.value
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100 scale-105'
+                : 'bg-gray-50 text-gray-700 border-gray-100 hover:border-indigo-200 hover:bg-indigo-50'
+            ]"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
+
+        <!-- Preview new end time -->
+        <div v-if="extendModal.booking" class="mb-6 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+          <p class="text-xs text-indigo-500 font-black uppercase tracking-widest mb-1">New Session End</p>
+          <p class="text-lg font-black text-indigo-800">
+            {{ getNewEndTime(extendModal.booking, extendModal.selectedMinutes) }}
+          </p>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            @click="extendModal.show = false"
+            class="flex-1 py-3 rounded-2xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmExtend"
+            :disabled="extendModal.loading"
+            class="flex-1 py-3 rounded-2xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {{ extendModal.loading ? 'Extending...' : 'Confirm' }}
+          </button>
         </div>
       </div>
     </div>
@@ -224,8 +287,8 @@ import { parseISO } from 'date-fns';
 import { useSwal } from '@/shared/composables/useSwal';
 
 const router = useRouter();
-const { bookings, loadBookings, checkOutSeat, cancelBooking } = useApp();
-const { showConfirm, showSuccess } = useSwal();
+const { bookings, loadBookings, checkOutSeat, cancelBooking, extendSeatBooking } = useApp();
+const { showConfirm, showSuccess, showError } = useSwal();
 
 const now = ref(new Date());
 let timer: any = null;
@@ -249,23 +312,52 @@ const filteredHistory = computed(() => {
   return pastBookings;
 });
 
-const getRemainingTime = (booking: any) => {
-  const endTimeStr = booking.scheduled_end_time || booking.end_time;
-  if (!endTimeStr) return '00:00:00';
-  
+const getTargetTime = (booking: any): Date | null => {
+  const timeStr = booking.status === 'checked_in'
+    ? (booking.scheduled_end_time || booking.endTime)
+    : (booking.booking_time || booking.startTime);
+  if (!timeStr) return null;
   try {
-    const end = parseISO(endTimeStr);
-    const diff = end.getTime() - now.value.getTime();
-    if (diff <= 0) return '00:00:00';
-    
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  } catch (e) {
-    return '00:00:00';
+    const normalized = timeStr.includes('T') ? timeStr : timeStr.replace(' ', 'T');
+    const d = new Date(normalized);
+    return isNaN(d.getTime()) ? null : d;
+  } catch { return null; }
+};
+
+const isOverdue = (booking: any): boolean => {
+  const t = getTargetTime(booking);
+  if (!t) return false;
+  return t.getTime() <= now.value.getTime();
+};
+
+const getTimerLabel = (booking: any): string => {
+  if (booking.status === 'checked_in') {
+    return isOverdue(booking) ? 'Session Overtime' : 'Session Ends In';
   }
+  return isOverdue(booking) ? 'Session Started' : 'Starts In';
+};
+
+const getRemainingTime = (booking: any) => {
+  const target = getTargetTime(booking);
+  if (!target) return '--:--:--';
+  
+  const diff = target.getTime() - now.value.getTime();
+  if (diff <= 0) {
+    // Show elapsed time for checked_in overtime
+    if (booking.status === 'checked_in') {
+      const elapsed = Math.abs(diff);
+      const h = Math.floor(elapsed / 3600000);
+      const m = Math.floor((elapsed % 3600000) / 60000);
+      const s = Math.floor((elapsed % 60000) / 1000);
+      return `+${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return '--:--:--';
+  }
+  
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
 const formatDate = (date: string | undefined) => {
@@ -312,6 +404,60 @@ const handleCancel = async (id: number) => {
     await cancelBooking(id);
     await loadBookings();
     showSuccess('Cancelled', 'Booking cancelled successfully.');
+  }
+};
+
+const canExtend = (booking: any) => {
+  const endTimeStr = booking.scheduled_end_time || booking.endTime;
+  if (!endTimeStr) return false;
+  const end = new Date(endTimeStr);
+  const diffMinutes = (end.getTime() - now.value.getTime()) / 60000;
+  // Rule: Can extend only if more than 10 minutes remain
+  return diffMinutes >= 10;
+};
+
+const extendOptions = [
+  { label: '5 min',  value: 5  },
+  { label: '10 min', value: 10 },
+  { label: '15 min', value: 15 },
+  { label: '30 min', value: 30 },
+  { label: '45 min', value: 45 },
+  { label: '1 hour', value: 60 },
+];
+
+const extendModal = ref({
+  show: false,
+  booking: null as any,
+  selectedMinutes: 30,
+  loading: false,
+});
+
+const getNewEndTime = (booking: any, addMinutes: number) => {
+  const endStr = booking.scheduled_end_time || booking.endTime;
+  if (!endStr) return '--';
+  const end = new Date(endStr);
+  end.setMinutes(end.getMinutes() + addMinutes);
+  return end.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
+};
+
+const handleExtend = (booking: any) => {
+  extendModal.value = { show: true, booking, selectedMinutes: 30, loading: false };
+};
+
+const confirmExtend = async () => {
+  const { booking, selectedMinutes } = extendModal.value;
+  extendModal.value.loading = true;
+  try {
+    const success = await extendSeatBooking(booking.id, selectedMinutes);
+    if (success) {
+      extendModal.value.show = false;
+      await loadBookings();
+      showSuccess('Extended!', `Your session has been extended by ${selectedMinutes < 60 ? selectedMinutes + ' minutes' : '1 hour'}.`);
+    }
+  } catch (error: any) {
+    showError('Extension Failed', error.response?.data?.message || 'Could not extend session. The seat might be booked by someone else or library is closing.');
+  } finally {
+    extendModal.value.loading = false;
   }
 };
 

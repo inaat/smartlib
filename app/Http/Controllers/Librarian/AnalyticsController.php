@@ -20,43 +20,50 @@ class AnalyticsController extends Controller
         }
 
         $timeRange = $request->input('timeRange', 'week');
+        $daysCount = match ($timeRange) {
+            'today' => 1,
+            'week' => 7,
+            'month' => 30,
+            default => 7,
+        };
+
         $startDate = $this->getStartDate($timeRange);
 
-        // Get bookings for the time range
+        // Get bookings for the time range (based on booking_time, not created_at)
         $bookings = $library->seatBookings()
-            ->where('seat_bookings.created_at', '>=', $startDate)
+            ->where('seat_bookings.booking_time', '>=', $startDate)
             ->get();
 
         // Calculate stats
         $totalBookings = $bookings->count();
         $completedBookings = $bookings->where('status', 'completed')->count();
         $noShowBookings = $bookings->where('status', 'no_show')->count();
-        $activeBookings = $bookings->whereIn('status', ['pending', 'active'])->count();
+        $activeBookings = $bookings->whereIn('status', ['booked', 'checked_in'])->count();
 
         $completionRate = $totalBookings > 0 ? round(($completedBookings / $totalBookings) * 100, 1) : 0;
         $noShowRate = $totalBookings > 0 ? round(($noShowBookings / $totalBookings) * 100, 1) : 0;
 
         // Calculate average session duration
         $completedWithTimes = $bookings->filter(function ($booking) {
-            return $booking->status === 'completed' && $booking->checked_in_at && $booking->checked_out_at;
+            return $booking->status === 'completed' && $booking->check_in_time && $booking->check_out_time;
         });
 
         $avgDuration = 0;
         if ($completedWithTimes->count() > 0) {
             $totalMinutes = $completedWithTimes->sum(function ($booking) {
-                $checkIn = Carbon::parse($booking->checked_in_at);
-                $checkOut = Carbon::parse($booking->checked_out_at);
+                $checkIn = Carbon::parse($booking->check_in_time);
+                $checkOut = Carbon::parse($booking->check_out_time);
                 return $checkOut->diffInMinutes($checkIn);
             });
             $avgDuration = round($totalMinutes / $completedWithTimes->count() / 60, 1); // Convert to hours
         }
 
-        // Daily trends for the last 7 days
+        // Daily trends for the requested range
         $dailyTrends = [];
-        for ($i = 6; $i >= 0; $i--) {
+        for ($i = $daysCount - 1; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
             $dayBookings = $bookings->filter(function ($booking) use ($date) {
-                return Carbon::parse($booking->created_at)->isSameDay($date);
+                return Carbon::parse($booking->booking_time)->isSameDay($date);
             });
 
             $dailyTrends[] = [
@@ -69,7 +76,7 @@ class AnalyticsController extends Controller
 
         // Popular time slots
         $timeSlotData = $bookings->groupBy(function ($booking) {
-            return Carbon::parse($booking->start_time)->format('H:00');
+            return Carbon::parse($booking->booking_time)->format('H:00');
         })->map(function ($group) {
             return $group->count();
         })->sortDesc()->take(5);
@@ -83,7 +90,7 @@ class AnalyticsController extends Controller
 
         // Current library occupancy
         $totalSeats = $library->seats()->count();
-        $availableSeats = $library->seats()->where('status', 'available')->count();
+        $availableSeats = $library->seats()->where('seats.status', 'available')->count();
         $occupiedSeats = $totalSeats - $availableSeats;
         $occupancyRate = $totalSeats > 0 ? round(($occupiedSeats / $totalSeats) * 100, 1) : 0;
 
@@ -111,25 +118,27 @@ class AnalyticsController extends Controller
                   });
             })->count();
 
-        // Top Students (by completed booking hours)
-        $topStudents = $library->seatBookings()
-            ->where('seat_bookings.created_at', '>=', $startDate)
-            ->where('status', 'completed')
-            ->join('users', 'seat_bookings.user_id', '=', 'users.id')
-            ->select('users.id', 'users.name', 'users.loyalty_points as points', DB::raw('SUM(total_minutes) / 60 as hours'))
+        // Top Students (by Attendance minutes instead of just seatBookings, as it's more accurate)
+        $topStudents = DB::table('attendance')
+            ->join('users', 'attendance.user_id', '=', 'users.id')
+            ->where('attendance.library_id', $library->id)
+            ->where('attendance.date', '>=', $startDate->toDateString())
+            ->select('users.id', 'users.name', 'users.loyalty_points as points', DB::raw('SUM(attendance.total_minutes) / 60 as hours'))
             ->groupBy('users.id', 'users.name', 'users.loyalty_points')
             ->orderByDesc('hours')
             ->take(5)
             ->get()
             ->map(function ($student) {
-                $student->hours = round($student->hours, 1);
-                return $student;
+                $student->hours = round($student->hours ?? 0, 1);
+                $student->points = $student->points ?? 0;
+                return (array)$student;
             });
 
-        // Popular Seats
-        $popularSeats = $library->seatBookings()
-            ->where('seat_bookings.created_at', '>=', $startDate)
+        // Popular Seats (from seatBookings)
+        $popularSeats = DB::table('seat_bookings')
             ->join('seats', 'seat_bookings.seat_id', '=', 'seats.id')
+            ->where('seat_bookings.library_id', $library->id)
+            ->where('seat_bookings.booking_time', '>=', $startDate)
             ->select('seats.seat_number as number', DB::raw('COUNT(*) as bookings'))
             ->groupBy('seats.id', 'seats.seat_number')
             ->orderByDesc('bookings')
@@ -137,7 +146,7 @@ class AnalyticsController extends Controller
             ->get()
             ->map(function ($seat) use ($totalBookings) {
                 $seat->utilization = $totalBookings > 0 ? round(($seat->bookings / $totalBookings) * 100, 1) : 0;
-                return $seat;
+                return (array)$seat;
             });
 
         return response()->json([

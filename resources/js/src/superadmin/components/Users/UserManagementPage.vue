@@ -193,7 +193,7 @@
                 </button>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="flex items-center justify-end space-x-2 transition-opacity">
                   <button 
                     v-if="user.status === 'pending'"
                     @click="approveUser(user)" 
@@ -273,9 +273,9 @@
               <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">CRN / Student ID</label>
               <input
                 v-model="form.crn"
-                type="text"
+                type="number"
                 required
-                placeholder="e.g. STD12345"
+                placeholder="e.g. 12345"
                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
               />
             </div>

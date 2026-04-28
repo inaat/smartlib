@@ -24,10 +24,7 @@ class SupportTicketController extends Controller
             $query->where('library_id', $user->library_id)
                   ->where('ticket_type', 'library');
         } elseif ($user->role === 'super_admin') {
-            // Super admin can see all, but might want to filter or prioritize 'system' tickets
-            if ($request->has('type')) {
-                $query->where('ticket_type', $request->type);
-            }
+            $query->where('ticket_type', 'system');
         }
 
         $tickets = $query->latest()->get();
@@ -43,7 +40,7 @@ class SupportTicketController extends Controller
             'subject' => 'required|string|max:255',
             'message' => 'required|string',
             'ticket_type' => 'required|in:library,system',
-            'library_id' => 'required_if:ticket_type,library|exists:libraries,id',
+            'library_id' => 'required_if:ticket_type,library|nullable|exists:libraries,id',
             'priority' => 'required|in:low,medium,high,urgent',
         ]);
 
@@ -83,6 +80,10 @@ class SupportTicketController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        if ($user->role === 'super_admin' && $supportTicket->ticket_type !== 'system') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         return response()->json($supportTicket->load(['user', 'library', 'messages.user']));
     }
 
@@ -103,6 +104,10 @@ class SupportTicketController extends Controller
         }
 
         if ($user->role === 'librarian' && $supportTicket->library_id !== $user->library_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($user->role === 'super_admin' && $supportTicket->ticket_type !== 'system') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -138,6 +143,10 @@ class SupportTicketController extends Controller
         }
 
         if ($user->role === 'librarian' && $supportTicket->library_id !== $user->library_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($user->role === 'super_admin' && $supportTicket->ticket_type !== 'system') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

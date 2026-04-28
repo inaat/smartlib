@@ -100,7 +100,7 @@ class BookingController extends Controller
         } else {
             $libraryId = $request->library_id ?? ($library ? $library->id : null);
             if (!$libraryId) {
-                return response()->json(['message' => 'No library assigned to this librarian'], 404);
+                return response()->json(['message' => 'No library assigned to this librarian'], 403);
             }
             $baseQuery->where('library_id', $libraryId);
         }

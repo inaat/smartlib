@@ -33,7 +33,7 @@
       </div>
 
       <!-- User Profile -->
-      <div class="relative">
+      <div class="relative" ref="userMenuRef">
         <button 
           @click="showUserMenu = !showUserMenu"
           class="flex items-center space-x-3 pl-2 md:pl-4 border-l border-gray-200 hover:bg-gray-50 rounded-lg p-2 transition-colors"
@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/shared/composables/useAuth';
 import { Menu, User, Settings, LogOut } from 'lucide-vue-next';
 import { adminAPI } from '@/shared/services/api';
@@ -125,10 +125,29 @@ const getProfilePictureUrl = (path: string) => {
   return `/storage/${path}`;
 };
 
+// Click outside handling
+const userMenuRef = ref<HTMLElement | null>(null);
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (userMenuRef.value && !userMenuRef.value.contains(event.target as Node)) {
+    showUserMenu.value = false;
+  }
+};
+
 onMounted(() => {
   fetchStats();
   // Refresh stats every 30 seconds
   const interval = setInterval(fetchStats, 30000);
-  return () => clearInterval(interval);
+  
+  document.addEventListener('mousedown', handleClickOutside);
+  
+  return () => {
+    clearInterval(interval);
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+});
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside);
 });
 </script>

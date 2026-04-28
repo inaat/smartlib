@@ -523,8 +523,25 @@ class BookingController extends Controller
 
         $newEndTime = $booking->scheduled_end_time->addMinutes($request->minutes);
 
+        // Rule: Cannot extend beyond library closing time
+        $dayOfWeek = $booking->scheduled_end_time->format('l');
+        $operatingHour = \App\Models\LibraryOperatingHour::where('library_id', $booking->library_id)
+            ->where('day_of_week', $dayOfWeek)
+            ->first();
+
+        if ($operatingHour && $operatingHour->is_open) {
+            $closeAt = Carbon::createFromFormat('H:i:s', $operatingHour->close_time, $booking->scheduled_end_time->timezone);
+            $closeAt->setDate($booking->scheduled_end_time->year, $booking->scheduled_end_time->month, $booking->scheduled_end_time->day);
+            
+            if ($newEndTime->gt($closeAt)) {
+                return response()->json([
+                    'message' => "Cannot extend beyond library closing time ({$operatingHour->close_time})."
+                ], 400);
+            }
+        }
+
         // Check for overlapping bookings
-        $overlapping = SeatBooking::where('seat_id', $booking->seat_id)
+        $overlapping = \App\Models\SeatBooking::where('seat_id', $booking->seat_id)
             ->where('id', '!=', $booking->id)
             ->where('status', '!=', 'cancelled')
             ->where(function($query) use ($booking, $newEndTime) {

@@ -111,6 +111,7 @@ export function useAuth() {
             notifications.value = [];
             localStorage.removeItem('smart-lib-user');
             localStorage.removeItem('auth_token');
+            window.location.href = '/login';
         }
     };
 

@@ -87,7 +87,7 @@ import { authAPI } from '@/shared/services/api';
 import { format, parseISO } from 'date-fns';
 import { useSwal } from '@/shared/composables/useSwal';
 
-const { showSuccess, showError, confirm } = useSwal();
+const { showSuccess, showError, showConfirm } = useSwal();
 const sessions = ref<any[]>([]);
 const groupedSessions = computed(() => {
   const groups: any = {};
@@ -141,10 +141,9 @@ const fetchSessions = async () => {
 };
 
 const revokeSession = async (group: any) => {
-  const confirmed = await confirm(
+  const confirmed = await showConfirm(
     'Logout Device?',
     `Are you sure you want to log out from ${getDeviceName(group.user_agent)}?`,
-    'warning',
     'Log out'
   );
 
@@ -164,10 +163,9 @@ const revokeSession = async (group: any) => {
 };
 
 const logoutAll = async () => {
-  const confirmed = await confirm(
+  const confirmed = await showConfirm(
     'Logout All Other Devices?',
     'This will log you out from all devices except this one. Continue?',
-    'warning',
     'Logout All'
   );
 

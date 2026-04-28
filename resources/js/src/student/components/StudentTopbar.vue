@@ -36,7 +36,7 @@
         
 
         <!-- Notifications -->
-        <div class="relative">
+        <div class="relative" ref="notificationsRef">
           <button
             @click="showNotifications = !showNotifications; showUserMenu = false"
             class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 relative transition-colors"
@@ -102,7 +102,7 @@
         </div>
 
         <!-- User Menu -->
-        <div class="relative">
+        <div class="relative" ref="userMenuRef">
           <button
             @click="showUserMenu = !showUserMenu"
             class="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100"
@@ -131,7 +131,23 @@
               <div class="font-medium text-gray-800">{{ user?.name }}</div>
               <div class="text-sm text-gray-600">{{ user?.email }}</div>
             </div>
-            
+            <div class="p-2">
+              <router-link 
+                to="/student/profile" 
+                @click="showUserMenu = false"
+                class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <User class="w-4 h-4" />
+                <span>My Profile</span>
+              </router-link>
+              <button 
+                @click="handleLogout"
+                class="w-full flex items-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <LogOut class="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -140,9 +156,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/shared/composables/useAuth';
+import { useSwal } from '@/shared/composables/useSwal';
 import { 
   Menu, 
   Bell, 
@@ -154,16 +171,46 @@ import {
   Book,
   CheckCircle,
   MessageSquare,
-  Clock
+  Clock,
+  LogOut
 } from 'lucide-vue-next';
 import { formatDistanceToNow } from 'date-fns';
 const router = useRouter();
 
 defineEmits(['menu-click']);
 
-const { user, notifications, unreadCount, markNotificationAsRead, isPlanExpired } = useAuth();
+const { user, notifications, unreadCount, markNotificationAsRead, isPlanExpired, logout } = useAuth();
+const { showConfirm } = useSwal();
 const showNotifications = ref(false);
 const showUserMenu = ref(false);
+
+const handleLogout = async () => {
+  showUserMenu.value = false;
+  if (await showConfirm('Sign Out', 'Are you sure you want to sign out?', 'Yes, Sign Out')) {
+    await logout();
+  }
+};
+
+// Click outside handling
+const notificationsRef = ref<HTMLElement | null>(null);
+const userMenuRef = ref<HTMLElement | null>(null);
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (notificationsRef.value && !notificationsRef.value.contains(event.target as Node)) {
+    showNotifications.value = false;
+  }
+  if (userMenuRef.value && !userMenuRef.value.contains(event.target as Node)) {
+    showUserMenu.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('mousedown', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside);
+});
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
