@@ -209,6 +209,11 @@ const router = createRouter({
                     component: () => import('@/librarian/components/Support/SupportPage.vue')
                 },
                 {
+                    path: 'reports',
+                    name: 'librarian-reports',
+                    component: () => import('@/librarian/components/Reports/ReportsPage.vue')
+                },
+                {
                     path: '',
                     redirect: { name: 'librarian-dashboard' }
                 }
@@ -293,6 +298,11 @@ const router = createRouter({
                     path: 'support',
                     name: 'superadmin-support',
                     component: () => import('@/superadmin/components/Support/SupportPage.vue')
+                },
+                {
+                    path: 'reports',
+                    name: 'superadmin-reports',
+                    component: () => import('@/superadmin/components/Reports/ReportsPage.vue')
                 },
                 {
                     path: 'attendance',

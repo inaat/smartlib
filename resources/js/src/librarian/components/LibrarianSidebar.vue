@@ -177,6 +177,7 @@ import {
   LayoutGrid,
   LifeBuoy,
   Layers,
+  FileBarChart,
   ChevronDown as ChevronDownIcon
 } from 'lucide-vue-next';
 import { ref, computed, watch } from 'vue';
@@ -235,5 +236,6 @@ const spaceManagementItems = [
 
 const reportItems = [
   { path: '/librarian/analytics', label: 'Analytics', icon: BarChart3 },
+  { path: '/librarian/reports', label: 'Reports', icon: FileBarChart },
 ];
 </script>

@@ -440,8 +440,8 @@ export const adminAPI = {
 
 // Librarian API
 export const librarianAPI = {
-  async getDashboard() {
-    const response = await api.get('/librarian/dashboard');
+  async getDashboard(params: any = {}) {
+    const response = await api.get('/librarian/dashboard', { params });
     return response.data;
   },
 
@@ -475,8 +475,8 @@ export const librarianAPI = {
     return response.data;
   },
 
-  async getEvents() {
-    const response = await api.get('/librarian/events');
+  async getEvents(params: any = {}) {
+    const response = await api.get('/librarian/events', { params });
     return response.data;
   },
 
@@ -485,8 +485,8 @@ export const librarianAPI = {
     return response.data;
   },
 
-  async getBooks() {
-    const response = await api.get('/librarian/books');
+  async getBooks(params: any = {}) {
+    const response = await api.get('/librarian/books', { params });
     return response.data;
   },
 

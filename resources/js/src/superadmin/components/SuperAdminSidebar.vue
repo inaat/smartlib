@@ -109,14 +109,9 @@ import {
   LogOut,
   X,
   ChevronRight,
-  Layers,
-  Layout,
-  BookOpen,
   Calendar,
-  ClipboardList,
-  Square,
   LifeBuoy,
-  CalendarCheck
+  FileBarChart
 } from 'lucide-vue-next';
 
 
@@ -140,6 +135,7 @@ const mainNavItems = [
 
 const systemNavItems = [
   { path: '/superadmin/analytics', label: 'Analytics', icon: BarChart3 },
+  { path: '/superadmin/reports', label: 'Reports', icon: FileBarChart },
   { path: '/superadmin/support', label: 'Support & Complaints', icon: LifeBuoy },
   { path: '/superadmin/settings', label: 'System Settings', icon: Settings },
 ];
