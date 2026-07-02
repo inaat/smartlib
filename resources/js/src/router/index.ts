@@ -210,8 +210,7 @@ const router = createRouter({
                 },
                 {
                     path: 'reports',
-                    name: 'librarian-reports',
-                    component: () => import('@/librarian/components/Reports/ReportsPage.vue')
+                    redirect: { name: 'librarian-analytics' }
                 },
                 {
                     path: '',
@@ -382,6 +381,11 @@ router.beforeEach((to, from, next) => {
         return next();
     }
 
+    // Redirect logged-in users away from the landing page to their respective panel home
+    if (to.path === '/' && user.value) {
+        return next('/home');
+    }
+
     if (to.meta.requiresAuth && !user.value) {
         return next('/login');
     }
@@ -395,7 +399,7 @@ router.beforeEach((to, from, next) => {
     }
 
     if (to.meta.role && user.value && user.value.role !== to.meta.role) {
-        return next('/');
+        return next('/home');
     }
 
     // Redirect student to subscription page if plan is expired, but allow events, support and notifications

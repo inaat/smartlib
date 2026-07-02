@@ -39,7 +39,7 @@
         <div class="h-40 bg-gray-100 relative">
           <img
             v-if="library.photo"
-            :src="'/storage/' + library.photo"
+            :src="library.photo_url"
             class="w-full h-full object-cover"
             alt="Library cover"
           />
@@ -184,12 +184,23 @@
 
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-gray-700 mb-1">Library Photo</label>
-              <input
-                type="file"
-                @change="handlePhotoUpload"
-                accept="image/*"
-                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-              />
+              <div class="flex items-center space-x-6 mt-1">
+                <div class="w-20 h-20 rounded-lg border border-gray-250 bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0">
+                  <img 
+                    v-if="adminPhotoPreview || form.photo_url" 
+                    :src="adminPhotoPreview || form.photo_url" 
+                    class="w-full h-full object-cover" 
+                    alt="Library preview"
+                  />
+                  <Building2 v-else class="w-8 h-8 text-gray-350" />
+                </div>
+                <input
+                  type="file"
+                  @change="handlePhotoUpload"
+                  accept="image/*"
+                  class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
+                />
+              </div>
             </div>
 
             <div class="md:col-span-2">
@@ -298,11 +309,18 @@ const form = ref({
   wifi_password: '',
   parking_available: true,
   is_active: true,
-  photo: null as File | null
+  photo: null as File | null,
+  photo_url: ''
 });
 
+const adminPhotoPreview = ref<string | null>(null);
+
 const handlePhotoUpload = (event: any) => {
-  form.value.photo = event.target.files[0];
+  const file = event.target.files[0];
+  if (file) {
+    form.value.photo = file;
+    adminPhotoPreview.value = URL.createObjectURL(file);
+  }
 };
 
 const fetchLibraries = async () => {
@@ -319,6 +337,7 @@ const fetchLibraries = async () => {
 
 const openCreateModal = () => {
   isEditing.value = false;
+  adminPhotoPreview.value = null;
   form.value = {
     id: null,
     name: '',
@@ -331,13 +350,15 @@ const openCreateModal = () => {
     wifi_password: '',
     parking_available: true,
     is_active: true,
-    photo: null
+    photo: null,
+    photo_url: ''
   };
   showModal.value = true;
 };
 
 const editLibrary = (library: any) => {
   isEditing.value = true;
+  adminPhotoPreview.value = null;
   form.value = {
     id: library.id,
     name: library.name,
@@ -350,7 +371,8 @@ const editLibrary = (library: any) => {
     wifi_password: library.wifi_password || '',
     parking_available: !!library.parking_available,
     is_active: !!library.is_active,
-    photo: null
+    photo: null,
+    photo_url: library.photo_url || (library.photo ? '/storage/' + library.photo : '')
   };
   showModal.value = true;
 };

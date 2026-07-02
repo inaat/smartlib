@@ -116,7 +116,7 @@ class BookController extends Controller
         if ($bookLimit !== -1) {
             // Count active book reservations for this user
             $activeReservations = BookReservation::where('user_id', $user->id)
-                ->whereIn('status', ['reserved', 'pending_return'])
+                ->whereIn('status', ['pending', 'approved', 'collected', 'pending_return', 'overdue'])
                 ->count();
 
             if ($activeReservations >= $bookLimit) {
@@ -128,17 +128,23 @@ class BookController extends Controller
             }
         }
 
+        $maxDays = $book->borrowing_period ?: 14;
+        $request->validate([
+            'days' => 'nullable|integer|min:1|max:' . $maxDays,
+        ]);
+        $days = $request->input('days', $maxDays);
+
         $reservation = BookReservation::create([
             'user_id' => $user->id,
             'book_id' => $book->id,
-            'due_date' => now()->addDays(7), // Default 7 days borrowing period
-            'status' => 'reserved',
+            'due_date' => now()->addDays($days),
+            'status' => 'pending',
         ]);
 
         $book->update(['availability' => 'reserved']);
 
         return response()->json([
-            'message' => 'Book reserved successfully',
+            'message' => 'Book reservation request submitted successfully. Awaiting librarian approval.',
             'reservation' => $reservation,
             'due_date' => $reservation->due_date->format('Y-m-d H:i:s')
         ], 201);
@@ -153,7 +159,7 @@ class BookController extends Controller
 
         $reservations = BookReservation::with(['book', 'book.library'])
             ->where('user_id', $user->id)
-            ->whereIn('status', ['reserved', 'borrowed', 'pending_return', 'overdue'])
+            ->whereIn('status', ['pending', 'approved', 'rejected', 'collected', 'pending_return', 'returned', 'overdue'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -176,12 +182,12 @@ class BookController extends Controller
         
         $reservation = BookReservation::where('id', $id)
             ->where('user_id', $user->id)
-            ->where('status', 'reserved')
+            ->where('status', 'approved')
             ->firstOrFail();
 
-        // Update status to borrowed
+        // Update status to collected
         $reservation->update([
-            'status' => 'borrowed'
+            'status' => 'collected'
         ]);
 
         return response()->json([
@@ -199,7 +205,7 @@ class BookController extends Controller
         
         $reservation = BookReservation::where('id', $id)
             ->where('user_id', $user->id)
-            ->whereIn('status', ['borrowed', 'overdue'])
+            ->whereIn('status', ['collected', 'overdue'])
             ->firstOrFail();
 
         // Update status to pending_return

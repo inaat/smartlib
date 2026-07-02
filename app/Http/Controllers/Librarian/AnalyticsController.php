@@ -24,28 +24,43 @@ class AnalyticsController extends Controller
             'today' => 1,
             'week' => 7,
             'month' => 30,
+            'year' => 365,
             default => 7,
         };
 
         $startDate = $this->getStartDate($timeRange);
+        $previousStartDate = $this->getPreviousStartDate($timeRange);
 
-        // Get bookings for the time range (based on booking_time, not created_at)
+        // Get bookings for the current time range
         $bookings = $library->seatBookings()
             ->where('seat_bookings.booking_time', '>=', $startDate)
             ->get();
 
+        // Get bookings for the previous time range
+        $previousBookings = $library->seatBookings()
+            ->where('seat_bookings.booking_time', '>=', $previousStartDate)
+            ->where('seat_bookings.booking_time', '<', $startDate)
+            ->get();
+
         // Calculate stats
         $totalBookings = $bookings->count();
-        $completedBookings = $bookings->where('status', 'completed')->count();
+        $completedBookings = $bookings->where('status', 'checked_out')->count();
         $noShowBookings = $bookings->where('status', 'no_show')->count();
         $activeBookings = $bookings->whereIn('status', ['booked', 'checked_in'])->count();
+
+        $prevTotalBookings = $previousBookings->count();
+        $prevCompletedBookings = $previousBookings->where('status', 'checked_out')->count();
+
+        // Calculate changes
+        $totalBookingsChange = $this->calculatePercentageChange($totalBookings, $prevTotalBookings);
+        $completedBookingsChange = $this->calculatePercentageChange($completedBookings, $prevCompletedBookings);
 
         $completionRate = $totalBookings > 0 ? round(($completedBookings / $totalBookings) * 100, 1) : 0;
         $noShowRate = $totalBookings > 0 ? round(($noShowBookings / $totalBookings) * 100, 1) : 0;
 
         // Calculate average session duration
         $completedWithTimes = $bookings->filter(function ($booking) {
-            return $booking->status === 'completed' && $booking->check_in_time && $booking->check_out_time;
+            return $booking->status === 'checked_out' && $booking->check_in_time && $booking->check_out_time;
         });
 
         $avgDuration = 0;
@@ -53,25 +68,81 @@ class AnalyticsController extends Controller
             $totalMinutes = $completedWithTimes->sum(function ($booking) {
                 $checkIn = Carbon::parse($booking->check_in_time);
                 $checkOut = Carbon::parse($booking->check_out_time);
-                return $checkOut->diffInMinutes($checkIn);
+                return $checkOut->diffInMinutes($checkIn, true);
             });
             $avgDuration = round($totalMinutes / $completedWithTimes->count() / 60, 1); // Convert to hours
         }
 
-        // Daily trends for the requested range
-        $dailyTrends = [];
-        for ($i = $daysCount - 1; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
-            $dayBookings = $bookings->filter(function ($booking) use ($date) {
-                return Carbon::parse($booking->booking_time)->isSameDay($date);
-            });
+        $prevCompletedWithTimes = $previousBookings->filter(function ($booking) {
+            return $booking->status === 'checked_out' && $booking->check_in_time && $booking->check_out_time;
+        });
 
-            $dailyTrends[] = [
-                'date' => $date->format('Y-m-d'),
-                'day' => $date->format('D'),
-                'bookings' => $dayBookings->count(),
-                'completed' => $dayBookings->where('status', 'completed')->count(),
-            ];
+        $prevAvgDuration = 0;
+        if ($prevCompletedWithTimes->count() > 0) {
+            $prevTotalMinutes = $prevCompletedWithTimes->sum(function ($booking) {
+                $checkIn = Carbon::parse($booking->check_in_time);
+                $checkOut = Carbon::parse($booking->check_out_time);
+                return $checkOut->diffInMinutes($checkIn, true);
+            });
+            $prevAvgDuration = round($prevTotalMinutes / $prevCompletedWithTimes->count() / 60, 1);
+        }
+
+        $avgDurationChange = $this->calculatePercentageChange($avgDuration, $prevAvgDuration);
+
+        // Trends grouping for the requested range
+        $dailyTrends = [];
+        if ($timeRange === 'year') {
+            // Group month-wise for the last 12 months
+            for ($i = 11; $i >= 0; $i--) {
+                $monthDate = Carbon::now()->subMonths($i);
+                $monthBookings = $bookings->filter(function ($booking) use ($monthDate) {
+                    return Carbon::parse($booking->booking_time)->isSameMonth($monthDate);
+                });
+
+                $dailyTrends[] = [
+                    'date' => $monthDate->format('Y-m'),
+                    'day' => $monthDate->format('M'),
+                    'bookings' => $monthBookings->count(),
+                    'completed' => $monthBookings->where('status', 'checked_out')->count(),
+                ];
+            }
+        } elseif ($timeRange === 'month') {
+            // Group week-wise (4 weeks of the last 30 days)
+            for ($i = 3; $i >= 0; $i--) {
+                $endDays = $i * 7;
+                $startDays = ($i + 1) * 7 - 1;
+                if ($i === 3) $startDays = 29; // cover full 30 days
+                
+                $start = Carbon::now()->subDays($startDays)->startOfDay();
+                $end = Carbon::now()->subDays($endDays)->endOfDay();
+                
+                $weekBookings = $bookings->filter(function ($booking) use ($start, $end) {
+                    $bt = Carbon::parse($booking->booking_time);
+                    return $bt->between($start, $end);
+                });
+
+                $dailyTrends[] = [
+                    'date' => $start->format('Y-m-d'),
+                    'day' => 'Week ' . (4 - $i),
+                    'bookings' => $weekBookings->count(),
+                    'completed' => $weekBookings->where('status', 'checked_out')->count(),
+                ];
+            }
+        } else {
+            // Default to day-wise (for week or today)
+            for ($i = $daysCount - 1; $i >= 0; $i--) {
+                $date = Carbon::now()->subDays($i);
+                $dayBookings = $bookings->filter(function ($booking) use ($date) {
+                    return Carbon::parse($booking->booking_time)->isSameDay($date);
+                });
+
+                $dailyTrends[] = [
+                    'date' => $date->format('Y-m-d'),
+                    'day' => $date->format('D'),
+                    'bookings' => $dayBookings->count(),
+                    'completed' => $dayBookings->where('status', 'checked_out')->count(),
+                ];
+            }
         }
 
         // Popular time slots
@@ -93,6 +164,11 @@ class AnalyticsController extends Controller
         $availableSeats = $library->seats()->where('seats.status', 'available')->count();
         $occupiedSeats = $totalSeats - $availableSeats;
         $occupancyRate = $totalSeats > 0 ? round(($occupiedSeats / $totalSeats) * 100, 1) : 0;
+
+        // Compare daily booking averages for occupancy proxy trends
+        $currAvgBookingsPerDay = $totalBookings / max($daysCount, 1);
+        $prevAvgBookingsPerDay = $prevTotalBookings / max($daysCount, 1);
+        $occupancyRateChange = $this->calculatePercentageChange($currAvgBookingsPerDay, $prevAvgBookingsPerDay);
 
         // Book stats
         $totalBooks = $library->books()->count();
@@ -118,7 +194,7 @@ class AnalyticsController extends Controller
                   });
             })->count();
 
-        // Top Students (by Attendance minutes instead of just seatBookings, as it's more accurate)
+        // Top Students
         $topStudents = DB::table('attendance')
             ->join('users', 'attendance.user_id', '=', 'users.id')
             ->where('attendance.library_id', $library->id)
@@ -134,7 +210,7 @@ class AnalyticsController extends Controller
                 return (array)$student;
             });
 
-        // Popular Seats (from seatBookings)
+        // Popular Seats
         $popularSeats = DB::table('seat_bookings')
             ->join('seats', 'seat_bookings.seat_id', '=', 'seats.id')
             ->where('seat_bookings.library_id', $library->id)
@@ -156,14 +232,18 @@ class AnalyticsController extends Controller
             ],
             'stats' => [
                 'total_bookings' => $totalBookings,
+                'total_bookings_change' => $totalBookingsChange,
                 'active_bookings' => $activeBookings,
                 'completed_bookings' => $completedBookings,
+                'completed_bookings_change' => $completedBookingsChange,
                 'completion_rate' => $completionRate,
                 'no_show_rate' => $noShowRate,
                 'avg_session_duration' => $avgDuration,
+                'avg_session_duration_change' => $avgDurationChange,
                 'total_seats' => $totalSeats,
                 'available_seats' => $availableSeats,
                 'occupancy_rate' => $occupancyRate,
+                'occupancy_rate_change' => $occupancyRateChange,
                 'total_books' => $totalBooks,
                 'digital_books' => $digitalBooks,
                 'physical_books' => $physicalBooks,
@@ -179,6 +259,14 @@ class AnalyticsController extends Controller
         ]);
     }
 
+    private function calculatePercentageChange($current, $previous)
+    {
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0;
+        }
+        return round((($current - $previous) / $previous) * 100, 1);
+    }
+
     private function getStartDate($timeRange)
     {
         return match ($timeRange) {
@@ -187,6 +275,17 @@ class AnalyticsController extends Controller
             'month' => Carbon::now()->subMonth(),
             'year' => Carbon::now()->subYear(),
             default => Carbon::now()->subWeek(),
+        };
+    }
+
+    private function getPreviousStartDate($timeRange)
+    {
+        return match ($timeRange) {
+            'today' => Carbon::yesterday(),
+            'week' => Carbon::now()->subWeeks(2),
+            'month' => Carbon::now()->subMonths(2),
+            'year' => Carbon::now()->subYears(2),
+            default => Carbon::now()->subWeeks(2),
         };
     }
 }

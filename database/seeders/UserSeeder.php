@@ -53,7 +53,7 @@ class UserSeeder extends Seeder
         }
 
         // Create Students
-        $caLevels = ['PRC', 'CAP', 'Final'];
+        $caLevels = ['PRC', 'CAF', 'Final'];
         for ($i = 1; $i <= 10; $i++) {
             $trialUsed = $i % 3 == 0; // Some students used trial
             $trialStarted = $trialUsed ? now()->subDays(rand(10, 30)) : null;

@@ -185,8 +185,8 @@ export const studentAPI = {
     return response.data;
   },
 
-  async reserveBook(bookId: number) {
-    const response = await api.post(`/student/books/${bookId}/reserve`);
+  async reserveBook(bookId: number, days?: number) {
+    const response = await api.post(`/student/books/${bookId}/reserve`, { days });
     return response.data;
   },
 
@@ -520,6 +520,16 @@ export const librarianAPI = {
     return response.data;
   },
 
+  async approveReservation(reservationId: number) {
+    const response = await api.post(`/librarian/books/reservations/${reservationId}/approve`);
+    return response.data;
+  },
+
+  async rejectReservation(reservationId: number) {
+    const response = await api.post(`/librarian/books/reservations/${reservationId}/reject`);
+    return response.data;
+  },
+
   async getAnalytics(params?: any) {
     const response = await api.get('/librarian/analytics', { params });
     return response.data;
@@ -608,6 +618,11 @@ export const librarianAPI = {
     return response.data;
   },
   async updateLibraryInfo(data: any) {
+    if (data instanceof FormData) {
+      data.append('_method', 'PUT');
+      const response = await api.post('/librarian/library', data);
+      return response.data;
+    }
     const response = await api.put('/librarian/library', data);
     return response.data;
   },
@@ -718,6 +733,34 @@ export const ownerAPI = {
   },
   async updateSettings(data: FormData) {
     const response = await api.post('/owner/settings', data);
+    return response.data;
+  },
+};
+
+// Support API
+export const supportAPI = {
+  async getTickets(role: 'student' | 'librarian' | 'admin') {
+    const response = await api.get(`/${role}/support-tickets`);
+    return response.data;
+  },
+
+  async createTicket(ticket: { subject: string; message: string; priority: string; library_id?: number | null }) {
+    const response = await api.post('/student/support-tickets', ticket);
+    return response.data;
+  },
+
+  async getTicket(role: 'student' | 'librarian' | 'admin', id: number) {
+    const response = await api.get(`/${role}/support-tickets/${id}`);
+    return response.data;
+  },
+
+  async sendMessage(role: 'student' | 'librarian' | 'admin', ticketId: number, message: string) {
+    const response = await api.post(`/${role}/support-tickets/${ticketId}/messages`, { message });
+    return response.data;
+  },
+
+  async updateStatus(role: 'student' | 'librarian' | 'admin', ticketId: number, status: string) {
+    const response = await api.put(`/${role}/support-tickets/${ticketId}/status`, { status });
     return response.data;
   },
 };

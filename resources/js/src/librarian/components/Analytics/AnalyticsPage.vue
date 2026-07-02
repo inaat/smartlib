@@ -1,188 +1,294 @@
 <template>
-  <div class="p-6 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Analytics & Reports</h1>
-        <p class="text-gray-600 mt-1">Comprehensive insights into library performance</p>
-      </div>
-      <div class="flex items-center space-x-3">
-        <select v-model="timeRange" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-          <option value="today">Today</option>
-          <option value="week">Last 7 Days</option>
-          <option value="month">Last 30 Days</option>
-          <option value="year">Last Year</option>
-        </select>
-      </div>
+  <div class="p-6 space-y-6 font-outfit text-slate-700">
+    
+    <!-- Tab Switcher -->
+    <div class="flex items-center space-x-1.5 bg-slate-100 rounded-xl p-1 w-fit">
+      <button
+        @click="activeView = 'analytics'"
+        :class="[
+          'px-5 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-2',
+          activeView === 'analytics'
+            ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/40'
+            : 'text-slate-500 hover:text-slate-700'
+        ]"
+      >
+        <BarChart3 class="w-4 h-4" />
+        <span>Analytics</span>
+      </button>
+      <button
+        @click="activeView = 'reports'"
+        :class="[
+          'px-5 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-2',
+          activeView === 'reports'
+            ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/40'
+            : 'text-slate-500 hover:text-slate-700'
+        ]"
+      >
+        <FileBarChart class="w-4 h-4" />
+        <span>Reports</span>
+      </button>
     </div>
 
-    <!-- Key Metrics -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div class="flex items-center justify-between mb-4">
-          <div class="p-3 bg-blue-100 rounded-lg">
-            <Users class="w-6 h-6 text-blue-600" />
-          </div>
-          <span class="text-green-600 text-sm font-medium flex items-center">
-            <TrendingUp class="w-4 h-4 mr-1" />
-            +12%
-          </span>
-        </div>
-        <h3 class="text-2xl font-bold text-gray-900">{{ stats.total_bookings }}</h3>
-        <p class="text-sm text-gray-600 mt-1">Total Bookings</p>
-      </div>
-
-      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div class="flex items-center justify-between mb-4">
-          <div class="p-3 bg-green-100 rounded-lg">
-            <Calendar class="w-6 h-6 text-green-600" />
-          </div>
-          <span class="text-green-600 text-sm font-medium flex items-center">
-            <TrendingUp class="w-4 h-4 mr-1" />
-            +8%
-          </span>
-        </div>
-        <h3 class="text-2xl font-bold text-gray-900">{{ stats.completed_bookings }}</h3>
-        <p class="text-sm text-gray-600 mt-1">Completed Sessions</p>
-      </div>
-
-      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div class="flex items-center justify-between mb-4">
-          <div class="p-3 bg-purple-100 rounded-lg">
-            <Clock class="w-6 h-6 text-purple-600" />
-          </div>
-          <span class="text-green-600 text-sm font-medium flex items-center">
-            <TrendingUp class="w-4 h-4 mr-1" />
-            +15%
-          </span>
-        </div>
-        <h3 class="text-2xl font-bold text-gray-900">{{ stats.avg_session_duration }}h</h3>
-        <p class="text-sm text-gray-600 mt-1">Avg. Duration</p>
-      </div>
-
-      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div class="flex items-center justify-between mb-4">
-          <div class="p-3 bg-orange-100 rounded-lg">
-            <BarChart3 class="w-6 h-6 text-orange-600" />
-          </div>
-          <span class="text-green-600 text-sm font-medium flex items-center">
-            <TrendingUp class="w-4 h-4 mr-1" />
-            +5%
-          </span>
-        </div>
-        <h3 class="text-2xl font-bold text-gray-900">{{ stats.occupancy_rate }}%</h3>
-        <p class="text-sm text-gray-600 mt-1">Avg. Occupancy</p>
-      </div>
-    </div>
-
-    <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Booking Trends -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Booking Trends</h2>
-        <div class="h-64 flex items-end justify-between space-x-2">
-          <div
-            v-for="(day, index) in bookingTrends"
-            :key="index"
-            class="flex-1 flex flex-col items-center"
+    <!-- Analytics View -->
+    <div v-if="activeView === 'analytics'">
+      <!-- Header Controls -->
+      <div class="flex justify-end items-center mb-6">
+        <div class="flex items-center space-x-3">
+          <select 
+            v-model="timeRange" 
+            class="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 bg-white text-xs font-semibold text-slate-600 cursor-pointer shadow-sm appearance-none pr-8 relative"
           >
-            <div class="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t-lg transition-all hover:opacity-80"
-                 :style="{ height: (day.value / (Math.max(...bookingTrends.map(d => d.value)) || 1) * 100) + '%' }">
+            <option value="today">Today</option>
+            <option value="week">Last 7 Days</option>
+            <option value="month">Last 30 Days</option>
+            <option value="year">Last Year</option>
+          </select>
+          
+          <button 
+            @click="fetchAnalytics" 
+            :disabled="loading"
+            class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-sm"
+            title="Refresh Statistics"
+          >
+            <RefreshCw :class="['w-4 h-4 text-slate-500', loading ? 'animate-spin' : '']" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Key Metrics Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left mb-6">
+        
+        <!-- Total Bookings -->
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between min-h-[140px] hover:translate-y-[-2px] transition-all">
+          <div class="flex items-center justify-between">
+            <div class="p-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-600">
+              <Users class="w-5 h-5" />
             </div>
-            <span class="text-xs text-gray-600 mt-2">{{ day.label }}</span>
+            <span 
+              :class="[
+                'text-sm font-semibold flex items-center',
+                stats.total_bookings_change >= 0 ? 'text-green-600' : 'text-rose-600'
+              ]"
+            >
+              <TrendingUp v-if="stats.total_bookings_change >= 0" class="w-4 h-4 mr-1" />
+              <TrendingDown v-else class="w-4 h-4 mr-1" />
+              {{ stats.total_bookings_change >= 0 ? '+' : '' }}{{ stats.total_bookings_change }}%
+            </span>
+          </div>
+          <div class="mt-4">
+            <h3 class="text-2xl font-bold text-slate-800 tracking-tight">{{ stats.total_bookings }}</h3>
+            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Total Bookings</p>
+          </div>
+        </div>
+
+        <!-- Completed Sessions -->
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between min-h-[140px] hover:translate-y-[-2px] transition-all">
+          <div class="flex items-center justify-between">
+            <div class="p-3 bg-green-50 border border-green-100 rounded-xl text-green-600">
+              <Calendar class="w-5 h-5" />
+            </div>
+            <span 
+              :class="[
+                'text-sm font-semibold flex items-center',
+                stats.completed_bookings_change >= 0 ? 'text-green-600' : 'text-rose-600'
+              ]"
+            >
+              <TrendingUp v-if="stats.completed_bookings_change >= 0" class="w-4 h-4 mr-1" />
+              <TrendingDown v-else class="w-4 h-4 mr-1" />
+              {{ stats.completed_bookings_change >= 0 ? '+' : '' }}{{ stats.completed_bookings_change }}%
+            </span>
+          </div>
+          <div class="mt-4">
+            <h3 class="text-2xl font-bold text-slate-800 tracking-tight">{{ stats.completed_bookings }}</h3>
+            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Completed Sessions</p>
+          </div>
+        </div>
+
+        <!-- Avg Session Duration -->
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between min-h-[140px] hover:translate-y-[-2px] transition-all">
+          <div class="flex items-center justify-between">
+            <div class="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-600">
+              <Clock class="w-5 h-5" />
+            </div>
+            <span 
+              :class="[
+                'text-sm font-semibold flex items-center',
+                stats.avg_session_duration_change >= 0 ? 'text-green-600' : 'text-rose-600'
+              ]"
+            >
+              <TrendingUp v-if="stats.avg_session_duration_change >= 0" class="w-4 h-4 mr-1" />
+              <TrendingDown v-else class="w-4 h-4 mr-1" />
+              {{ stats.avg_session_duration_change >= 0 ? '+' : '' }}{{ stats.avg_session_duration_change }}%
+            </span>
+          </div>
+          <div class="mt-4">
+            <h3 class="text-2xl font-bold text-slate-800 tracking-tight">{{ stats.avg_session_duration }}h</h3>
+            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Avg. Session Duration</p>
+          </div>
+        </div>
+
+        <!-- Avg Occupancy -->
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between min-h-[140px] hover:translate-y-[-2px] transition-all">
+          <div class="flex items-center justify-between">
+            <div class="p-3 bg-orange-50 border border-orange-100 rounded-xl text-orange-600">
+              <BarChart3 class="w-5 h-5" />
+            </div>
+            <span 
+              :class="[
+                'text-sm font-semibold flex items-center',
+                stats.occupancy_rate_change >= 0 ? 'text-green-600' : 'text-rose-600'
+              ]"
+            >
+              <TrendingUp v-if="stats.occupancy_rate_change >= 0" class="w-4 h-4 mr-1" />
+              <TrendingDown v-else class="w-4 h-4 mr-1" />
+              {{ stats.occupancy_rate_change >= 0 ? '+' : '' }}{{ stats.occupancy_rate_change }}%
+            </span>
+          </div>
+          <div class="mt-4">
+            <h3 class="text-2xl font-bold text-slate-800 tracking-tight">{{ stats.occupancy_rate }}%</h3>
+            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Avg. Occupancy Rate</p>
           </div>
         </div>
       </div>
 
-      <!-- Peak Hours -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Peak Hours</h2>
-        <div class="space-y-3">
-          <div
-            v-for="hour in peakHours"
-            :key="hour.time"
-            class="flex items-center space-x-3"
-          >
-            <span class="text-sm font-medium text-gray-700 w-20">{{ hour.time }}</span>
-            <div class="flex-1 bg-gray-200 rounded-full h-8 overflow-hidden">
-              <div
-                class="h-full bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full flex items-center justify-end pr-3 transition-all"
-                :style="{ width: hour.percentage + '%' }"
-              >
-                <span class="text-xs font-medium text-white">{{ hour.bookings }}</span>
+      <!-- Charts Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left mb-6">
+        
+        <!-- Booking Trends Bar Chart -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1">Booking Trends</h2>
+            <p class="text-[10px] text-slate-400 font-semibold mb-6">Total bookings distribution over selected time duration.</p>
+          </div>
+          
+          <div class="h-64 flex items-end justify-between space-x-2 border-b border-slate-100 pb-2">
+            <div
+              v-for="(day, index) in bookingTrends"
+              :key="index"
+              class="flex-1 h-full flex flex-col justify-end items-center group cursor-pointer relative"
+            >
+              <!-- Hover details popover -->
+              <div class="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[9px] font-bold py-1 px-2 rounded absolute mb-2 -translate-y-16 shadow pointer-events-none z-20">
+                {{ day.value }} bookings
+              </div>
+              
+              <!-- Bar wrapper container to allow proper percentage height rendering -->
+              <div class="w-full h-44 flex items-end relative">
+                <div 
+                  class="w-full bg-gradient-to-t from-emerald-600 to-teal-500 rounded-t-md transition-all group-hover:brightness-105"
+                  :style="{ height: (day.value / (Math.max(...bookingTrends.map(d => d.value)) || 1) * 100) + '%' }"
+                ></div>
+              </div>
+              
+              <span class="text-[10px] font-bold text-slate-400 mt-2 truncate w-full text-center">{{ day.label }}</span>
+            </div>
+            <div v-if="bookingTrends.length === 0" class="w-full h-full flex items-center justify-center text-slate-400 text-xs italic">
+              No booking trend data for this period
+            </div>
+          </div>
+        </div>
+
+        <!-- Peak Hours Slots Chart -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1">Peak Occupancy Hours</h2>
+            <p class="text-[10px] text-slate-400 font-semibold mb-6">Distribution of session booking times across high-traffic hours.</p>
+          </div>
+
+          <div class="space-y-4 flex-1 flex flex-col justify-center">
+            <div
+              v-for="hour in peakHours"
+              :key="hour.time"
+              class="flex items-center space-x-3"
+            >
+              <span class="text-[11px] font-bold text-slate-500 w-16 uppercase tracking-wider">{{ hour.time }}</span>
+              <div class="flex-1 bg-slate-50 rounded-xl h-6 overflow-hidden border border-slate-100 relative">
+                <div
+                  class="h-full bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl transition-all"
+                  :style="{ width: hour.percentage + '%' }"
+                ></div>
+                <span class="absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-slate-600">{{ hour.bookings }} Bookings</span>
               </div>
             </div>
+            <div v-if="peakHours.length === 0" class="text-center py-8 text-slate-400 text-xs italic">
+              No traffic data available for this range
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Student Activity & Popular Seats -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Top Students -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-          <h2 class="text-lg font-bold text-gray-900">Top Active Students</h2>
-        </div>
-        <div class="p-6">
-          <div class="space-y-4">
+      <!-- Student Activity & Popular Seats lists -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left">
+        
+        <!-- Top Active Students List -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="p-5 border-b border-slate-50">
+            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Top Active Students</h2>
+            <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Registered students with most library study time.</p>
+          </div>
+          
+          <div class="p-5 space-y-3.5">
             <div v-if="topStudents.length === 0" class="text-center py-8">
-              <Award class="w-10 h-10 text-gray-200 mx-auto mb-2" />
-              <p class="text-sm text-gray-500">No active students found in this period</p>
+              <Award class="w-8 h-8 text-slate-200 mx-auto mb-2" />
+              <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">No student data available</p>
             </div>
+            
             <div
               v-else
               v-for="(student, index) in topStudents"
               :key="student.id"
-              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              class="flex items-center justify-between p-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl transition-colors"
             >
               <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
-                  {{ index + 1 }}
+                <div class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center font-bold text-xs">
+                  #{{ index + 1 }}
                 </div>
                 <div>
-                  <h4 class="font-medium text-gray-900">{{ student.name }}</h4>
-                  <p class="text-sm text-gray-500">{{ student.hours || 0 }} hours studied</p>
+                  <h4 class="font-bold text-slate-700 text-xs">{{ student.name }}</h4>
+                  <p class="text-[10px] text-slate-400 font-semibold mt-0.5">{{ student.hours || 0 }} Hours Logged</p>
                 </div>
               </div>
-              <div class="flex items-center space-x-2">
-                <Award class="w-5 h-5 text-yellow-500" />
-                <span class="text-sm font-medium text-gray-900">{{ student.points || 0 }} pts</span>
+              
+              <div class="flex items-center space-x-1.5 px-3 py-1 bg-white border border-slate-100 rounded-lg text-amber-600">
+                <Award class="w-3.5 h-3.5" />
+                <span class="text-[10px] font-bold">{{ student.points || 0 }} pts</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Popular Seats -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-          <h2 class="text-lg font-bold text-gray-900">Most Popular Seats</h2>
-        </div>
-        <div class="p-6">
-          <div class="space-y-4">
+        <!-- Most Popular Seats List -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="p-5 border-b border-slate-50">
+            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Most Popular Seats</h2>
+            <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Top reservation spots and seat utility percentage rates.</p>
+          </div>
+
+          <div class="p-5 space-y-3.5">
             <div v-if="popularSeats.length === 0" class="text-center py-8">
-              <MapPin class="w-10 h-10 text-gray-200 mx-auto mb-2" />
-              <p class="text-sm text-gray-500">No seat data available for this period</p>
+              <MapPin class="w-8 h-8 text-slate-200 mx-auto mb-2" />
+              <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">No seat statistics available</p>
             </div>
+
             <div
               v-else
               v-for="seat in popularSeats"
               :key="seat.number"
-              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              class="flex items-center justify-between p-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl transition-colors"
             >
               <div class="flex items-center space-x-3">
-                <div class="p-2 bg-purple-100 rounded-lg">
-                  <MapPin class="w-5 h-5 text-purple-600" />
+                <div class="p-2 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-700">
+                  <MapPin class="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 class="font-medium text-gray-900">Seat {{ seat.number }}</h4>
-                  <p class="text-sm text-gray-500">{{ seat.bookings }} bookings</p>
+                  <h4 class="font-bold text-slate-700 text-xs">Seat {{ seat.number }}</h4>
+                  <p class="text-[10px] text-slate-400 font-semibold mt-0.5">{{ seat.bookings }} total reservations</p>
                 </div>
               </div>
+
               <div class="text-right">
-                <p class="text-sm font-medium text-gray-900">{{ seat.utilization }}%</p>
-                <p class="text-xs text-gray-500">utilization</p>
+                <span class="text-xs font-bold text-slate-700">{{ seat.utilization }}%</span>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">utilization</p>
               </div>
             </div>
           </div>
@@ -190,13 +296,15 @@
       </div>
     </div>
 
-    <!-- Revenue & Statistics -->
-    
+    <!-- Reports View -->
+    <div v-if="activeView === 'reports'">
+      <ReportsPage />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, defineAsyncComponent } from 'vue';
 import {
   Users,
   Calendar,
@@ -204,39 +312,39 @@ import {
   BarChart3,
   TrendingUp,
   TrendingDown,
-  Download,
+  RefreshCw,
   Award,
   MapPin,
-  DollarSign,
-  XCircle,
-  Star
+  FileBarChart
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/librarian/services/librarianApi';
 
+// Lazy-load ReportsPage to avoid loading its heavy code unless the Reports tab is active
+const ReportsPage = defineAsyncComponent(() => import('@/librarian/components/Reports/ReportsPage.vue'));
+
+const activeView = ref<'analytics' | 'reports'>('analytics');
 const loading = ref(false);
 const timeRange = ref('week');
 const stats = ref({
   total_bookings: 0,
+  total_bookings_change: 0,
   active_bookings: 0,
   completed_bookings: 0,
+  completed_bookings_change: 0,
   completion_rate: 0,
   no_show_rate: 0,
   avg_session_duration: 0,
+  avg_session_duration_change: 0,
   total_seats: 0,
   available_seats: 0,
   occupancy_rate: 0,
-  total_books: 0,
-  digital_books: 0,
-  physical_books: 0,
-  total_events: 0,
-  upcoming_events: 0,
-  past_events: 0
+  occupancy_rate_change: 0
 });
 
-const bookingTrends = ref([]);
-const peakHours = ref([]);
-const topStudents = ref([]); // Need to add backend support for this
-const popularSeats = ref([]); // Need to add backend support for this
+const bookingTrends = ref<any[]>([]);
+const peakHours = ref<any[]>([]);
+const topStudents = ref<any[]>([]);
+const popularSeats = ref<any[]>([]);
 
 const fetchAnalytics = async () => {
   loading.value = true;
@@ -287,3 +395,11 @@ onMounted(() => {
   fetchAnalytics();
 });
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+</style>

@@ -12,6 +12,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        \App\Models\SeatBooking::cancelExpiredBookings();
         $library = Auth::user()->library;
 
         if (!$library) {

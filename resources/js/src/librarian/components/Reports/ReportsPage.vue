@@ -1,50 +1,67 @@
 <template>
-  <div class="space-y-8 pb-12">
-    <!-- Page Header -->
-    <div>
-      <h1 class="text-3xl font-black text-gray-900">Reports</h1>
-      <p class="text-gray-500 mt-1">Generate, schedule, and export library reports</p>
+  <div class="space-y-6 pb-12 font-outfit text-slate-700">
+    
+    <!-- Hero Banner Card -->
+    <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-900 p-8 text-white shadow-lg text-left">
+      <!-- Decorative background shapes -->
+      <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
+      <div class="absolute bottom-0 left-16 w-40 h-40 bg-white/5 rounded-full translate-y-1/2"></div>
+      <div class="absolute top-8 right-32 w-20 h-20 bg-white/5 rounded-full"></div>
+
+      <div class="relative z-10 max-w-2xl">
+        <h1 class="text-2xl font-bold tracking-tight leading-tight">Library Reports Center</h1>
+        <p class="text-white/70 mt-2 text-xs font-medium leading-relaxed">
+          Generate real-time analytics, export data spreadsheets, or configure automated report delivery directly to your inbox.
+        </p>
+      </div>
     </div>
 
     <!-- Quick Generate Section -->
-    <div>
-      <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-        <Zap class="w-5 h-5 mr-2 text-amber-500" />
-        Quick Generate
+    <div class="space-y-4">
+      <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+        <Zap class="w-4 h-4 text-amber-500" />
+        <span>Quick Generate</span>
       </h2>
-      <div class="space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div
           v-for="summary in quickSummaries"
           :key="summary.label"
-          class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md hover:border-purple-100 transition-all"
+          class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md hover:border-emerald-200 transition-all text-left group"
         >
-          <div class="flex items-center gap-3">
-            <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', summary.bgColor]">
-              <component :is="summary.icon" :class="['w-5 h-5', summary.iconColor]" />
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div :class="['w-9 h-9 rounded-lg flex items-center justify-center border', summary.bgColor]">
+                <component :is="summary.icon" :class="['w-4.5 h-4.5', summary.iconColor]" />
+              </div>
+              <span class="font-bold text-sm text-slate-800">{{ summary.label }}</span>
             </div>
-            <span class="font-bold text-gray-800">{{ summary.label }}</span>
+            <p class="text-[11px] text-slate-400 font-medium mb-5">Instant compilation of key metrics, bookings, and active stats.</p>
           </div>
-          <div class="flex items-center gap-2 flex-wrap">
+          
+          <div class="grid grid-cols-3 gap-2">
             <button
               @click="exportReport(summary.type, 'pdf')"
-              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-all"
+              class="inline-flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-all cursor-pointer shadow-sm"
+              title="Download PDF"
             >
               <FileText class="w-3.5 h-3.5" />
-              Export PDF
+              <span>PDF</span>
             </button>
             <button
               @click="exportReport(summary.type, 'excel')"
-              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 border border-green-100 transition-all"
+              class="inline-flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold text-green-600 bg-green-50 hover:bg-green-100 border border-green-100 transition-all cursor-pointer shadow-sm"
+              title="Download Excel"
             >
               <Sheet class="w-3.5 h-3.5" />
-              Export Excel
+              <span>Excel</span>
             </button>
             <button
               @click="openScheduleModal(summary.type, summary.label)"
-              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-100 transition-all"
+              class="inline-flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 transition-all cursor-pointer shadow-sm"
+              title="Schedule Report"
             >
               <Clock class="w-3.5 h-3.5" />
-              Schedule
+              <span>Schedule</span>
             </button>
           </div>
         </div>
@@ -52,128 +69,155 @@
     </div>
 
     <!-- Report Categories -->
-    <div>
-      <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-        <LayoutGrid class="w-5 h-5 mr-2 text-indigo-500" />
-        Report Categories
+    <div class="space-y-4">
+      <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+        <LayoutGrid class="w-4 h-4 text-teal-500" />
+        <span>Report Categories</span>
       </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 text-left">
         <div
           v-for="cat in reportCategories"
           :key="cat.type"
-          class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg hover:border-purple-100 transition-all group"
+          class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all flex flex-col justify-between"
         >
-          <div class="flex items-center gap-3 mb-3">
-            <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', cat.bgColor]">
-              <component :is="cat.icon" :class="['w-5 h-5', cat.iconColor]" />
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div :class="['w-9 h-9 rounded-lg flex items-center justify-center border', cat.bgColor]">
+                <component :is="cat.icon" :class="['w-4.5 h-4.5', cat.iconColor]" />
+              </div>
+              <h3 class="font-bold text-slate-800 text-sm">{{ cat.label }}</h3>
             </div>
-            <h3 class="font-bold text-gray-900 text-base">{{ cat.label }}</h3>
+            <ul class="text-[11px] text-slate-400 font-semibold mb-6 space-y-1.5 pl-1">
+              <li v-for="desc in cat.descriptions" :key="desc" class="flex items-start">
+                <span class="mr-2 text-emerald-500">•</span>{{ desc }}
+              </li>
+            </ul>
           </div>
-          <ul class="text-xs text-gray-500 mb-5 space-y-1 pl-1">
-            <li v-for="desc in cat.descriptions" :key="desc" class="flex items-start">
-              <span class="mr-1.5 text-gray-300">•</span>{{ desc }}
-            </li>
-          </ul>
-          <div class="flex items-center gap-2 flex-wrap">
+          
+          <div class="grid grid-cols-3 gap-1.5 pt-3 border-t border-slate-50">
             <button
               @click="openExportModal(cat.type, cat.label, 'pdf')"
-              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-all"
+              class="inline-flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-all cursor-pointer"
             >
               <FileText class="w-3 h-3" />
-              Export PDF
+              <span>PDF</span>
             </button>
             <button
               @click="openExportModal(cat.type, cat.label, 'excel')"
-              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-green-600 bg-green-50 hover:bg-green-100 border border-green-100 transition-all"
+              class="inline-flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold text-green-600 bg-green-50 hover:bg-green-100 border border-green-100 transition-all cursor-pointer"
             >
               <Sheet class="w-3 h-3" />
-              Excel
+              <span>Excel</span>
             </button>
             <button
               @click="openScheduleModal(cat.type, cat.label)"
-              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-100 transition-all"
+              class="inline-flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 transition-all cursor-pointer"
             >
               <CalendarClock class="w-3 h-3" />
-              Schedule
+              <span>Schedule</span>
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Scheduled Reports / Report History Tabs -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div class="flex border-b border-gray-100">
+    <!-- Scheduled Reports & Report History Panel -->
+    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden text-left">
+      <div class="flex items-center space-x-1.5 bg-slate-50/50 border-b border-slate-100 p-2">
         <button
           @click="activeTab = 'scheduled'"
           :class="[
-            'flex-1 sm:flex-none px-6 py-4 text-sm font-bold transition-all border-b-2',
-            activeTab === 'scheduled' ? 'border-purple-600 text-purple-700 bg-purple-50/50' : 'border-transparent text-gray-500 hover:text-gray-700'
+            'px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center space-x-2',
+            activeTab === 'scheduled'
+              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/40'
+              : 'text-slate-500 hover:text-slate-700'
           ]"
         >
-          <CalendarClock class="w-4 h-4 inline mr-1.5 -mt-0.5" />
-          Scheduled Reports
+          <CalendarClock class="w-3.5 h-3.5" />
+          <span>Scheduled Reports</span>
         </button>
         <button
           @click="activeTab = 'history'"
           :class="[
-            'flex-1 sm:flex-none px-6 py-4 text-sm font-bold transition-all border-b-2',
-            activeTab === 'history' ? 'border-purple-600 text-purple-700 bg-purple-50/50' : 'border-transparent text-gray-500 hover:text-gray-700'
+            'px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center space-x-2',
+            activeTab === 'history'
+              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/40'
+              : 'text-slate-500 hover:text-slate-700'
           ]"
         >
-          <History class="w-4 h-4 inline mr-1.5 -mt-0.5" />
-          Report History
+          <History class="w-3.5 h-3.5" />
+          <span>Report History</span>
         </button>
       </div>
 
-      <!-- Scheduled Reports Table -->
+      <!-- Scheduled Reports Tab -->
       <div v-if="activeTab === 'scheduled'" class="p-6">
         <div v-if="scheduledReports.length === 0" class="text-center py-16">
-          <CalendarClock class="w-12 h-12 text-gray-200 mx-auto mb-4" />
-          <p class="text-gray-400 font-medium">No scheduled reports yet.</p>
-          <p class="text-xs text-gray-300 mt-1">Click "Schedule" on any report above to create one.</p>
+          <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-300">
+            <CalendarClock class="w-6 h-6" />
+          </div>
+          <p class="text-slate-400 font-semibold text-xs uppercase tracking-wider">No scheduled reports yet</p>
+          <p class="text-[11px] text-slate-400 mt-1">Configure automated notifications by clicking "Schedule" above.</p>
         </div>
+        
         <div v-else class="overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="w-full text-xs">
             <thead>
-              <tr class="text-xs text-gray-400 font-bold uppercase tracking-wider border-b border-gray-100">
-                <th class="text-left py-3 px-3">Name</th>
-                <th class="text-left py-3 px-3">Frequency</th>
-                <th class="text-left py-3 px-3">Format</th>
-                <th class="text-left py-3 px-3">Recipient</th>
-                <th class="text-left py-3 px-3">Status</th>
-                <th class="text-right py-3 px-3">Actions</th>
+              <tr class="text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+                <th class="text-left py-3.5 px-4 font-semibold">Report Name</th>
+                <th class="text-left py-3.5 px-4 font-semibold">Frequency</th>
+                <th class="text-left py-3.5 px-4 font-semibold">Format</th>
+                <th class="text-left py-3.5 px-4 font-semibold">Recipient</th>
+                <th class="text-left py-3.5 px-4 font-semibold">Status</th>
+                <th class="text-right py-3.5 px-4 font-semibold">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr v-for="(sr, idx) in scheduledReports" :key="idx" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                <td class="py-3 px-3 font-bold text-gray-800">{{ sr.name }}</td>
-                <td class="py-3 px-3 text-gray-600 capitalize">{{ sr.frequency }}</td>
-                <td class="py-3 px-3">
-                  <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase" :class="sr.format === 'pdf' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'">
+            <tbody class="divide-y divide-slate-50">
+              <tr v-for="(sr, idx) in scheduledReports" :key="idx" class="hover:bg-slate-50/50 transition-colors">
+                <td class="py-3.5 px-4 font-bold text-slate-800">{{ sr.name }}</td>
+                <td class="py-3.5 px-4 text-slate-500 font-medium capitalize">{{ sr.frequency }}</td>
+                <td class="py-3.5 px-4">
+                  <span 
+                    :class="[
+                      'px-2 py-0.5 rounded text-[9px] font-bold uppercase border',
+                      sr.format === 'pdf' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-green-50 border-green-100 text-green-600'
+                    ]"
+                  >
                     {{ sr.format }}
                   </span>
                 </td>
-                <td class="py-3 px-3 text-gray-500 text-xs">{{ sr.recipient }}</td>
-                <td class="py-3 px-3">
+                <td class="py-3.5 px-4 text-slate-500 font-medium">{{ sr.recipient }}</td>
+                <td class="py-3.5 px-4">
                   <span :class="[
-                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase',
-                    sr.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                    'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border',
+                    sr.status === 'active' ? 'bg-green-50 border-green-100 text-green-700' : 'bg-yellow-50 border-yellow-100 text-yellow-700'
                   ]">
                     <span :class="['w-1.5 h-1.5 rounded-full', sr.status === 'active' ? 'bg-green-500' : 'bg-yellow-500']"></span>
                     {{ sr.status }}
                   </span>
                 </td>
-                <td class="py-3 px-3 text-right">
-                  <div class="flex items-center justify-end gap-1">
-                    <button @click="toggleScheduleStatus(idx)" class="p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600 transition-colors" :title="sr.status === 'active' ? 'Pause' : 'Resume'">
+                <td class="py-3.5 px-4 text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <button 
+                      @click="toggleScheduleStatus(idx)" 
+                      class="p-2 rounded-lg hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-colors border border-transparent hover:border-emerald-100 cursor-pointer" 
+                      :title="sr.status === 'active' ? 'Pause' : 'Resume'"
+                    >
                       <Pause v-if="sr.status === 'active'" class="w-3.5 h-3.5" />
                       <Play v-else class="w-3.5 h-3.5" />
                     </button>
-                    <button @click="runScheduledNow(idx)" class="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors" title="Run Now">
+                    <button 
+                      @click="runScheduledNow(idx)" 
+                      class="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors border border-transparent hover:border-blue-100 cursor-pointer" 
+                      title="Run Now"
+                    >
                       <RefreshCw class="w-3.5 h-3.5" />
                     </button>
-                    <button @click="deleteScheduled(idx)" class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors" title="Delete">
+                    <button 
+                      @click="deleteScheduled(idx)" 
+                      class="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors border border-transparent hover:border-red-100 cursor-pointer" 
+                      title="Delete"
+                    >
                       <Trash2 class="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -184,38 +228,49 @@
         </div>
       </div>
 
-      <!-- Report History Table -->
+      <!-- Report History Tab -->
       <div v-if="activeTab === 'history'" class="p-6">
         <div v-if="reportHistory.length === 0" class="text-center py-16">
-          <History class="w-12 h-12 text-gray-200 mx-auto mb-4" />
-          <p class="text-gray-400 font-medium">No reports generated yet.</p>
-          <p class="text-xs text-gray-300 mt-1">Export a report above to see it here.</p>
+          <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-300">
+            <History class="w-6 h-6" />
+          </div>
+          <p class="text-slate-400 font-semibold text-xs uppercase tracking-wider">No reports generated yet</p>
+          <p class="text-[11px] text-slate-400 mt-1">Export any reports above to initialize generation log history.</p>
         </div>
+        
         <div v-else class="overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="w-full text-xs">
             <thead>
-              <tr class="text-xs text-gray-400 font-bold uppercase tracking-wider border-b border-gray-100">
-                <th class="text-left py-3 px-3">Report</th>
-                <th class="text-left py-3 px-3">Type</th>
-                <th class="text-left py-3 px-3">Format</th>
-                <th class="text-left py-3 px-3">Generated</th>
-                <th class="text-right py-3 px-3">Actions</th>
+              <tr class="text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+                <th class="text-left py-3.5 px-4 font-semibold">Report Title</th>
+                <th class="text-left py-3.5 px-4 font-semibold">Category Type</th>
+                <th class="text-left py-3.5 px-4 font-semibold">Format</th>
+                <th class="text-left py-3.5 px-4 font-semibold">Generated Timestamp</th>
+                <th class="text-right py-3.5 px-4 font-semibold">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr v-for="(h, idx) in reportHistory" :key="idx" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                <td class="py-3 px-3 font-bold text-gray-800">{{ h.name }}</td>
-                <td class="py-3 px-3 text-gray-600 capitalize">{{ h.type }}</td>
-                <td class="py-3 px-3">
-                  <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase" :class="h.format === 'pdf' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'">
+            <tbody class="divide-y divide-slate-50">
+              <tr v-for="(h, idx) in reportHistory" :key="idx" class="hover:bg-slate-50/50 transition-colors">
+                <td class="py-3.5 px-4 font-bold text-slate-800">{{ h.name }}</td>
+                <td class="py-3.5 px-4 text-slate-500 font-medium capitalize">{{ h.type }}</td>
+                <td class="py-3.5 px-4">
+                  <span 
+                    :class="[
+                      'px-2 py-0.5 rounded text-[9px] font-bold uppercase border',
+                      h.format === 'pdf' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-green-50 border-green-100 text-green-600'
+                    ]"
+                  >
                     {{ h.format }}
                   </span>
                 </td>
-                <td class="py-3 px-3 text-gray-500 text-xs">{{ h.generatedAt }}</td>
-                <td class="py-3 px-3 text-right">
-                  <button @click="downloadReport(h)" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 transition-all">
-                    <Download class="w-3 h-3" />
-                    Download
+                <td class="py-3.5 px-4 text-slate-400 font-semibold">{{ h.generatedAt }}</td>
+                <td class="py-3.5 px-4 text-right">
+                  <button 
+                    @click="downloadReport(h)" 
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 transition-all cursor-pointer shadow-sm"
+                  >
+                    <Download class="w-3.5 h-3.5" />
+                    <span>Download</span>
                   </button>
                 </td>
               </tr>
@@ -227,31 +282,36 @@
 
     <!-- Schedule Modal -->
     <div v-if="scheduleModal.show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="scheduleModal.show = false">
-      <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h3 class="text-xl font-black text-gray-900">Schedule Report</h3>
-            <p class="text-sm text-gray-500 mt-1">{{ scheduleModal.reportName }}</p>
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between text-left">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100/50 flex-shrink-0">
+              <CalendarClock class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-800 leading-snug">Schedule Report</h3>
+              <p class="text-[10px] font-semibold text-slate-400 uppercase mt-0.5">{{ scheduleModal.reportName }}</p>
+            </div>
           </div>
-          <button @click="scheduleModal.show = false" class="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
-            <X class="w-5 h-5" />
+          <button @click="scheduleModal.show = false" class="p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
+            <X class="w-5 h-5 text-slate-400" />
           </button>
         </div>
 
-        <div class="space-y-5">
+        <div class="p-6 space-y-5 text-left font-outfit text-slate-700">
           <!-- Frequency -->
           <div>
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Frequency</label>
+            <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Delivery Frequency</label>
             <div class="grid grid-cols-3 gap-2">
               <button
                 v-for="f in ['daily', 'weekly', 'monthly']"
                 :key="f"
                 @click="scheduleModal.frequency = f"
                 :class="[
-                  'py-2.5 rounded-xl font-bold text-sm transition-all border-2 capitalize',
+                  'py-2.5 rounded-xl font-bold text-xs transition-all border-2 capitalize cursor-pointer',
                   scheduleModal.frequency === f
-                    ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-100'
-                    : 'bg-gray-50 text-gray-600 border-gray-100 hover:border-purple-200'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-slate-50 text-slate-600 border-transparent hover:border-emerald-100'
                 ]"
               >
                 {{ f }}
@@ -261,65 +321,65 @@
 
           <!-- Format -->
           <div>
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Format</label>
+            <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Document Format</label>
             <div class="grid grid-cols-2 gap-2">
               <button
                 @click="scheduleModal.format = 'pdf'"
                 :class="[
-                  'py-2.5 rounded-xl font-bold text-sm transition-all border-2 flex items-center justify-center gap-2',
+                  'py-2.5 rounded-xl font-bold text-xs transition-all border-2 flex items-center justify-center gap-2 cursor-pointer',
                   scheduleModal.format === 'pdf'
-                    ? 'bg-red-50 text-red-700 border-red-300 shadow-sm'
-                    : 'bg-gray-50 text-gray-600 border-gray-100 hover:border-red-200'
+                    ? 'bg-red-55 border-red-200 text-red-700'
+                    : 'bg-slate-50 text-slate-600 border-transparent hover:border-red-200'
                 ]"
               >
-                <FileText class="w-4 h-4" /> PDF
+                <FileText class="w-4 h-4 text-red-500" /> PDF
               </button>
               <button
                 @click="scheduleModal.format = 'excel'"
                 :class="[
-                  'py-2.5 rounded-xl font-bold text-sm transition-all border-2 flex items-center justify-center gap-2',
+                  'py-2.5 rounded-xl font-bold text-xs transition-all border-2 flex items-center justify-center gap-2 cursor-pointer',
                   scheduleModal.format === 'excel'
-                    ? 'bg-green-50 text-green-700 border-green-300 shadow-sm'
-                    : 'bg-gray-50 text-gray-600 border-gray-100 hover:border-green-200'
+                    ? 'bg-green-55 border-green-200 text-green-700'
+                    : 'bg-slate-50 text-slate-600 border-transparent hover:border-green-200'
                 ]"
               >
-                <Sheet class="w-4 h-4" /> Excel
+                <Sheet class="w-4 h-4 text-green-500" /> Excel
               </button>
             </div>
           </div>
 
           <!-- Recipient Email -->
           <div>
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Recipient Email</label>
+            <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Recipient Email Address</label>
             <input
               v-model="scheduleModal.recipient"
               type="email"
               placeholder="admin@example.com"
-              class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
             />
           </div>
 
           <!-- Time -->
           <div>
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Send At</label>
+            <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Preferred Send Time</label>
             <input
               v-model="scheduleModal.time"
               type="time"
-              class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
             />
           </div>
         </div>
 
-        <div class="flex gap-3 mt-8">
+        <div class="p-6 border-t border-gray-100 bg-slate-50/50 flex gap-3">
           <button
             @click="scheduleModal.show = false"
-            class="flex-1 py-3 rounded-2xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all"
+            class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition-all text-xs cursor-pointer"
           >
             Cancel
           </button>
           <button
             @click="saveSchedule"
-            class="flex-1 py-3 rounded-2xl font-bold text-white bg-purple-600 hover:bg-purple-700 transition-all shadow-lg shadow-purple-100"
+            class="flex-1 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold cursor-pointer"
           >
             Save Schedule
           </button>
@@ -329,56 +389,66 @@
 
     <!-- Export Timespan Modal -->
     <div v-if="exportModal.show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="exportModal.show = false">
-      <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h3 class="text-xl font-black text-gray-900">Export Report</h3>
-            <p class="text-sm text-gray-500 mt-1">{{ exportModal.reportName }}</p>
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between text-left">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100/50 flex-shrink-0">
+              <FileText class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-800 leading-snug">Export Report</h3>
+              <p class="text-[10px] font-semibold text-slate-400 uppercase mt-0.5">{{ exportModal.reportName }}</p>
+            </div>
           </div>
-          <button @click="exportModal.show = false" class="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
-            <X class="w-5 h-5" />
+          <button @click="exportModal.show = false" class="p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
+            <X class="w-5 h-5 text-slate-400" />
           </button>
         </div>
 
-        <!-- Timespan -->
-        <div class="mb-6">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Time Period</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button
-              v-for="ts in timespanOptions"
-              :key="ts.value"
-              @click="exportModal.timespan = ts.value"
-              :class="[
-                'py-3 rounded-xl font-bold text-sm transition-all border-2',
-                exportModal.timespan === ts.value
-                  ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-100 scale-105'
-                  : 'bg-gray-50 text-gray-600 border-gray-100 hover:border-purple-200 hover:bg-purple-50'
-              ]"
-            >
-              {{ ts.label }}
-            </button>
+        <div class="p-6 space-y-5 text-left font-outfit text-slate-700">
+          <!-- Timespan -->
+          <div>
+            <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5 block">Time Period</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button
+                v-for="ts in timespanOptions"
+                :key="ts.value"
+                @click="exportModal.timespan = ts.value"
+                :class="[
+                  'py-2.5 rounded-xl font-bold text-xs transition-all border-2 cursor-pointer',
+                  exportModal.timespan === ts.value
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-slate-50 text-slate-600 border-transparent hover:border-emerald-100'
+                ]"
+              >
+                {{ ts.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Format indicator -->
+          <div class="p-4 rounded-xl border flex items-center gap-3" :class="exportModal.format === 'pdf' ? 'bg-red-50/50 border-red-100 text-red-700' : 'bg-green-50/50 border-green-100 text-green-700'">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-white border" :class="exportModal.format === 'pdf' ? 'border-red-100' : 'border-green-100'">
+              <FileText v-if="exportModal.format === 'pdf'" class="w-4 h-4 text-red-500" />
+              <Sheet v-else class="w-4 h-4 text-green-500" />
+            </div>
+            <div>
+              <p class="text-xs font-bold">{{ exportModal.format === 'pdf' ? 'PDF Document' : 'Excel Spreadsheet' }}</p>
+              <p class="text-[10px] text-slate-400 font-semibold mt-0.5">High-fidelity layout report format.</p>
+            </div>
           </div>
         </div>
 
-        <!-- Format indicator -->
-        <div class="mb-6 p-4 rounded-2xl border" :class="exportModal.format === 'pdf' ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'">
-          <div class="flex items-center gap-2">
-            <FileText v-if="exportModal.format === 'pdf'" class="w-4 h-4 text-red-500" />
-            <Sheet v-else class="w-4 h-4 text-green-500" />
-            <span class="text-sm font-bold" :class="exportModal.format === 'pdf' ? 'text-red-700' : 'text-green-700'">{{ exportModal.format === 'pdf' ? 'PDF Document' : 'Excel Spreadsheet' }}</span>
-          </div>
-        </div>
-
-        <div class="flex gap-3">
+        <div class="p-6 border-t border-gray-100 bg-slate-50/50 flex gap-3">
           <button
             @click="exportModal.show = false"
-            class="flex-1 py-3 rounded-2xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all"
+            class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition-all text-xs cursor-pointer"
           >
             Cancel
           </button>
           <button
             @click="confirmExport"
-            class="flex-1 py-3 rounded-2xl font-bold text-white bg-purple-600 hover:bg-purple-700 transition-all shadow-lg shadow-purple-100"
+            class="flex-1 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold cursor-pointer"
           >
             Generate
           </button>
@@ -388,18 +458,18 @@
 
     <!-- Export Progress Toast -->
     <Transition name="slide-up">
-      <div v-if="exportToast.show" class="fixed bottom-6 right-6 z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 flex items-center gap-4 min-w-[320px]">
-        <div v-if="exportToast.status === 'loading'" class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-          <RefreshCw class="w-5 h-5 text-purple-600 animate-spin" />
+      <div v-if="exportToast.show" class="fixed bottom-6 right-6 z-50 bg-white rounded-xl shadow-xl border border-gray-100 p-5 flex items-center gap-4 min-w-[320px] text-left">
+        <div v-if="exportToast.status === 'loading'" class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+          <RefreshCw class="w-5 h-5 text-emerald-600 animate-spin" />
         </div>
-        <div v-else class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+        <div v-else class="w-10 h-10 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
           <CheckCircle class="w-5 h-5 text-green-600" />
         </div>
         <div>
-          <p class="font-bold text-gray-800 text-sm">{{ exportToast.title }}</p>
-          <p class="text-xs text-gray-500">{{ exportToast.subtitle }}</p>
+          <p class="font-bold text-slate-800 text-xs">{{ exportToast.title }}</p>
+          <p class="text-[10px] text-slate-400 font-semibold mt-0.5">{{ exportToast.subtitle }}</p>
         </div>
-        <button @click="exportToast.show = false" class="ml-auto p-1 rounded-lg hover:bg-gray-100 text-gray-400">
+        <button @click="exportToast.show = false" class="ml-auto p-1.5 hover:bg-slate-50 rounded-lg text-slate-400 transition-colors cursor-pointer">
           <X class="w-4 h-4" />
         </button>
       </div>
@@ -424,42 +494,42 @@ const activeTab = ref<'scheduled' | 'history'>('scheduled');
 
 // ---------- Quick Generate ----------
 const quickSummaries = [
-  { label: 'Generate Today Summary', type: 'today', icon: CalendarDays, bgColor: 'bg-blue-100', iconColor: 'text-blue-600' },
-  { label: 'Generate Weekly Summary', type: 'weekly', icon: Calendar, bgColor: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-  { label: 'Generate Monthly Summary', type: 'monthly', icon: CalendarClock, bgColor: 'bg-purple-100', iconColor: 'text-purple-600' },
+  { label: 'Today Summary', type: 'today', icon: CalendarDays, bgColor: 'bg-blue-50 border-blue-100', iconColor: 'text-blue-500' },
+  { label: 'Weekly Summary', type: 'weekly', icon: Calendar, bgColor: 'bg-emerald-50 border-emerald-100', iconColor: 'text-emerald-500' },
+  { label: 'Monthly Summary', type: 'monthly', icon: CalendarClock, bgColor: 'bg-teal-50 border-teal-100', iconColor: 'text-teal-500' },
 ];
 
 // ---------- Categories ----------
 const reportCategories = [
   {
     label: 'Attendance', type: 'attendance', icon: Users,
-    bgColor: 'bg-violet-100', iconColor: 'text-violet-600',
-    descriptions: ['Reports, present/absent approx.', 'Daily and weekly summaries']
+    bgColor: 'bg-indigo-50 border-indigo-100', iconColor: 'text-indigo-500',
+    descriptions: ['Present/absent status list', 'Daily/weekly attendee count']
   },
   {
     label: 'Bookings', type: 'bookings', icon: Calendar,
-    bgColor: 'bg-blue-100', iconColor: 'text-blue-600',
-    descriptions: ['Reports, list, statistics', 'Peak hours analysis']
+    bgColor: 'bg-blue-50 border-blue-100', iconColor: 'text-blue-500',
+    descriptions: ['Reservation lists & status logs', 'Peak seat usage hours']
   },
   {
     label: 'Seat Utilization', type: 'seat_utilization', icon: Armchair,
-    bgColor: 'bg-teal-100', iconColor: 'text-teal-600',
-    descriptions: ['Search: seat, usage & utilizers', 'Availability heatmaps']
+    bgColor: 'bg-emerald-50 border-emerald-100', iconColor: 'text-emerald-500',
+    descriptions: ['Section/floor seat usage rates', 'Utilization percentage summaries']
   },
   {
     label: 'Complaints', type: 'complaints', icon: AlertTriangle,
-    bgColor: 'bg-red-100', iconColor: 'text-red-600',
-    descriptions: ['Reports, mishapances & complaints', 'Resolution tracking']
+    bgColor: 'bg-rose-50 border-rose-100', iconColor: 'text-rose-500',
+    descriptions: ['Support tickets & complaints', 'Current ticket resolution speed']
   },
   {
     label: 'Books', type: 'books', icon: BookMarked,
-    bgColor: 'bg-amber-100', iconColor: 'text-amber-600',
-    descriptions: ['Report: books, genre, status', 'Reservation analytics']
+    bgColor: 'bg-amber-50 border-amber-100', iconColor: 'text-amber-500',
+    descriptions: ['Inventory counts & status lists', 'Reservation request totals']
   },
   {
     label: 'Events', type: 'events', icon: CalendarDays,
-    bgColor: 'bg-indigo-100', iconColor: 'text-indigo-600',
-    descriptions: ['View: scheduled, attendance stats', 'Participation tracking']
+    bgColor: 'bg-teal-50 border-teal-100', iconColor: 'text-teal-500',
+    descriptions: ['Scheduled library workshops', 'Student participant logs']
   },
 ];
 
@@ -607,7 +677,6 @@ const openExportModal = (type: string, name: string, format: 'pdf' | 'excel') =>
 const confirmExport = () => {
   const tsLabel = timespanOptions.find(t => t.value === exportModal.timespan)?.label || '';
   exportModal.show = false;
-  // Pass combined label: e.g. "Attendance (Today)"
   exportReport(exportModal.reportType, exportModal.format, tsLabel);
 };
 
@@ -626,7 +695,6 @@ const exportReport = async (type: string, format: 'pdf' | 'excel', timespanLabel
   exportToast.subtitle = `Format: ${format.toUpperCase()}`;
 
   try {
-    // Fetch all data in parallel
     const [dashboard, bookingsRes, attendanceRes, booksRes, eventsRes] = await Promise.allSettled([
       librarianAPI.getDashboard(),
       librarianAPI.getBookings({ per_page: 50 }),
@@ -664,12 +732,12 @@ const exportReport = async (type: string, format: 'pdf' | 'excel', timespanLabel
 
 // ---------- Helpers ----------
 const fmtDate = (d: any) => {
-  if (!d) return '\u2014';
+  if (!d) return '—';
   const dt = new Date(d);
   return isNaN(dt.getTime()) ? String(d) : dt.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 const fmtTime12 = (d: any) => {
-  if (!d) return '\u2014';
+  if (!d) return '—';
   const dt = new Date(d);
   return isNaN(dt.getTime()) ? String(d) : dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 };
@@ -703,78 +771,78 @@ const buildHTMLReport = (_type: string, _label: string, d: any) => {
   const isSummary = ['today', 'weekly', 'monthly'].includes(_type);
 
   const attendRows = attendance.slice(0, 15).map((a: any) =>
-    '<tr><td>' + (a.seat_number || a.seat?.seat_number || '\u2014') + '</td><td>' + (a.user?.name || a.student_name || '\u2014') + '</td><td>' + fmtTime12(a.check_in_time) + '</td><td>' + (a.status ? statusBadge(a.status) : (a.check_out_time ? statusBadge('completed') : statusBadge('checked_in'))) + '</td></tr>'
+    '<tr><td>' + (a.seat_number || a.seat?.seat_number || '—') + '</td><td>' + (a.user?.name || a.student_name || '—') + '</td><td>' + fmtTime12(a.check_in_time) + '</td><td>' + (a.status ? statusBadge(a.status) : (a.check_out_time ? statusBadge('completed') : statusBadge('checked_in'))) + '</td></tr>'
   ).join('');
 
   const bookingRows = bookings.slice(0, 15).map((b: any) =>
-    '<tr><td>' + (b.seat?.seat_number || '\u2014') + '</td><td>' + (b.user?.name || '\u2014') + '</td><td>' + fmtTime12(b.booking_time) + ' - ' + fmtTime12(b.scheduled_end_time) + '</td><td>' + statusBadge(b.status) + '</td></tr>'
+    '<tr><td>' + (b.seat?.seat_number || '—') + '</td><td>' + (b.user?.name || '—') + '</td><td>' + fmtTime12(b.booking_time) + ' - ' + fmtTime12(b.scheduled_end_time) + '</td><td>' + statusBadge(b.status) + '</td></tr>'
   ).join('');
 
   const bookRows = books.slice(0, 10).map((bk: any) =>
-    '<tr><td>' + (bk.title || '\u2014') + '</td><td>' + (bk.author || '\u2014') + '</td><td>' + fmtDate(bk.created_at) + '</td></tr>'
+    '<tr><td>' + (bk.title || '—') + '</td><td>' + (bk.author || '—') + '</td><td>' + fmtDate(bk.created_at) + '</td></tr>'
   ).join('');
 
   const eventRows = events.slice(0, 10).map((ev: any) =>
-    '<tr><td>' + (ev.title || '\u2014') + '</td><td>' + fmtDate(ev.date) + '</td><td>' + (ev.registrations_count ?? ev.joined_count ?? '\u2014') + '</td></tr>'
+    '<tr><td>' + (ev.title || '—') + '</td><td>' + fmtDate(ev.date) + '</td><td>' + (ev.registrations_count ?? ev.joined_count ?? '—') + '</td></tr>'
   ).join('');
 
-  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Daily End-of-Day Report \u2014 ' + libName + '</title>' +
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Daily End-of-Day Report — ' + libName + '</title>' +
     '<style>' +
     '@page{size:A4;margin:20mm}' +
     '*{box-sizing:border-box}' +
     'body{font-family:"Segoe UI",system-ui,sans-serif;max-width:780px;margin:0 auto;color:#1e293b;padding:30px 20px;font-size:13px}' +
-    '.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;padding-bottom:16px;border-bottom:3px solid #1e3a5f}' +
+    '.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;padding-bottom:16px;border-bottom:3px solid #047857}' +
     '.header .logo{display:flex;align-items:center;gap:12px}' +
-    '.header .logo-icon{width:48px;height:48px;background:#1e3a5f;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:800}' +
-    '.header .lib-name{font-size:22px;font-weight:800;color:#1e3a5f}' +
+    '.header .logo-icon{width:48px;height:48px;background:#047857;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:800}' +
+    '.header .lib-name{font-size:22px;font-weight:800;color:#047857}' +
     '.header .meta{text-align:right;font-size:11px;color:#64748b;line-height:1.6}' +
-    '.header .meta strong{color:#1e3a5f}' +
-    'h1{font-size:22px;color:#1e3a5f;margin:0 0 24px 0}' +
-    'h2{font-size:15px;color:#1e3a5f;margin:28px 0 12px 0;display:flex;align-items:center;gap:8px}' +
+    '.header .meta strong{color:#047857}' +
+    'h1{font-size:22px;color:#047857;margin:0 0 24px 0}' +
+    'h2{font-size:15px;color:#047857;margin:28px 0 12px 0;display:flex;align-items:center;gap:8px}' +
     'h2 .icon{width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:13px}' +
     '.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 8px 0}' +
     '.stat-card{padding:16px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;text-align:center}' +
-    '.stat-card .value{font-size:32px;font-weight:800;color:#1e3a5f}' +
+    '.stat-card .value{font-size:32px;font-weight:800;color:#047857}' +
     '.stat-card .label{font-size:11px;color:#64748b;margin-top:2px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}' +
     '.stat-card .icon-sm{font-size:16px;margin-bottom:4px}' +
     'table{width:100%;border-collapse:collapse;margin:8px 0 20px 0;font-size:12px}' +
-    'th{background:#1e3a5f;color:#fff;padding:8px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}' +
+    'th{background:#047857;color:#fff;padding:8px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}' +
     'td{padding:8px 12px;border-bottom:1px solid #e2e8f0}' +
     'tr:nth-child(even){background:#f8fafc}' +
     '.util-row{display:flex;align-items:center;margin-bottom:6px;font-size:12px}' +
     '.util-row .lbl{width:100px;color:#64748b;font-weight:600}' +
-    '.util-row .val{width:60px;font-weight:700;color:#1e3a5f;text-align:right;margin-right:12px}' +
+    '.util-row .val{width:60px;font-weight:700;color:#047857;text-align:right;margin-right:12px}' +
     '.bar-track{flex:1;height:22px;background:#e2e8f0;border-radius:6px;overflow:hidden}' +
     '.bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:11px;font-weight:700;color:#fff}' +
     '.bar-green{background:#059669}' +
     '.bar-amber{background:#d97706}' +
     '.footer{margin-top:40px;padding-top:12px;border-top:1px solid #e2e8f0;text-align:center;font-size:10px;color:#94a3b8}' +
     '</style></head><body>' +
-    '<div class="header"><div class="logo"><div class="logo-icon">\ud83d\udcda</div><span class="lib-name">' + libName + '</span></div>' +
+    '<div class="header"><div class="logo"><div class="logo-icon">📚</div><span class="lib-name">' + libName + '</span></div>' +
     '<div class="meta">Date Generated: <strong>' + dateStr + '</strong><br>Generated By: <strong>Librarian</strong></div></div>' +
     '<h1>' + _label + ' Report</h1>' +
     (isSummary ? (
-    '<h2><span class="icon" style="background:#dbeafe;color:#2563eb">\ud83d\udcca</span> Summary</h2>' +
+    '<h2><span class="icon" style="background:#dbeafe;color:#2563eb">📊</span> Summary</h2>' +
     '<div class="stat-grid">' +
-    '<div class="stat-card"><div class="icon-sm">\ud83d\udc65</div><div class="value">' + totalSeats + '</div><div class="label">Total Seats</div></div>' +
-    '<div class="stat-card"><div class="icon-sm">\ud83d\udccb</div><div class="value">' + (stats.today_bookings || bookings.length) + '</div><div class="label">Total Bookings</div></div>' +
-    '<div class="stat-card"><div class="icon-sm">\ud83d\udcba</div><div class="value">' + utilPct + '%</div><div class="label">Seats Utilized</div></div>' +
+    '<div class="stat-card"><div class="icon-sm">👤</div><div class="value">' + totalSeats + '</div><div class="label">Total Seats</div></div>' +
+    '<div class="stat-card"><div class="icon-sm">📅</div><div class="value">' + (stats.today_bookings || bookings.length) + '</div><div class="label">Total Bookings</div></div>' +
+    '<div class="stat-card"><div class="icon-sm">🪑</div><div class="value">' + utilPct + '%</div><div class="label">Seats Utilized</div></div>' +
     '</div><div class="stat-grid">' +
-    '<div class="stat-card"><div class="icon-sm">\ud83d\udea8</div><div class="value">' + (stats.pending_tickets || 0) + '</div><div class="label">Complaints</div></div>' +
-    '<div class="stat-card"><div class="icon-sm">\ud83d\udcda</div><div class="value">' + (stats.total_books || books.length) + '</div><div class="label">Books</div></div>' +
-    '<div class="stat-card"><div class="icon-sm">\ud83c\udf89</div><div class="value">' + (stats.total_events || events.length) + '</div><div class="label">Events Held</div></div>' +
+    '<div class="stat-card"><div class="icon-sm">🚨</div><div class="value">' + (stats.pending_tickets || 0) + '</div><div class="label">Complaints</div></div>' +
+    '<div class="stat-card"><div class="icon-sm">📚</div><div class="value">' + (stats.total_books || books.length) + '</div><div class="label">Books</div></div>' +
+    '<div class="stat-card"><div class="icon-sm">🎉</div><div class="value">' + (stats.total_events || events.length) + '</div><div class="label">Events Held</div></div>' +
     '</div>'
     ) : '') +
     (isSummary || _type === 'attendance' ? (
-    '<h2><span class="icon" style="background:#ede9fe;color:#7c3aed">\u2713</span> Attendance</h2>' +
+    '<h2><span class="icon" style="background:#ede9fe;color:#7c3aed">✓</span> Attendance</h2>' +
     (attendance.length > 0 ? '<table><thead><tr><th>Seat</th><th>Student</th><th>Time Slot</th><th>Status</th></tr></thead><tbody>' + attendRows + '</tbody></table>' : '<p style="color:#94a3b8;font-size:12px">No attendance records for this period.</p>')
     ) : '') +
     (isSummary || _type === 'bookings' ? (
-    '<h2><span class="icon" style="background:#dbeafe;color:#2563eb">\ud83d\udcc5</span> Bookings</h2>' +
+    '<h2><span class="icon" style="background:#dbeafe;color:#2563eb">📅</span> Bookings</h2>' +
     (bookings.length > 0 ? '<table><thead><tr><th>Seat No</th><th>Student</th><th>Time Slot</th><th>Status</th></tr></thead><tbody>' + bookingRows + '</tbody></table>' : '<p style="color:#94a3b8;font-size:12px">No bookings for this period.</p>')
     ) : '') +
     (isSummary || _type === 'seat_utilization' ? (
-    '<h2><span class="icon" style="background:#d1fae5;color:#059669">\ud83d\udcba</span> Seat Utilization</h2>' +
+    '<h2><span class="icon" style="background:#d1fae5;color:#059669">🪑</span> Seat Utilization</h2>' +
     '<div style="margin:12px 0 20px 0">' +
     '<div class="util-row"><span class="lbl">Total Seats:</span><span class="val">' + totalSeats + '</span><div class="bar-track"><div class="bar-fill bar-green" style="width:100%">&nbsp;</div></div></div>' +
     '<div class="util-row"><span class="lbl">Occupied:</span><span class="val">' + occupied + '</span><div class="bar-track"><div class="bar-fill bar-amber" style="width:' + utilPct + '%">' + utilPct + '%</div></div></div>' +
@@ -782,19 +850,19 @@ const buildHTMLReport = (_type: string, _label: string, d: any) => {
     '</div>'
     ) : '') +
     (isSummary || _type === 'complaints' ? (
-    '<h2><span class="icon" style="background:#fee2e2;color:#dc2626">\ud83d\udea8</span> Complaints</h2>' +
+    '<h2><span class="icon" style="background:#fee2e2;color:#dc2626">🚨</span> Complaints</h2>' +
     '<div class="stat-grid"><div class="stat-card"><div class="value">' + (stats.pending_tickets || 0) + '</div><div class="label">Open / In Progress</div></div></div>' +
     '<p style="color:#64748b;font-size:12px;margin-top:8px">Detailed complaint reports can be viewed in the Support &amp; Complaints section.</p>'
     ) : '') +
     (isSummary || _type === 'books' ? (
-    '<h2><span class="icon" style="background:#fef3c7;color:#d97706">\ud83d\udcd6</span> Books</h2>' +
+    '<h2><span class="icon" style="background:#fef3c7;color:#d97706">📖</span> Books</h2>' +
     (books.length > 0 ? '<table><thead><tr><th>Book Name</th><th>Author</th><th>Date</th></tr></thead><tbody>' + bookRows + '</tbody></table>' : '<p style="color:#94a3b8;font-size:12px">No book records.</p>')
     ) : '') +
     (isSummary || _type === 'events' ? (
-    '<h2><span class="icon" style="background:#e0e7ff;color:#4f46e5">\ud83c\udf89</span> Events</h2>' +
+    '<h2><span class="icon" style="background:#e0e7ff;color:#4f46e5">🎉</span> Events</h2>' +
     (events.length > 0 ? '<table><thead><tr><th>Event Name</th><th>Date</th><th>Participants</th></tr></thead><tbody>' + eventRows + '</tbody></table>' : '<p style="color:#94a3b8;font-size:12px">No events scheduled.</p>')
     ) : '') +
-    '<div class="footer">Generated Automatically by Smart Lib \u2014 Library Management System &nbsp;|&nbsp; Page 1 of 1</div>' +
+    '<div class="footer">Generated Automatically by Smart Lib — Library Management System &nbsp;|&nbsp; Page 1 of 1</div>' +
     '</body></html>';
 };
 
@@ -812,7 +880,7 @@ const buildCSVReport = (_type: string, label: string, d: any) => {
   const occupied = (stats.active_bookings || 0) + (stats.pending_bookings || 0);
   const utilPct = totalSeats > 0 ? Math.round((occupied / totalSeats) * 100) : 0;
 
-  let csv = '"' + libName + ' \u2014 ' + label + '"\n"Generated","' + now + '"\n\n';
+  let csv = '"' + libName + ' — ' + label + '"\n"Generated","' + now + '"\n\n';
   const isSummary = ['today', 'weekly', 'monthly'].includes(_type);
 
   if (isSummary) {
@@ -867,13 +935,11 @@ const printHTMLReport = (html: string) => {
   }
   printWindow.document.write(html);
   printWindow.document.close();
-  // Wait for content to render, then trigger print
   printWindow.onload = () => {
     setTimeout(() => {
       printWindow.print();
     }, 300);
   };
-  // Fallback if onload doesn't fire
   setTimeout(() => {
     printWindow.print();
   }, 1000);
@@ -910,5 +976,11 @@ onMounted(() => {
 .slide-up-leave-to {
   opacity: 0;
   transform: translateY(20px);
+}
+.bg-red-55 {
+  background-color: rgba(254, 242, 242, 0.6);
+}
+.bg-green-55 {
+  background-color: rgba(240, 253, 244, 0.6);
 }
 </style>

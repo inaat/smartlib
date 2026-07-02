@@ -1,206 +1,238 @@
 <template>
-  <div class="p-6 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Section Management</h1>
-        <p class="text-gray-600 mt-1">Manage seating sections across all floors</p>
-      </div>
-      <div class="flex items-center space-x-3">
-        <button @click="fetchSections" class="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" title="Refresh">
-          <RefreshCw :class="['w-5 h-5 text-gray-600', loading ? 'animate-spin' : '']" />
-        </button>
-        <button
-          @click="printAllQRs"
-          class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
-        >
-          <Printer class="w-4 h-4 text-gray-600" />
-          <span class="text-sm font-medium text-gray-700">Print All Bulk</span>
-        </button>
-        <button
-          @click="openCreateModal"
-          class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center space-x-2"
-        >
-          <Plus class="w-4 h-4" />
-          <span class="text-sm font-medium">Add Section</span>
-        </button>
-      </div>
-    </div>
+  <div class="p-6 space-y-6 font-outfit text-slate-700">
+    
+    <!-- Header & Filters in One Line -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <!-- Filter by Floor -->
+        <div class="flex items-center space-x-3 w-full sm:max-w-xs text-left">
+          <div class="w-full">
+            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Filter by Floor</label>
+            <div class="relative">
+              <select
+                v-model="selectedFloorId"
+                @change="fetchSections"
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-xs text-slate-600 font-semibold bg-white appearance-none cursor-pointer shadow-sm"
+              >
+                <option :value="null">All Floors</option>
+                <option v-for="floor in floors" :key="floor.id" :value="floor.id">
+                  {{ floor.name }} (Level {{ floor.level }})
+                </option>
+              </select>
+              <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
+                <ChevronDown class="w-3.5 h-3.5" />
+              </div>
+            </div>
+          </div>
+        </div>
 
-    <!-- Filters -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-      <div class="flex items-center space-x-4">
-        <div class="flex-1 max-w-xs">
-          <label class="block text-xs font-medium text-gray-700 mb-1">Filter by Floor</label>
-          <select
-            v-model="selectedFloorId"
-            @change="fetchSections"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+        <!-- Actions -->
+        <div class="flex items-center space-x-3 sm:ml-auto">
+          <button 
+            @click="fetchSections" 
+            class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shadow-sm" 
+            title="Refresh List"
           >
-            <option :value="null">All Floors</option>
-            <option v-for="floor in floors" :key="floor.id" :value="floor.id">
-              {{ floor.name }} (Level {{ floor.level }})
-            </option>
-          </select>
+            <RefreshCw :class="['w-4 h-4 text-slate-500', loading ? 'animate-spin' : '']" />
+          </button>
+          <button
+            @click="printAllQRs"
+            class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors flex items-center space-x-2 text-xs font-semibold text-slate-600 cursor-pointer shadow-sm"
+          >
+            <Printer class="w-4 h-4 text-slate-500" />
+            <span>Print All Bulk</span>
+          </button>
+          <button
+            @click="openCreateModal"
+            class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-colors flex items-center space-x-2 text-xs font-bold shadow-sm cursor-pointer"
+          >
+            <Plus class="w-4 h-4" />
+            <span>Add Section</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Sections Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section Name</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Floor</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seats</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="section in sections" :key="section.id" class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-medium text-gray-900">{{ section.name }}</div>
-              <div class="text-xs text-gray-500">{{ section.description || 'No description' }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm text-gray-900">{{ section.floor?.name || 'N/A' }}</div>
-              <div class="text-xs text-gray-500">Level {{ section.floor?.level }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm text-gray-900">{{ section.total_seats }} total</div>
-              <div class="text-xs text-green-600">{{ section.available_seats }} available</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span
-                :class="[
-                  'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                  section.gender === 'male' ? 'bg-blue-100 text-blue-800' :
-                  section.gender === 'female' ? 'bg-pink-100 text-pink-800' :
-                  'bg-purple-100 text-purple-800'
-                ]"
-              >
-                {{ section.gender === 'male' ? 'Male Only' : section.gender === 'female' ? 'Female Only' : 'Mixed' }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span
-                :class="[
-                  'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                  section.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                ]"
-              >
-                {{ section.is_active ? 'Active' : 'Inactive' }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <button @click="printSectionQRs(section)" class="text-green-600 hover:text-green-900 mr-4 flex items-center inline-flex">
-                <Printer class="w-3 h-3 mr-1" />
-                Print QR
-              </button>
-              <button @click="editSection(section)" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-              <button @click="confirmDelete(section)" class="text-red-600 hover:text-red-900">Delete</button>
-            </td>
-          </tr>
-          <tr v-if="sections.length === 0 && !loading">
-            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-              No sections found. Add a new section to get started.
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Sections Table Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden text-left">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-100 text-xs">
+          <thead>
+            <tr class="bg-slate-50/50 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+              <th class="px-6 py-4 font-semibold">Section details</th>
+              <th class="px-6 py-4 font-semibold">Floor level</th>
+              <th class="px-6 py-4 font-semibold">Seat stats</th>
+              <th class="px-6 py-4 font-semibold">Gender Rule</th>
+              <th class="px-6 py-4 font-semibold">Status</th>
+              <th class="px-6 py-4 text-right font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            <tr v-for="section in sections" :key="section.id" class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-800 text-sm">{{ section.name }}</div>
+                <div class="text-[11px] text-slate-400 font-medium mt-0.5">{{ section.description || 'No description provided' }}</div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-700">{{ section.floor?.name || 'N/A' }}</div>
+                <div class="text-[10px] text-slate-400 font-semibold mt-0.5">Level {{ section.floor?.level ?? '0' }}</div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-700">{{ section.total_seats }} total</div>
+                <div class="text-[10px] text-green-600 font-bold mt-0.5">{{ section.available_seats }} available</div>
+              </td>
+              <td class="px-6 py-4">
+                <span
+                  :class="[
+                    'px-2.5 py-0.5 rounded text-[9px] font-bold uppercase border',
+                    section.gender === 'male' ? 'bg-blue-50 border-blue-100 text-blue-700' :
+                    section.gender === 'female' ? 'bg-pink-50 border-pink-100 text-pink-700' :
+                    'bg-emerald-50 border-emerald-100 text-emerald-700'
+                  ]"
+                >
+                  {{ section.gender === 'male' ? 'Male Only' : section.gender === 'female' ? 'Female Only' : 'Mixed' }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <span
+                  :class="[
+                    'px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border inline-flex items-center gap-1',
+                    section.is_active ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'
+                  ]"
+                >
+                  <span :class="['w-1.5 h-1.5 rounded-full', section.is_active ? 'bg-green-500' : 'bg-red-500']"></span>
+                  {{ section.is_active ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end space-x-2">
+                  <button 
+                    @click="printSectionQRs(section)" 
+                    class="px-2.5 py-1.5 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg font-bold border border-slate-200/40 cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <Printer class="w-3.5 h-3.5" />
+                    <span>Print QR</span>
+                  </button>
+                  <button 
+                    @click="editSection(section)" 
+                    class="px-2.5 py-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg font-bold border border-emerald-100 cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    @click="confirmDelete(section)" 
+                    class="px-2.5 py-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-bold border border-red-100 cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="sections.length === 0 && !loading">
+              <td colspan="6" class="px-6 py-16 text-center">
+                <Building2 class="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                <p class="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">No sections found</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">Click "Add Section" to configure library space partitions.</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-bold text-gray-900">{{ isEditing ? 'Edit Section' : 'Add New Section' }}</h3>
-          <button @click="showModal = false" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <X class="w-5 h-5 text-gray-500" />
+    <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" @click.self="showModal = false">
+      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden border border-gray-200 animate-in fade-in zoom-in duration-200">
+        <div class="p-6 border-b border-slate-150 flex items-center justify-between text-left">
+          <h3 class="text-base font-bold text-slate-800">{{ isEditing ? 'Edit Section Settings' : 'Add New Section' }}</h3>
+          <button @click="showModal = false" class="p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer text-slate-400">
+            <X class="w-4 h-4" />
           </button>
         </div>
 
-        <form @submit.prevent="saveSection" class="space-y-4">
+        <form @submit.prevent="saveSection" class="p-6 space-y-4 text-left">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Floor</label>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Floor Level</label>
             <select
               v-model="form.floor_id"
               required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50 cursor-pointer"
             >
               <option v-for="floor in floors" :key="floor.id" :value="floor.id">
                 {{ floor.name }} (Level {{ floor.level }})
               </option>
             </select>
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Section Name</label>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Section Name</label>
             <input
               v-model="form.name"
               type="text"
               required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
               placeholder="e.g. Zone A"
             />
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Gender Restriction</label>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Gender Restriction</label>
             <select
               v-model="form.gender"
               required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50 cursor-pointer"
             >
               <option value="mixed">Mixed (All)</option>
               <option value="male">Male Only</option>
               <option value="female">Female Only</option>
             </select>
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Total Seats</label>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Total Seats</label>
             <input
               v-model.number="form.total_seats"
               type="number"
               required
               :disabled="isEditing"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50 disabled:bg-slate-100/50 disabled:text-slate-400"
               placeholder="e.g. 20"
             />
-            <p v-if="isEditing" class="mt-1 text-xs text-gray-500">Total seats cannot be changed after creation.</p>
+            <p v-if="isEditing" class="mt-1 text-[10px] text-slate-400 font-bold">Total seats count cannot be modified after creation.</p>
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Description</label>
             <textarea
               v-model="form.description"
               rows="3"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-              placeholder="e.g. Near the window, quiet area"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50 resize-none"
+              placeholder="e.g. Near window, quiet zone"
             ></textarea>
           </div>
-          <div class="flex items-center">
+
+          <div class="flex items-center space-x-2 pt-1">
             <input
               v-model="form.is_active"
               type="checkbox"
               id="is_active"
-              class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              class="rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
             />
-            <label for="is_active" class="ml-2 text-sm text-gray-700">Active</label>
+            <label for="is_active" class="text-xs font-bold text-slate-500 cursor-pointer select-none">Mark Active</label>
           </div>
 
-          <div class="flex items-center space-x-3 pt-4">
+          <div class="flex items-center space-x-3 pt-4 border-t border-slate-100">
             <button
               type="submit"
               :disabled="loading"
-              class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+              class="flex-1 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold cursor-pointer"
             >
               {{ loading ? 'Saving...' : (isEditing ? 'Update Section' : 'Create Section') }}
             </button>
             <button
               type="button"
               @click="showModal = false"
-              class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              class="px-4 py-2 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition-all text-xs cursor-pointer"
             >
               Cancel
             </button>
@@ -213,10 +245,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { Plus, X, RefreshCw, Printer } from 'lucide-vue-next';
+import { Plus, X, RefreshCw, Printer, ChevronDown, Building2 } from 'lucide-vue-next';
 import { useAuth } from '@/shared/composables/useAuth';
 import { librarianAPI } from '@/shared/services/api';
+import { useSwal } from '@/shared/composables/useSwal';
 
+const { showConfirm, showSuccess, showError } = useSwal();
 const { user } = useAuth();
 const libraryId = computed(() => user.value?.library_id || 1);
 
@@ -291,26 +325,30 @@ const saveSection = async () => {
   try {
     if (isEditing.value && form.value.id) {
       await librarianAPI.updateSection(form.value.id, form.value);
+      showSuccess('Updated!', 'Section updated successfully.');
     } else {
       await librarianAPI.createSection(form.value);
+      showSuccess('Created!', 'New section created successfully.');
     }
     await fetchSections();
     showModal.value = false;
   } catch (error) {
     console.error('Error saving section:', error);
+    showError('Save Failed', 'Failed to save section.');
   } finally {
     loading.value = false;
   }
 };
 
 const confirmDelete = async (section: any) => {
-  if (confirm(`Are you sure you want to delete section "${section.name}"? This will also delete all seats in this section.`)) {
-    try {
-      await librarianAPI.deleteSection(section.id);
-      await fetchSections();
-    } catch (error) {
-      console.error('Error deleting section:', error);
-    }
+  if (!await showConfirm('Delete Section', `Are you sure you want to delete "${section.name}"? This will delete all seats in this section.`, 'Yes, Delete')) return;
+  try {
+    await librarianAPI.deleteSection(section.id);
+    showSuccess('Deleted!', 'Section has been successfully deleted.');
+    await fetchSections();
+  } catch (error) {
+    console.error('Error deleting section:', error);
+    showError('Delete Failed', 'Failed to delete section.');
   }
 };
 
@@ -339,7 +377,7 @@ const printSectionQRs = (section: any) => {
       </head>
       <body>
         <div class="no-print" style="position: fixed; top: 20px; right: 20px; z-index: 100;">
-          <button onclick="window.print()" style="padding: 10px 20px; background: #7c3aed; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             Print QR Codes
           </button>
         </div>
@@ -382,7 +420,7 @@ const printAllQRs = () => {
           body { font-family: sans-serif; margin: 0; padding: 20px; }
           .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
           .section-block { margin-bottom: 50px; }
-          .section-title { font-size: 20px; font-bold; margin-bottom: 15px; padding-left: 10px; border-left: 4px solid #7c3aed; }
+          .section-title { font-size: 20px; font-bold; margin-bottom: 15px; padding-left: 10px; border-left: 4px solid #059669; }
           .qr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
           .qr-item { border: 1px solid #ddd; padding: 15px; text-align: center; page-break-inside: avoid; border-radius: 8px; }
           .qr-image { width: 140px; height: 140px; object-fit: contain; }
@@ -397,7 +435,7 @@ const printAllQRs = () => {
       </head>
       <body>
         <div class="no-print" style="position: fixed; top: 20px; right: 20px; z-index: 100;">
-          <button onclick="window.print()" style="padding: 10px 20px; background: #7c3aed; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             Print All QR Codes
           </button>
         </div>
@@ -446,3 +484,11 @@ onMounted(() => {
   fetchSections();
 });
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+</style>

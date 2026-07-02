@@ -112,6 +112,8 @@ class LibraryController extends Controller
             'total_seats' => $library->seats()->count(),
             'books_count' => $library->books_count ?? 0,
             'events_count' => $library->events_count ?? 0,
+            'photo' => $library->photo,
+            'photo_url' => $library->photo_url,
         ];
 
         return response()->json($response);
@@ -124,6 +126,16 @@ class LibraryController extends Controller
 
         if (!$library) {
             return response()->json(['message' => 'No library assigned to this librarian'], 404);
+        }
+
+        // Decode JSON strings if sent as FormData
+        foreach (['contact_info', 'operating_days', 'facilities', 'rules', 'special_features', 'is_active', 'capacity', 'latitude', 'longitude'] as $field) {
+            if ($request->has($field) && is_string($request->input($field))) {
+                $decoded = json_decode($request->input($field), true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $request->merge([$field => $decoded]);
+                }
+            }
         }
 
         $validated = $request->validate([
@@ -140,13 +152,17 @@ class LibraryController extends Controller
             'capacity' => 'sometimes|integer',
             'is_active' => 'sometimes|boolean',
             'seat_layout_mode' => 'nullable|string|in:layout,grid',
-
             'special_features' => 'nullable|array',
+            'photo' => 'nullable|image|max:10240',
         ]);
+
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('libraries', 'public');
+        }
 
         DB::transaction(function () use ($library, $validated) {
             // Update basic library info
-            $library->update([
+            $updateData = [
                 'name' => $validated['name'] ?? $library->name,
                 'address' => $validated['address'] ?? $library->address,
                 'latitude' => $validated['latitude'] ?? $library->latitude,
@@ -156,7 +172,13 @@ class LibraryController extends Controller
                 'special_features' => $validated['special_features'] ?? $library->special_features,
                 'is_active' => $validated['is_active'] ?? $library->is_active,
                 'seat_layout_mode' => $validated['seat_layout_mode'] ?? $library->seat_layout_mode,
-            ]);
+            ];
+
+            if (isset($validated['photo'])) {
+                $updateData['photo'] = $validated['photo'];
+            }
+
+            $library->update($updateData);
 
             // Update operating hours
             if (isset($validated['operating_days'])) {
@@ -259,6 +281,8 @@ class LibraryController extends Controller
                 'facilities' => $library->facilities->pluck('name')->toArray(),
                 'is_active' => $library->is_active,
                 'seat_layout_mode' => $library->seat_layout_mode,
+                'photo' => $library->photo,
+                'photo_url' => $library->photo_url,
             ]
         ]);
     }

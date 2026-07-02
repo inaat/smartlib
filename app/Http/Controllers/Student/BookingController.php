@@ -14,6 +14,7 @@ class BookingController extends Controller
 {
     public function myQueue(Request $request)
     {
+        SeatBooking::cancelExpiredBookings();
         $queueEntries = SmartQueue::with(['seat.library', 'seat.floor'])
             ->where('user_id', $request->user()->id)
             ->whereIn('status', ['waiting', 'notified'])
@@ -68,7 +69,8 @@ class BookingController extends Controller
 
     public function index(Request $request)
     {
-        $bookings = SeatBooking::with(['seat.library', 'user'])
+        SeatBooking::cancelExpiredBookings();
+        $bookings = SeatBooking::with(['seat.library.operatingHours', 'user'])
             ->where('user_id', $request->user()->id)
             ->orderBy('booking_time', 'desc')
             ->get();
@@ -78,6 +80,7 @@ class BookingController extends Controller
 
     public function store(Request $request)
     {
+        SeatBooking::cancelExpiredBookings();
         $request->validate([
             'seat_id' => 'required|exists:seats,id',
             'booking_time' => 'required|date',
@@ -259,6 +262,7 @@ class BookingController extends Controller
 
     public function checkIn(Request $request, $id)
     {
+        SeatBooking::cancelExpiredBookings();
         $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
@@ -325,7 +329,7 @@ class BookingController extends Controller
                     $activeBooking->update([
                         'status' => 'checked_out',
                         'check_out_time' => now(),
-                        'total_minutes' => $activeBooking->check_in_time ? now()->diffInMinutes($activeBooking->check_in_time) : 0
+                        'total_minutes' => $activeBooking->check_in_time ? now()->diffInMinutes($activeBooking->check_in_time, true) : 0
                     ]);
 
                     // Verify seat becomes available (logic update below will set it occupied)
@@ -353,6 +357,21 @@ class BookingController extends Controller
             }
         }
 
+        if ($booking->status === 'checked_in') {
+            return response()->json(['message' => 'You are already checked in for this booking.'], 400);
+        }
+
+        if ($booking->status !== 'booked') {
+            return response()->json(['message' => 'Booking is not in a state that can be checked in.'], 400);
+        }
+
+        // Enforce 15-minute check-in window expiration
+        if ($booking->status === 'booked' && $booking->booking_time->copy()->addMinutes(15)->isPast()) {
+            $booking->update(['status' => 'cancelled']);
+            $booking->seat->update(['status' => 'available']);
+            return response()->json(['message' => 'Check-in window has expired. This booking has been cancelled.'], 400);
+        }
+
         $library = $booking->seat->library;
         
         if (!$library->latitude || !$library->longitude) {
@@ -375,9 +394,14 @@ class BookingController extends Controller
             }
         }
 
+        $now = now();
+        $durationMinutes = Carbon::parse($booking->booking_time)->diffInMinutes(Carbon::parse($booking->scheduled_end_time), true);
+
         $booking->update([
             'status' => 'checked_in',
-            'check_in_time' => now(),
+            'check_in_time' => $now,
+            'booking_time' => $now,
+            'scheduled_end_time' => $now->copy()->addMinutes($durationMinutes),
         ]);
 
         $booking->seat->update(['status' => 'occupied']);
@@ -400,19 +424,16 @@ class BookingController extends Controller
             $user->save();
         }
  
-        // Auto mark attendance - ensure only one per day
-        \App\Models\Attendance::firstOrCreate(
-            [
-                'user_id' => $user->id,
-                'date' => $today,
-            ],
-            [
-                'library_id' => $booking->seat->floor->library_id,
-                'seat_booking_id' => $booking->id,
-                'check_in_time' => now(),
-                'marked_manually' => false,
-            ]
-        );
+        // Auto mark attendance for this booking
+        \App\Models\Attendance::firstOrCreate([
+            'seat_booking_id' => $booking->id,
+        ], [
+            'user_id' => $user->id,
+            'library_id' => $booking->seat->floor->library_id,
+            'date' => $today,
+            'check_in_time' => now(),
+            'marked_manually' => false,
+        ]);
 
         return response()->json([
             'success' => true, 
@@ -445,35 +466,23 @@ class BookingController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        $now = now();
+        $totalMinutes = $booking->check_in_time ? $now->diffInMinutes($booking->check_in_time, true) : 0;
+
         $booking->update([
             'status' => 'checked_out',
-            'check_out_time' => now(),
-            'total_minutes' => $booking->check_in_time ? now()->diffInMinutes($booking->check_in_time) : 0
+            'check_out_time' => $now,
+            'total_minutes' => $totalMinutes,
         ]);
  
+        $booking->seat->update(['status' => 'available']);
+
         // Update attendance record
         $attendance = \App\Models\Attendance::where('seat_booking_id', $booking->id)->first();
         if ($attendance) {
             $attendance->update([
-                'check_out_time' => now(),
-                'total_minutes' => $attendance->check_in_time ? now()->diffInMinutes($attendance->check_in_time) : 0
-            ]);
-        }
-
-        $booking->seat->update(['status' => 'available']);
-
-        // Calculate total minutes
-        if ($booking->check_in_time) {
-            $booking->total_minutes = now()->diffInMinutes($booking->check_in_time);
-            $booking->save();
-        }
-
-        // Attendance update
-        $attendance = \App\Models\Attendance::where('seat_booking_id', $booking->id)->first();
-        if ($attendance) {
-            $attendance->update([
-                'check_out_time' => now(),
-                'total_minutes' => $attendance->total_minutes + (now()->diffInMinutes($attendance->check_in_time ?: now()))
+                'check_out_time' => $now->toTimeString(),
+                'total_minutes' => $totalMinutes,
             ]);
         }
 
@@ -500,7 +509,7 @@ class BookingController extends Controller
     public function extend(Request $request, $id)
     {
         $request->validate([
-            'minutes' => 'required|integer|min:15|max:240',
+            'minutes' => 'required|integer|min:10',
         ]);
 
         $booking = SeatBooking::findOrFail($id);
@@ -521,7 +530,7 @@ class BookingController extends Controller
             ], 400);
         }
 
-        $newEndTime = $booking->scheduled_end_time->addMinutes($request->minutes);
+        $newEndTime = $booking->scheduled_end_time->copy()->addMinutes($request->minutes);
 
         // Rule: Cannot extend beyond library closing time
         $dayOfWeek = $booking->scheduled_end_time->format('l');
@@ -530,12 +539,14 @@ class BookingController extends Controller
             ->first();
 
         if ($operatingHour && $operatingHour->is_open) {
-            $closeAt = Carbon::createFromFormat('H:i:s', $operatingHour->close_time, $booking->scheduled_end_time->timezone);
-            $closeAt->setDate($booking->scheduled_end_time->year, $booking->scheduled_end_time->month, $booking->scheduled_end_time->day);
+            $closeAt = Carbon::parse($booking->scheduled_end_time->format('Y-m-d') . ' ' . $operatingHour->close_time);
             
-            if ($newEndTime->gt($closeAt)) {
+            $maxMinutes = $booking->scheduled_end_time->diffInMinutes($closeAt, false);
+            
+            if ($newEndTime->gt($closeAt) || $request->minutes > $maxMinutes) {
+                $formattedClose = $closeAt->format('h:i A');
                 return response()->json([
-                    'message' => "Cannot extend beyond library closing time ({$operatingHour->close_time})."
+                    'message' => "Cannot extend beyond library closing time ($formattedClose). Maximum available extension is " . max(0, $maxMinutes) . " minutes."
                 ], 400);
             }
         }
@@ -559,10 +570,14 @@ class BookingController extends Controller
             'extension_count' => $booking->extension_count + 1,
         ]);
 
-        return response()->json(['success' => true, 'booking' => $booking]);
+        return response()->json([
+            'success' => true, 
+            'booking' => $booking->load('seat.library.operatingHours')
+        ]);
     }
     public function cancel(Request $request, $id)
     {
+        SeatBooking::cancelExpiredBookings();
         $booking = SeatBooking::findOrFail($id);
 
         if ($booking->user_id !== $request->user()->id) {

@@ -1,30 +1,21 @@
 <template>
-  <div class="space-y-8 pb-12">
-    <!-- Header Section -->
-    <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800">My Waitlist</h1>
-          <p class="text-gray-500 mt-1">Track your position and estimated wait time for reserved seats</p>
-        </div>
-      </div>
-    </div>
-
+  <div class="space-y-6 pb-12 font-outfit">
     <!-- Active Waitlist Section -->
-    <div class="space-y-6">
-      <div v-if="loading" class="flex justify-center py-20">
-        <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+    <div class="space-y-4">
+      <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-4">
+        <div class="animate-spin rounded-full h-10 w-10 border-2 border-orange-500 border-t-transparent"></div>
+        <p class="text-xs font-semibold text-slate-400 font-outfit uppercase tracking-wider animate-pulse">Loading waitlist...</p>
       </div>
 
-      <div v-else-if="queueEntries.length === 0" class="bg-white rounded-3xl p-16 text-center border border-dashed border-gray-200">
-        <div class="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Clock class="w-10 h-10 text-orange-200" />
+      <div v-else-if="queueEntries.length === 0" class="bg-slate-100 rounded-2xl p-16 text-center border border-dashed border-slate-200/80">
+        <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-inner">
+          <Clock class="w-7 h-7" />
         </div>
-        <h3 class="text-xl font-bold text-gray-800 mb-2">Waitlist is Empty</h3>
-        <p class="text-gray-500 max-w-xs mx-auto mb-8">You haven't joined any seat queues yet. When a seat is ending soon, you can join the waitlist from the library map.</p>
+        <h3 class="text-base font-bold text-slate-800 mb-1">Waitlist is Empty</h3>
+        <p class="text-xs text-slate-400 max-w-xs mx-auto mb-6 leading-relaxed">You haven't joined any seat queues yet. When a seat is ending soon, you can join the waitlist from the library map.</p>
         <router-link 
           to="/student/libraries" 
-          class="inline-flex items-center px-6 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-all"
+          class="inline-flex items-center px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:opacity-90 active:scale-98 transition-all uppercase tracking-wider"
         >
           Explore Libraries
         </router-link>
@@ -34,64 +25,64 @@
         <div 
           v-for="entry in queueEntries" 
           :key="entry.id"
-          class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-xl hover:border-orange-100 transition-all group relative overflow-hidden"
+          class="bg-white rounded-2xl p-5 border border-slate-100 hover:border-slate-200/80 shadow-sm hover:shadow-xl hover:shadow-slate-100/50 transition-all duration-350 group relative overflow-hidden text-left"
         >
           <!-- Progress Indicator -->
-          <div class="absolute bottom-0 left-0 h-1.5 bg-orange-100 w-full">
+          <div class="absolute bottom-0 left-0 h-1 bg-slate-100 w-full">
             <div 
-              class="h-full bg-orange-500 transition-all duration-1000"
+              class="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-1000"
               :style="{ width: getProgressWidth(entry) }"
             ></div>
           </div>
 
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            <div class="flex items-start gap-6">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div class="flex items-start gap-4">
               <div :class="[
-                'p-5 rounded-2xl transition-all duration-300',
-                entry.status === 'notified' ? 'bg-green-100 text-green-600 animate-pulse' : 'bg-orange-50 text-orange-600'
+                'p-4 rounded-xl border flex-shrink-0 transition-all duration-300',
+                entry.status === 'notified' ? 'bg-green-50 border-green-200 text-green-600 animate-pulse' : 'bg-orange-50/60 border-orange-100 text-orange-600'
               ]">
-                <Clock class="w-10 h-10" />
+                <Clock class="w-8 h-8" />
               </div>
-              <div class="space-y-1">
+              <div class="space-y-1 min-w-0">
                 <div class="flex items-center gap-2">
-                  <h3 class="font-black text-gray-900 text-2xl">Seat {{ entry.seat?.seat_number }}</h3>
+                  <h3 class="font-extrabold text-slate-800 text-lg">Seat {{ entry.seat?.seat_number }}</h3>
                   <span :class="[
-                    'px-3 py-1 rounded-full text-xs font-black uppercase tracking-tight',
-                    entry.status === 'notified' ? 'bg-green-500 text-white' : 'bg-orange-100 text-orange-700'
+                    'px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wide border',
+                    entry.status === 'notified' ? 'bg-green-100 text-green-700 border-green-100' : 'bg-orange-50 text-orange-700 border-orange-100'
                   ]">
-                    {{ entry.status === 'notified' ? 'Ready to Check In' : `Position #${entry.queue_position}` }}
+                    {{ entry.status === 'notified' ? 'Ready' : `Pos #${entry.queue_position}` }}
                   </span>
                 </div>
-                <p class="text-gray-500 text-lg flex items-center font-medium">
-                  <MapPin class="w-5 h-5 mr-1.5 text-red-400" />
+                <p class="text-slate-500 text-xs flex items-center font-semibold">
+                  <MapPin class="w-4 h-4 mr-1 text-slate-400" />
                   {{ entry.seat?.library?.name }} • {{ entry.seat?.floor?.name }}
                 </p>
                 
-                <div v-if="entry.status === 'notified'" class="mt-4 p-3 bg-green-50 rounded-xl border border-green-100 text-green-700 text-xs font-bold flex items-center">
-                  <Zap class="w-4 h-4 mr-2" />
+                <div v-if="entry.status === 'notified'" class="mt-3 p-3 bg-green-50/60 border border-green-100 text-green-700 text-[11px] font-bold rounded-xl flex items-center leading-relaxed">
+                  <Zap class="w-4 h-4 mr-2 text-green-600 flex-shrink-0" />
                   Seat is now free! You have 10 minutes to check in before your spot is given to the next person.
                 </div>
               </div>
             </div>
 
-            <div class="flex flex-col lg:items-end gap-6 border-t lg:border-t-0 pt-6 lg:pt-0 border-gray-50">
+            <div class="flex flex-col lg:items-end gap-4 border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-50 flex-shrink-0">
               <div class="lg:text-right">
-                <p class="text-xs text-gray-400 font-black uppercase tracking-widest mb-1">Estimated Wait</p>
-                <p class="text-4xl font-black text-gray-800 font-mono tracking-tighter">
+                <p class="text-[9px] font-extrabold uppercase tracking-widest mb-1 text-slate-400">Estimated Wait</p>
+                <p class="text-3xl font-black text-slate-800 font-mono tracking-tight leading-none">
                   {{ entry.status === 'notified' ? 'NOW' : formatWaitTime(entry.estimated_wait_time) }}
                 </p>
               </div>
-              <div class="flex flex-wrap gap-3">
+              <div class="flex flex-wrap gap-2.5">
                 <button 
                   v-if="entry.status === 'notified'"
                   @click="handleCheckIn(entry.seat_id)"
-                  class="flex-1 lg:flex-none px-10 py-4 bg-green-600 text-white rounded-2xl font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-100 active:scale-95"
+                  class="flex-1 lg:flex-none px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-xs font-extrabold shadow-md shadow-emerald-500/10 hover:opacity-95 active:scale-98 transition-all"
                 >
                   Check In Now
                 </button>
                 <button 
                   @click="handleCancel(entry.id)"
-                  class="flex-1 lg:flex-none px-10 py-4 bg-white border-2 border-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all active:scale-95"
+                  class="flex-1 lg:flex-none px-6 py-2 bg-white border border-slate-200 hover:border-red-200 text-slate-500 hover:text-red-500 rounded-xl text-xs font-bold active:scale-98 transition-all"
                 >
                   Leave Queue
                 </button>
@@ -103,27 +94,27 @@
     </div>
 
     <!-- Info Section -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
-      <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100">
-        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-4">
-          <Bell class="w-5 h-5" />
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
+      <div class="bg-blue-50/40 p-5 rounded-2xl border border-blue-100/50 text-left">
+        <div class="w-9 h-9 bg-blue-100/60 border border-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-3">
+          <Bell class="w-4.5 h-4.5" />
         </div>
-        <h4 class="font-bold text-blue-900 mb-2">Smart Notifications</h4>
-        <p class="text-xs text-blue-700 leading-relaxed">We'll notify you via push and SMS as soon as your seat is ready. Make sure you're near the library.</p>
+        <h4 class="font-extrabold text-blue-900 text-xs uppercase tracking-wide mb-1.5">Smart Notifications</h4>
+        <p class="text-[11px] text-blue-700/90 leading-relaxed font-semibold">We'll notify you via push and SMS as soon as your seat is ready. Make sure you're near the library.</p>
       </div>
-      <div class="bg-purple-50 p-6 rounded-3xl border border-purple-100">
-        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mb-4">
-          <Zap class="w-5 h-5" />
+      <div class="bg-purple-50/40 p-5 rounded-2xl border border-purple-100/50 text-left">
+        <div class="w-9 h-9 bg-purple-100/60 border border-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-3">
+          <Zap class="w-4.5 h-4.5" />
         </div>
-        <h4 class="font-bold text-purple-900 mb-2">10-Minute Window</h4>
-        <p class="text-xs text-purple-700 leading-relaxed">Once notified, you have exactly 10 minutes to check in. If you miss it, the seat goes to the next student.</p>
+        <h4 class="font-extrabold text-purple-900 text-xs uppercase tracking-wide mb-1.5">10-Minute Window</h4>
+        <p class="text-[11px] text-purple-700/90 leading-relaxed font-semibold">Once notified, you have exactly 10 minutes to check in. If you miss it, the seat goes to the next student.</p>
       </div>
-      <div class="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
-        <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-4">
-          <Armchair class="w-5 h-5" />
+      <div class="bg-emerald-50/40 p-5 rounded-2xl border border-emerald-100/50 text-left">
+        <div class="w-9 h-9 bg-emerald-100/60 border border-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-3">
+          <Armchair class="w-4.5 h-4.5" />
         </div>
-        <h4 class="font-bold text-emerald-900 mb-2">Queue Priority</h4>
-        <p class="text-xs text-emerald-700 leading-relaxed">Current students cannot extend their bookings if someone is waiting in the queue. Your priority is protected.</p>
+        <h4 class="font-extrabold text-emerald-900 text-xs uppercase tracking-wide mb-1.5">Queue Priority</h4>
+        <p class="text-[11px] text-emerald-700/90 leading-relaxed font-semibold">Current students cannot extend their bookings if someone is waiting in the queue. Your priority is protected.</p>
       </div>
     </div>
   </div>
@@ -162,7 +153,6 @@ const formatWaitTime = (minutes: number) => {
 
 const getProgressWidth = (entry: any) => {
   if (entry.status === 'notified') return '100%';
-  // Dummy progress based on position
   const pos = entry.queue_position;
   if (pos === 1) return '75%';
   if (pos === 2) return '50%';
@@ -185,8 +175,6 @@ const handleCancel = async (id: number) => {
   
   if (confirmed) {
     try {
-      // We don't have a specific leaveQueue API yet, but we can reuse cancelBooking if it's implemented for queue
-      // Or just a general queue leave. Let's assume studentAPI.leaveQueue (I'll add it)
       await studentAPI.leaveQueue(id);
       showSuccess('Left Waitlist', 'You have been removed from the queue.');
       fetchQueue();
@@ -198,3 +186,25 @@ const handleCancel = async (id: number) => {
 
 onMounted(fetchQueue);
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+.active\:scale-98:active {
+  transform: scale(0.98);
+}
+.scale-102 {
+  transform: scale(1.02);
+}
+</style>

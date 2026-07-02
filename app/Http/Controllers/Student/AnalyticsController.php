@@ -17,10 +17,10 @@ class AnalyticsController extends Controller
 
         // Stats
         $stats = [
-            'total_bookings' => SeatBooking::where('user_id', $user->id)->count(),
+            'total_bookings' => SeatBooking::where('user_id', $user->id)->whereNotNull('check_in_time')->count(),
             'total_study_hours' => $this->calculateTotalStudyHours($user->id),
             'active_reservations' => BookReservation::where('user_id', $user->id)
-                ->whereIn('status', ['reserved', 'borrowed', 'pending_return', 'overdue'])
+                ->active()
                 ->count(),
             'study_streak' => $user->current_streak ?? 0,
             'loyalty_points' => $user->loyalty_points ?? 0,
@@ -61,7 +61,7 @@ class AnalyticsController extends Controller
     private function calculateTotalStudyHours($userId)
     {
         $bookings = SeatBooking::where('user_id', $userId)
-            ->where('status', 'completed')
+            ->where('status', 'checked_out')
             ->whereNotNull('check_in_time')
             ->whereNotNull('check_out_time')
             ->get();
@@ -70,7 +70,7 @@ class AnalyticsController extends Controller
         foreach ($bookings as $booking) {
             $start = Carbon::parse($booking->check_in_time);
             $end = Carbon::parse($booking->check_out_time);
-            $totalMinutes += $start->diffInMinutes($end);
+            $totalMinutes += $start->diffInMinutes($end, true);
         }
 
         return round($totalMinutes / 60, 1);

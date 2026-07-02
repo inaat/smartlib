@@ -54,6 +54,8 @@ export interface Library {
   updated_at: string;
 
   // Computed attributes
+  photo?: string;
+  photo_url?: string;
   totalSeats?: number;
   availableSeats?: number;
   currentOccupancy?: number;
@@ -189,6 +191,7 @@ export interface Event {
   registered?: number;
   waitlist?: number;
   isActive?: boolean;
+  library?: Library;
 }
 
 // Book Reservation Type - Matches Laravel BookReservation Model

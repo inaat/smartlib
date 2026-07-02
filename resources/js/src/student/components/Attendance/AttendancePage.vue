@@ -1,63 +1,74 @@
 <template>
-  <div class="space-y-8 pb-12">
-    <!-- Header & Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div class="md:col-span-1 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 text-white shadow-xl flex flex-col justify-between overflow-hidden relative">
-        <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+  <div class="space-y-6 pb-12 font-outfit">
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Month Stats -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 hover-lift flex items-center space-x-5 text-left relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 text-slate-50 opacity-60 group-hover:scale-115 transition-transform duration-500 pointer-events-none">
+          <Calendar class="w-20 h-20 stroke-1" />
+        </div>
+        <div class="p-3 bg-emerald-50/65 border border-emerald-100/50 rounded-xl text-emerald-600 relative z-10">
+          <Calendar class="w-5.5 h-5.5" />
+        </div>
         <div class="relative z-10">
-          <CalendarCheck class="w-10 h-10 mb-4 text-blue-100" />
-          <h1 class="text-3xl font-black mb-1">Attendance</h1>
-          <p class="text-blue-100/60 text-xs font-bold uppercase tracking-widest">Your Learning Journey</p>
+          <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-2">This Month</p>
+          <p class="text-3xl font-black text-slate-800 leading-none">
+            {{ stats.attendance_this_month || 0 }} 
+            <span class="text-xs font-bold text-slate-400 ml-1 uppercase tracking-wide">Days</span>
+          </p>
         </div>
       </div>
 
-      <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex items-center space-x-6">
-        <div class="p-4 bg-green-50 rounded-2xl text-green-600">
-          <Calendar class="w-8 h-8" />
+      <!-- Streak Stats -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 hover-lift flex items-center space-x-5 text-left relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 text-slate-50 opacity-60 group-hover:scale-115 transition-transform duration-500 pointer-events-none">
+          <Zap class="w-20 h-20 stroke-1" />
         </div>
-        <div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">This Month</p>
-          <p class="text-3xl font-black text-gray-900">{{ stats.attendance_this_month || 0 }} <span class="text-sm font-medium text-gray-400">Days</span></p>
+        <div class="p-3 bg-orange-50/65 border border-orange-100/50 rounded-xl text-orange-600 relative z-10">
+          <Zap class="w-5.5 h-5.5" />
         </div>
-      </div>
-
-      <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex items-center space-x-6">
-        <div class="p-4 bg-orange-50 rounded-2xl text-orange-600">
-          <Zap class="w-8 h-8" />
-        </div>
-        <div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Current Streak</p>
-          <p class="text-3xl font-black text-gray-900">{{ stats.current_streak || 0 }} <span class="text-sm font-medium text-gray-400">Days</span></p>
+        <div class="relative z-10">
+          <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-2">Current Streak</p>
+          <p class="text-3xl font-black text-slate-800 leading-none">
+            {{ stats.current_streak || 0 }} 
+            <span class="text-xs font-bold text-slate-400 ml-1 uppercase tracking-wide">Days</span>
+          </p>
         </div>
       </div>
 
-      <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex items-center space-x-6">
-        <div class="p-4 bg-purple-50 rounded-2xl text-purple-600">
-          <Clock class="w-8 h-8" />
+      <!-- Hours Stats -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 hover-lift flex items-center space-x-5 text-left relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 text-slate-50 opacity-60 group-hover:scale-115 transition-transform duration-500 pointer-events-none">
+          <Clock class="w-20 h-20 stroke-1" />
         </div>
-        <div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Hours</p>
-          <p class="text-3xl font-black text-gray-900">{{ stats.total_hours || 0 }} <span class="text-sm font-medium text-gray-400">Hours</span></p>
+        <div class="p-3 bg-purple-50/65 border border-purple-100/50 rounded-xl text-purple-600 relative z-10">
+          <Clock class="w-5.5 h-5.5" />
+        </div>
+        <div class="relative z-10">
+          <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-2">Total Hours</p>
+          <p class="text-3xl font-black text-slate-800 leading-none">
+            {{ stats.total_hours || 0 }} 
+            <span class="text-xs font-bold text-slate-400 ml-1 uppercase tracking-wide">Hours</span>
+          </p>
         </div>
       </div>
     </div>
 
     <!-- Calendar + Table Layout -->
     <div class="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6 items-start">
-
       <!-- Calendar Card -->
-      <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6 text-left">
         <!-- Month Navigation -->
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2">
             <CalendarCheck class="w-5 h-5 text-blue-500" />
-            <span class="text-lg font-black text-gray-900">{{ calendarTitle }}</span>
+            <span class="text-base font-black text-slate-800">{{ calendarTitle }}</span>
           </div>
           <div class="flex items-center space-x-1">
-            <button @click="prevMonth" class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
+            <button @click="prevMonth" class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/50 text-slate-400 hover:text-slate-700 transition-all active:scale-95">
               <ChevronLeft class="w-4 h-4" />
             </button>
-            <button @click="nextMonth" class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
+            <button @click="nextMonth" class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/50 text-slate-400 hover:text-slate-700 transition-all active:scale-95">
               <ChevronRight class="w-4 h-4" />
             </button>
           </div>
@@ -66,12 +77,12 @@
         <!-- Weekday headers -->
         <div class="grid grid-cols-7 text-center">
           <div v-for="d in ['S','M','T','W','T','F','S']" :key="d + Math.random()"
-            class="text-[10px] font-black text-gray-400 uppercase tracking-widest py-1">{{ d }}</div>
+            class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest py-1">{{ d }}</div>
         </div>
 
         <!-- Calendar Grid -->
         <div v-if="calendarLoading" class="flex justify-center py-8">
-          <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
         <div v-else class="grid grid-cols-7 gap-y-1.5 text-center">
           <!-- Empty offset for first day of month -->
@@ -83,53 +94,53 @@
             :key="dateStr"
             :title="info.attended ? `You attended · ${formatDuration(info.total_minutes)}` : 'No attendance'"
             :class="[
-              'mx-auto flex items-center justify-center rounded-full w-9 h-9 text-sm font-bold transition-all cursor-default relative select-none',
+              'mx-auto flex items-center justify-center rounded-full w-9 h-9 text-xs font-extrabold transition-all relative select-none',
               isToday(dateStr)
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 scale-105'
                 : info.attended
-                  ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                  : 'text-gray-300'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/50 hover:bg-emerald-100 hover:border-emerald-200'
+                  : 'text-slate-300'
             ]"
           >
             {{ parseInt(dateStr.split('-')[2]) }}
             <span
               v-if="info.attended && !isToday(dateStr)"
-              class="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-500"
+              class="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-emerald-500 border border-white"
             ></span>
           </div>
         </div>
 
         <!-- Footer Stats -->
-        <div class="border-t border-gray-50 pt-5 space-y-3">
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-500">Days attended</span>
-            <span class="font-black text-gray-900">{{ calendarData.total_attended }} days</span>
+        <div class="border-t border-slate-100 pt-5 space-y-4">
+          <div class="flex items-center justify-between text-xs font-bold">
+            <span class="text-slate-400 uppercase tracking-wide">Days attended</span>
+            <span class="font-extrabold text-slate-800">{{ calendarData.total_attended }} days</span>
           </div>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-500">Attendance rate</span>
-            <span class="font-black text-emerald-600">
+          <div class="flex items-center justify-between text-xs font-bold">
+            <span class="text-slate-400 uppercase tracking-wide">Attendance rate</span>
+            <span class="font-extrabold text-emerald-600">
               {{ calendarData.total_days > 0 ? Math.round((calendarData.total_attended / calendarData.total_days) * 100) : 0 }}%
             </span>
           </div>
           <!-- Progress bar -->
-          <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div
-              class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-700"
+              class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-700"
               :style="{ width: calendarData.total_days > 0 ? `${Math.round((calendarData.total_attended / calendarData.total_days) * 100)}%` : '0%' }"
             ></div>
           </div>
           <!-- Legend -->
-          <div class="flex items-center space-x-4 pt-1">
-            <div class="flex items-center space-x-1.5 text-xs text-gray-400">
-              <div class="w-3 h-3 rounded-full bg-emerald-100 border border-emerald-300"></div>
+          <div class="flex flex-wrap gap-x-4 gap-y-1.5 pt-1">
+            <div class="flex items-center space-x-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-50 border border-emerald-300"></div>
               <span>Attended</span>
             </div>
-            <div class="flex items-center space-x-1.5 text-xs text-gray-400">
-              <div class="w-3 h-3 rounded-full bg-blue-600"></div>
+            <div class="flex items-center space-x-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">
+              <div class="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
               <span>Today</span>
             </div>
-            <div class="flex items-center space-x-1.5 text-xs text-gray-400">
-              <div class="w-3 h-3 rounded-full bg-gray-100 border border-gray-200"></div>
+            <div class="flex items-center space-x-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">
+              <div class="w-2.5 h-2.5 rounded-full bg-white border border-slate-200"></div>
               <span>Absent</span>
             </div>
           </div>
@@ -137,29 +148,29 @@
       </div>
 
       <!-- Attendance History Table -->
-      <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div class="px-8 py-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 class="text-xl font-bold text-gray-900">Attendance Logs</h2>
-            <p class="text-sm text-gray-500">A detailed record of your library visits</p>
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/30">
+          <div class="text-left">
+            <h2 class="text-base font-extrabold text-slate-800">Attendance Logs</h2>
+            <p class="text-xs text-slate-400 mt-0.5">A detailed record of your library visits</p>
           </div>
-          <button @click="fetchAttendance" class="p-2 hover:bg-gray-50 rounded-xl transition-all text-gray-500 hover:text-blue-600 border border-gray-100">
-            <RefreshCw :class="['w-5 h-5', loading ? 'animate-spin' : '']" />
+          <button @click="fetchAttendance" class="p-2.5 hover:bg-slate-50 rounded-xl transition-all text-slate-500 hover:text-blue-600 border border-slate-200/50 shadow-sm active:scale-98">
+            <RefreshCw :class="['w-4 h-4', loading ? 'animate-spin' : '']" />
           </button>
         </div>
 
-        <div v-if="loading" class="p-20 flex flex-col items-center justify-center space-y-4">
-          <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p class="text-gray-500 font-bold animate-pulse uppercase tracking-widest text-xs">Loading logs...</p>
+        <div v-if="loading" class="p-24 flex flex-col items-center justify-center space-y-3">
+          <div class="w-9 h-9 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-slate-400 font-extrabold animate-pulse uppercase tracking-wider text-[10px]">Loading logs...</p>
         </div>
 
-        <div v-else-if="attendance.length === 0" class="p-20 text-center">
-          <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-200">
-            <FileText class="w-12 h-12" />
+        <div v-else-if="attendance.length === 0" class="p-16 text-center">
+          <div class="w-16 h-16 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-inner">
+            <FileText class="w-7 h-7" />
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-2">No Attendance Yet</h3>
-          <p class="text-gray-500 max-w-sm mx-auto">Start by booking a seat and checking in at the library. Your attendance will be automatically marked here.</p>
-          <router-link to="/student/libraries" class="mt-8 inline-flex items-center space-x-2 bg-blue-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 uppercase tracking-wider text-xs">
+          <h3 class="text-base font-bold text-slate-800 mb-1">No Attendance Yet</h3>
+          <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">Start by booking a seat and checking in. Your attendance will automatically appear here.</p>
+          <router-link to="/student/libraries" class="mt-6 inline-flex items-center space-x-1.5 bg-blue-600 hover:from-blue-700 hover:to-cyan-600 text-white px-5 py-2.5 rounded-xl font-extrabold shadow-md shadow-blue-500/10 active:scale-98 transition-all uppercase tracking-wider text-[10px]">
             <Armchair class="w-4 h-4" />
             <span>Book Your First Seat</span>
           </router-link>
@@ -168,53 +179,53 @@
         <div v-else class="overflow-x-auto">
           <table class="w-full text-left">
             <thead>
-              <tr class="bg-gray-50/50 text-[10px] uppercase font-black tracking-widest text-gray-400">
-                <th class="px-8 py-4">Date</th>
-                <th class="px-8 py-4">Library</th>
-                <th class="px-8 py-4">Check In</th>
-                <th class="px-8 py-4">Check Out</th>
-                <th class="px-8 py-4 text-center">Duration</th>
-                <th class="px-8 py-4 text-right">Method</th>
+              <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] uppercase font-black tracking-wider text-slate-400">
+                <th class="px-6 py-3.5">Date</th>
+                <th class="px-6 py-3.5">Library</th>
+                <th class="px-6 py-3.5">Check In</th>
+                <th class="px-6 py-3.5">Check Out</th>
+                <th class="px-6 py-3.5 text-center">Duration</th>
+                <th class="px-6 py-3.5 text-right">Method</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
-              <tr v-for="log in attendance" :key="log.id" class="hover:bg-blue-50/30 transition-colors group">
-                <td class="px-8 py-5 whitespace-nowrap">
+            <tbody class="divide-y divide-slate-50">
+              <tr v-for="log in attendance" :key="log.id" class="hover:bg-slate-50/30 transition-colors group">
+                <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">
+                    <div class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 font-black text-xs group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-300">
                       {{ getDay(log.date) }}
                     </div>
-                    <div>
-                      <div class="text-sm font-bold text-gray-900">{{ formatDate(log.date) }}</div>
-                      <div class="text-[10px] text-gray-400 uppercase font-bold">{{ getDayName(log.date) }}</div>
+                    <div class="text-left">
+                      <div class="text-xs font-bold text-slate-800 leading-snug">{{ formatDate(log.date) }}</div>
+                      <div class="text-[9px] text-slate-400 font-extrabold uppercase mt-0.5 leading-none">{{ getDayName(log.date) }}</div>
                     </div>
                   </div>
                 </td>
-                <td class="px-8 py-5">
-                  <div class="text-sm font-bold text-gray-700">{{ log.library?.name || 'N/A' }}</div>
+                <td class="px-6 py-4 text-left">
+                  <div class="text-xs font-bold text-slate-700">{{ log.library?.name || 'N/A' }}</div>
                 </td>
-                <td class="px-8 py-5">
-                  <div class="flex items-center text-xs font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg w-fit">
-                    <Clock class="w-3 h-3 mr-2" />
+                <td class="px-6 py-4">
+                  <div class="flex items-center text-[11px] font-extrabold text-emerald-600 bg-emerald-50/60 border border-emerald-100/50 px-2.5 py-1 rounded-lg w-fit">
+                    <Clock class="w-3 h-3 mr-1.5" />
                     {{ formatTime(log.check_in_time) }}
                   </div>
                 </td>
-                <td class="px-8 py-5">
-                  <div v-if="log.check_out_time" class="flex items-center text-xs font-bold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg w-fit">
-                    <Clock class="w-3 h-3 mr-2" />
+                <td class="px-6 py-4">
+                  <div v-if="log.check_out_time" class="flex items-center text-[11px] font-extrabold text-red-500 bg-red-50/60 border border-red-100/50 px-2.5 py-1 rounded-lg w-fit">
+                    <Clock class="w-3 h-3 mr-1.5" />
                     {{ formatTime(log.check_out_time) }}
                   </div>
-                  <div v-else class="flex items-center text-[10px] font-black uppercase tracking-widest text-blue-600 animate-pulse">
+                  <div v-else class="flex items-center text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50/50 border border-blue-100/30 px-2.5 py-1 rounded-lg w-fit animate-pulse">
                     Present Now
                   </div>
                 </td>
-                <td class="px-8 py-5 text-center">
-                  <div class="text-sm font-black text-gray-900">{{ log.total_minutes ? formatDuration(log.total_minutes) : '--' }}</div>
+                <td class="px-6 py-4 text-center">
+                  <div class="text-xs font-black text-slate-700">{{ log.total_minutes ? formatDuration(log.total_minutes) : '--' }}</div>
                 </td>
-                <td class="px-8 py-5 text-right">
+                <td class="px-6 py-4 text-right">
                   <span :class="[
-                    'text-[9px] font-black uppercase tracking-tighter px-2 py-1 rounded-md border',
-                    log.marked_manually ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-gray-50 text-gray-400 border-gray-100'
+                    'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border',
+                    log.marked_manually ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-slate-50 text-slate-400 border-slate-100'
                   ]">
                     {{ log.marked_manually ? 'Manual' : 'Auto' }}
                   </span>
@@ -223,7 +234,7 @@
             </tbody>
           </table>
 
-          <div class="px-8 py-6 bg-gray-50/30 border-t border-gray-50 flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-widest">
+          <div class="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
             <div>Showing {{ attendance.length }} records</div>
           </div>
         </div>
@@ -318,3 +329,22 @@ onMounted(() => {
   fetchCalendar();
 });
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+.active\:scale-98:active {
+  transform: scale(0.98);
+}
+</style>

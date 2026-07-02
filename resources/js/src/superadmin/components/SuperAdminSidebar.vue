@@ -1,12 +1,12 @@
 <template>
   <!-- Sidebar -->
   <div :class="[
-    'fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0',
+    'fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col h-screen lg:h-full',
     isOpen ? 'translate-x-0' : '-translate-x-full'
   ]">
     
     <!-- Header -->
-    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative flex-shrink-0">
       <button
         @click="$emit('close')"
         class="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-1 lg:hidden"

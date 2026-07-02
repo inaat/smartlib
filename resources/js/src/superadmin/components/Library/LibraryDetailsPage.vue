@@ -38,7 +38,7 @@
         <div class="h-48 bg-gradient-to-br from-indigo-50 to-purple-50 relative">
           <img
             v-if="library.photo"
-            :src="'/storage/' + library.photo"
+            :src="library.photo_url"
             class="w-full h-full object-cover"
             alt="Library cover"
           />

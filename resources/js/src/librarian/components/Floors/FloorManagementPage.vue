@@ -1,68 +1,87 @@
 <template>
-  <div class="p-6 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Floor Management</h1>
-        <p class="text-gray-600 mt-1">Manage library floors and levels</p>
-      </div>
+  <div class="p-6 space-y-6 font-outfit text-slate-700">
+    
+    <!-- Header Controls -->
+    <div class="flex justify-end items-center mb-6">
       <button
         @click="openCreateModal"
-        class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center space-x-2"
+        class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-colors flex items-center space-x-2 text-xs font-bold shadow-sm cursor-pointer"
       >
-        <span class="text-sm font-medium">Add Floor</span>
+        <Plus class="w-4 h-4" />
+        <span>Add Floor</span>
       </button>
     </div>
 
-    <!-- Floors List -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <!-- Floors List Table Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden text-left">
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        <table class="min-w-full divide-y divide-slate-100 text-xs">
+          <thead>
+            <tr class="bg-slate-50/50 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+              <th class="px-6 py-4 font-semibold">Floor details</th>
+              <th class="px-6 py-4 font-semibold">Level Number</th>
+              <th class="px-6 py-4 font-semibold">Zone Type</th>
+              <th class="px-6 py-4 font-semibold">Total Capacity</th>
+              <th class="px-6 py-4 font-semibold">Status</th>
+              <th class="px-6 py-4 text-right font-semibold">Actions</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="floor in floors" :key="floor.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ floor.name }}</div>
-                <div class="text-xs text-gray-500">{{ floor.description || 'No description' }}</div>
+          <tbody class="divide-y divide-slate-50">
+            <tr v-for="floor in floors" :key="floor.id" class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-800 text-sm">{{ floor.name }}</div>
+                <div class="text-[11px] text-slate-400 font-medium mt-0.5">{{ floor.description || 'No description provided' }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-500">{{ floor.level }}</div>
+              <td class="px-6 py-4 font-bold text-slate-600">
+                Lvl {{ floor.level }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 capitalize">
+              <td class="px-6 py-4">
+                <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-blue-50 border-blue-100 text-blue-700">
                   {{ (floor.type || 'mixed').replace('_', ' ') }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-500">{{ floor.capacity || 0 }} seats</div>
+              <td class="px-6 py-4 font-bold text-slate-600">
+                {{ floor.capacity || 0 }} Seats
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4">
                 <span
                   :class="[
-                    'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                    floor.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    'px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border inline-flex items-center gap-1',
+                    floor.is_active ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'
                   ]"
                 >
+                  <span :class="['w-1.5 h-1.5 rounded-full', floor.is_active ? 'bg-green-500' : 'bg-red-500']"></span>
                   {{ floor.is_active ? 'Active' : 'Inactive' }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button @click="editFloor(floor)" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                <button @click="confirmDelete(floor)" class="text-red-600 hover:text-red-900">Delete</button>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end space-x-2">
+                  <button 
+                    @click="openSectionsModal(floor)" 
+                    class="px-2.5 py-1.5 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg font-bold border border-slate-200/40 cursor-pointer"
+                  >
+                    Sections
+                  </button>
+                  <button 
+                    @click="editFloor(floor)" 
+                    class="px-2.5 py-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg font-bold border border-emerald-100 cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    @click="confirmDelete(floor)" 
+                    class="px-2.5 py-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-bold border border-red-100 cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="floors.length === 0">
-              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                No floors found. Add a new floor to get started.
+              <td colspan="6" class="px-6 py-16 text-center">
+                <Building2 class="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                <p class="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">No floors added yet</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">Click "Add Floor" to create your first layout floor.</p>
               </td>
             </tr>
           </tbody>
@@ -71,52 +90,54 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-bold text-gray-900">{{ isEditing ? 'Edit Floor' : 'Add New Floor' }}</h3>
-          <button @click="closeModal" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            Close
+    <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" @click.self="closeModal">
+      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden border border-gray-200 animate-in fade-in zoom-in duration-200">
+        <div class="p-6 border-b border-slate-150 flex items-center justify-between text-left">
+          <h3 class="text-base font-bold text-slate-800">{{ isEditing ? 'Edit Floor Settings' : 'Add New Floor' }}</h3>
+          <button @click="closeModal" class="p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer text-slate-400">
+            <X class="w-4 h-4" />
           </button>
         </div>
 
-        <form @submit.prevent="saveFloor" class="space-y-4">
+        <form @submit.prevent="saveFloor" class="p-6 space-y-4 text-left">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Floor Name</label>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Floor Name</label>
             <input
               v-model="form.name"
               type="text"
               required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
               placeholder="e.g. First Floor"
             />
           </div>
+          
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Level Number</label>
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Level Number</label>
               <input
                 v-model.number="form.level"
                 type="number"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
                 placeholder="e.g. 1"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Capacity</label>
               <input
                 v-model.number="form.capacity"
                 type="number"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
                 placeholder="e.g. 50"
               />
             </div>
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Floor Type</label>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Floor Type</label>
             <select
               v-model="form.type"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
             >
               <option value="mixed">Mixed</option>
               <option value="quiet_zone">Quiet Zone</option>
@@ -125,47 +146,50 @@
               <option value="boys_only">Boys Only</option>
             </select>
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Description</label>
             <textarea
               v-model="form.description"
               rows="3"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Optional description..."
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50 resize-none"
+              placeholder="Optional description details..."
             ></textarea>
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Map Image</label>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Map Image Layout</label>
             <input
               type="file"
               @change="handleFileUpload"
               accept="image/*"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
             />
-            <p v-if="form.map_image_url" class="mt-1 text-xs text-gray-500">Current: {{ form.map_image_url }}</p>
+            <p v-if="form.map_image_url" class="mt-1.5 text-[10px] text-slate-400 font-bold truncate">Current: {{ form.map_image_url.split('/').pop() }}</p>
           </div>
-          <div class="flex items-center space-x-2">
+
+          <div class="flex items-center space-x-2 pt-1">
             <input
               v-model="form.is_active"
               type="checkbox"
               id="is_active"
-              class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+              class="rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
             />
-            <label for="is_active" class="text-sm font-medium text-gray-700">Active</label>
+            <label for="is_active" class="text-xs font-bold text-slate-500 cursor-pointer select-none">Mark Active</label>
           </div>
 
-          <div class="flex items-center space-x-3 pt-4">
+          <div class="flex items-center space-x-3 pt-4 border-t border-slate-100">
             <button
               type="submit"
               :disabled="loading"
-              class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+              class="flex-1 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold cursor-pointer"
             >
               {{ loading ? 'Saving...' : (isEditing ? 'Update Floor' : 'Create Floor') }}
             </button>
             <button
               type="button"
               @click="closeModal"
-              class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              class="px-4 py-2 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition-all text-xs cursor-pointer"
             >
               Cancel
             </button>
@@ -173,6 +197,7 @@
         </form>
       </div>
     </div>
+
     <!-- Sections Modal -->
     <SectionManagementModal
       :is-open="showSectionsModal"
@@ -188,6 +213,17 @@ import { ref, onMounted, computed } from 'vue';
 import { useAuth } from '@/shared/composables/useAuth';
 import { librarianAPI } from '@/shared/services/api';
 import SectionManagementModal from './SectionManagementModal.vue';
+import { Plus, X, Building2 } from 'lucide-vue-next';
+import { useSwal } from '@/shared/composables/useSwal';
+
+const { showConfirm, showSuccess, showError } = useSwal();
+const { user } = useAuth();
+const floors = ref<Floor[]>([]);
+const showModal = ref(false);
+const showSectionsModal = ref(false);
+const selectedFloor = ref<Floor | null>(null);
+const isEditing = ref(false);
+const loading = ref(false);
 
 interface Floor {
   id: number;
@@ -199,15 +235,6 @@ interface Floor {
   map_image: string;
   is_active: boolean;
 }
-
-const { user } = useAuth();
-const floors = ref<Floor[]>([]);
-const showModal = ref(false);
-const showSectionsModal = ref(false);
-const selectedFloor = ref<Floor | null>(null);
-const isEditing = ref(false);
-const loading = ref(false);
-const libraryId = computed(() => user.value?.library_id || 1);
 
 const openSectionsModal = (floor: Floor) => {
   selectedFloor.value = floor;
@@ -295,26 +322,30 @@ const saveFloor = async () => {
 
     if (isEditing.value && form.value.id) {
       await librarianAPI.updateFloor(form.value.id, formData);
+      showSuccess('Updated!', 'Floor details updated successfully.');
     } else {
       await librarianAPI.createFloor(formData);
+      showSuccess('Created!', 'New floor created successfully.');
     }
     await fetchFloors();
     closeModal();
   } catch (error) {
     console.error('Error saving floor:', error);
+    showError('Save Failed', 'Failed to save floor details.');
   } finally {
     loading.value = false;
   }
 };
 
 const confirmDelete = async (floor: Floor) => {
-  if (confirm('Are you sure you want to delete this floor?')) {
-    try {
-      await librarianAPI.deleteFloor(floor.id);
-      await fetchFloors();
-    } catch (error) {
-      console.error('Error deleting floor:', error);
-    }
+  if (!await showConfirm('Delete Floor', `Are you sure you want to delete "${floor.name}"? This action cannot be undone.`, 'Yes, Delete')) return;
+  try {
+    await librarianAPI.deleteFloor(floor.id);
+    showSuccess('Deleted!', 'Floor has been successfully deleted.');
+    await fetchFloors();
+  } catch (error) {
+    console.error('Error deleting floor:', error);
+    showError('Delete Failed', 'Failed to delete floor.');
   }
 };
 
@@ -322,3 +353,11 @@ onMounted(() => {
   fetchFloors();
 });
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+</style>

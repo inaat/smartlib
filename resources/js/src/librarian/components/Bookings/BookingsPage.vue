@@ -1,163 +1,169 @@
 <template>
-  <div class="p-6 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Seat Bookings</h1>
-        <p class="text-gray-600 mt-1">Manage and monitor all seat bookings</p>
-      </div>
-      <div class="flex items-center space-x-3">
-        <div class="relative">
-          <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+  <div class="p-6 space-y-6 font-outfit">
+    <!-- Search and Filters in One Line -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+      <div class="flex flex-col md:flex-row items-center gap-4">
+        <!-- Search bar -->
+        <div class="relative flex-1 w-full text-left">
+          <Search class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search student or ID..."
-            class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none w-64"
+            placeholder="Search student by name or ID..."
+            class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-655 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none placeholder-slate-400"
             @input="debounceSearch"
           />
         </div>
-      </div>
-    </div>
-
-    <!-- Filter Tabs -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-      <div class="flex items-center space-x-2">
-        <button
-          v-for="tab in filterTabs"
-          :key="tab.value"
-          @click="setFilter(tab.value)"
-          :class="[
-            'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-            activeFilter === tab.value
-              ? 'bg-purple-100 text-purple-700'
-              : 'text-gray-600 hover:bg-gray-100'
-          ]"
+        <!-- Status filter select dropdown -->
+        <select
+          v-model="activeFilter"
+          @change="fetchBookings(1)"
+          class="w-full md:w-56 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-655 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none cursor-pointer"
         >
-          {{ tab.label }}
-          <span v-if="stats[tab.value] !== undefined" :class="[
-            'ml-2 px-2 py-0.5 rounded-full text-xs',
-            activeFilter === tab.value ? 'bg-purple-200' : 'bg-gray-200'
-          ]">
-            {{ stats[tab.value] }}
-          </span>
-        </button>
+          <option value="all">All Bookings ({{ stats.all || 0 }})</option>
+          <option value="active">Active ({{ stats.active || 0 }})</option>
+          <option value="pending">Pending ({{ stats.pending || 0 }})</option>
+          <option value="completed">Completed ({{ stats.completed || 0 }})</option>
+          <option value="cancelled">Cancelled ({{ stats.cancelled || 0 }})</option>
+        </select>
       </div>
     </div>
 
-    <!-- Bookings Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div v-if="loading" class="p-12 flex justify-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+    <!-- Bookings Table Container -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div v-if="loading" class="p-16 flex flex-col items-center justify-center">
+        <RefreshCw class="w-10 h-10 text-emerald-600 animate-spin mb-4" />
+        <p class="text-slate-500 font-semibold uppercase tracking-wider text-xs animate-pulse">Loading reservations...</p>
       </div>
-      <div v-else-if="bookings.length === 0" class="p-12 text-center text-gray-500">
-        No bookings found.
+      <div v-else-if="bookings.length === 0" class="p-16 text-center text-slate-400">
+        <Search class="w-10 h-10 text-slate-200 mx-auto mb-4" />
+        <p class="text-xs font-bold uppercase tracking-widest text-slate-400">No bookings found</p>
       </div>
       <div v-else class="overflow-x-auto">
-        <table class="w-full">
-          <thead class="bg-gray-50 border-b border-gray-200">
+        <table class="w-full divide-y divide-gray-100">
+          <thead class="bg-gray-50/50">
             <tr>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">
                 Student
               </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Seat
+              <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                Seat & Floor
               </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">
                 Date & Time
               </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">
                 Status
               </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Check-in/out
+              <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                Activity Logs
               </th>
-              <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Actions
+              <th class="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                Action
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200">
+          <tbody class="divide-y divide-gray-100 bg-white">
             <tr
               v-for="booking in bookings"
               :key="booking.id"
-              class="hover:bg-gray-50 transition-colors"
+              class="hover:bg-slate-50/50 transition-colors"
             >
-              <td class="px-6 py-4">
-                <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold">
-                    {{ booking.user?.name?.charAt(0) }}
+              <!-- Student Profile Column -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center space-x-3.5">
+                  <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center shadow-sm">
+                    <img 
+                      v-if="booking.user?.profile_picture" 
+                      :src="getProfilePictureUrl(booking.user.profile_picture)" 
+                      class="w-full h-full object-cover rounded-lg" 
+                    />
+                    <div v-else class="w-full h-full flex items-center justify-center bg-emerald-50 border border-emerald-600 rounded-lg text-emerald-600 font-bold text-sm">
+                      {{ booking.user?.name?.charAt(0).toUpperCase() }}
+                    </div>
                   </div>
-                  <div>
-                    <div class="font-medium text-gray-900">{{ booking.user?.name }}</div>
-                    <div class="text-sm text-gray-500">{{ booking.user?.crn || 'N/A' }}</div>
+                  <div class="text-left">
+                    <div class="text-sm font-medium text-slate-700">{{ booking.user?.name }}</div>
+                    <div class="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5 uppercase">ID: {{ booking.user?.crn || 'N/A' }}</div>
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-4">
-                <div class="flex items-center space-x-2">
-                  <MapPin class="w-4 h-4 text-gray-400" />
-                  <span class="font-medium text-gray-900">{{ booking.seat?.seat_number }}</span>
-                  <span class="text-xs text-gray-500">({{ booking.seat?.floor?.name }})</span>
+
+              <!-- Seat & Floor Location Column -->
+              <td class="px-6 py-4 whitespace-nowrap text-left">
+                <div class="flex items-center space-x-2 text-xs font-semibold text-slate-600">
+                  <MapPin class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span class="font-semibold text-slate-800">Seat {{ booking.seat?.seat_number }}</span>
+                  <span class="text-[10px] text-slate-400 font-semibold bg-slate-50 px-2 py-0.5 border border-gray-200 rounded-md">
+                    {{ booking.seat?.floor?.name }}
+                  </span>
                 </div>
               </td>
-              <td class="px-6 py-4">
-                <div class="text-sm text-gray-900">{{ formatDate(booking.booking_time) }}</div>
-                <div class="text-sm text-gray-500">
+
+              <!-- Date & Time Window Column -->
+              <td class="px-6 py-4 whitespace-nowrap text-left">
+                <div class="text-xs font-semibold text-slate-800">{{ formatDate(booking.booking_time) }}</div>
+                <div class="text-[10px] text-slate-400 font-semibold mt-1 uppercase tracking-wider">
                   {{ formatTime(booking.booking_time) }} - {{ formatTime(booking.scheduled_end_time) }}
                 </div>
               </td>
-              <td class="px-6 py-4">
+
+              <!-- Status Column -->
+              <td class="px-6 py-4 whitespace-nowrap text-left">
                 <span :class="[
-                  'px-3 py-1 rounded-full text-xs font-medium capitalize',
+                  'text-[9px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider border',
                   getStatusClass(booking.status)
                 ]">
                   {{ formatStatus(booking.status) }}
                 </span>
               </td>
-              <td class="px-6 py-4">
-                <div v-if="booking.check_in_time" class="text-xs text-gray-600">
-                  <div class="flex items-center space-x-1">
-                    <CheckCircle class="w-3 h-3 text-green-500" />
+
+              <!-- Check-In/Out Activity Logs Column -->
+              <td class="px-6 py-4 whitespace-nowrap text-left">
+                <div v-if="booking.check_in_time" class="text-[10px] font-semibold text-slate-500 space-y-1">
+                  <div class="flex items-center space-x-1.5 text-green-700">
+                    <CheckCircle class="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
                     <span>In: {{ formatTime(booking.check_in_time) }}</span>
                   </div>
-                  <div v-if="booking.check_out_time" class="flex items-center space-x-1 mt-1">
-                    <LogOut class="w-3 h-3 text-blue-500" />
+                  <div v-if="booking.check_out_time" class="flex items-center space-x-1.5 text-blue-700">
+                    <LogOut class="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
                     <span>Out: {{ formatTime(booking.check_out_time) }}</span>
                   </div>
                 </div>
-                <div v-else class="text-sm text-gray-400 italic">Not checked in</div>
+                <div v-else class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider italic">No activity logged</div>
               </td>
-              <td class="px-6 py-4 text-right">
+
+              <!-- Actions Column -->
+              <td class="px-6 py-4 whitespace-nowrap text-right">
                 <div class="flex items-center justify-end space-x-2">
                   <button
                     v-if="booking.status === 'booked'"
                     @click="handleCheckIn(booking.id)"
-                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                    title="Check In"
+                    class="p-2 bg-green-50 border border-green-200/50 hover:bg-green-100 rounded-lg text-green-600 hover:text-green-700 transition-all cursor-pointer shadow-sm"
+                    title="Confirm Check In"
                   >
                     <UserCheck class="w-4 h-4" />
                   </button>
                   <button
                     v-if="booking.status === 'checked_in'"
                     @click="handleCheckOut(booking.id)"
-                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Check Out"
+                    class="p-2 bg-blue-50 border border-blue-200/50 hover:bg-blue-100 rounded-lg text-blue-600 hover:text-blue-700 transition-all cursor-pointer shadow-sm"
+                    title="Confirm Check Out"
                   >
                     <LogOut class="w-4 h-4" />
                   </button>
                   <button
                     v-if="['booked', 'checked_in'].includes(booking.status)"
                     @click="handleCancel(booking.id)"
-                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    class="p-2 bg-red-50 border border-red-200 rounded-lg text-red-600 hover:bg-red-100 transition-all cursor-pointer shadow-sm"
                     title="Cancel Booking"
                   >
                     <XCircle class="w-4 h-4" />
                   </button>
                   <button
-                    @click="viewBookingDetails(booking.id)"
-                    class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="View Details"
+                    @click="viewBookingDetails(booking)"
+                    class="p-2 bg-white border border-gray-200 hover:bg-slate-50 rounded-lg text-emerald-700 hover:text-emerald-800 transition-all cursor-pointer shadow-sm"
+                    title="View Details Dialog"
                   >
                     <Eye class="w-4 h-4" />
                   </button>
@@ -168,39 +174,113 @@
         </table>
       </div>
 
-      <!-- Pagination -->
-      <div v-if="pagination.total > 0" class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-        <div class="flex items-center justify-between">
-          <div class="text-sm text-gray-600">
-            Showing <span class="font-medium">{{ pagination.from }}</span> to <span class="font-medium">{{ pagination.to }}</span> of <span class="font-medium">{{ pagination.total }}</span> results
+    </div>
+
+    <!-- Booking Details Dialog -->
+    <div v-if="selectedBooking" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+        <!-- Dialog Header -->
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between text-left">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100/50 flex-shrink-0">
+              <Calendar class="w-5 h-5" />
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-slate-800 leading-snug">Booking Details</h2>
+              <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Booking identification #{{ selectedBooking.id }}</p>
+            </div>
           </div>
-          <div class="flex items-center space-x-2">
+          <button @click="selectedBooking = null" class="p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
+            <X class="w-5 h-5 text-slate-400" />
+          </button>
+        </div>
+
+        <!-- Dialog Body Content -->
+        <div class="p-6 space-y-5 text-left font-outfit text-slate-700">
+          <!-- Student Profile Details -->
+          <div class="flex items-center space-x-3.5 pb-4 border-b border-gray-100">
+            <div class="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center shadow-sm">
+              <img v-if="selectedBooking.user?.profile_picture" :src="getProfilePictureUrl(selectedBooking.user.profile_picture)" class="w-full h-full object-cover rounded-xl" />
+              <div v-else class="w-full h-full flex items-center justify-center bg-emerald-50 border border-emerald-600 rounded-xl text-emerald-600 font-bold text-base">
+                {{ selectedBooking.user?.name?.charAt(0).toUpperCase() }}
+              </div>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-700 text-sm leading-snug">{{ selectedBooking.user?.name || 'N/A' }}</h4>
+              <p class="text-[11px] text-slate-400 font-semibold mt-0.5">{{ selectedBooking.user?.email || 'N/A' }}</p>
+              <p class="text-[10px] text-slate-400 font-semibold tracking-wider mt-0.5 uppercase">ID: {{ selectedBooking.user?.crn || 'N/A' }}</p>
+            </div>
+          </div>
+
+          <!-- Seat Assignment Details -->
+          <div class="grid grid-cols-2 gap-4 pb-4 border-b border-gray-100">
+            <div>
+              <span class="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Seat Assigned</span>
+              <span class="font-bold text-slate-700 text-sm">Seat {{ selectedBooking.seat?.seat_number || 'N/A' }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Location</span>
+              <span class="font-semibold text-slate-700 text-xs">{{ selectedBooking.seat?.floor?.name || 'N/A' }}</span>
+            </div>
+          </div>
+
+          <!-- Reservation Dates & Hours -->
+          <div class="pb-4 border-b border-gray-100 space-y-2">
+            <div>
+              <span class="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Reservation Date</span>
+              <span class="font-semibold text-slate-700 text-xs">{{ formatDate(selectedBooking.booking_time) }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Scheduled Window</span>
+              <span class="font-semibold text-slate-700 text-xs">
+                {{ formatTime(selectedBooking.booking_time) }} - {{ formatTime(selectedBooking.scheduled_end_time) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Check-in Activity & Status Timings -->
+          <div class="space-y-2.5 pb-1">
+            <span class="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Status & Timings</span>
+            <div>
+              <span :class="[
+                'text-[9px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider border bg-white',
+                selectedBooking.status === 'checked_in' ? 'bg-green-50 text-green-700 border-green-200' :
+                selectedBooking.status === 'booked' ? 'bg-orange-50 text-orange-700 border-orange-100' :
+                selectedBooking.status === 'checked_out' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                selectedBooking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-200' :
+                'bg-slate-50 border-slate-200 text-slate-500'
+              ]">
+                {{ formatStatus(selectedBooking.status) }}
+              </span>
+            </div>
+            <div class="text-[11px] text-slate-500 font-semibold space-y-1.5 pt-1">
+              <p v-if="selectedBooking.check_in_time">Checked In: <span class="font-bold text-slate-700">{{ formatTime(selectedBooking.check_in_time) }}</span></p>
+              <p v-if="selectedBooking.check_out_time">Checked Out: <span class="font-bold text-slate-700">{{ formatTime(selectedBooking.check_out_time) }}</span></p>
+            </div>
+          </div>
+
+          <!-- Quick Action buttons in Details -->
+          <div class="pt-4 flex items-center space-x-3 border-t border-gray-100">
             <button
-              @click="changePage(pagination.current_page - 1)"
-              :disabled="pagination.current_page === 1"
-              class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-white transition-colors disabled:opacity-50"
+              v-if="selectedBooking.status === 'booked'"
+              @click="handleCheckIn(selectedBooking.id); selectedBooking = null"
+              class="flex-1 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm"
             >
-              Previous
+              Check In Student
             </button>
             <button
-              v-for="page in pagination.last_page"
-              :key="page"
-              @click="changePage(page)"
-              :class="[
-                'px-3 py-1 rounded-lg transition-all',
-                pagination.current_page === page
-                  ? 'bg-purple-600 text-white'
-                  : 'border border-gray-300 hover:bg-white'
-              ]"
+              v-if="selectedBooking.status === 'checked_in'"
+              @click="handleCheckOut(selectedBooking.id); selectedBooking = null"
+              class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm"
             >
-              {{ page }}
+              Check Out Student
             </button>
             <button
-              @click="changePage(pagination.current_page + 1)"
-              :disabled="pagination.current_page === pagination.last_page"
-              class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-white transition-colors disabled:opacity-50"
+              type="button"
+              @click="selectedBooking = null"
+              class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-505 font-bold rounded-xl hover:bg-slate-50 transition-colors text-xs cursor-pointer text-center"
             >
-              Next
+              Close Details
             </button>
           </div>
         </div>
@@ -212,21 +292,56 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import {
-  Plus,
   Search,
   MapPin,
   CheckCircle,
   UserCheck,
   LogOut,
   Eye,
-  XCircle
+  XCircle,
+  X,
+  Calendar,
+  RefreshCw
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 import { format } from 'date-fns';
+import { useSwal } from '@/shared/composables/useSwal';
+
+const { showError, showSuccess, showConfirm } = useSwal();
+
+interface BookingStats {
+  [key: string]: number;
+  all: number;
+  active: number;
+  pending: number;
+  completed: number;
+  cancelled: number;
+}
+
+interface Booking {
+  id: number;
+  user?: {
+    name?: string;
+    profile_picture?: string;
+    crn?: string;
+    email?: string;
+  };
+  seat?: {
+    seat_number?: string | number;
+    floor?: {
+      name?: string;
+    };
+  };
+  booking_time: string;
+  scheduled_end_time: string;
+  status: string;
+  check_in_time?: string;
+  check_out_time?: string;
+}
 
 const loading = ref(false);
-const bookings = ref([]);
-const stats = ref({
+const bookings = ref<Booking[]>([]);
+const stats = ref<BookingStats>({
   all: 0,
   active: 0,
   pending: 0,
@@ -235,6 +350,7 @@ const stats = ref({
 });
 const activeFilter = ref('all');
 const searchQuery = ref('');
+const selectedBooking = ref<any>(null);
 const pagination = ref({
   current_page: 1,
   last_page: 1,
@@ -301,9 +417,6 @@ const changePage = (page: number) => {
   }
 };
 
-import { useSwal } from '@/shared/composables/useSwal';
-const { showConfirm, showSuccess, showError } = useSwal();
-
 const handleCheckIn = async (id: number) => {
   if (!await showConfirm('Check In', 'Are you sure you want to check in this student?', 'Yes, Check In')) return;
   try {
@@ -362,17 +475,23 @@ const formatStatus = (status: string) => {
 
 const getStatusClass = (status: string) => {
   switch (status) {
-    case 'checked_in': return 'bg-green-100 text-green-700';
-    case 'booked': return 'bg-orange-100 text-orange-700';
-    case 'checked_out': return 'bg-blue-100 text-blue-700';
-    case 'cancelled': return 'bg-red-100 text-red-700';
-    case 'no_show': return 'bg-gray-100 text-gray-700';
-    default: return 'bg-gray-100 text-gray-700';
+    case 'checked_in': return 'bg-green-50 border-green-200 text-green-700';
+    case 'booked': return 'bg-orange-50 border-orange-100 text-orange-700';
+    case 'checked_out': return 'bg-blue-50 border-blue-100 text-blue-700';
+    case 'cancelled': return 'bg-red-50 border-red-200 text-red-700';
+    case 'no_show': return 'bg-gray-50 border-slate-200 text-gray-550';
+    default: return 'bg-gray-50 border-slate-200 text-gray-550';
   }
 };
 
-const viewBookingDetails = (id: number) => {
-  console.log('View details for booking:', id);
+const viewBookingDetails = (booking: any) => {
+  selectedBooking.value = booking;
+};
+
+const getProfilePictureUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `/storage/${path}`;
 };
 
 onMounted(() => {
@@ -380,3 +499,20 @@ onMounted(() => {
   fetchStats();
 });
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+.text-slate-550 {
+  color: #64748b;
+}
+.w-8\.5 {
+  width: 2.125rem;
+}
+.h-8\.5 {
+  height: 2.125rem;
+}
+</style>

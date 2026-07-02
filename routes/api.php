@@ -301,6 +301,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Book Reservations (must come before /books/{book} to avoid route conflict)
         Route::get('/books/reservations', [\App\Http\Controllers\Librarian\BookReservationController::class, 'index'])->name('books.reservations');
         Route::post('/books/reservations/{id}/approve-return', [\App\Http\Controllers\Librarian\BookReservationController::class, 'approveReturn'])->name('books.reservations.approve-return');
+        Route::post('/books/reservations/{id}/approve', [\App\Http\Controllers\Librarian\BookReservationController::class, 'approveReservation'])->name('books.reservations.approve');
+        Route::post('/books/reservations/{id}/reject', [\App\Http\Controllers\Librarian\BookReservationController::class, 'rejectReservation'])->name('books.reservations.reject');
         
         // Book details and actions
         Route::get('/books/{book}', [LibrarianBook::class, 'show'])->name('books.show');

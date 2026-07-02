@@ -1,56 +1,54 @@
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-800">Libraries</h1>
-        <p class="text-gray-600 mt-1">Find and book seats at ICAP libraries</p>
-      </div>
-      
-      <div class="flex items-center space-x-2">
+  <div class="space-y-6 pb-12 font-outfit">
+    <!-- Action Row (List/Map view toggles) -->
+    <div class="flex justify-end">
+      <div class="flex items-center bg-slate-100 p-1 rounded-xl w-fit">
         <button
           @click="viewMode = 'list'"
           :class="[
-            'p-2 rounded-lg transition-colors',
-            viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+            'px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wide transition-all active:scale-98 flex items-center space-x-1.5',
+            viewMode === 'list' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-700'
           ]"
         >
-          <List class="w-5 h-5" />
+          <List class="w-3.5 h-3.5" />
+          <span>List View</span>
         </button>
         <button
           @click="viewMode = 'map'"
           :class="[
-            'p-2 rounded-lg transition-colors',
-            viewMode === 'map' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+            'px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wide transition-all active:scale-98 flex items-center space-x-1.5',
+            viewMode === 'map' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-700'
           ]"
         >
-          <MapPin class="w-5 h-5" />
+          <MapPin class="w-3.5 h-3.5" />
+          <span>Map View</span>
         </button>
       </div>
     </div>
 
     <!-- Search and Filters -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div class="bg-gradient-to-r from-slate-50 to-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
       <div class="flex flex-col sm:flex-row gap-4">
-        <div class="flex-1 relative">
-          <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <div class="flex-1 relative group">
+          <Search class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
           <input
             type="text"
-            placeholder="Search libraries..."
+            placeholder="Search libraries by name or location..."
             v-model="searchQuery"
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-sm text-slate-700 placeholder-slate-400"
           />
         </div>
         
-        <div class="relative">
-          <Filter class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <div class="relative min-w-[180px] group">
+          <Filter class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
           <select
             v-model="filterFacility"
-            class="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="w-full pl-11 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-sm text-slate-700 appearance-none cursor-pointer"
           >
             <option value="">All Facilities</option>
             <option v-for="facility in allFacilities" :key="facility" :value="facility">{{ facility }}</option>
           </select>
+          <ChevronDown class="absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
         </div>
       </div>
     </div>
@@ -61,10 +59,13 @@
     </div>
     <LibraryMap v-else :libraries="filteredLibraries" />
 
-    <div v-if="filteredLibraries.length === 0" class="text-center py-12">
-      <MapPin class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-      <h3 class="text-lg font-medium text-gray-800 mb-2">No libraries found</h3>
-      <p class="text-gray-600">Try adjusting your search or filters</p>
+    <!-- Empty State -->
+    <div v-if="filteredLibraries.length === 0" class="text-center py-20 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200/80 p-8">
+      <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-inner">
+        <MapPin class="w-7 h-7" />
+      </div>
+      <h3 class="text-base font-bold text-slate-800 mb-1">No libraries found</h3>
+      <p class="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">Try adjusting your search query or choosing another facility filter.</p>
     </div>
   </div>
 </template>
@@ -74,7 +75,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useApp } from '@/shared/composables/useApp';
 import LibraryCard from './LibraryCard.vue';
 import LibraryMap from './LibraryMap.vue';
-import { Search, Filter, MapPin, List } from 'lucide-vue-next';
+import { Search, Filter, MapPin, List, ChevronDown } from 'lucide-vue-next';
 
 const { libraries, searchQuery, loadLibraries } = useApp();
 const viewMode = ref<'list' | 'map'>('list');
@@ -103,3 +104,15 @@ const allFacilities = computed(() => {
   );
 });
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+.active\:scale-98:active {
+  transform: scale(0.98);
+}
+</style>

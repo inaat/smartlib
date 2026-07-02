@@ -3,14 +3,12 @@
     <!-- Top Header -->
     <div class="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
       <div class="flex items-center space-x-4">
-        <h1 class="text-2xl font-bold text-gray-900">Seat Map</h1>
-        <div class="h-6 w-px bg-gray-200"></div>
         <div class="flex items-center space-x-2">
           <!-- Floor Selector -->
           <div class="relative">
             <select
               v-model="activeFloorId"
-              class="appearance-none flex items-center bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700 py-1.5 pl-9 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+              class="appearance-none flex items-center bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700 py-1.5 pl-9 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option v-for="floor in floors" :key="floor.id" :value="floor.id">
                 {{ floor.name }}
@@ -26,7 +24,7 @@
               :class="[
                 'px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap',
                 activeSectionId === null
-                  ? 'bg-white text-purple-600 shadow-sm'
+                  ? 'bg-white text-emerald-600 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               ]"
             >
@@ -39,7 +37,7 @@
               :class="[
                 'px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap',
                 activeSectionId === section.id
-                  ? 'bg-white text-purple-600 shadow-sm'
+                  ? 'bg-white text-emerald-600 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               ]"
             >
@@ -54,7 +52,7 @@
           :class="[
             'px-4 py-2 rounded-lg transition-all flex items-center space-x-2 border shadow-sm',
             isLayoutMode 
-              ? 'bg-purple-600 text-white border-purple-600' 
+              ? 'bg-emerald-600 text-white border-emerald-600' 
               : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
           ]"
         >
@@ -69,13 +67,13 @@
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
       <div 
         v-for="(stat, key) in [
-          { label: 'Total Seats', count: seatStats.total, delta: 3, color: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' },
-          { label: 'Available', count: seatStats.available, delta: 20, color: 'green', bg: 'bg-green-50', text: 'text-green-600' },
-          { label: 'Occupied', count: seatStats.occupied, delta: 13, color: 'orange', bg: 'bg-orange-50', text: 'text-orange-600' },
-          { label: 'Reserved', count: seatStats.reserved, delta: 5, color: 'indigo', bg: 'bg-indigo-50', text: 'text-indigo-600' },
-          { label: 'Overstay', count: seatStats.overstay, delta: 3, color: 'yellow', bg: 'bg-yellow-50', text: 'text-yellow-600' },
-          { label: 'Serious Overstay', count: seatStats.serious_overstay, delta: 1, color: 'red', bg: 'bg-red-50', text: 'text-red-600' },
-          { label: 'Maintenance', count: seatStats.maintenance, delta: 2, color: 'gray', bg: 'bg-gray-100', text: 'text-gray-600' }
+          { label: 'Total Seats', count: seatStats.total, color: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' },
+          { label: 'Available', count: seatStats.available, color: 'green', bg: 'bg-green-50', text: 'text-green-600' },
+          { label: 'Occupied', count: seatStats.occupied, color: 'orange', bg: 'bg-orange-50', text: 'text-orange-600' },
+          { label: 'Reserved', count: seatStats.reserved, color: 'teal', bg: 'bg-teal-50', text: 'text-teal-600' },
+          { label: 'Overstay', count: seatStats.overstay, color: 'yellow', bg: 'bg-yellow-50', text: 'text-yellow-600' },
+          { label: 'Serious Overstay', count: seatStats.serious_overstay, color: 'red', bg: 'bg-red-50', text: 'text-red-600' },
+          { label: 'Maintenance', count: seatStats.maintenance, color: 'gray', bg: 'bg-gray-100', text: 'text-gray-600' }
         ]" 
         :key="key"
         class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center space-x-4"
@@ -85,7 +83,6 @@
         </div>
         <div>
           <p class="text-xs font-semibold text-gray-500 whitespace-nowrap">{{ stat.label }}</p>
-          <p class="text-[10px] text-gray-400 font-medium">{{ stat.delta }}</p>
         </div>
       </div>
     </div>
@@ -99,16 +96,16 @@
       leave-from-class="transform translate-y-0 opacity-100"
       leave-to-class="transform -translate-y-4 opacity-0"
     >
-      <div v-if="isLayoutMode" class="bg-white p-2 rounded-xl border border-purple-100 shadow-sm flex items-center justify-between">
+      <div v-if="isLayoutMode" class="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm flex items-center justify-between">
         <div class="flex items-center space-x-1">
           <div class="px-3 border-r border-gray-100 mr-2 py-1">
-            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-widest whitespace-nowrap">Layout Toolbar</span>
+            <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest whitespace-nowrap">Layout Toolbar</span>
           </div>
           
           <button 
             @click="autoArrangeLayout"
             :disabled="isArranging"
-            class="px-4 py-2 hover:bg-purple-50 text-gray-700 hover:text-purple-600 rounded-lg transition-all flex items-center space-x-2 group disabled:opacity-50"
+            class="px-4 py-2 hover:bg-emerald-50 text-gray-700 hover:text-emerald-600 rounded-lg transition-all flex items-center space-x-2 group disabled:opacity-50"
           >
             <Wand2 :class="['w-4 h-4 transition-transform group-hover:rotate-12', isArranging ? 'animate-pulse' : '']" />
             <span class="text-sm font-semibold whitespace-nowrap">{{ isArranging ? 'Arranging...' : 'Auto-Arrange' }}</span>
@@ -207,7 +204,7 @@
                       </div>
                       <div class="p-4 space-y-4">
                         <div class="flex items-center space-x-3">
-                          <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                          <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 border border-teal-100">
                             <User class="w-5 h-5" />
                           </div>
                           <div class="flex-1 min-w-0">
@@ -219,7 +216,7 @@
                         </div>
 
                         <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-50">
-                          <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.has_computer ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-50 text-gray-400']">
+                          <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.has_computer ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-400']">
                             <Monitor class="w-4 h-4 mb-1" />
                             <span class="text-[8px] font-black uppercase tracking-tighter">PC</span>
                           </div>
@@ -297,7 +294,7 @@
                       </div>
                       <div class="p-4 space-y-4">
                         <div class="flex items-center space-x-3">
-                          <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                          <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 border border-teal-100">
                             <User class="w-5 h-5" />
                           </div>
                           <div class="flex-1 min-w-0">
@@ -310,7 +307,7 @@
 
                         <!-- Amenities Section -->
                         <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-50">
-                          <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.has_computer ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-50 text-gray-400']">
+                          <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.has_computer ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-400']">
                             <Monitor class="w-4 h-4 mb-1" />
                             <span class="text-[8px] font-black uppercase tracking-tighter">PC</span>
                           </div>
@@ -432,7 +429,7 @@
                   </div>
                   <div class="p-4 space-y-4">
                     <div class="flex items-center space-x-3">
-                      <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                      <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 border border-teal-100">
                         <User class="w-5 h-5" />
                       </div>
                       <div class="flex-1 min-w-0">
@@ -445,7 +442,7 @@
 
                     <!-- Amenities Section -->
                     <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-50">
-                      <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.has_computer ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-50 text-gray-400']">
+                      <div :class="['flex flex-col items-center p-2 rounded-xl transition-colors', seat.has_computer ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-400']">
                         <Monitor class="w-4 h-4 mb-1" />
                         <span class="text-[8px] font-black uppercase tracking-tighter">PC</span>
                       </div>
@@ -505,11 +502,11 @@
         @click="selectedSeat = null"
       >
         <div
-          class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all border border-gray-100"
+          class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all border border-gray-200"
           @click.stop
         >
           <!-- Header -->
-          <div class="relative h-32 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 p-6 flex flex-col justify-end">
+          <div class="relative h-32 bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 p-6 flex flex-col justify-end">
             <button
               @click="selectedSeat = null"
               class="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all text-white backdrop-blur-md"
@@ -517,12 +514,12 @@
               <X class="w-5 h-5" />
             </button>
             <div class="flex items-end space-x-3">
-              <div class="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center text-indigo-600 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+              <div class="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center text-teal-600 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
                 <Armchair class="w-8 h-8" />
               </div>
               <div>
-                <h3 class="text-2xl font-black text-white tracking-tight">Seat {{ selectedSeat.seat_number }}</h3>
-                <p class="text-indigo-100 text-[10px] font-bold uppercase tracking-widest">{{ activeSectionName }}</p>
+                <h3 class="text-2xl font-bold text-white tracking-tight">Seat {{ selectedSeat.seat_number }}</h3>
+                <p class="text-teal-100 text-[10px] font-semibold uppercase tracking-wider">{{ activeSectionName }}</p>
               </div>
             </div>
           </div>
@@ -534,11 +531,11 @@
                 @click="selectedSeat.has_computer = !selectedSeat.has_computer"
                 :class="[
                   'p-4 rounded-2xl border-2 transition-all cursor-pointer text-center group',
-                  selectedSeat.has_computer ? 'border-indigo-600 bg-indigo-50/50' : 'border-gray-100 bg-gray-50'
+                  selectedSeat.has_computer ? 'border-teal-600 bg-teal-50/50' : 'border-gray-100 bg-gray-50'
                 ]"
               >
-                <Monitor :class="['w-8 h-8 mx-auto mb-2 transition-transform group-hover:scale-110', selectedSeat.has_computer ? 'text-indigo-600' : 'text-gray-400']" />
-                <span :class="['text-[10px] font-black uppercase tracking-widest', selectedSeat.has_computer ? 'text-indigo-700' : 'text-gray-500']">Computer</span>
+                <Monitor :class="['w-8 h-8 mx-auto mb-2 transition-transform group-hover:scale-110', selectedSeat.has_computer ? 'text-teal-600' : 'text-gray-400']" />
+                <span :class="['text-[10px] font-bold uppercase tracking-wider', selectedSeat.has_computer ? 'text-teal-700' : 'text-slate-500']">Computer</span>
               </div>
               
               <div 
@@ -549,7 +546,7 @@
                 ]"
               >
                 <Layout :class="['w-8 h-8 mx-auto mb-2 transition-transform group-hover:scale-110', selectedSeat.near_window ? 'text-sky-600' : 'text-gray-400']" />
-                <span :class="['text-[10px] font-black uppercase tracking-widest', selectedSeat.near_window ? 'text-sky-700' : 'text-gray-500']">Window View</span>
+                <span :class="['text-[10px] font-bold uppercase tracking-wider', selectedSeat.near_window ? 'text-sky-700' : 'text-slate-500']">Window View</span>
               </div>
             </div>
 
@@ -560,7 +557,7 @@
                   <div class="p-2 bg-white rounded-lg shadow-sm">
                     <Zap class="w-4 h-4 text-orange-500" />
                   </div>
-                  <span class="text-xs font-black uppercase tracking-widest text-gray-500">Power Sockets</span>
+                  <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Power Sockets</span>
                 </div>
                 <div class="flex items-center bg-white rounded-xl border border-gray-200 p-1">
                   <button @click="selectedSeat.socket_count = Math.max(0, selectedSeat.socket_count - 1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-50 rounded-lg text-gray-500">-</button>
@@ -572,7 +569,7 @@
 
             <!-- Status Section -->
             <div class="space-y-3">
-              <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Current Status</label>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Current Status</label>
               <div class="grid grid-cols-2 gap-2">
                 <button
                   v-for="status in ['available', 'maintenance']"
@@ -581,7 +578,7 @@
                   :class="[
                     'px-4 py-3 rounded-xl text-xs font-bold transition-all border-2 capitalize',
                     selectedSeat.status === status 
-                      ? 'border-indigo-600 bg-indigo-600 text-white shadow-lg shadow-indigo-100' 
+                      ? 'border-teal-600 bg-teal-600 text-white shadow-lg shadow-teal-100' 
                       : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
                   ]"
                 >
@@ -594,13 +591,13 @@
             <div class="flex flex-col space-y-3 pt-4">
               <button
                 @click="updateSeat"
-                class="w-full py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-200 active:scale-[0.98]"
+                class="w-full py-4 bg-emerald-700 text-white rounded-xl font-bold uppercase tracking-wider hover:bg-emerald-800 transition-all shadow-md active:scale-[0.98] cursor-pointer"
               >
                 Save Configuration
               </button>
               <button
                 @click="selectedSeat = null"
-                class="w-full py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest"
+                class="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-wider cursor-pointer"
               >
                 Dismiss
               </button>

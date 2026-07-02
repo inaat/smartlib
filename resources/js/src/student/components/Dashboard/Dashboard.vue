@@ -1,87 +1,68 @@
 <template>
-  <div class="p-6 space-y-6">
-    <!-- Welcome Section with Enhanced Design -->
-    <div class="bg-gradient-to-r from-blue-600 via-teal-600 to-cyan-600 rounded-2xl text-white p-8 shadow-xl relative overflow-hidden">
+  <div class="space-y-5">
+    <!-- Welcome Banner (blue bg, text only) -->
+    <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-2xl text-white px-6 py-5 shadow-xl relative overflow-hidden">
       <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
       <div class="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
-      
       <div class="relative z-10">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h1 class="text-3xl font-bold mb-2">Welcome back, {{ user?.name }}! 👋</h1>
-            <p class="text-blue-100 text-lg">Ready to continue your learning journey?</p>
+        <h1 class="text-2xl font-extrabold mb-1">Welcome back, {{ user?.name }}! 👋</h1>
+        <p class="text-blue-200 text-sm font-medium">Ready to continue your learning journey? Your library world awaits.</p>
+      </div>
+    </div>
+
+    <!-- Stat Cards (white, no background color) -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <!-- Total Bookings -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 bg-blue-50 rounded-lg">
+            <Calendar class="w-4 h-4 text-blue-600" />
           </div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Bookings</span>
         </div>
+        <div class="text-3xl font-extrabold text-slate-800">{{ checkedInBookingsCount }}</div>
+        <div class="text-[10px] text-slate-400 font-medium">Reservations completed this month</div>
+      </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <!-- Total Bookings -->
-          <div class="bg-gradient-to-br from-blue-500/30 to-indigo-500/20 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform">
-            <div class="flex items-center space-x-2 mb-2">
-              <div class="p-2 bg-white/20 rounded-lg">
-                <Calendar class="w-4 h-4 text-white" />
-              </div>
-              <span class="text-sm font-medium text-white/90">Total Bookings</span>
-            </div>
-            <div class="text-3xl font-bold text-white">{{ bookings.length }}</div>
-            <div class="text-xs text-white/70 mt-1">This month</div>
+      <!-- Hours Today -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 bg-purple-50 rounded-lg">
+            <Clock class="w-4 h-4 text-purple-600" />
           </div>
-
-          <!-- Hours Today -->
-          <div class="bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform">
-            <div class="flex items-center space-x-2 mb-2">
-              <div class="p-2 bg-white/20 rounded-lg">
-                <Clock class="w-4 h-4 text-white" />
-              </div>
-              <span class="text-sm font-medium text-white/90">Hours Today</span>
-            </div>
-            <div class="text-3xl font-bold text-white">{{ hoursToday }}h</div>
-            <div class="text-xs text-white/70 mt-1">Keep it up!</div>
-          </div>
-
-          <!-- Reserved Books -->
-          <div class="bg-gradient-to-br from-emerald-500/30 to-teal-500/20 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform">
-            <div class="flex items-center space-x-2 mb-2">
-              <div class="p-2 bg-white/20 rounded-lg">
-                <BookMarked class="w-4 h-4 text-white" />
-              </div>
-              <span class="text-sm font-medium text-white/90">Reserved Books</span>
-            </div>
-            <div class="text-3xl font-bold text-white">{{ reservations.length }}</div>
-            <div class="text-xs text-white/70 mt-1">Active reservations</div>
-          </div>
-
-          <!-- Available Libraries -->
-          <div class="bg-gradient-to-br from-amber-500/30 to-orange-500/20 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform">
-            <div class="flex items-center space-x-2 mb-2">
-              <div class="p-2 bg-white/20 rounded-lg">
-                <MapPin class="w-4 h-4 text-white" />
-              </div>
-              <span class="text-sm font-medium text-white/90">Available Libraries</span>
-            </div>
-            <div class="text-3xl font-bold text-white">{{ libraries.length }}</div>
-            <div class="text-xs text-white/70 mt-1">In your area</div>
-          </div>
-
-          <!-- Study Streak -->
-          <div class="bg-gradient-to-br from-orange-500/30 to-red-500/20 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:scale-105 transition-transform col-span-2 md:col-span-1">
-            <div class="flex items-center space-x-2 mb-2">
-              <div class="p-2 bg-white/20 rounded-lg">
-                <Flame class="w-4 h-4 text-white" />
-              </div>
-              <span class="text-sm font-medium text-white/90">Study Streak</span>
-            </div>
-            <div class="flex items-baseline space-x-2">
-              <div class="text-3xl font-bold text-white">{{ studyStreak }}</div>
-              <div class="text-xs text-white/70 font-bold uppercase tracking-widest">Days</div>
-            </div>
-            <div class="text-xs text-white/70 mt-1">Don't break it!</div>
-          </div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Hours Today</span>
         </div>
+        <div class="text-3xl font-extrabold text-slate-800">{{ hoursToday }}h</div>
+        <div class="text-[10px] text-slate-400 font-medium">Study hours logged in libraries</div>
+      </div>
+
+      <!-- Reserved Books -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 bg-emerald-50 rounded-lg">
+            <BookMarked class="w-4 h-4 text-emerald-600" />
+          </div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Reserved Books</span>
+        </div>
+        <div class="text-3xl font-extrabold text-slate-800">{{ reservedBooksCount }}</div>
+        <div class="text-[10px] text-slate-400 font-medium">Catalog items ready at desk</div>
+      </div>
+
+      <!-- Available Libraries -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 bg-orange-50 rounded-lg">
+            <MapPin class="w-4 h-4 text-orange-500" />
+          </div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Available Libraries</span>
+        </div>
+        <div class="text-3xl font-extrabold text-slate-800">{{ libraries.length }}</div>
+        <div class="text-[10px] text-slate-400 font-medium">National partner locations</div>
       </div>
     </div>
 
     <!-- Stats Grid -->
-    
+
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Left Column - AI Recommendations & Study Analytics -->
@@ -99,33 +80,75 @@
               <BarChart3 class="w-5 h-5 mr-2 text-blue-600" />
               Study Analytics
             </h2>
-            <select class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>Last 7 Days</option>
-              <option>Last 30 Days</option>
-              <option>This Month</option>
-            </select>
+            <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+              <button
+                @click="activeTab = 'weekly'"
+                :class="[
+                  'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300',
+                  activeTab === 'weekly' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-700'
+                ]"
+              >
+                Weekly
+              </button>
+              <button
+                @click="activeTab = 'monthly'"
+                :class="[
+                  'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300',
+                  activeTab === 'monthly' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-700'
+                ]"
+              >
+                Monthly
+              </button>
+            </div>
           </div>
 
           <!-- Study Hours Chart -->
           <div class="mb-6">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm font-medium text-gray-600">Weekly Study Hours</span>
-              <span class="text-sm font-bold text-blue-600">{{ totalWeeklyHours }}h total</span>
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-sm font-semibold text-slate-500 uppercase tracking-wider">
+                {{ activeTab === 'weekly' ? 'Weekly Study Hours' : 'Monthly Study Hours' }}
+              </span>
+              <span class="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full shadow-sm">
+                {{ chartTotalHours }}h total
+              </span>
             </div>
-            <div class="h-48 flex items-end justify-between space-x-2">
-              <div
-                v-for="(day, index) in weeklyStudyData"
-                :key="index"
-                class="flex-1 flex flex-col items-center group"
-              >
-                <div class="w-full bg-gradient-to-t from-blue-600 to-cyan-500 rounded-t-lg transition-all hover:opacity-80 cursor-pointer relative"
-                     :style="{ height: (day.hours / Math.max(...weeklyStudyData.map(d => d.hours)) * 100) + '%' }">
-                  <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    {{ day.hours }}h
+            
+            <div class="relative h-48 mb-3">
+              <!-- Y-Axis Gridlines -->
+              <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                <div v-for="i in 4" :key="i" class="w-full border-t border-slate-100"></div>
+              </div>
+
+              <!-- Bars Container -->
+              <div class="absolute inset-0 flex items-end justify-between space-x-3.5 pt-4">
+                <div
+                  v-for="(item, index) in activeChartData"
+                  :key="index"
+                  class="flex-1 flex flex-col items-center group h-full justify-end"
+                >
+                  <!-- Bar -->
+                  <div 
+                    class="w-full bg-gradient-to-t from-blue-600 to-cyan-500 rounded-t-lg transition-all duration-500 hover:from-blue-500 hover:to-cyan-400 cursor-pointer relative shadow-sm hover:shadow-md group-hover:scale-x-105"
+                    :style="{ height: (item.hours / maxChartHours * 100) + '%' }"
+                  >
+                    <!-- Tooltip -->
+                    <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap shadow-lg border border-slate-700 pointer-events-none z-20">
+                      {{ item.hours }}h
+                    </div>
                   </div>
                 </div>
-                <span class="text-xs text-gray-600 mt-2">{{ day.day }}</span>
               </div>
+            </div>
+
+            <!-- X-Axis Labels -->
+            <div class="flex justify-between px-2 pt-2 border-t border-slate-100 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+              <span v-for="(item, index) in activeChartData" :key="index" class="flex-1 text-center truncate">
+                {{ item.label }}
+              </span>
             </div>
           </div>
 
@@ -147,36 +170,45 @@
         </div>
 
         <!-- Recent Activity -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
+          <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
             <Activity class="w-5 h-5 mr-2 text-blue-600" />
             Recent Activity
           </h2>
-          <div class="space-y-3">
+          <div class="relative pl-6 border-l-2 border-slate-100 space-y-6 ml-3 text-left">
             <div
               v-for="activity in recentActivities"
               :key="activity.id"
-              class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              class="relative group"
             >
-              <div :class="[
-                'w-10 h-10 rounded-full flex items-center justify-center',
-                activity.type === 'booking' ? 'bg-blue-100' :
-                activity.type === 'book' ? 'bg-green-100' :
-                activity.type === 'event' ? 'bg-purple-100' :
-                'bg-orange-100'
-              ]">
-                <component :is="activity.icon" :class="[
-                  'w-5 h-5',
-                  activity.type === 'booking' ? 'text-blue-600' :
-                  activity.type === 'book' ? 'text-green-600' :
-                  activity.type === 'event' ? 'text-purple-600' :
-                  'text-orange-600'
-                ]" />
-              </div>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-gray-900">{{ activity.title }}</p>
-                <p class="text-xs text-gray-600">{{ activity.description }}</p>
-                <span class="text-xs text-gray-400">{{ activity.time }}</span>
+              <!-- Timeline indicator circle -->
+              <span 
+                class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center shadow-sm z-10 transition-colors duration-300"
+                :class="[
+                  activity.type === 'booking' ? 'bg-blue-600 group-hover:bg-blue-500' :
+                  activity.type === 'book' ? 'bg-emerald-600 group-hover:bg-emerald-500' :
+                  activity.type === 'event' ? 'bg-purple-600 group-hover:bg-purple-500' :
+                  'bg-orange-500 group-hover:bg-orange-400'
+                ]"
+              ></span>
+
+              <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-slate-200/80 hover:bg-slate-50/80 transition-all hover-lift flex items-start space-x-3.5 relative">
+                <div :class="[
+                  'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border',
+                  activity.type === 'booking' ? 'bg-blue-50/50 border-blue-100 text-blue-600' :
+                  activity.type === 'book' ? 'bg-emerald-50/50 border-emerald-100 text-emerald-600' :
+                  activity.type === 'event' ? 'bg-purple-50/50 border-purple-100 text-purple-600' :
+                  'bg-orange-50/50 border-orange-100 text-orange-600'
+                ]">
+                  <component :is="activity.icon" class="w-4.5 h-4.5" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-bold text-slate-800">{{ activity.title }}</p>
+                  <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{{ activity.description }}</p>
+                </div>
+                <div class="text-[10px] font-semibold text-slate-400 text-right whitespace-nowrap self-start">
+                  {{ activity.time }}
+                </div>
               </div>
             </div>
           </div>
@@ -194,86 +226,74 @@
         <!-- Seat Waiting List (Queue) -->
         <QueueStatus :queues="activeQueues" />
 
-        <!-- Achievement Progress -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-            <Trophy class="w-5 h-5 mr-2 text-yellow-600" />
-            Achievements
-          </h2>
-          <div class="space-y-4">
-            <div
-              v-for="achievement in achievements"
-              :key="achievement.id"
-              class="relative"
-            >
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center space-x-2">
-                  <component :is="achievement.icon" class="w-4 h-4 text-gray-600" />
-                  <span class="text-sm font-medium text-gray-900">{{ achievement.name }}</span>
-                </div>
-                <span class="text-xs text-gray-600">{{ achievement.progress }}/{{ achievement.target }}</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  class="bg-gradient-to-r from-blue-600 to-cyan-500 h-2 rounded-full transition-all"
-                  :style="{ width: (achievement.progress / achievement.target * 100) + '%' }"
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Study Tips -->
-        <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
-          <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
-            <Lightbulb class="w-5 h-5 mr-2 text-purple-600" />
-            Study Tip of the Day
-          </h3>
-          <p class="text-sm text-gray-700 leading-relaxed">
-            {{ studyTip }}
-          </p>
-          <button class="mt-4 text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center">
-            Learn more
-            <ChevronRight class="w-4 h-4 ml-1" />
-          </button>
-        </div>
+        <!-- Study Target Progress & Streak -->
+        <StudyGoal 
+          :streak="studyStreak"
+          :progress="weeklyProgress"
+          :weekly-hours="totalWeeklyHours"
+          :hours-today="hoursToday"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '@/shared/composables/useAuth';
 import { useApp } from '@/shared/composables/useApp';
 import { studentAPI } from '@/shared/services/api';
-import StatsCard from './StatsCard.vue';
 import RecommendationSlider from './RecommendationSlider.vue';
 import UpcomingBookings from './UpcomingBookings.vue';
 import QueueStatus from './QueueStatus.vue';
 import QuickActions from './QuickActions.vue';
+import StudyGoal from './StudyGoal.vue';
 import { 
   BookMarked, 
   Calendar, 
   MapPin, 
-  Award,
   Clock,
-  Target,
-  TrendingUp,
   BarChart3,
-  Activity,
-  Trophy,
-  Lightbulb,
-  ChevronRight,
-  BookOpen,
-  Users,
-  Flame
+  Activity
 } from 'lucide-vue-next';
 
 const { user } = useAuth();
-const { bookings, reservations, libraries, books, events, generateAIRecommendations } = useApp();
+const { bookings, libraries, books, events, generateAIRecommendations } = useApp();
 const router = useRouter();
+
+const checkedInBookingsCount = computed(() => {
+  return bookings.value.filter(b => b.check_in_time !== null && b.check_in_time !== undefined).length;
+});
+
+// Automatically reload dashboard data when bookings change (e.g. check in, check out, cancel, extend)
+watch(bookings, () => {
+  loadDashboardData();
+}, { deep: true });
+
+const activeChartData = computed(() => {
+  if (activeTab.value === 'weekly') {
+    return weeklyStudyData.value.map(d => ({
+      label: d.day,
+      hours: d.hours
+    }));
+  } else {
+    return monthlyStudyData.value.map(d => ({
+      label: d.month,
+      hours: d.hours
+    }));
+  }
+});
+
+const maxChartHours = computed(() => {
+  if (activeChartData.value.length === 0) return 1;
+  return Math.max(...activeChartData.value.map(d => d.hours), 1);
+});
+
+const chartTotalHours = computed(() => {
+  const sum = activeChartData.value.reduce((acc, curr) => acc + curr.hours, 0);
+  return Math.round(sum * 10) / 10;
+});
 
 const handleRecommendationAction = (recommendation: any) => {
   switch (recommendation.type) {
@@ -302,7 +322,10 @@ const totalWeeklyHours = ref(0);
 const avgSessionDuration = ref(0);
 const totalSessions = ref(0);
 const focusScore = ref(0);
+const reservedBooksCount = ref(0);
 const weeklyStudyData = ref<any[]>([]);
+const monthlyStudyData = ref<any[]>([]);
+const activeTab = ref<'weekly' | 'monthly'>('weekly');
 const recentActivities = ref<any[]>([]);
 const activeQueues = ref<any[]>([]);
 
@@ -312,6 +335,11 @@ const loadDashboardData = async () => {
     loading.value = true;
     const data = await studentAPI.getDashboard();
     dashboardData.value = data;
+
+    // Update stats
+    if (data.stats) {
+      reservedBooksCount.value = data.stats.active_reservations || 0;
+    }
 
     // Update analytics
     if (data.analytics) {
@@ -323,6 +351,7 @@ const loadDashboardData = async () => {
       totalSessions.value = data.analytics.total_sessions || 0;
       focusScore.value = data.analytics.focus_score || 0;
       weeklyStudyData.value = data.analytics.weekly_study_data || [];
+      monthlyStudyData.value = data.analytics.monthly_study_data || [];
     }
 
     if (data.active_queue) {
@@ -375,59 +404,7 @@ const formatTimeAgo = (dateString: string) => {
   return `${Math.floor(diffInSeconds / 86400)} days ago`;
 };
 
-const achievements = ref([
-  {
-    id: 1,
-    name: 'Early Bird',
-    icon: Clock,
-    progress: Math.min(totalSessions.value, 10),
-    target: 10,
-    description: 'Complete 10 study sessions'
-  },
-  {
-    id: 2,
-    name: 'Bookworm',
-    icon: BookOpen,
-    progress: Math.min(reservations.value.length, 15),
-    target: 15,
-    description: 'Reserve 15 books'
-  }
-]);
-
-const studyTip = ref(
-  "The Pomodoro Technique: Study for 25 minutes, then take a 5-minute break. After 4 sessions, take a longer 15-30 minute break. This helps maintain focus and prevents burnout."
-);
-
-const stats = computed(() => [
-  {
-    title: 'Total Bookings',
-    value: bookings.value.length.toString(),
-    icon: Calendar,
-    color: 'blue' as const,
-    subtitle: 'This month'
-  },
-  {
-    title: 'Reserved Books',
-    value: reservations.value.length.toString(),
-    icon: BookMarked,
-    color: 'teal' as const,
-    subtitle: 'Active reservations'
-  },
-  {
-    title: 'Loyalty Points',
-    value: (user.value?.loyalty_points || 0).toString(),
-    icon: Award,
-    color: 'orange' as const,
-    subtitle: 'Earned points'
-  },
-  {
-    title: 'Available Libraries',
-    value: libraries.value.length.toString(),
-    icon: MapPin,
-    color: 'green' as const,
-    subtitle: 'In your area'
-  }
-]);
+// Removed achievements and studyTip as they are no longer used on the dashboard
 
 const recommendations = computed(() => {
   const aiRecs = user.value?.id ? generateAIRecommendations(user.value.id) : [];

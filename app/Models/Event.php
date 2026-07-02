@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Event extends Model
 {
@@ -64,5 +65,31 @@ class Event extends Model
     public function registrations()
     {
         return $this->hasMany(EventRegistration::class);
+    }
+
+    /**
+     * Get the resolved URL for the event image.
+     */
+    public function getImageAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        // If it's already a full URL, return it
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            return $value;
+        }
+
+        // If it already starts with /storage/ or storage/, return as is
+        if (str_starts_with($value, '/storage/')) {
+            return $value;
+        }
+        if (str_starts_with($value, 'storage/')) {
+            return '/' . $value;
+        }
+
+        // Otherwise, convert storage path to URL (e.g., /storage/events/filename.jpg)
+        return Storage::url($value);
     }
 }

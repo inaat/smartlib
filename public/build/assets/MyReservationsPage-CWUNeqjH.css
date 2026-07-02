@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit[data-v-d4c5cdd2] {
+  font-family: 'Outfit', sans-serif;
+}
+@keyframes fadeIn-d4c5cdd2 {
+from {
+    opacity: 0;
+    transform: translateY(6px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-d4c5cdd2] {
+  animation: fadeIn-d4c5cdd2 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hover-lift[data-v-d4c5cdd2] {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift[data-v-d4c5cdd2]:hover {
+  transform: translateY(-4px);
+}
+.active\:scale-98[data-v-d4c5cdd2]:active {
+  transform: scale(0.98);
+}
+.text-blue-755[data-v-d4c5cdd2] {
+  color: #1e40af;
+}
+.text-emerald-755[data-v-d4c5cdd2] {
+  color: #065f46;
+}
+.text-orange-755[data-v-d4c5cdd2] {
+  color: #9a3412;
+}
+.text-red-755[data-v-d4c5cdd2] {
+  color: #991b1b;
+}
+.text-slate-600[data-v-d4c5cdd2] {
+  color: #475569;
+}
+.text-red-655[data-v-d4c5cdd2] {
+  color: #dc2626;
+}

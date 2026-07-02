@@ -238,9 +238,16 @@ const handleUpdateProfile = async () => {
     await checkAuth();
     isEditing.value = false;
     showSuccess('Updated!', 'Profile updated successfully');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to update profile:', error);
-    showError('Update Failed', 'Failed to update profile');
+    const message = error.response?.data?.message || 'Failed to update profile';
+    const errors = error.response?.data?.errors;
+    if (errors) {
+      const errorMessages = Object.values(errors).flat().join('\n');
+      showError('Update Failed', `${message}\n\n${errorMessages}`);
+    } else {
+      showError('Update Failed', message);
+    }
   } finally {
     isSaving.value = false;
   }

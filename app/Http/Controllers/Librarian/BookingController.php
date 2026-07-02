@@ -14,6 +14,7 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {
+        SeatBooking::cancelExpiredBookings();
         $user = Auth::user();
         $library = $user->library;
 
@@ -62,6 +63,7 @@ class BookingController extends Controller
                     'name' => $booking->user->name,
                     'email' => $booking->user->email,
                     'crn' => $booking->user->crn,
+                    'profile_picture' => $booking->user->profile_picture,
                 ] : null,
                 'seat' => $booking->seat ? [
                     'id' => $booking->seat->id,
@@ -84,6 +86,7 @@ class BookingController extends Controller
 
     public function stats(Request $request)
     {
+        SeatBooking::cancelExpiredBookings();
         $user = Auth::user();
         $library = $user->library;
 
@@ -118,26 +121,39 @@ class BookingController extends Controller
 
     public function checkIn($id)
     {
+        SeatBooking::cancelExpiredBookings();
         $booking = SeatBooking::findOrFail($id);
         
         if ($booking->status !== 'booked') {
             return response()->json(['message' => 'Booking is not in a state that can be checked in'], 400);
         }
 
+        // Enforce 15-minute check-in window expiration
+        if ($booking->booking_time->copy()->addMinutes(15)->isPast()) {
+            $booking->update(['status' => 'cancelled']);
+            $booking->seat->update(['status' => 'available']);
+            return response()->json(['message' => 'Check-in window has expired. This booking has been cancelled.'], 400);
+        }
+
         $now = now();
+        $durationMinutes = Carbon::parse($booking->booking_time)->diffInMinutes(Carbon::parse($booking->scheduled_end_time), true);
+
         $booking->update([
             'status' => 'checked_in',
             'check_in_time' => $now,
+            'booking_time' => $now,
+            'scheduled_end_time' => $now->copy()->addMinutes($durationMinutes),
         ]);
 
         // Update seat status
         $booking->seat->update(['status' => 'occupied']);
 
         // Create Attendance record
-        \App\Models\Attendance::create([
+        \App\Models\Attendance::firstOrCreate([
+            'seat_booking_id' => $booking->id,
+        ], [
             'user_id' => $booking->user_id,
             'library_id' => $booking->library_id,
-            'seat_booking_id' => $booking->id,
             'date' => $now->toDateString(),
             'check_in_time' => $now->toTimeString(),
         ]);
@@ -171,7 +187,7 @@ class BookingController extends Controller
 
         // Calculate total minutes
         if ($booking->check_in_time) {
-            $booking->total_minutes = $now->diffInMinutes($booking->check_in_time);
+            $booking->total_minutes = $now->diffInMinutes($booking->check_in_time, true);
             $booking->save();
         }
 

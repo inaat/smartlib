@@ -22,9 +22,14 @@ class LibrarySeeder extends Seeder
         ];
 
         foreach ($libraries as $index => $library) {
+            $openCarbon = \Carbon\Carbon::createFromFormat('H:i:s', $library['opening_time']);
+            $closeCarbon = \Carbon\Carbon::createFromFormat('H:i:s', $library['closing_time']);
+            $openingHoursStr = $openCarbon->format('h:i A') . ' - ' . $closeCarbon->format('h:i A');
+
             $libraryId = DB::table('libraries')->insertGetId([
                 'name' => $library['name'],
                 'address' => $library['address'],
+                'opening_hours' => $openingHoursStr,
                 'is_active' => true,
                 'created_by' => 2, // Created by super admin
                 'created_at' => now(),
@@ -131,9 +136,9 @@ class LibrarySeeder extends Seeder
             }
 
             // Assign librarians to libraries
-            $librarianIds = range(5, 14); // Librarian user IDs
+            $librarianIds = DB::table('users')->where('role', 'librarian')->pluck('id')->toArray();
             shuffle($librarianIds);
-            $assignedLibrarians = array_slice($librarianIds, 0, rand(2, 4));
+            $assignedLibrarians = array_slice($librarianIds, 0, rand(2, 3));
             
             foreach ($assignedLibrarians as $librarianId) {
                 DB::table('library_librarian')->insert([

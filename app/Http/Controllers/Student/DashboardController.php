@@ -14,14 +14,15 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        SeatBooking::cancelExpiredBookings();
 
         $stats = [
             'active_bookings' => SeatBooking::where('user_id', $user->id)
                 ->whereIn('status', ['booked', 'checked_in'])
                 ->count(),
-            'total_bookings' => SeatBooking::where('user_id', $user->id)->count(),
+            'total_bookings' => SeatBooking::where('user_id', $user->id)->whereNotNull('check_in_time')->count(),
             'active_reservations' => BookReservation::where('user_id', $user->id)
-                ->whereIn('status', ['pending', 'active'])
+                ->active()
                 ->count(),
             'upcoming_events' => Event::whereHas('registrations', function($query) use ($user) {
                 $query->where('user_id', $user->id);
@@ -35,7 +36,7 @@ class DashboardController extends Controller
             'loyalty_points' => $user->loyalty_points,
         ];
 
-        $activeBooking = SeatBooking::with(['seat.library'])
+        $activeBooking = SeatBooking::with(['seat.library.operatingHours'])
             ->where('user_id', $user->id)
             ->whereIn('status', ['booked', 'checked_in'])
             ->latest()
@@ -46,9 +47,11 @@ class DashboardController extends Controller
         // Get recent bookings
         $recentBookings = SeatBooking::with('seat.library')
             ->where('user_id', $user->id)
+            ->where('status', '!=', 'cancelled')
             ->latest()
             ->take(5)
             ->get()
+            ->toBase()
             ->map(function($booking) {
                 return [
                     'type' => 'booking',
@@ -63,6 +66,7 @@ class DashboardController extends Controller
             ->latest()
             ->take(5)
             ->get()
+            ->toBase()
             ->map(function($reservation) {
                 return [
                     'type' => 'reservation',
@@ -119,6 +123,24 @@ class DashboardController extends Controller
             ];
         }
 
+        // Monthly study data (last 6 months)
+        $monthlyStudyData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $startOfMonth = $date->copy()->startOfMonth();
+            $endOfMonth = $date->copy()->endOfMonth();
+            
+            $hours = SeatBooking::where('user_id', $user->id)
+                ->where('status', 'checked_out')
+                ->whereBetween('check_out_time', [$startOfMonth, $endOfMonth])
+                ->sum('total_minutes') / 60;
+                
+            $monthlyStudyData[] = [
+                'month' => $date->format('M'),
+                'hours' => round($hours, 1)
+            ];
+        }
+
         // Update and get stored streak
         if ($user->last_streak_date && $user->last_streak_date < now()->subDay()->toDateString()) {
             $user->current_streak = 0;
@@ -145,6 +167,7 @@ class DashboardController extends Controller
                 'hours_today' => round($totalHoursToday, 1),
                 'weekly_hours' => round($totalMinutes / 60, 1),
                 'weekly_study_data' => $weeklyStudyData,
+                'monthly_study_data' => $monthlyStudyData,
                 'avg_session_duration' => $avgSessionDuration,
                 'total_sessions' => $totalSessions,
                 'focus_score' => $focusScore,

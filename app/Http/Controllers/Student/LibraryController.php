@@ -14,6 +14,7 @@ class LibraryController extends Controller
      */
     public function nearby(Request $request)
     {
+        \App\Models\SeatBooking::cancelExpiredBookings();
         $lat  = (float) $request->query('lat');
         $lng  = (float) $request->query('lng');
         $radius = (float) ($request->query('radius_km', 50));
@@ -55,6 +56,7 @@ class LibraryController extends Controller
 
     public function index(Request $request)
     {
+        \App\Models\SeatBooking::cancelExpiredBookings();
         $libraries = Library::with(['facilities'])
             ->withCount([
                 'seats as totalSeats',
@@ -74,6 +76,7 @@ class LibraryController extends Controller
                 'description' => $library->description,
                 'address' => $library->address,
                 'photo' => $library->photo,
+                'photo_url' => $library->photo_url,
                 'latitude' => $library->latitude,
                 'longitude' => $library->longitude,
                 'contact_info' => $library->contact_info,
@@ -97,6 +100,7 @@ class LibraryController extends Controller
 
     public function show($id)
     {
+        \App\Models\SeatBooking::cancelExpiredBookings();
         $library = Library::with(['facilities', 'operatingHours', 'rules'])
             ->withCount([
                 'seats as totalSeats',
@@ -128,6 +132,7 @@ class LibraryController extends Controller
             'description' => $library->description,
             'address' => $library->address,
             'photo' => $library->photo,
+            'photo_url' => $library->photo_url,
             'latitude' => $library->latitude,
             'longitude' => $library->longitude,
             'contact_info' => $library->contact_info,
@@ -157,6 +162,7 @@ class LibraryController extends Controller
 
     public function seats($id)
     {
+        \App\Models\SeatBooking::cancelExpiredBookings();
         $library = Library::with(['floors', 'seatSections', 'operatingHours'])->findOrFail($id);
         
         $seats = $library->seats()

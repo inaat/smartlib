@@ -89,6 +89,7 @@ class StudentController extends Controller
                 'gender'              => $student->gender,
                 'ca_level'            => $student->ca_level,
                 'is_active'           => $student->is_active,
+                'profile_picture'     => $student->profile_picture,
                 'seat_bookings_count' => $student->seat_bookings_count,
                 'created_at'          => $student->created_at,
                 'is_banned'           => $isBanned,
@@ -174,7 +175,14 @@ class StudentController extends Controller
             return response()->json(['message' => 'User is not a student'], 403);
         }
 
-        return response()->json($student);
+        $librarian = Auth::user();
+        $library = $librarian->library;
+        $isBanned = $library ? $student->isBannedFrom($library->id) : false;
+
+        $studentArray = $student->toArray();
+        $studentArray['is_banned'] = $isBanned;
+
+        return response()->json($studentArray);
     }
 
     public function destroy($id)

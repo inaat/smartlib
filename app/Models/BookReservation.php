@@ -29,12 +29,9 @@ class BookReservation extends Model
         return $this->belongsTo(Book::class);
     }
 
-    /**
-     * Check if the reservation is overdue
-     */
     public function isOverdue(): bool
     {
-        return in_array($this->status, ['reserved', 'borrowed']) && $this->due_date < now();
+        return in_array($this->status, ['approved', 'collected']) && $this->due_date < now();
     }
 
     /**
@@ -42,7 +39,7 @@ class BookReservation extends Model
      */
     public function scopeOverdue($query)
     {
-        return $query->whereIn('status', ['reserved', 'borrowed'])
+        return $query->whereIn('status', ['approved', 'collected'])
                      ->where('due_date', '<', now());
     }
 
@@ -51,6 +48,6 @@ class BookReservation extends Model
      */
     public function scopeActive($query)
     {
-        return $query->whereIn('status', ['reserved', 'borrowed', 'pending_return', 'overdue']);
+        return $query->whereIn('status', ['pending', 'approved', 'collected', 'pending_return', 'overdue']);
     }
 }

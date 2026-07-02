@@ -33,6 +33,7 @@ class SeatController extends Controller
 
     public function index(Request $request)
     {
+        \App\Models\SeatBooking::cancelExpiredBookings();
         // Check if API request
         if ($request->expectsJson() || $request->is('api/*')) {
             $user = Auth::user();
@@ -78,7 +79,7 @@ class SeatController extends Controller
                     $now = now();
                     
                     if ($currentBooking->check_in_time && $endTime && $now->gt($endTime)) {
-                        $overstayMinutes = $now->diffInMinutes($endTime);
+                        $overstayMinutes = $now->diffInMinutes($endTime, true);
                         if ($overstayMinutes > 30) {
                             $status = 'serious_overstay';
                         } else {
@@ -191,11 +192,11 @@ class SeatController extends Controller
         $library = $floor->library;
 
         // Generate QR code
-        $qrContent = encrypt([
+        $qrContent = base64_encode(json_encode([
             'type' => 'seat',
             'seat_number' => $validated['seat_number'],
             'library_id' => $library->id,
-        ]);
+        ]));
 
         $validated['qr_code'] = $qrContent;
         $validated['qr_generated_at'] = now();
@@ -269,11 +270,11 @@ class SeatController extends Controller
         // Regenerate QR code if seat number changes
         if (isset($validated['seat_number']) && $validated['seat_number'] !== $seat->seat_number) {
             $library = $seat->floor->library;
-            $qrContent = encrypt([
+            $qrContent = base64_encode(json_encode([
                 'type' => 'seat',
                 'seat_number' => $validated['seat_number'],
                 'library_id' => $library->id,
-            ]);
+            ]));
             $validated['qr_code'] = $qrContent;
             $validated['qr_generated_at'] = now();
             

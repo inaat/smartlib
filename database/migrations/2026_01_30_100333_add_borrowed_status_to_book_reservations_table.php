@@ -13,7 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         // Modify the status enum to include 'borrowed'
-        DB::statement("ALTER TABLE `book_reservations` MODIFY COLUMN `status` ENUM('reserved', 'borrowed', 'pending_return', 'returned', 'overdue') NOT NULL DEFAULT 'reserved'");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE `book_reservations` MODIFY COLUMN `status` ENUM('reserved', 'borrowed', 'pending_return', 'returned', 'overdue') NOT NULL DEFAULT 'reserved'");
+        }
     }
 
     /**
@@ -22,6 +24,8 @@ return new class extends Migration
     public function down(): void
     {
         // Revert back to original enum values
-        DB::statement("ALTER TABLE `book_reservations` MODIFY COLUMN `status` ENUM('reserved', 'pending_return', 'returned', 'overdue') NOT NULL DEFAULT 'reserved'");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE `book_reservations` MODIFY COLUMN `status` ENUM('reserved', 'pending_return', 'returned', 'overdue') NOT NULL DEFAULT 'reserved'");
+        }
     }
 };

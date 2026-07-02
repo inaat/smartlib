@@ -1,7 +1,12 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
+  <div class="min-h-screen bg-gray-50 flex librarian-portal">
     <!-- Sidebar -->
-    <LibrarianSidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
+    <LibrarianSidebar
+      :isOpen="sidebarOpen"
+      :isCollapsed="sidebarCollapsed"
+      @close="sidebarOpen = false"
+      @toggle-collapse="toggleCollapse"
+    />
     
     <!-- Overlay for mobile -->
     <div
@@ -29,5 +34,10 @@ import LibrarianSidebar from './components/LibrarianSidebar.vue';
 import LibrarianTopbar from './components/LibrarianTopbar.vue';
 
 const sidebarOpen = ref(false);
+const sidebarCollapsed = ref(false);
+
+const toggleCollapse = () => {
+  sidebarCollapsed.value = !sidebarCollapsed.value;
+};
 </script>
 

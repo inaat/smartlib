@@ -25,7 +25,7 @@ class EventController extends Controller
             $query->where('library_id', $request->library_id);
         }
 
-        $events = $query->orderBy('date')->orderBy('start_time')->get();
+        $events = $query->with('library')->orderBy('date')->orderBy('start_time')->get();
 
         // Add registration count and check if user is registered
         $user = $request->user();
@@ -62,7 +62,12 @@ class EventController extends Controller
 
         // Check capacity
         if ($event->capacity && $event->registrations()->count() >= $event->capacity) {
-            return response()->json(['message' => 'Event is full'], 400);
+            return response()->json(['message' => 'Event registration seat is full'], 400);
+        }
+
+        // Check registration deadline (registration auto closed if it is event date or later)
+        if (now()->toDateString() >= $event->date) {
+            return response()->json(['message' => 'Registration closed. You can only register before the event date.'], 400);
         }
 
         $registration = EventRegistration::create([

@@ -1,157 +1,160 @@
 <template>
-  <div class="p-6 space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">My Analytics</h1>
-        <p class="text-gray-500 text-sm">Track your study progress and library activity.</p>
-      </div>
-      <div class="flex items-center space-x-3">
-        <button 
-          @click="fetchAnalytics" 
-          :disabled="loading"
-          class="p-2.5 text-gray-500 hover:bg-gray-100 rounded-xl transition-all disabled:opacity-50" 
-          title="Refresh Data"
-        >
-          <RefreshCw :class="['w-5 h-5', loading ? 'animate-spin' : '']" />
-        </button>
-      </div>
+  <div class="space-y-6">
+    <!-- Inline Mini Action Bar for Refresh -->
+    <div class="flex justify-end font-outfit">
+      <button 
+        @click="fetchAnalytics" 
+        :disabled="loading"
+        class="flex items-center space-x-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold border border-slate-200 shadow-sm active:scale-98 transition-all disabled:opacity-50" 
+        title="Refresh Data"
+      >
+        <RefreshCw :class="['w-3.5 h-3.5 text-slate-500', loading ? 'animate-spin' : '']" />
+        <span>{{ loading ? 'Refreshing...' : 'Refresh Data' }}</span>
+      </button>
     </div>
 
-    <div v-if="loading && !analyticsData" class="flex items-center justify-center py-20">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    <div v-if="loading && !analyticsData" class="flex flex-col items-center justify-center py-24 space-y-4">
+      <div class="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent"></div>
+      <p class="text-xs font-semibold text-slate-400 font-outfit uppercase tracking-wider animate-pulse">Loading analytics...</p>
     </div>
 
     <template v-else>
       <!-- Stats Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div v-for="stat in statsCards" :key="stat.label" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
-          <div class="absolute top-0 right-0 p-4 -mr-4 -mt-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <component :is="stat.icon" class="w-24 h-24" />
-          </div>
-          <div class="flex items-center justify-between mb-4 relative z-10">
-            <div :class="['p-3 rounded-2xl', stat.bgClass]">
-              <component :is="stat.icon" :class="['w-6 h-6', stat.iconClass]" />
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 font-outfit">
+        <div 
+          v-for="stat in statsCards" 
+          :key="stat.label" 
+          class="bg-white px-4 py-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 hover-lift group text-left"
+        >
+          <div class="flex items-center space-x-3.5">
+            <!-- Icon -->
+            <div :class="['p-2.5 rounded-xl border flex-shrink-0', stat.bgClass]">
+              <component :is="stat.icon" :class="['w-5 h-5', stat.iconClass]" />
             </div>
-          </div>
-          <div class="relative z-10">
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ stat.label }}</p>
-            <h3 class="text-3xl font-black text-gray-900 mt-1">{{ stat.value }}</h3>
+            <!-- Label & Value -->
+            <div class="min-w-0">
+              <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none truncate">{{ stat.label }}</p>
+              <h3 class="text-xl font-black text-slate-800 mt-1 leading-none">{{ stat.value }}</h3>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Study Trends Chart -->
-        <div class="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-8 relative overflow-hidden">
-           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-teal-500"></div>
-          <div class="flex items-center justify-between mb-8">
-            <div class="flex items-center space-x-3">
-               <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
-                  <TrendingUp class="w-5 h-5" />
-               </div>
-               <h3 class="font-bold text-gray-900">Study Frequency (Last 30 Days)</h3>
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 relative overflow-hidden font-outfit text-left">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-2.5">
+              <div class="p-2 bg-blue-50/60 border border-blue-100/50 rounded-xl text-blue-600">
+                <TrendingUp class="w-4.5 h-4.5" />
+              </div>
+              <h3 class="font-extrabold text-slate-800 text-sm">Study Frequency (Last 30 Days)</h3>
             </div>
           </div>
-          <div class="h-64 flex items-end justify-between space-x-2">
+          <div class="h-64 flex items-end justify-between space-x-1.5 px-2">
             <div
               v-for="(day, index) in monthlyTrends"
               :key="index"
               class="flex-1 flex flex-col items-center group relative h-full justify-end"
             >
               <div 
-                class="w-full bg-blue-500/80 rounded-t-lg transition-all group-hover:bg-blue-600 hover:scale-x-110"
+                class="w-full bg-gradient-to-t from-blue-600 to-cyan-500 rounded-t-md transition-all duration-300 hover:opacity-85 hover:scale-x-105 cursor-pointer"
                 :style="{ height: (day.count / maxTrendCount * 100) + '%' }"
               >
                 <!-- Tooltip -->
-                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-xl">
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-slate-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 shadow-lg font-bold border border-slate-700">
                   {{ formatDateShort(day.date) }}: {{ day.count }} Bookings
                 </div>
               </div>
             </div>
           </div>
-          <div class="flex justify-between mt-6 px-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          <div class="flex justify-between mt-5 px-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
             <span>{{ formatDateShort(monthlyTrends[0]?.date) }}</span>
             <span>{{ formatDateShort(monthlyTrends[monthlyTrends.length - 1]?.date) }}</span>
           </div>
         </div>
 
-        <!-- Top Libraries -->
-        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden relative">
-          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-          <div class="px-8 py-6 border-b border-gray-50 flex items-center space-x-3">
-             <div class="p-2 bg-purple-50 rounded-lg text-purple-600">
-                <MapPin class="w-5 h-5" />
-             </div>
-             <h3 class="font-bold text-gray-900">Favorite Spots</h3>
+        <!-- Favorite Spots -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative font-outfit text-left">
+          <div class="px-6 py-5 border-b border-slate-100 flex items-center space-x-2.5 bg-slate-50/30">
+            <div class="p-2 bg-purple-50/60 border border-purple-100/50 rounded-xl text-purple-600">
+              <MapPin class="w-4.5 h-4.5" />
+            </div>
+            <h3 class="font-extrabold text-slate-800 text-sm">Favorite Spots</h3>
           </div>
-          <div class="p-4">
-            <div v-if="topLibraries.length === 0" class="p-8 text-center">
-              <div class="mx-auto w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                <LibraryIcon class="w-8 h-8 text-gray-300" />
+          <div class="p-5">
+            <div v-if="topLibraries.length === 0" class="py-12 text-center">
+              <div class="mx-auto w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3 border border-slate-200">
+                <LibraryIcon class="w-5 h-5 text-slate-400" />
               </div>
-              <p class="text-sm text-gray-400 italic">No library visits yet.</p>
+              <p class="text-xs text-slate-400 italic">No library visits yet.</p>
             </div>
             <div v-else class="space-y-3">
-              <div v-for="lib in topLibraries" :key="lib.id" class="p-4 rounded-2xl bg-gray-50 border border-transparent hover:border-purple-200 hover:bg-white transition-all flex items-center justify-between group">
-                <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all">
-                    <Building2 class="w-5 h-5" />
+              <router-link 
+                v-for="lib in topLibraries" 
+                :key="lib.id" 
+                :to="`/student/libraries/${lib.id}`"
+                class="p-3.5 rounded-xl border border-slate-100 bg-slate-50/50 hover:border-purple-200 hover:bg-white transition-all duration-300 flex items-center justify-between group cursor-pointer block"
+              >
+                <div class="flex items-center space-x-3 min-w-0">
+                  <div class="w-9 h-9 rounded-xl bg-purple-50/80 border border-purple-100/50 text-purple-600 flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-purple-600 group-hover:to-indigo-500 group-hover:text-white transition-all duration-350 flex-shrink-0">
+                    <Building2 class="w-4.5 h-4.5" />
                   </div>
-                  <div>
-                    <span class="text-sm font-bold text-gray-900 block">{{ lib.name }}</span>
-                    <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">{{ lib.bookings_count }} Visits</span>
+                  <div class="min-w-0 text-left">
+                    <span class="text-xs font-bold text-slate-800 block truncate leading-snug">{{ lib.name }}</span>
+                    <span class="text-[9px] uppercase font-extrabold text-slate-400 tracking-wider leading-none mt-1 block">{{ lib.bookings_count }} Visits</span>
                   </div>
                 </div>
-                <ChevronRight class="w-4 h-4 text-gray-300 group-hover:text-purple-500" />
-              </div>
+                <ChevronRight class="w-4 h-4 text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
+              </router-link>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Recent Activity Table -->
-      <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden relative">
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-        <div class="px-8 py-6 border-b border-gray-50 flex items-center justify-between">
-          <div class="flex items-center space-x-3">
-              <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
-                <Activity class="w-5 h-5" />
-              </div>
-              <h3 class="font-bold text-gray-900">Recent Activity</h3>
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative font-outfit text-left">
+        <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/30">
+          <div class="flex items-center space-x-2.5">
+            <div class="p-2 bg-emerald-50/60 border border-emerald-100/50 rounded-xl text-emerald-600">
+              <Activity class="w-4.5 h-4.5" />
+            </div>
+            <h3 class="font-extrabold text-slate-800 text-sm">Recent Activity</h3>
           </div>
-          <router-link to="/student/libraries" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest">Book New Seat</router-link>
+          <router-link to="/student/libraries" class="text-[10px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors">
+            Book New Seat
+          </router-link>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left">
             <thead>
-              <tr class="bg-gray-50/50 text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">
-                <th class="px-8 py-4">Library</th>
-                <th class="px-8 py-4">Seat</th>
-                <th class="px-8 py-4">Status</th>
-                <th class="px-8 py-4 text-right">Date</th>
+              <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-400 text-[10px] font-extrabold uppercase tracking-wider">
+                <th class="px-6 py-3.5">Library</th>
+                <th class="px-6 py-3.5">Seat</th>
+                <th class="px-6 py-3.5">Status</th>
+                <th class="px-6 py-3.5 text-right">Date</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody class="divide-y divide-slate-50">
               <tr v-if="recentBookings.length === 0">
-                <td colspan="4" class="px-8 py-12 text-center text-gray-400 italic text-sm">No recent bookings found.</td>
+                <td colspan="4" class="px-6 py-10 text-center text-slate-400 italic text-xs">No recent bookings found.</td>
               </tr>
-              <tr v-for="booking in recentBookings" :key="booking.id" class="hover:bg-gray-50/50 transition-colors group">
-                <td class="px-8 py-5">
+              <tr v-for="booking in recentBookings" :key="booking.id" class="hover:bg-slate-50/30 transition-colors group">
+                <td class="px-6 py-4.5">
                   <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-xs text-gray-500 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-all">
-                      <Building2 class="w-4 h-4" />
+                    <div class="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-emerald-50 group-hover:text-emerald-600 group-hover:border-emerald-100 transition-all duration-300">
+                      <Building2 class="w-4.5 h-4.5" />
                     </div>
-                    <span class="text-sm font-bold text-gray-900">{{ booking.library?.name }}</span>
+                    <span class="text-xs font-bold text-slate-800">{{ booking.library?.name }}</span>
                   </div>
                 </td>
-                <td class="px-8 py-5 text-sm font-medium text-gray-600">Seat #{{ booking.seat?.seat_number }}</td>
-                <td class="px-8 py-5">
-                  <span :class="['px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest', getStatusClass(booking.status)]">
+                <td class="px-6 py-4.5 text-xs font-bold text-slate-600">Seat #{{ booking.seat?.seat_number }}</td>
+                <td class="px-6 py-4.5">
+                  <span :class="['px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border', getStatusClass(booking.status)]">
                     {{ booking.status.replace('_', ' ') }}
                   </span>
                 </td>
-                <td class="px-8 py-5 text-sm font-bold text-gray-400 text-right">{{ formatDate(booking.created_at) }}</td>
+                <td class="px-6 py-4.5 text-xs font-extrabold text-slate-400 text-right">{{ formatDate(booking.created_at) }}</td>
               </tr>
             </tbody>
           </table>
@@ -164,10 +167,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { 
-  Users, 
   Library as LibraryIcon, 
-  BookOpen, 
-  CreditCard, 
   Activity,
   Calendar,
   RefreshCw,
@@ -176,7 +176,6 @@ import {
   Building2,
   ChevronRight,
   Clock,
-  Trophy,
   BookMarked,
   Flame
 } from 'lucide-vue-next';
@@ -194,28 +193,28 @@ const statsCards = computed(() => [
     label: 'Total Sessions',
     value: analyticsData.value?.total_bookings || 0,
     icon: Calendar,
-    bgClass: 'bg-blue-50',
+    bgClass: 'bg-blue-50/50 border-blue-100/50',
     iconClass: 'text-blue-600'
   },
   {
     label: 'Study Hours',
     value: analyticsData.value?.total_study_hours || 0,
     icon: Clock,
-    bgClass: 'bg-purple-50',
+    bgClass: 'bg-purple-50/50 border-purple-100/50',
     iconClass: 'text-purple-600'
   },
   {
     label: 'Active Books',
     value: analyticsData.value?.active_reservations || 0,
     icon: BookMarked,
-    bgClass: 'bg-amber-50',
+    bgClass: 'bg-amber-50/50 border-amber-100/50',
     iconClass: 'text-amber-600'
   },
   {
     label: 'Study Streak',
     value: (analyticsData.value?.study_streak || 0) + ' Days',
     icon: Flame,
-    bgClass: 'bg-orange-50',
+    bgClass: 'bg-orange-50/50 border-orange-100/50',
     iconClass: 'text-orange-600'
   }
 ]);
@@ -242,13 +241,13 @@ const fetchAnalytics = async () => {
 
 const getStatusClass = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'completed': return 'bg-emerald-100 text-emerald-700';
+    case 'completed': return 'bg-emerald-50 text-emerald-700 border-emerald-100/50';
     case 'active':
-    case 'checked_in': return 'bg-blue-100 text-blue-700';
+    case 'checked_in': return 'bg-blue-50 text-blue-700 border-blue-100/50';
     case 'pending':
-    case 'booked': return 'bg-amber-100 text-amber-700';
-    case 'cancelled': return 'bg-red-100 text-red-700';
-    default: return 'bg-gray-100 text-gray-700';
+    case 'booked': return 'bg-amber-50 text-amber-700 border-amber-100/50';
+    case 'cancelled': return 'bg-red-50 text-red-700 border-red-100/50';
+    default: return 'bg-slate-50 text-slate-700 border-slate-100/50';
   }
 };
 
@@ -266,3 +265,22 @@ onMounted(() => {
   fetchAnalytics();
 });
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+.active\:scale-98:active {
+  transform: scale(0.98);
+}
+</style>

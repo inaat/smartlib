@@ -64,11 +64,11 @@ class SeatSectionController extends Controller
         // Auto-create seats for this section
         for ($i = 1; $i <= $validated['total_seats']; $i++) {
             $seatNumber = "{$section->name}-{$i}";
-            $qrContent = encrypt([
+            $qrContent = base64_encode(json_encode([
                 'type' => 'seat',
                 'seat_number' => $seatNumber,
                 'library_id' => $libraryId,
-            ]);
+            ]));
 
             $seat = Seat::create([
                 'floor_id' => $section->floor_id,

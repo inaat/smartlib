@@ -33,12 +33,83 @@ class BookReservationController extends Controller
 
         // Update overdue status
         foreach ($reservations as $reservation) {
-            if ($reservation->isOverdue() && $reservation->status === 'reserved') {
+            if ($reservation->isOverdue() && $reservation->status === 'collected') {
                 $reservation->update(['status' => 'overdue']);
             }
         }
 
         return response()->json($reservations);
+    }
+
+    /**
+     * Approve a book reservation request
+     */
+    public function approveReservation(Request $request, $id)
+    {
+        $reservation = BookReservation::with(['book', 'user'])->findOrFail($id);
+
+        if ($reservation->status !== 'pending') {
+            return response()->json([
+                'message' => 'This reservation is not pending approval'
+            ], 400);
+        }
+
+        // Update reservation status
+        $reservation->update([
+            'status' => 'approved'
+        ]);
+
+        // Send notification to student
+        \App\Models\Notification::send(
+            $reservation->user_id,
+            'reservation',
+            'Book Reservation Approved!',
+            "Your reservation request for \"{$reservation->book->title}\" has been approved. You can now visit the library to pick it up.",
+            $reservation
+        );
+
+        return response()->json([
+            'message' => 'Book reservation request approved successfully',
+            'reservation' => $reservation
+        ]);
+    }
+
+    /**
+     * Reject a book reservation request
+     */
+    public function rejectReservation(Request $request, $id)
+    {
+        $reservation = BookReservation::with(['book', 'user'])->findOrFail($id);
+
+        if ($reservation->status !== 'pending') {
+            return response()->json([
+                'message' => 'This reservation is not pending approval'
+            ], 400);
+        }
+
+        // Update reservation status
+        $reservation->update([
+            'status' => 'rejected'
+        ]);
+
+        // Revert book availability
+        $reservation->book->update([
+            'availability' => 'available'
+        ]);
+
+        // Send notification to student
+        \App\Models\Notification::send(
+            $reservation->user_id,
+            'reservation',
+            'Book Reservation Rejected',
+            "Your reservation request for \"{$reservation->book->title}\" was rejected.",
+            $reservation
+        );
+
+        return response()->json([
+            'message' => 'Book reservation request rejected successfully',
+            'reservation' => $reservation
+        ]);
     }
 
     /**

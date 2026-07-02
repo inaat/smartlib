@@ -89,7 +89,7 @@
                 :style="{ width: `${Math.floor(100 / revenueData.length)}%`, maxWidth: '64px' }"
               >
                 <div
-                  :style="{ height: `${Math.max(4, (month.total / Math.max(...revenueData.map(d => d.total))) * 100)}%` }"
+                  :style="{ height: `${Math.max(4, (month.total / maxRevenue) * 100)}%` }"
                   class="w-8 bg-gradient-to-t from-indigo-600 to-purple-500 rounded-t-lg transition-all duration-500 hover:from-indigo-500 hover:to-purple-400 cursor-pointer min-h-[4px]"
                 ></div>
                 <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
@@ -193,6 +193,11 @@ const countStats = computed(() => {
 
 const revenueData    = computed(() => rawData.value?.monthly_revenue || []);
 const recentBookings = computed(() => rawData.value?.recent_bookings  || []);
+
+const maxRevenue = computed(() => {
+  if (revenueData.value.length === 0) return 1;
+  return Math.max(...revenueData.value.map((d: any) => d.total), 1);
+});
 
 const fetchAnalytics = async () => {
   loading.value = true;
