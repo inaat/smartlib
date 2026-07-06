@@ -236,9 +236,9 @@ export const superadminAPI = {
   },
 
   // Analytics
-  async getAnalytics(): Promise<any> {
+  async getAnalytics(params?: any): Promise<any> {
     try {
-      const response = await api.get('/admin/analytics');
+      const response = await api.get('/admin/analytics', { params });
       return response.data;
     } catch (error) {
       handleApiError(error);

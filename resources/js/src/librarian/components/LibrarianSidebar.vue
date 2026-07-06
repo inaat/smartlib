@@ -176,16 +176,18 @@
               </div>
             </Teleport>
 
-            <!-- Expanded Nested Submenu (Tree line design) -->
-            <transition name="slide-fade">
-              <div
-                v-if="spaceManagementOpen && !showCollapsed"
-                class="relative ml-6 mt-1 space-y-1 animate-fade-in"
-              >
+            <!-- Expanded Nested Submenu (Tree line design) - smooth max-height transition -->
+            <div
+              :class="[
+                'space-mgmt-submenu overflow-hidden transition-all duration-300 ease-in-out',
+                spaceManagementOpen && !showCollapsed ? 'submenu-open' : 'submenu-closed'
+              ]"
+            >
+              <div class="relative ml-6 mt-1 space-y-1">
                 <div
                   v-for="(subItem, index) in spaceManagementItems"
                   :key="subItem.path"
-                  class="relative pl-5 animate-fade-in"
+                  class="relative pl-5"
                 >
                   <!-- Tree connecting line vertical -->
                   <div 
@@ -223,7 +225,7 @@
                   </router-link>
                 </div>
               </div>
-            </transition>
+            </div>
           </div>
 
           <!-- Other Management Items -->
@@ -353,6 +355,7 @@ import { useAuth } from '@/shared/composables/useAuth';
 import { 
   BookOpen, 
   Library,
+  Armchair,
   Home, 
   Users,
   Calendar,
@@ -453,6 +456,14 @@ watch(isSpaceManagementActive, (active) => {
   }
 }, { immediate: true });
 
+// Auto-close dropdowns smoothly when sidebar collapses
+watch(showCollapsed, (collapsed) => {
+  if (collapsed) {
+    spaceManagementOpen.value = false;
+    showSpaceManagementPopover.value = false;
+  }
+});
+
 // Close all menus when clicking outside
 const closeAllDropdowns = () => {
   showSpaceManagementPopover.value = false;
@@ -471,7 +482,7 @@ onUnmounted(() => {
 
 const mainNavItems = [
   { path: '/librarian/dashboard', label: 'Dashboard', icon: Home, exact: true },
-  { path: '/librarian/bookings', label: 'Seat Bookings', icon: Calendar },
+  { path: '/librarian/bookings', label: 'Seat Bookings', icon: Armchair },
   { path: '/librarian/reservations', label: 'Reserved Books', icon: BookOpen },
   { path: '/librarian/library', label: 'Library Info', icon: Building2 },
 ];
@@ -511,16 +522,16 @@ const reportItems = [
   animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Slide Fade Transition for Sub-menu options */
-.slide-fade-enter-active {
-  transition: all 0.2s ease-out;
+/* Smooth submenu expand/collapse via max-height + opacity */
+.space-mgmt-submenu {
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
 }
-.slide-fade-leave-active {
-  transition: all 0.15s cubic-bezier(1, 0.5, 0.8, 1);
+.submenu-open {
+  max-height: 250px; /* enough for 3 sub-items */
+  opacity: 1;
 }
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-8px);
+.submenu-closed {
+  max-height: 0;
   opacity: 0;
 }
 

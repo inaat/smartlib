@@ -79,7 +79,7 @@
                 </div>
               </div>
               <h2 class="text-lg font-bold text-slate-800 tracking-tight leading-snug">{{ student.name }}</h2>
-              <p class="text-xs font-semibold text-slate-400 mt-1">Student ID: {{ student.crn }}</p>
+              <p class="text-xs font-semibold text-slate-400 mt-1">Student CRN: {{ student.crn }}</p>
               
               <div class="mt-6 space-y-3.5">
                 <div class="flex items-center space-x-3.5 text-xs font-semibold text-slate-600">

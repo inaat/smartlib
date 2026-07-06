@@ -19,8 +19,8 @@
             </div>
           </div>
           <div class="relative z-10">
-            <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Total Points Balance</p>
-            <h3 class="text-3xl font-black text-slate-800 mt-2.5 leading-none">{{ loyaltyData.total_points }}</h3>
+            <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none">Total Points Balance</p>
+            <h3 class="text-3xl font-bold text-slate-800 mt-2.5 leading-none">{{ loyaltyData.total_points }}</h3>
           </div>
         </div>
 
@@ -33,7 +33,7 @@
             <div class="p-3 rounded-xl border" :class="[tierIconBgClass]">
               <Award class="w-5 h-5" :class="[tierIconColorClass]" />
             </div>
-            <div class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-slate-50 border border-slate-200 text-slate-500">
+            <div class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-wider bg-slate-50 border border-slate-200 text-slate-500">
               Current Rank
             </div>
           </div>
@@ -51,14 +51,14 @@
                 <div class="p-3 bg-indigo-50 border border-indigo-200/60 rounded-xl text-indigo-600">
                   <Sparkles class="w-5 h-5 animate-pulse" />
                 </div>
-                <div class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-indigo-50 border border-indigo-200 text-indigo-700">
+                <div class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-wider bg-indigo-50 border border-indigo-200 text-indigo-700">
                   Next: {{ loyaltyData.next_tier }}
                 </div>
               </div>
               <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Progress to Next Tier</p>
               <div class="flex justify-between items-baseline mt-2.5">
-                <h4 class="text-lg font-black text-slate-700 tracking-tight leading-none">{{ loyaltyData.points_to_next_tier }} <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wide">pts to go</span></h4>
-                <span class="text-xs font-black text-indigo-600 leading-none">{{ loyaltyData.progress }}%</span>
+                <h4 class="text-lg font-bold text-slate-700 tracking-tight leading-none">{{ loyaltyData.points_to_next_tier }} <span class="text-[11px] font-medium text-slate-400 uppercase tracking-wide">pts to go</span></h4>
+                <span class="text-xs font-bold text-indigo-600 leading-none">{{ loyaltyData.progress }}%</span>
               </div>
               <div class="w-full bg-slate-100 border border-slate-200/50 rounded-full h-2 mt-3.5 overflow-hidden">
                 <div class="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-500" :style="{ width: loyaltyData.progress + '%' }"></div>
@@ -69,7 +69,7 @@
               <div class="p-3 bg-emerald-50 border border-emerald-200/60 rounded-xl text-emerald-600 mb-2">
                 <Award class="w-6 h-6 animate-bounce" />
               </div>
-              <h4 class="text-sm font-bold text-slate-800">Max Rank Attained</h4>
+              <h4 class="text-sm font-semibold text-slate-800">Max Rank Attained</h4>
               <p class="text-[11px] text-slate-400 mt-1">You are at the highest library VIP tier!</p>
             </div>
           </div>
@@ -83,7 +83,7 @@
             <div class="p-2 bg-slate-100 border border-slate-200/60 rounded-xl text-slate-600">
               <History class="w-4 h-4" />
             </div>
-            <h3 class="font-extrabold text-slate-800 text-sm">Recent Transactions</h3>
+            <h3 class="font-semibold text-slate-800 text-sm">Recent Transactions</h3>
           </div>
         </div>
 
@@ -91,10 +91,10 @@
           <table class="min-w-full divide-y divide-slate-100">
             <thead class="bg-slate-50/40">
               <tr>
-                <th scope="col" class="px-6 py-3.5 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Date & Time</th>
-                <th scope="col" class="px-6 py-3.5 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Description</th>
-                <th scope="col" class="px-6 py-3.5 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Type</th>
-                <th scope="col" class="px-6 py-3.5 text-right text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Points</th>
+                <th scope="col" class="px-6 py-3.5 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Date & Time</th>
+                <th scope="col" class="px-6 py-3.5 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Description</th>
+                <th scope="col" class="px-6 py-3.5 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Type</th>
+                <th scope="col" class="px-6 py-3.5 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Points</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 bg-white" v-if="loyaltyData.transactions.length > 0">
@@ -102,18 +102,18 @@
                 <td class="px-6 py-4 whitespace-nowrap text-xs font-semibold text-slate-500">
                   {{ formatDate(transaction.created_at) }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-slate-700">
+                <td class="px-6 py-4 whitespace-nowrap text-xs font-semibold text-slate-700">
                   {{ transaction.description }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-xs">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" 
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-wider" 
                         :class="transaction.points > 0 
                           ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' 
                           : 'bg-rose-50 border border-rose-200 text-rose-700'">
                     {{ transaction.type }}
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-xs text-right font-black" 
+                <td class="px-6 py-4 whitespace-nowrap text-xs text-right font-bold" 
                     :class="transaction.points > 0 ? 'text-emerald-600' : 'text-rose-600'">
                   {{ transaction.points > 0 ? '+' : '' }}{{ transaction.points }}
                 </td>

@@ -5,7 +5,7 @@
       <button 
         @click="fetchAnalytics" 
         :disabled="loading"
-        class="flex items-center space-x-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold border border-slate-200 shadow-sm active:scale-98 transition-all disabled:opacity-50" 
+        class="flex items-center space-x-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-semibold border border-slate-200 shadow-sm active:scale-98 transition-all disabled:opacity-50" 
         title="Refresh Data"
       >
         <RefreshCw :class="['w-3.5 h-3.5 text-slate-500', loading ? 'animate-spin' : '']" />
@@ -33,8 +33,8 @@
             </div>
             <!-- Label & Value -->
             <div class="min-w-0">
-              <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none truncate">{{ stat.label }}</p>
-              <h3 class="text-xl font-black text-slate-800 mt-1 leading-none">{{ stat.value }}</h3>
+              <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none truncate">{{ stat.label }}</p>
+              <h3 class="text-xl font-bold text-slate-800 mt-1 leading-none">{{ stat.value }}</h3>
             </div>
           </div>
         </div>
@@ -48,7 +48,7 @@
               <div class="p-2 bg-blue-50/60 border border-blue-100/50 rounded-xl text-blue-600">
                 <TrendingUp class="w-4.5 h-4.5" />
               </div>
-              <h3 class="font-extrabold text-slate-800 text-sm">Study Frequency (Last 30 Days)</h3>
+              <h3 class="font-semibold text-slate-800 text-sm">Study Frequency (Last 30 Days)</h3>
             </div>
           </div>
           <div class="h-64 flex items-end justify-between space-x-1.5 px-2">
@@ -58,17 +58,17 @@
               class="flex-1 flex flex-col items-center group relative h-full justify-end"
             >
               <div 
-                class="w-full bg-gradient-to-t from-blue-600 to-cyan-500 rounded-t-md transition-all duration-300 hover:opacity-85 hover:scale-x-105 cursor-pointer"
+                class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-md transition-all duration-300 hover:opacity-85 hover:scale-x-105 cursor-pointer"
                 :style="{ height: (day.count / maxTrendCount * 100) + '%' }"
               >
                 <!-- Tooltip -->
-                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-slate-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 shadow-lg font-bold border border-slate-700">
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-slate-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 shadow-lg font-medium border border-slate-700">
                   {{ formatDateShort(day.date) }}: {{ day.count }} Bookings
                 </div>
               </div>
             </div>
           </div>
-          <div class="flex justify-between mt-5 px-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+          <div class="flex justify-between mt-5 px-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
             <span>{{ formatDateShort(monthlyTrends[0]?.date) }}</span>
             <span>{{ formatDateShort(monthlyTrends[monthlyTrends.length - 1]?.date) }}</span>
           </div>
@@ -80,7 +80,7 @@
             <div class="p-2 bg-purple-50/60 border border-purple-100/50 rounded-xl text-purple-600">
               <MapPin class="w-4.5 h-4.5" />
             </div>
-            <h3 class="font-extrabold text-slate-800 text-sm">Favorite Spots</h3>
+            <h3 class="font-semibold text-slate-800 text-sm">Favorite Spots</h3>
           </div>
           <div class="p-5">
             <div v-if="topLibraries.length === 0" class="py-12 text-center">
@@ -101,8 +101,8 @@
                     <Building2 class="w-4.5 h-4.5" />
                   </div>
                   <div class="min-w-0 text-left">
-                    <span class="text-xs font-bold text-slate-800 block truncate leading-snug">{{ lib.name }}</span>
-                    <span class="text-[9px] uppercase font-extrabold text-slate-400 tracking-wider leading-none mt-1 block">{{ lib.bookings_count }} Visits</span>
+                    <span class="text-xs font-semibold text-slate-800 block truncate leading-snug">{{ lib.name }}</span>
+                    <span class="text-[9px] uppercase font-semibold text-slate-400 tracking-wider leading-none mt-1 block">{{ lib.bookings_count }} Visits</span>
                   </div>
                 </div>
                 <ChevronRight class="w-4 h-4 text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
@@ -119,16 +119,16 @@
             <div class="p-2 bg-emerald-50/60 border border-emerald-100/50 rounded-xl text-emerald-600">
               <Activity class="w-4.5 h-4.5" />
             </div>
-            <h3 class="font-extrabold text-slate-800 text-sm">Recent Activity</h3>
+            <h3 class="font-semibold text-slate-800 text-sm">Recent Activity</h3>
           </div>
-          <router-link to="/student/libraries" class="text-[10px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors">
+          <router-link to="/student/libraries" class="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors">
             Book New Seat
           </router-link>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left">
             <thead>
-              <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-400 text-[10px] font-extrabold uppercase tracking-wider">
+              <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-400 text-[10px] font-semibold uppercase tracking-wider">
                 <th class="px-6 py-3.5">Library</th>
                 <th class="px-6 py-3.5">Seat</th>
                 <th class="px-6 py-3.5">Status</th>
@@ -145,16 +145,16 @@
                     <div class="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-emerald-50 group-hover:text-emerald-600 group-hover:border-emerald-100 transition-all duration-300">
                       <Building2 class="w-4.5 h-4.5" />
                     </div>
-                    <span class="text-xs font-bold text-slate-800">{{ booking.library?.name }}</span>
+                    <span class="text-xs font-semibold text-slate-800">{{ booking.library?.name }}</span>
                   </div>
                 </td>
-                <td class="px-6 py-4.5 text-xs font-bold text-slate-600">Seat #{{ booking.seat?.seat_number }}</td>
+                <td class="px-6 py-4.5 text-xs font-semibold text-slate-600">Seat #{{ booking.seat?.seat_number }}</td>
                 <td class="px-6 py-4.5">
-                  <span :class="['px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border', getStatusClass(booking.status)]">
+                  <span :class="['px-2.5 py-1 rounded-lg text-[9px] font-semibold uppercase tracking-wider border', getStatusClass(booking.status)]">
                     {{ booking.status.replace('_', ' ') }}
                   </span>
                 </td>
-                <td class="px-6 py-4.5 text-xs font-extrabold text-slate-400 text-right">{{ formatDate(booking.created_at) }}</td>
+                <td class="px-6 py-4.5 text-xs font-semibold text-slate-400 text-right">{{ formatDate(booking.created_at) }}</td>
               </tr>
             </tbody>
           </table>

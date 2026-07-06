@@ -67,6 +67,32 @@ class ProfileController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function markAllNotificationsRead(Request $request)
+    {
+        Notification::where('user_id', $request->user()->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function clearAllNotifications(Request $request)
+    {
+        Notification::where('user_id', $request->user()->id)->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function destroyNotification(Request $request, $id)
+    {
+        $notification = Notification::where('user_id', $request->user()->id)
+            ->findOrFail($id);
+
+        $notification->delete();
+
+        return response()->json(['success' => true]);
+    }
+
     public function loyaltyTransactions(Request $request)
     {
         $user = $request->user();

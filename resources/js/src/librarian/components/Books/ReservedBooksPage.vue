@@ -1,6 +1,17 @@
 <template>
   <div class="p-6 space-y-6 font-outfit">
-
+    <!-- Header Controls -->
+    <div class="flex justify-end items-center mb-6">
+      <div class="flex items-center gap-2">
+        <button
+          @click="fetchReservations"
+          class="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer shadow-sm animate-fade-in"
+          title="Refresh"
+        >
+          <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
+        </button>
+      </div>
+    </div>
 
     <!-- Filters -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
@@ -71,13 +82,13 @@
                 <div class="flex items-center text-left">
                   <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center shadow-sm">
                     <img v-if="reservation.user?.profile_picture" :src="getProfilePictureUrl(reservation.user.profile_picture)" class="w-full h-full object-cover rounded-lg" />
-                    <div v-else class="w-full h-full flex items-center justify-center bg-emerald-50 border border-emerald-600 rounded-lg text-emerald-600 font-bold text-sm">
+                    <div v-else class="w-full h-full flex items-center justify-center bg-emerald-50 border border-emerald-700 rounded-lg text-emerald-700 font-bold text-sm">
                       {{ reservation.user?.name?.charAt(0).toUpperCase() }}
                     </div>
                   </div>
                   <div class="text-left ml-3">
                     <div class="text-sm font-medium text-slate-700">{{ reservation.user?.name }}</div>
-                    <div class="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5 uppercase">ID: {{ reservation.user?.crn || 'N/A' }}</div>
+                    <div class="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5 uppercase">CRN: {{ reservation.user?.crn || 'N/A' }}</div>
                   </div>
                 </div>
               </td>
@@ -139,6 +150,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { 
   Search, 
+  RefreshCw, 
   Book as BookIcon
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';

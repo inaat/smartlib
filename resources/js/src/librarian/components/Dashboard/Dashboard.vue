@@ -8,7 +8,7 @@
       <div class="relative z-10 flex items-center justify-between">
         <div class="text-left">
           <span class="text-[10px] font-semibold tracking-wider text-emerald-300 uppercase bg-white/10 px-2.5 py-0.5 rounded-full">Librarian Workspace</span>
-          <h1 class="text-2xl font-bold mt-2 mb-1 tracking-tight">Welcome back, {{ user?.name }}! 👋</h1>
+          <h1 class="text-2xl font-bold mt-2 mb-1 tracking-tight">{{ greeting }}, {{ user?.name }}! 👋</h1>
           <p class="text-emerald-100/90 text-xs font-normal">Space occupancy, seat reservations, and catalog overview today.</p>
         </div>
       </div>
@@ -285,6 +285,18 @@ import { librarianAPI } from '@/shared/services/api';
 import { format } from 'date-fns';
 
 const { user } = useAuth();
+const greeting = computed(() => {
+  const hour = new Date().getHours();
+  if (hour < 12) {
+    return 'Good morning';
+  } else if (hour < 17) {
+    return 'Good afternoon';
+  } else if (hour < 21) {
+    return 'Good evening';
+  } else {
+    return 'Welcome back';
+  }
+});
 const loading = ref(true);
 
 const stats = ref({

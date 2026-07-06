@@ -4,9 +4,12 @@
     <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-2xl text-white px-6 py-5 shadow-xl relative overflow-hidden">
       <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
       <div class="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
-      <div class="relative z-10">
-        <h1 class="text-2xl font-extrabold mb-1">Welcome back, {{ user?.name }}! 👋</h1>
-        <p class="text-blue-200 text-sm font-medium">Ready to continue your learning journey? Your library world awaits.</p>
+      <div class="relative z-10 flex items-center justify-between">
+        <div class="text-left">
+          <span class="text-[10px] font-semibold tracking-wider text-blue-200 uppercase bg-white/10 px-2.5 py-0.5 rounded-full">Student Workspace</span>
+          <h1 class="text-2xl font-bold mt-2 mb-1 tracking-tight">Welcome back, {{ user?.name }}! 👋</h1>
+          <p class="text-blue-100/90 text-xs font-normal">Ready to continue your learning journey? Your library world awaits.</p>
+        </div>
       </div>
     </div>
 
@@ -20,7 +23,7 @@
           </div>
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Bookings</span>
         </div>
-        <div class="text-3xl font-extrabold text-slate-800">{{ checkedInBookingsCount }}</div>
+        <div class="text-3xl font-bold text-slate-800">{{ checkedInBookingsCount }}</div>
         <div class="text-[10px] text-slate-400 font-medium">Reservations completed this month</div>
       </div>
 
@@ -32,7 +35,7 @@
           </div>
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Hours Today</span>
         </div>
-        <div class="text-3xl font-extrabold text-slate-800">{{ hoursToday }}h</div>
+        <div class="text-3xl font-bold text-slate-800">{{ hoursToday }}h</div>
         <div class="text-[10px] text-slate-400 font-medium">Study hours logged in libraries</div>
       </div>
 
@@ -44,7 +47,7 @@
           </div>
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Reserved Books</span>
         </div>
-        <div class="text-3xl font-extrabold text-slate-800">{{ reservedBooksCount }}</div>
+        <div class="text-3xl font-bold text-slate-800">{{ reservedBooksCount }}</div>
         <div class="text-[10px] text-slate-400 font-medium">Catalog items ready at desk</div>
       </div>
 
@@ -56,7 +59,7 @@
           </div>
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Available Libraries</span>
         </div>
-        <div class="text-3xl font-extrabold text-slate-800">{{ libraries.length }}</div>
+        <div class="text-3xl font-bold text-slate-800">{{ libraries.length }}</div>
         <div class="text-[10px] text-slate-400 font-medium">National partner locations</div>
       </div>
     </div>
@@ -145,7 +148,7 @@
             </div>
 
             <!-- X-Axis Labels -->
-            <div class="flex justify-between px-2 pt-2 border-t border-slate-100 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+            <div class="flex justify-between px-2 pt-2 border-t border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               <span v-for="(item, index) in activeChartData" :key="index" class="flex-1 text-center truncate">
                 {{ item.label }}
               </span>

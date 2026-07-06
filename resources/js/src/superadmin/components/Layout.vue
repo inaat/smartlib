@@ -2,14 +2,22 @@
   <div v-if="!user">
     <slot />
   </div>
-  <div v-else class="min-h-screen bg-gray-50 flex">
+  <div v-else class="h-screen bg-gray-50 flex superadmin-portal overflow-hidden">
     <!-- Sidebar -->
-    <SuperAdminSidebar :is-open="sidebarOpen" @close="sidebarOpen = false" />
+    <SuperAdminSidebar 
+      :is-open="sidebarOpen" 
+      :is-collapsed="sidebarCollapsed"
+      @close="sidebarOpen = false" 
+      @toggle-collapse="toggleCollapse"
+    />
     
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
       <!-- Top Bar -->
-      <SuperAdminTopbar @menu-click="sidebarOpen = true" />
+      <SuperAdminTopbar 
+        @menu-click="sidebarOpen = true" 
+        @toggle-sidebar="sidebarOpen = !sidebarOpen" 
+      />
       
       <!-- Page Content -->
       <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 lg:p-8">
@@ -27,15 +35,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/shared/composables/useAuth';
 import SuperAdminSidebar from './SuperAdminSidebar.vue';
 import SuperAdminTopbar from './SuperAdminTopbar.vue';
 
 const { user, fetchSettings } = useAuth();
 const sidebarOpen = ref(false);
+const sidebarCollapsed = ref(false);
+
+const toggleCollapse = () => {
+  sidebarCollapsed.value = !sidebarCollapsed.value;
+};
+
+const lockBody = () => {
+  document.documentElement.style.margin = '0';
+  document.documentElement.style.padding = '0';
+  document.documentElement.style.overflow = 'hidden';
+  document.documentElement.style.height = '100%';
+  document.documentElement.style.width = '100%';
+  document.body.style.margin = '0';
+  document.body.style.padding = '0';
+  document.body.style.overflow = 'hidden';
+  document.body.style.height = '100%';
+  document.body.style.width = '100%';
+};
+
+const unlockBody = () => {
+  document.documentElement.style.margin = '';
+  document.documentElement.style.padding = '';
+  document.documentElement.style.overflow = '';
+  document.documentElement.style.height = '';
+  document.documentElement.style.width = '';
+  document.body.style.margin = '';
+  document.body.style.padding = '';
+  document.body.style.overflow = '';
+  document.body.style.height = '';
+  document.body.style.width = '';
+};
 
 onMounted(() => {
   fetchSettings();
+  lockBody();
+});
+
+onUnmounted(() => {
+  unlockBody();
 });
 </script>

@@ -1,7 +1,7 @@
 <template>
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <!-- Map Placeholder -->
-    <div class="h-96 bg-gradient-to-br from-blue-50 to-teal-50 relative">
+    <div class="h-96 bg-blue-50/60 relative">
       <div class="absolute inset-0 flex items-center justify-center">
         <div class="text-center">
           <MapPin class="w-16 h-16 text-blue-400 mx-auto mb-4" />

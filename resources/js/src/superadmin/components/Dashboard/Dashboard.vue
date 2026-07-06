@@ -1,148 +1,199 @@
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Super Admin Dashboard</h1>
-        <p class="text-gray-500 text-sm">Welcome back! Here's what's happening across all libraries.</p>
-      </div>
-      <div class="flex items-center space-x-3">
-        <div class="relative">
-          <select 
-            v-model="selectedRange"
-            class="appearance-none pl-10 pr-10 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer"
-          >
-            <option v-for="range in dateRanges" :key="range.value" :value="range.value">
-              {{ range.label }}
-            </option>
-          </select>
-          <Calendar class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
-          <ChevronDown class="w-4 h-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+  <div class="space-y-6 text-slate-700">
+    <!-- Welcome Header Banner -->
+    <div 
+      class="rounded-2xl text-white px-6 py-5 shadow-sm relative overflow-hidden bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-850"
+      style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #4338ca 100%)"
+    >
+      <!-- Abstract Graphic Overlays -->
+      <div class="absolute top-0 right-0 w-80 h-80 bg-white opacity-[0.03] rounded-full -mr-32 -mt-32"></div>
+      <div class="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-[0.03] rounded-full -ml-24 -mb-24"></div>
+      
+      <div class="relative z-10 flex items-center justify-between">
+        <div class="text-left">
+          <span class="text-[10px] font-semibold tracking-wider text-purple-200 uppercase bg-white/10 px-2.5 py-0.5 rounded-full">Super Admin Workspace</span>
+          <h1 class="text-2xl font-bold mt-2 mb-1 tracking-tight">
+            Welcome back, <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-300 font-extrabold" style="background-image: linear-gradient(to right, #fcd34d, #fef08a, #fcd34d); -webkit-background-clip: text; background-clip: text;">{{ user?.name }}</span>! 👋
+          </h1>
+          <p class="text-purple-100/90 text-xs font-normal">Global seat utilization, student registration reviews, and settings management today.</p>
         </div>
       </div>
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-      <div v-for="stat in statsCards" :key="stat.label" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div 
+        v-for="stat in statsCards" 
+        :key="stat.label" 
+        class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-purple-200 transition-all duration-300 group text-left"
+      >
         <div class="flex items-center justify-between mb-4">
-          <div :class="['p-2.5 rounded-xl', stat.bgClass]">
-            <component :is="stat.icon" :class="['w-6 h-6', stat.iconClass]" />
+          <div :class="['p-3 rounded-xl transition-transform group-hover:scale-105 duration-300 bg-slate-50', stat.iconClass]">
+            <component :is="stat.icon" class="w-5 h-5" />
           </div>
-          <div v-if="stat.trend" :class="['flex items-center text-xs font-medium px-2 py-1 rounded-full', stat.trend > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600']">
-            <TrendingUp v-if="stat.trend > 0" class="w-3 h-3 mr-1" />
-            <TrendingDown v-else class="w-3 h-3 mr-1" />
+          <div v-if="stat.trend" :class="['flex items-center text-[9px] font-extrabold px-2 py-0.5 rounded-full border', stat.trend > 0 ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700']">
+            <TrendingUp v-if="stat.trend > 0" class="w-2.5 h-2.5 mr-1" />
+            <TrendingDown v-else class="w-2.5 h-2.5 mr-1" />
             {{ Math.abs(stat.trend) }}%
           </div>
         </div>
         <div>
-          <p class="text-sm font-medium text-gray-500">{{ stat.label }}</p>
-          <h3 class="text-2xl font-bold text-gray-900 mt-1">{{ stat.value }}</h3>
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ stat.label }}</p>
+          <h3 class="text-2xl font-black text-slate-800 mt-1.5 tracking-tight">{{ stat.value }}</h3>
         </div>
       </div>
     </div>
 
+    <!-- Main Content Layout Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Recent Activity -->
-      <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-          <h3 class="font-bold text-gray-900">System Activity</h3>
-          <button class="text-sm text-indigo-600 font-medium hover:text-indigo-700">View All</button>
+      <!-- Recent System Activity Timeline -->
+      <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+        <div class="px-6 py-5 border-b border-slate-50 bg-slate-50/20 flex items-center justify-between text-left">
+          <div>
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">System Activity Feed</h3>
+          </div>
+          <button @click="router.push({ name: 'superadmin-analytics' })" class="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 cursor-pointer">
+            View Analytics
+            <ArrowUpRight class="w-3.5 h-3.5" />
+          </button>
         </div>
-        <div class="p-0">
-          <div v-if="loading" class="p-8 flex justify-center">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div class="p-6 flex-1 text-left">
+          <div v-if="loading" class="flex items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
           </div>
-          <div v-else-if="activities.length === 0" class="p-12 text-center">
-            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Activity class="w-8 h-8 text-gray-300" />
+          <div v-else-if="activities.length === 0" class="text-center py-12">
+            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+              <Activity class="w-8 h-8 text-slate-300 animate-pulse" />
             </div>
-            <p class="text-gray-500">No recent activity found</p>
+            <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">No recent activity logged</p>
           </div>
-          <div v-else class="divide-y divide-gray-50">
-            <div v-for="activity in activities" :key="activity.id" class="px-6 py-4 flex items-center space-x-4 hover:bg-gray-50 transition-colors">
-              <div :class="['w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0', activity.bg]">
-                <component :is="getActivityIcon(activity.icon)" class="w-5 h-5" :class="activity.iconColor" />
+          <div v-else class="relative border-l-2 border-slate-100 ml-4 space-y-6">
+            <div v-for="activity in activities" :key="activity.id" class="relative pl-6 group">
+              <!-- Timeline Dot -->
+              <div :class="['absolute -left-3 top-0.5 w-6 h-6 rounded-lg flex items-center justify-center border-4 border-white shadow-sm transition-transform group-hover:scale-105 duration-200', activity.bg]">
+                <component :is="getActivityIcon(activity.icon)" class="w-2.5 h-2.5" :class="activity.iconColor" />
               </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">{{ activity.title }}</p>
-                <p class="text-xs text-gray-500">{{ activity.time }}</p>
-              </div>
-              <div class="text-right">
-                <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider', activity.statusClass]">
-                  {{ activity.status }}
-                </span>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/50 hover:bg-slate-100/50 p-4 rounded-xl transition-all border border-transparent hover:border-slate-100">
+                <div>
+                  <p class="text-xs font-bold text-slate-700">{{ activity.title }}</p>
+                  <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1.5 font-semibold">
+                    <Clock class="w-3.5 h-3.5" />
+                    {{ activity.time }}
+                  </p>
+                </div>
+                <div class="flex items-center">
+                  <span :class="['px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest border bg-white', activity.statusClass]">
+                    {{ activity.status }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Pending Approvals -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-          <h3 class="font-bold text-gray-900">Pending Approvals</h3>
-          <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">{{ pendingUsers.length }}</span>
+      <!-- Pending Approvals Widget & Live Utilization -->
+      <div class="space-y-6">
+        <!-- Live Library Utilization Progress -->
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-5 border-b border-slate-50 bg-slate-50/20 text-left">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Library Utilization</h3>
+          </div>
+          <div class="p-6 text-left">
+            <div v-if="loading" class="flex justify-center py-6">
+              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+            </div>
+            <div v-else-if="librariesList.length === 0" class="text-center py-4 text-slate-400 text-xs font-bold uppercase">
+              No libraries configured
+            </div>
+            <div v-else class="space-y-4">
+              <div v-for="lib in librariesList" :key="lib.id" class="space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-bold text-slate-700">{{ lib.name }}</span>
+                  <span class="text-slate-400 font-bold">{{ lib.totalSeats - lib.availableSeats }} / {{ lib.totalSeats }} Seats</span>
+                </div>
+                <div class="w-full bg-slate-50 rounded-full h-2 border border-slate-100">
+                  <div 
+                    :class="['h-2 rounded-full transition-all duration-500', getProgressBarClass(lib)]" 
+                    :style="{ width: getUtilizationPercentage(lib) + '%' }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="p-0">
-          <div v-if="loading" class="p-8 flex justify-center">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-          </div>
-          <div v-else-if="pendingUsers.length === 0" class="p-12 text-center">
-            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <UserCheck class="w-8 h-8 text-gray-300" />
+
+        <!-- Pending Approvals -->
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-5 border-b border-slate-50 bg-slate-50/20 flex items-center justify-between text-left">
+            <div>
+              <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Pending Approvals</h3>
             </div>
-            <p class="text-gray-500">All caught up!</p>
+            <span class="bg-amber-50 border border-amber-100 text-amber-800 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">{{ pendingUsers.length }}</span>
           </div>
-          <div v-else class="divide-y divide-gray-50">
-            <div v-for="user in pendingUsers" :key="user.id" class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-              <div class="flex items-center space-x-3 min-w-0">
-                <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0 border border-indigo-100">
-                  <User class="w-5 h-5 text-indigo-600" />
+          <div class="p-0">
+            <div v-if="loading" class="p-8 flex justify-center">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            </div>
+            <div v-else-if="pendingUsers.length === 0" class="p-12 text-center">
+              <div class="w-16 h-16 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                <UserCheck class="w-8 h-8 text-slate-300" />
+              </div>
+              <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">All students approved!</p>
+            </div>
+            <div v-else class="divide-y divide-slate-50 max-h-[320px] overflow-y-auto">
+              <div v-for="user in pendingUsers" :key="user.id" class="px-6 py-4 flex items-center justify-between hover:bg-slate-50/30 transition-colors">
+                <div class="flex items-center space-x-3 min-w-0">
+                  <div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 font-bold flex items-center justify-center flex-shrink-0 border border-purple-200 text-xs">
+                    {{ user.name.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="min-w-0 text-left">
+                    <p class="text-xs font-bold text-slate-700 truncate">{{ user.name }}</p>
+                    <p class="text-[10px] text-slate-400 font-semibold truncate mt-0.5">{{ user.email }}</p>
+                  </div>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-bold text-gray-900 truncate">{{ user.name }}</p>
-                  <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
+                <div class="flex items-center space-x-1.5 flex-shrink-0">
+                  <button @click="approveUser(user.id)" class="p-1.5 text-green-700 bg-white border border-slate-200 hover:bg-green-50 rounded-lg shadow-sm transition-all cursor-pointer" title="Approve Student">
+                    <CheckCircle class="w-4 h-4" />
+                  </button>
+                  <button @click="rejectUser(user.id)" class="p-1.5 text-red-655 bg-white border border-slate-200 hover:bg-red-50 rounded-lg shadow-sm transition-all cursor-pointer" title="Reject Student">
+                    <XCircle class="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              <div class="flex items-center space-x-2">
-                <button @click="approveUser(user.id)" class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Approve">
-                  <CheckCircle class="w-5 h-5" />
-                </button>
-                <button @click="rejectUser(user.id)" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Reject">
-                  <XCircle class="w-5 h-5" />
-                </button>
-              </div>
             </div>
-          </div>
-          <div v-if="pendingUsers.length > 0" class="p-4 bg-gray-50 border-t border-gray-50">
-            <button @click="router.push({ name: 'superadmin-users' })" class="w-full py-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
-              View All Pending
-            </button>
+            <div v-if="pendingUsers.length > 0" class="p-4 bg-slate-50/50 border-t border-slate-100">
+              <button @click="router.push({ name: 'superadmin-users' })" class="w-full py-2.5 text-xs font-bold text-purple-700 bg-white border border-slate-200 rounded-xl hover:shadow-sm transition-all text-center cursor-pointer">
+                View All Student Requests
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <button 
-        v-for="action in quickActions" 
-        :key="action.label" 
-        @click="handleAction(action)"
-        class="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all group"
-      >
-        <div :class="['p-3 rounded-xl mb-3 group-hover:scale-110 transition-transform', action.bg]">
-          <component :is="action.icon" :class="['w-6 h-6', action.iconColor]" />
-        </div>
-        <span class="text-sm font-bold text-gray-700">{{ action.label }}</span>
-      </button>
+    <!-- Quick Actions Control Panel -->
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 text-left">
+      <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Quick Administrator Actions</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <button 
+          v-for="action in quickActions" 
+          :key="action.label" 
+          @click="handleAction(action)"
+          class="flex flex-col items-center justify-center p-6 bg-slate-50/40 rounded-2xl border border-slate-100 hover:border-purple-200 hover:bg-white hover:shadow-md transition-all duration-300 group cursor-pointer"
+        >
+          <div :class="['p-3 rounded-xl mb-3 group-hover:scale-105 transition-transform duration-300', action.bg]">
+            <component :is="action.icon" :class="['w-5 h-5', action.iconColor]" />
+          </div>
+          <span class="text-xs font-bold text-slate-750">{{ action.label }}</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { 
   Users, 
@@ -150,7 +201,6 @@ import {
   BookOpen, 
   TrendingUp, 
   TrendingDown,
-  Calendar,
   Activity,
   UserCheck,
   User,
@@ -160,30 +210,20 @@ import {
   Settings,
   Shield,
   UserPlus,
-  ChevronDown,
-  LifeBuoy
+  LifeBuoy,
+  ArrowUpRight,
+  Clock
 } from 'lucide-vue-next';
 import { superadminAPI } from '../../services/superadminApi';
+import { useAuth } from '@/shared/composables/useAuth';
 
 const router = useRouter();
+const { user } = useAuth();
 const loading = ref(true);
 const stats = ref<any>(null);
 const pendingUsers = ref<any[]>([]);
 const activities = ref<any[]>([]);
-
-const selectedRange = ref('today');
-const dateRanges = [
-  { label: 'Today', value: 'today' },
-  { label: 'This Week', value: 'this_week' },
-  { label: 'This Month', value: 'this_month' },
-  { label: 'Last Month', value: 'last_month' },
-  { label: 'Last 30 Days', value: 'last_30_days' },
-  { label: 'This Year', value: 'this_year' },
-];
-
-watch(selectedRange, () => {
-  fetchDashboardData();
-});
+const librariesList = ref<any[]>([]);
 
 const statsCards = computed(() => [
   {
@@ -191,7 +231,6 @@ const statsCards = computed(() => [
     value: stats.value?.total_students || 0,
     icon: Users,
     trend: 12,
-    bgClass: 'bg-blue-50',
     iconClass: 'text-blue-600'
   },
   {
@@ -199,7 +238,6 @@ const statsCards = computed(() => [
     value: stats.value?.active_libraries || 0,
     icon: Library,
     trend: 5,
-    bgClass: 'bg-purple-50',
     iconClass: 'text-purple-600'
   },
   {
@@ -207,22 +245,20 @@ const statsCards = computed(() => [
     value: stats.value?.active_bookings || 0,
     icon: BookOpen,
     trend: -2,
-    bgClass: 'bg-amber-50',
     iconClass: 'text-amber-600'
   },
   {
     label: 'System Complaints',
     value: stats.value?.pending_tickets || 0,
     icon: LifeBuoy,
-    bgClass: 'bg-red-50',
-    iconClass: 'text-red-600'
+    iconClass: 'text-red-655'
   }
 ]);
 
 const quickActions = [
-  { label: 'Add Library', icon: Plus, bg: 'bg-indigo-50', iconColor: 'text-indigo-600', route: 'superadmin-libraries' },
-  { label: 'System Settings', icon: Settings, bg: 'bg-gray-50', iconColor: 'text-gray-600', route: 'superadmin-settings' },
-  ];
+  { label: 'Add Library', icon: Plus, bg: 'bg-purple-50', iconColor: 'text-purple-600', route: 'superadmin-libraries' },
+  { label: 'System Settings', icon: Settings, bg: 'bg-slate-50', iconColor: 'text-slate-600', route: 'superadmin-settings' },
+];
 
 const getActivityIcon = (iconName: string) => {
   switch (iconName) {
@@ -235,13 +271,30 @@ const getActivityIcon = (iconName: string) => {
   }
 };
 
+const getUtilizationPercentage = (lib: any) => {
+  const total = lib.totalSeats || 0;
+  if (total <= 0) return 0;
+  return Math.round(((total - lib.availableSeats) / total) * 100);
+};
+
+const getProgressBarClass = (lib: any) => {
+  const percentage = getUtilizationPercentage(lib);
+  if (percentage > 85) return 'bg-red-500';
+  if (percentage > 60) return 'bg-amber-500';
+  return 'bg-purple-600';
+};
+
 const fetchDashboardData = async () => {
   try {
     loading.value = true;
-    const data = await superadminAPI.getDashboard({ range: selectedRange.value });
+    const [data, libs] = await Promise.all([
+      superadminAPI.getDashboard({ range: 'today' }),
+      superadminAPI.getLibraries()
+    ]);
     stats.value = data.stats;
     pendingUsers.value = data.pendingUsers || [];
     activities.value = data.recentActivity || [];
+    librariesList.value = libs || [];
   } catch (error) {
     console.error('Failed to fetch dashboard data:', error);
   } finally {
@@ -283,3 +336,42 @@ onMounted(() => {
   fetchDashboardData();
 });
 </script>
+
+<style scoped>
+.text-slate-850 {
+  color: #1e293b;
+}
+.text-slate-550 {
+  color: #64748b;
+}
+.text-slate-455 {
+  color: #475569;
+}
+.text-slate-505 {
+  color: #334155;
+}
+.text-slate-750 {
+  color: #475569;
+}
+.bg-indigo-650 {
+  background-color: #4f46e5;
+}
+.text-red-655 {
+  color: #ef4444;
+}
+.bg-gradient-to-r {
+  background-image: linear-gradient(to right, var(--tw-gradient-stops));
+}
+.bg-clip-text {
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.bg-amber-250 {
+  --tw-gradient-from: #fcd34d;
+  --tw-gradient-to: rgba(252, 211, 77, 0);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.yellow-250 {
+  color: #fef08a;
+}
+</style>

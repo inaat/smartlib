@@ -1,76 +1,71 @@
 <template>
   <div class="space-y-8 pb-12">
     <!-- Page Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-black text-gray-900">Library Reports</h1>
-        <p class="text-gray-500 mt-1">Select a library to generate, schedule, and export reports</p>
-      </div>
-      
+    <div class="flex justify-end gap-4">
       <!-- Library Selector -->
       <div class="min-w-[280px]">
-        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block ml-1">Active Library</label>
+        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Active Library</label>
         <div class="relative group">
           <select 
             v-model="selectedLibraryId" 
             @change="handleLibraryChange"
-            class="w-full pl-11 pr-10 py-3.5 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-800 shadow-sm hover:shadow-md hover:border-indigo-200 focus:ring-4 focus:ring-indigo-50 outline-none transition-all appearance-none cursor-pointer"
+            class="w-full pl-11 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all appearance-none cursor-pointer shadow-sm"
           >
             <option :value="null" disabled>Select a library...</option>
             <option v-for="lib in libraries" :key="lib.id" :value="lib.id">
               {{ lib.name }}
             </option>
           </select>
-          <div class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 group-hover:scale-110 transition-transform">
-            <Library class="w-5 h-5" />
+          <div class="absolute left-4 top-1/2 -translate-y-1/2 text-purple-600 transition-transform">
+            <Library class="w-4 h-4" />
           </div>
-          <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-            <ChevronDown class="w-4 h-4" />
+          <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+            <ChevronDown class="w-3.5 h-3.5" />
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="!selectedLibraryId" class="bg-indigo-50 border border-indigo-100 rounded-3xl p-12 text-center">
-      <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-sm mx-auto mb-6">
-        <MousePointer2 class="w-10 h-10 text-indigo-500 animate-bounce" />
+    <!-- Empty State -->
+    <div v-if="!selectedLibraryId" class="bg-purple-50/50 border border-purple-100/80 rounded-3xl p-12 text-center">
+      <div class="w-16 h-16 bg-white border border-purple-100 rounded-2xl flex items-center justify-center shadow-sm mx-auto mb-6">
+        <MousePointer2 class="w-8 h-8 text-purple-600 animate-bounce" />
       </div>
-      <h3 class="text-xl font-bold text-indigo-900 mb-2">Select a library to begin</h3>
-      <p class="text-indigo-600/70 max-w-sm mx-auto text-sm">Please choose a library from the dropdown above to access its specific reporting tools and data.</p>
+      <h3 class="text-base font-bold text-slate-800 mb-2">Select a library to begin</h3>
+      <p class="text-slate-550 max-w-sm mx-auto text-xs font-medium">Please choose a library from the dropdown above to access its specific reporting tools and data.</p>
     </div>
 
     <template v-else>
-      <!-- Transition Content -->
-      <div class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div class="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
         <!-- Quick Generate Section -->
-        <div class="mb-8">
-          <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <Zap class="w-5 h-5 mr-2 text-amber-500" />
+        <div>
+          <h2 class="text-sm font-bold text-slate-700 mb-4 flex items-center uppercase tracking-wider">
+            <Zap class="w-4.5 h-4.5 mr-2 text-amber-500" />
             Quick Generate ({{ selectedLibraryName }})
           </h2>
           <div class="space-y-3">
             <div
               v-for="summary in quickSummaries"
               :key="summary.label"
-              class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md hover:border-indigo-100 transition-all"
+              class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md hover:border-purple-100/60 transition-all text-left"
             >
               <div class="flex items-center gap-3">
-                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', summary.bgColor]">
+                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50', summary.bgColor]">
                   <component :is="summary.icon" :class="['w-5 h-5', summary.iconColor]" />
                 </div>
-                <span class="font-bold text-gray-800">{{ summary.label }}</span>
+                <span class="text-xs font-bold text-slate-700">{{ summary.label }}</span>
               </div>
               <div class="flex items-center gap-2 flex-wrap">
                 <button
                   @click="exportReport(summary.type, 'pdf')"
-                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-all"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-red-655 bg-red-50 hover:bg-red-100/80 border border-red-100 transition-all cursor-pointer"
                 >
                   <FileText class="w-3.5 h-3.5" />
                   Export PDF
                 </button>
                 <button
                   @click="exportReport(summary.type, 'excel')"
-                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 border border-green-100 transition-all"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-green-700 bg-green-50 hover:bg-green-150 border border-green-100 transition-all cursor-pointer"
                 >
                   <Sheet class="w-3.5 h-3.5" />
                   Export Excel
@@ -81,39 +76,41 @@
         </div>
 
         <!-- Report Categories -->
-        <div class="mb-8">
-          <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <LayoutGrid class="w-5 h-5 mr-2 text-indigo-500" />
+        <div>
+          <h2 class="text-sm font-bold text-slate-700 mb-4 flex items-center uppercase tracking-wider">
+            <LayoutGrid class="w-4.5 h-4.5 mr-2 text-purple-600" />
             Report Categories
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <div
               v-for="cat in reportCategories"
               :key="cat.type"
-              class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg hover:border-indigo-100 transition-all group"
+              class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:border-purple-100/60 transition-all flex flex-col justify-between text-left group"
             >
-              <div class="flex items-center gap-3 mb-3">
-                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', cat.bgColor]">
-                  <component :is="cat.icon" :class="['w-5 h-5', cat.iconColor]" />
+              <div>
+                <div class="flex items-center gap-3 mb-3">
+                  <div :class="['w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50', cat.bgColor]">
+                    <component :is="cat.icon" :class="['w-5 h-5', cat.iconColor]" />
+                  </div>
+                  <h3 class="font-bold text-slate-750 text-sm">{{ cat.label }}</h3>
                 </div>
-                <h3 class="font-bold text-gray-900 text-base">{{ cat.label }}</h3>
+                <ul class="text-xs text-slate-500 mb-5 space-y-1 pl-1 font-medium leading-relaxed">
+                  <li v-for="desc in cat.descriptions" :key="desc" class="flex items-start">
+                    <span class="mr-1.5 text-slate-300">•</span>{{ desc }}
+                  </li>
+                </ul>
               </div>
-              <ul class="text-xs text-gray-500 mb-5 space-y-1 pl-1">
-                <li v-for="desc in cat.descriptions" :key="desc" class="flex items-start">
-                  <span class="mr-1.5 text-gray-300">•</span>{{ desc }}
-                </li>
-              </ul>
-              <div class="flex items-center gap-2 flex-wrap">
+              <div class="flex items-center gap-2 flex-wrap pt-2">
                 <button
                   @click="openExportModal(cat.type, cat.label, 'pdf')"
-                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-all"
+                  class="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-lg text-[10px] font-bold text-red-655 bg-red-50 hover:bg-red-100 border border-red-100 transition-all cursor-pointer"
                 >
                   <FileText class="w-3 h-3" />
-                  Export PDF
+                  PDF
                 </button>
                 <button
                   @click="openExportModal(cat.type, cat.label, 'excel')"
-                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-green-600 bg-green-50 hover:bg-green-100 border border-green-100 transition-all"
+                  class="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-lg text-[10px] font-bold text-green-700 bg-green-50 hover:bg-green-100 border border-green-100 transition-all cursor-pointer"
                 >
                   <Sheet class="w-3 h-3" />
                   Excel
@@ -123,41 +120,44 @@
           </div>
         </div>
 
-        <!-- Report History -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 class="text-sm font-bold text-gray-800 flex items-center">
-              <History class="w-4 h-4 mr-2" />
+        <!-- Report History Table -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-5 border-b border-slate-50 flex items-center justify-between text-left">
+            <h3 class="text-sm font-bold text-slate-700 flex items-center uppercase tracking-wider">
+              <History class="w-4 h-4 mr-2 text-slate-400" />
               Report History ({{ selectedLibraryName }})
             </h3>
           </div>
           <div class="p-6">
             <div v-if="libraryReportHistory.length === 0" class="text-center py-12">
-              <History class="w-10 h-10 text-gray-200 mx-auto mb-3" />
-              <p class="text-gray-400 text-sm">No reports generated for this library yet.</p>
+              <History class="w-10 h-10 text-slate-200 mx-auto mb-3 animate-pulse" />
+              <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">No reports generated for this library yet.</p>
             </div>
             <div v-else class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="text-xs text-gray-400 font-bold uppercase tracking-wider border-b border-gray-100">
-                    <th class="text-left py-3 px-3">Report</th>
-                    <th class="text-left py-3 px-3">Format</th>
-                    <th class="text-left py-3 px-3">Generated</th>
-                    <th class="text-right py-3 px-3">Actions</th>
+              <table class="min-w-full divide-y divide-slate-100">
+                <thead class="bg-slate-50/20">
+                  <tr>
+                    <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Report</th>
+                    <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Format</th>
+                    <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Generated</th>
+                    <th scope="col" class="px-4 py-3.5 text-right text-xs font-semibold text-slate-400 uppercase tracking-widest">Action</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr v-for="(h, idx) in libraryReportHistory" :key="idx" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                    <td class="py-3 px-3 font-bold text-gray-800">{{ h.name }}</td>
-                    <td class="py-3 px-3">
-                      <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase" :class="h.format === 'pdf' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'">
+                <tbody class="divide-y divide-slate-50 bg-white">
+                  <tr v-for="(h, idx) in libraryReportHistory" :key="idx" class="hover:bg-slate-50/50 transition-colors">
+                    <td class="py-4 px-4 whitespace-nowrap text-left font-bold text-slate-700 text-xs">{{ h.name }}</td>
+                    <td class="py-4 px-4 whitespace-nowrap text-left">
+                      <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase border" :class="h.format === 'pdf' ? 'bg-red-50 border-red-100 text-red-655' : 'bg-green-50 border-green-100 text-green-700'">
                         {{ h.format }}
                       </span>
                     </td>
-                    <td class="py-3 px-3 text-gray-500 text-xs">{{ h.generatedAt }}</td>
-                    <td class="py-3 px-3 text-right">
-                      <button @click="downloadReport(h)" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-all">
-                        <Download class="w-3 h-3" />
+                    <td class="py-4 px-4 whitespace-nowrap text-left text-xs text-slate-500 font-medium">{{ h.generatedAt }}</td>
+                    <td class="py-4 px-4 whitespace-nowrap text-right">
+                      <button 
+                        @click="downloadReport(h)" 
+                        class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-purple-700 hover:text-purple-800 transition-all cursor-pointer shadow-sm text-xs font-bold inline-flex items-center gap-1.5"
+                      >
+                        <Download class="w-3.5 h-3.5" />
                         Download
                       </button>
                     </td>
@@ -170,31 +170,31 @@
       </div>
     </template>
 
-    <!-- Export Timespan Modal -->
+    <!-- Export Timespan Modal Dialog -->
     <div v-if="exportModal.show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="exportModal.show = false">
-      <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-        <div class="flex items-center justify-between mb-6">
+      <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-xl border border-slate-100 text-left flex flex-col animate-in fade-in zoom-in duration-200">
+        <div class="flex items-center justify-between mb-5">
           <div>
-            <h3 class="text-xl font-black text-gray-900">Export Report</h3>
-            <p class="text-sm text-gray-500 mt-1">{{ exportModal.reportName }}</p>
+            <h3 class="text-base font-bold text-slate-800">Export Report</h3>
+            <p class="text-xs text-slate-500 mt-1 font-semibold">{{ exportModal.reportName }}</p>
           </div>
-          <button @click="exportModal.show = false" class="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
-            <X class="w-5 h-5" />
+          <button @click="exportModal.show = false" class="p-2 rounded-xl hover:bg-slate-50 text-slate-450 transition-colors cursor-pointer">
+            <X class="w-4.5 h-4.5" />
           </button>
         </div>
 
-        <div class="mb-6">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Time Period</label>
+        <div class="mb-5">
+          <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Time Period</label>
           <div class="grid grid-cols-3 gap-2">
             <button
               v-for="ts in timespanOptions"
               :key="ts.value"
               @click="exportModal.timespan = ts.value"
               :class="[
-                'py-3 rounded-xl font-bold text-sm transition-all border-2',
+                'py-2 rounded-xl font-bold text-xs transition-all border cursor-pointer',
                 exportModal.timespan === ts.value
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100 scale-105'
-                  : 'bg-gray-50 text-gray-600 border-gray-100 hover:border-indigo-200 hover:bg-indigo-50'
+                  ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                  : 'bg-slate-50 text-slate-655 border-slate-200 hover:border-purple-250 hover:bg-purple-50'
               ]"
             >
               {{ ts.label }}
@@ -202,39 +202,37 @@
           </div>
         </div>
 
-        <div class="mb-6 p-4 rounded-2xl border" :class="exportModal.format === 'pdf' ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'">
-          <div class="flex items-center gap-2">
-            <FileText v-if="exportModal.format === 'pdf'" class="w-4 h-4 text-red-500" />
-            <Sheet v-else class="w-4 h-4 text-green-500" />
-            <span class="text-sm font-bold" :class="exportModal.format === 'pdf' ? 'text-red-700' : 'text-green-700'">{{ exportModal.format === 'pdf' ? 'PDF Document' : 'Excel Spreadsheet' }}</span>
-          </div>
+        <div class="mb-5 p-4 rounded-xl border flex items-center gap-2.5" :class="exportModal.format === 'pdf' ? 'bg-red-50 border-red-100 text-red-700' : 'bg-green-50 border-green-100 text-green-700'">
+          <FileText v-if="exportModal.format === 'pdf'" class="w-4 h-4 text-red-500" />
+          <Sheet v-else class="w-4 h-4 text-green-500" />
+          <span class="text-xs font-bold">{{ exportModal.format === 'pdf' ? 'PDF Document' : 'Excel Spreadsheet' }}</span>
         </div>
 
-        <div class="flex gap-3">
-          <button @click="exportModal.show = false" class="flex-1 py-3 rounded-2xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all">Cancel</button>
-          <button @click="confirmExport" class="flex-1 py-3 rounded-2xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Generate</button>
+        <div class="flex gap-3 pt-2">
+          <button @click="exportModal.show = false" class="flex-1 py-2.5 rounded-xl font-bold text-slate-550 bg-slate-100 hover:bg-slate-150 transition-all text-xs cursor-pointer border border-transparent">Cancel</button>
+          <button @click="confirmExport" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-750 transition-all text-xs cursor-pointer shadow-sm border border-transparent">Generate</button>
         </div>
       </div>
     </div>
 
-    <!-- Toast UI -->
+    <!-- Notification Toast UI -->
     <Transition name="slide-up">
-      <div v-if="exportToast.show" class="fixed bottom-6 right-6 z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 flex items-center gap-4 min-w-[320px]">
-        <div v-if="exportToast.status === 'loading'" class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-          <RefreshCw class="w-5 h-5 text-indigo-600 animate-spin" />
+      <div v-if="exportToast.show" class="fixed bottom-6 right-6 z-50 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 flex items-center gap-3.5 min-w-[320px]">
+        <div v-if="exportToast.status === 'loading'" class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
+          <RefreshCw class="w-5 h-5 text-purple-650 animate-spin" />
         </div>
-        <div v-else class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+        <div v-else class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
           <CheckCircle class="w-5 h-5 text-green-600" />
         </div>
-        <div>
-          <p class="font-bold text-gray-800 text-sm">{{ exportToast.title }}</p>
-          <p class="text-xs text-gray-500">{{ exportToast.subtitle }}</p>
+        <div class="text-left">
+          <p class="font-bold text-slate-800 text-xs">{{ exportToast.title }}</p>
+          <p class="text-[10px] text-slate-450 mt-0.5 font-bold uppercase tracking-wider">{{ exportToast.subtitle }}</p>
         </div>
-        <button @click="exportToast.show = false" class="ml-auto p-1 rounded-lg hover:bg-gray-100 text-gray-400"><X class="w-4 h-4" /></button>
+        <button @click="exportToast.show = false" class="ml-auto p-1 rounded-lg hover:bg-slate-50 text-slate-400 cursor-pointer"><X class="w-4 h-4" /></button>
       </div>
     </Transition>
   </div>
-</template>
+</template>e>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, watch } from 'vue';
@@ -264,16 +262,16 @@ const handleLibraryChange = () => {
 
 // ---------- Quick Generate ----------
 const quickSummaries = [
-  { label: 'Generate Today Summary', type: 'today', icon: CalendarDays, bgColor: 'bg-blue-100', iconColor: 'text-blue-600' },
+  { label: 'Generate Today Summary', type: 'today', icon: CalendarDays, bgColor: 'bg-blue-100', iconColor: 'text-blue-650' },
   { label: 'Generate Weekly Summary', type: 'weekly', icon: Calendar, bgColor: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-  { label: 'Generate Monthly Summary', type: 'monthly', icon: CalendarClock, bgColor: 'bg-indigo-100', iconColor: 'text-indigo-600' },
+  { label: 'Generate Monthly Summary', type: 'monthly', icon: CalendarClock, bgColor: 'bg-purple-105', iconColor: 'text-purple-600' },
 ];
 
 // ---------- Categories ----------
 const reportCategories = [
   {
     label: 'Attendance', type: 'attendance', icon: Users,
-    bgColor: 'bg-indigo-50', iconColor: 'text-indigo-600',
+    bgColor: 'bg-purple-50', iconColor: 'text-purple-600',
     descriptions: ['Reports, present/absent approx.', 'Daily and weekly summaries']
   },
   {
@@ -298,7 +296,7 @@ const reportCategories = [
   },
   {
     label: 'Events', type: 'events', icon: CalendarDays,
-    bgColor: 'bg-indigo-50', iconColor: 'text-indigo-600',
+    bgColor: 'bg-purple-50', iconColor: 'text-purple-600',
     descriptions: ['View: scheduled, attendance stats', 'Participation tracking']
   },
 ];

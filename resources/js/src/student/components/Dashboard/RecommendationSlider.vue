@@ -56,11 +56,11 @@
         <div v-for="(recommendation, index) in recommendations" :key="index" class="w-full flex-shrink-0 p-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div class="flex-1">
-              <div :class="['inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider mb-3 border', getTypeColor(recommendation.type)]">
+              <div :class="['inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider mb-3 border', getTypeColor(recommendation.type)]">
                 {{ recommendation.type }} Recommendation
               </div>
               
-              <h3 class="font-bold text-slate-800 text-base mb-2 tracking-tight leading-snug">
+              <h3 class="font-semibold text-slate-800 text-base mb-2 tracking-tight leading-snug">
                 {{ recommendation.title }}
               </h3>
               
@@ -68,7 +68,7 @@
                 {{ recommendation.description }}
               </p>
               
-              <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-bold text-slate-400">
+              <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-medium text-slate-400">
                 <div v-if="recommendation.time" class="flex items-center">
                   <Clock class="w-3.5 h-3.5 mr-1.5 text-slate-400" />
                   <span>{{ recommendation.time }}</span>
@@ -91,7 +91,7 @@
             <div class="flex-shrink-0 text-left md:text-right">
               <button 
                 @click="emit('action', recommendation)"
-                :class="['px-5 py-2.5 rounded-xl text-white text-xs font-bold uppercase tracking-wider transition-all duration-200 hover-lift active:scale-98 shadow-sm', getButtonColor(recommendation.type)]"
+                :class="['px-5 py-2.5 rounded-xl text-white text-xs font-semibold uppercase tracking-wider transition-all duration-200 hover-lift active:scale-98 shadow-sm', getButtonColor(recommendation.type)]"
               >
                 {{ recommendation.action }}
               </button>

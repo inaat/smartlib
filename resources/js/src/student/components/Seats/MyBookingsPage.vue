@@ -4,7 +4,7 @@
     <div class="flex justify-end">
       <router-link 
         to="/student/libraries" 
-        class="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:from-blue-700 hover:to-cyan-600 text-white rounded-xl text-xs font-extrabold shadow-md shadow-blue-500/10 active:scale-98 transition-all uppercase tracking-wider"
+        class="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:from-blue-700 hover:to-cyan-600 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 active:scale-98 transition-all uppercase tracking-wider"
       >
         <Plus class="w-4.5 h-4.5 mr-1.5" />
         Book New Seat
@@ -14,7 +14,7 @@
     <!-- Active Bookings Section -->
     <div class="space-y-4">
       <div class="flex items-center justify-between px-1">
-        <h2 class="text-sm font-extrabold text-slate-700 uppercase tracking-wider flex items-center">
+        <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center">
           <Clock class="w-4 h-4 mr-2 text-blue-600" />
           Current & Upcoming
         </h2>
@@ -41,7 +41,7 @@
           class="bg-white rounded-2xl p-5 border border-slate-100 hover:border-slate-200/80 shadow-sm hover:shadow-xl hover:shadow-slate-100/50 transition-all duration-350 group relative overflow-hidden text-left"
         >
           <!-- Status Banner for Active now -->
-          <div v-if="booking.status === 'checked_in'" class="absolute top-0 right-0 px-3.5 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9px] font-black uppercase tracking-widest rounded-bl-xl shadow-sm border border-emerald-400/20">
+          <div v-if="booking.status === 'checked_in'" class="absolute top-0 right-0 px-3.5 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9px] font-bold uppercase tracking-widest rounded-bl-xl shadow-sm border border-emerald-400/20">
             Active Now
           </div>
 
@@ -55,9 +55,9 @@
               </div>
               <div class="space-y-1 min-w-0">
                 <div class="flex items-center gap-2">
-                  <h3 class="font-extrabold text-slate-800 text-lg">Seat {{ booking.seat?.seat_number }}</h3>
+                  <h3 class="font-bold text-slate-800 text-lg">Seat {{ booking.seat?.seat_number }}</h3>
                   <span :class="[
-                    'px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wide border',
+                    'px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide border',
                     booking.status === 'checked_in' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-blue-50 text-blue-700 border-blue-100'
                   ]">
                     #{{ booking.id }}
@@ -83,8 +83,8 @@
 
             <div class="flex flex-col lg:items-end gap-4 border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-50 flex-shrink-0">
               <div class="lg:text-right">
-                <p class="text-[9px] font-extrabold uppercase tracking-widest mb-1" :class="isOverdue(booking) ? 'text-red-550' : 'text-slate-400'">{{ getTimerLabel(booking) }}</p>
-                <p class="text-3xl font-black font-mono tracking-tight leading-none" :class="isOverdue(booking) ? 'text-red-500' : 'text-slate-800'">
+                <p class="text-[9px] font-bold uppercase tracking-widest mb-1" :class="isOverdue(booking) ? 'text-red-550' : 'text-slate-400'">{{ getTimerLabel(booking) }}</p>
+                <p class="text-3xl font-bold font-mono tracking-tight leading-none" :class="isOverdue(booking) ? 'text-red-550' : 'text-slate-800'">
                   {{ getRemainingTime(booking) }}
                 </p>
               </div>
@@ -92,7 +92,7 @@
                 <button 
                   v-if="booking.status === 'booked'"
                   @click="handleCheckIn(booking.id)"
-                  class="flex-1 lg:flex-none px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-extrabold shadow-md shadow-emerald-500/10 hover:opacity-95 active:scale-98 transition-all"
+                  class="flex-1 lg:flex-none px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/10 hover:opacity-95 active:scale-98 transition-all"
                 >
                   Check In
                 </button>
@@ -106,14 +106,14 @@
                 <button 
                   v-if="booking.status === 'checked_in'"
                   @click="handleCheckOut(booking.id)"
-                  class="flex-1 lg:flex-none px-5 py-2 bg-red-500 text-white rounded-xl text-xs font-extrabold shadow-md shadow-orange-500/10 hover:opacity-95 active:scale-98 transition-all whitespace-nowrap"
+                  class="flex-1 lg:flex-none px-5 py-2 bg-red-500 text-white rounded-xl text-xs font-bold shadow-md shadow-orange-500/10 hover:opacity-95 active:scale-98 transition-all whitespace-nowrap"
                 >
                   Check Out
                 </button>
                 <button 
                   v-if="booking.status === 'checked_in'"
                   @click="handleExtend(booking)"
-                  class="flex-1 lg:flex-none px-5 py-2 bg-green-600 text-white rounded-xl text-xs font-extrabold shadow-md shadow-indigo-500/10 hover:opacity-95 active:scale-98 transition-all whitespace-nowrap"
+                  class="flex-1 lg:flex-none px-5 py-2 bg-green-600 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/10 hover:opacity-95 active:scale-98 transition-all whitespace-nowrap"
                 >
                   Extend Time
                 </button>
@@ -135,7 +135,7 @@
     <!-- Booking History Section -->
     <div class="pt-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h2 class="text-sm font-extrabold text-slate-700 uppercase tracking-wider flex items-center px-1">
+        <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center px-1">
           <History class="w-4 h-4 mr-2 text-purple-600" />
           Booking History
         </h2>
@@ -145,7 +145,7 @@
             :key="filter"
             @click="historyFilter = filter as any"
             :class="[
-              'px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wide transition-all',
+              'px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all',
               historyFilter === filter ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-700'
             ]"
           >
@@ -159,61 +159,85 @@
         <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">No past bookings found.</p>
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div 
-          v-for="booking in filteredHistory" 
-          :key="booking.id"
-          class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 group text-left"
-        >
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div :class="[
-                'p-2.5 rounded-xl border',
-                booking.status === 'checked_out' ? 'bg-emerald-50/50 border-emerald-100 text-emerald-600' :
-                booking.status === 'cancelled' ? 'bg-red-50/50 border-red-100 text-red-600' :
-                'bg-slate-50 border-slate-100 text-slate-500'
-              ]">
-                <Armchair class="w-5.5 h-5.5" />
-              </div>
-              <div>
-                <h3 class="font-bold text-slate-800 text-sm">Seat {{ booking.seat?.seat_number }}</h3>
-                <p class="text-[9px] text-slate-400 font-extrabold uppercase mt-0.5">ID #{{ booking.id }}</p>
-              </div>
-            </div>
-            <span :class="[
-              'px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border',
-              booking.status === 'checked_out' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-              booking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
-              'bg-slate-50 text-slate-700 border-slate-100'
-            ]">
-              {{ booking.status.replace('_', ' ') }}
-            </span>
-          </div>
-          
-          <div class="space-y-2.5 pt-3.5 border-t border-slate-50 text-xs text-slate-500">
-            <div class="flex items-center">
-              <MapPin class="w-4 h-4 mr-2 text-slate-400 flex-shrink-0" />
-              <span class="font-semibold truncate">{{ booking.seat?.library?.name }}</span>
-            </div>
-            <div class="flex items-center">
-              <Calendar class="w-4 h-4 mr-2 text-slate-400 flex-shrink-0" />
-              <span class="font-semibold">{{ formatDate(booking.booking_time) }}</span>
-            </div>
-            <div class="flex items-center">
-              <Clock class="w-4 h-4 mr-2 text-slate-400 flex-shrink-0" />
-              <span class="font-semibold">{{ formatTime(booking.booking_time) }} - {{ formatTime(booking.scheduled_end_time) }}</span>
-            </div>
-            <div v-if="booking.total_minutes" class="flex items-center text-blue-600 font-bold pt-1.5 border-t border-slate-50/50">
-              <Zap class="w-4 h-4 mr-2 text-blue-500" />
-              Duration: {{ formatDuration(booking.total_minutes) }}
-            </div>
-          </div>
-        </div>
+      <div v-else class="overflow-x-auto bg-white rounded-2xl border border-slate-100 shadow-sm">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] uppercase font-bold tracking-wider text-slate-400">
+              <th class="px-6 py-3.5">Seat</th>
+              <th class="px-6 py-3.5">Library</th>
+              <th class="px-6 py-3.5">Date</th>
+              <th class="px-6 py-3.5">Scheduled Time</th>
+              <th class="px-6 py-3.5 text-center">Duration</th>
+              <th class="px-6 py-3.5 text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            <tr v-for="booking in filteredHistory" :key="booking.id" class="hover:bg-slate-50/30 transition-colors group">
+              <!-- Seat Info -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center space-x-3">
+                  <div :class="[
+                    'w-9 h-9 rounded-xl border flex items-center justify-center font-bold text-xs transition-all duration-300',
+                    booking.status === 'checked_out' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                    booking.status === 'cancelled' ? 'bg-red-50 border-red-100 text-red-600' :
+                    'bg-slate-50 border-slate-100 text-slate-500'
+                  ]">
+                    <Armchair class="w-4 h-4" />
+                  </div>
+                  <div class="text-left">
+                    <div class="text-xs font-bold text-slate-800 leading-snug">Seat {{ booking.seat?.seat_number }}</div>
+                    <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5 leading-none">ID #{{ booking.id }}</div>
+                  </div>
+                </div>
+              </td>
+              <!-- Library -->
+              <td class="px-6 py-4 text-left whitespace-nowrap">
+                <div class="text-xs font-bold text-slate-700 flex items-center">
+                  <MapPin class="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" />
+                  {{ booking.seat?.library?.name || 'N/A' }}
+                </div>
+              </td>
+              <!-- Date -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center text-xs font-bold text-slate-700">
+                  <Calendar class="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" />
+                  {{ formatDate(booking.booking_time) }}
+                </div>
+              </td>
+              <!-- Time Window -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center text-xs font-semibold text-slate-500">
+                  <Clock class="w-3.5 h-3.5 mr-1.5 text-slate-400 flex-shrink-0" />
+                  {{ formatTime(booking.booking_time) }} - {{ formatTime(booking.scheduled_end_time) }}
+                </div>
+              </td>
+              <!-- Duration -->
+              <td class="px-6 py-4 text-center whitespace-nowrap">
+                <div v-if="booking.total_minutes" class="flex items-center justify-center text-xs font-bold text-blue-600">
+                  <Zap class="w-3.5 h-3.5 mr-1 text-blue-500" />
+                  {{ formatDuration(booking.total_minutes) }}
+                </div>
+                <div v-else class="text-xs text-slate-400">--</div>
+              </td>
+              <!-- Status -->
+              <td class="px-6 py-4 text-right whitespace-nowrap">
+                <span :class="[
+                  'text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-lg border',
+                  booking.status === 'checked_out' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                  booking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
+                  'bg-slate-50 text-slate-700 border-slate-100'
+                ]">
+                  {{ booking.status.replace('_', ' ') }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       
       <!-- Load More Button -->
       <div class="mt-8 text-center" v-if="filteredHistory && filteredHistory.length >= 10">
-        <button class="px-8 py-3 text-xs font-black text-slate-600 hover:bg-slate-50 rounded-xl transition-all border border-slate-200/80 active:scale-98 shadow-sm">
+        <button class="px-8 py-3 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-all border border-slate-200/80 active:scale-98 shadow-sm">
           Load More History
         </button>
       </div>

@@ -69,25 +69,25 @@
           />
           <div v-else class="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-300">
             <BookIcon class="w-10 h-10 mb-2 stroke-1" />
-            <span class="text-[10px] font-bold uppercase tracking-wider">No Cover</span>
+            <span class="text-[10px] font-medium uppercase tracking-wider">No Cover</span>
           </div>
           <!-- Availability Badge -->
           <div class="absolute top-2.5 right-2.5">
             <span
               v-if="book.type?.toLowerCase() === 'digital'"
-              class="px-2.5 py-1 bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm border border-indigo-400/20"
+              class="px-2.5 py-1 bg-blue-600 text-white text-[9px] font-semibold uppercase tracking-wider rounded-lg shadow-sm border border-blue-500/20"
             >
               Digital
             </span>
             <span
               v-else-if="book.availability === 'available'"
-              class="px-2.5 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm border border-emerald-400/20"
+              class="px-2.5 py-1 bg-emerald-500 text-white text-[9px] font-semibold uppercase tracking-wider rounded-lg shadow-sm border border-emerald-400/20"
             >
               Available
             </span>
             <span
               v-else
-              class="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm border border-amber-400/20"
+              class="px-2.5 py-1 bg-amber-500 text-white text-[9px] font-semibold uppercase tracking-wider rounded-lg shadow-sm border border-amber-400/20"
             >
               Reserved
             </span>
@@ -97,10 +97,10 @@
         <!-- Book Info -->
         <div class="flex-1 flex flex-col min-w-0">
           <div class="mb-4">
-            <span class="inline-block text-[9px] font-extrabold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded uppercase tracking-wider mb-2">
+            <span class="inline-block text-[9px] font-semibold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded uppercase tracking-wider mb-2">
               {{ book.category }}
             </span>
-            <h3 @click="openDetailsModal(book)" class="font-bold text-slate-800 text-sm line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors cursor-pointer" :title="book.title">
+            <h3 @click="openDetailsModal(book)" class="font-semibold text-slate-800 text-sm line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors cursor-pointer" :title="book.title">
               {{ book.title }}
             </h3>
             <p class="text-xs text-slate-400 font-semibold mt-1">by {{ book.author }}</p>
@@ -109,7 +109,7 @@
           <!-- Library details -->
           <div class="mt-auto mb-4 p-2 bg-slate-50 border border-slate-100/50 rounded-xl flex items-center space-x-2">
             <LibraryIcon class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-            <span class="text-[10px] font-bold text-slate-500 truncate" :title="book.library?.name || 'Main Library'">
+            <span class="text-[10px] font-medium text-slate-500 truncate" :title="book.library?.name || 'Main Library'">
               {{ book.library?.name || 'Main Library' }}
             </span>
           </div>
@@ -120,14 +120,14 @@
             <template v-if="book.type?.toLowerCase() === 'digital'">
               <button
                 @click="readBook(book)"
-                class="flex-1 py-2 px-3 bg-green-600 hover:opacity-95 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-indigo-500/10 flex items-center justify-center space-x-1.5 active:scale-98"
+                class="flex-1 py-2 px-3 bg-green-600 hover:opacity-95 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-green-500/10 flex items-center justify-center space-x-1.5 active:scale-98"
               >
                 <Eye class="w-3.5 h-3.5" />
                 <span>Read</span>
               </button>
               <button
                 @click="downloadBook(book)"
-                class="py-2 px-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-bold border border-slate-200/60 transition-all flex items-center justify-center active:scale-98"
+                class="py-2 px-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold border border-slate-200/60 transition-all flex items-center justify-center active:scale-98"
                 title="Download PDF"
               >
                 <Download class="w-3.5 h-3.5" />
@@ -138,7 +138,7 @@
             <template v-else>
               <button
                 @click="openDetailsModal(book)"
-                class="w-full py-2 px-3 bg-blue-500 hover:opacity-95 text-white text-xs font-extrabold rounded-xl shadow-md shadow-blue-500/10 border border-transparent transition-all flex items-center justify-center space-x-1.5 active:scale-98"
+                class="w-full py-2 px-3 bg-blue-500 hover:opacity-95 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/10 border border-transparent transition-all flex items-center justify-center space-x-1.5 active:scale-98"
               >
                 <span>{{ book.availability === 'available' ? 'Reserve Book' : 'View Details' }}</span>
               </button>
@@ -153,9 +153,9 @@
       <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200/50 shadow-inner animate-pulse-slow">
         <BookIcon class="w-7 h-7" />
       </div>
-      <h3 class="text-base font-bold text-slate-800 mb-1">No books found</h3>
+      <h3 class="text-base font-semibold text-slate-800 mb-1">No books found</h3>
       <p class="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">Try adjusting your search or filters to find what you're looking for.</p>
-      <button @click="resetFilters" class="mt-4 px-4 py-2 bg-white hover:bg-slate-50 text-blue-600 rounded-xl text-xs font-bold border border-slate-300 transition-all shadow-sm">
+      <button @click="resetFilters" class="mt-4 px-4 py-2 bg-white hover:bg-slate-50 text-blue-600 rounded-xl text-xs font-semibold border border-slate-300 transition-all shadow-sm">
         Clear all filters
       </button>
     </div>
@@ -165,7 +165,7 @@
       <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh] md:max-h-[85vh] animate-scale-up text-left">
         <!-- Header -->
         <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center justify-between">
-          <h2 class="font-extrabold text-sm uppercase tracking-wider">Book Details</h2>
+          <h2 class="font-semibold text-sm uppercase tracking-wider">Book Details</h2>
           <button @click="isDetailsModalOpen = false" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
             <X class="w-5 h-5 text-white" />
           </button>
@@ -179,35 +179,35 @@
               <img v-if="selectedBook.cover_url" :src="selectedBook.cover_url" :alt="selectedBook.title" class="w-full h-full object-cover" />
               <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300">
                 <BookIcon class="w-12 h-12 mb-2 stroke-1" />
-                <span class="text-xs font-bold uppercase tracking-wider">No Cover</span>
+                <span class="text-xs font-medium uppercase tracking-wider">No Cover</span>
               </div>
             </div>
 
             <!-- Right Side: Details -->
             <div class="flex-1 space-y-4">
               <div>
-                <span class="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-lg border border-blue-100">
+                <span class="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-semibold uppercase tracking-wider rounded-lg border border-blue-100">
                   {{ selectedBook.category }}
                 </span>
-                <h3 class="font-black text-slate-800 text-lg leading-tight mt-2.5">{{ selectedBook.title }}</h3>
+                <h3 class="font-semibold text-slate-800 text-lg leading-tight mt-2.5">{{ selectedBook.title }}</h3>
                 <p class="text-xs text-slate-400 font-semibold mt-1">by <span class="text-slate-650 font-bold">{{ selectedBook.author }}</span></p>
               </div>
 
               <!-- Metadata Grid -->
               <div class="grid grid-cols-2 gap-3.5 bg-slate-50/50 p-3.5 border border-slate-100 rounded-2xl text-xs text-slate-500">
                 <div>
-                  <span class="block text-[10px] text-slate-400 uppercase font-black tracking-wider">ISBN</span>
+                  <span class="block text-[10px] text-slate-400 uppercase font-semibold tracking-wider">ISBN</span>
                   <span class="font-bold text-slate-700">{{ selectedBook.isbn || 'N/A' }}</span>
                 </div>
                 <div>
-                  <span class="block text-[10px] text-slate-400 uppercase font-black tracking-wider">Format / Type</span>
+                  <span class="block text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Format / Type</span>
                   <span class="font-bold text-slate-700 capitalize">{{ selectedBook.type }}</span>
                 </div>
                 <div>
-                  <span class="block text-[10px] text-slate-400 uppercase font-black tracking-wider">Availability</span>
+                  <span class="block text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Availability</span>
                   <span 
                     :class="[
-                      'font-black uppercase text-[9px] px-2 py-0.5 rounded-md border w-fit block mt-0.5',
+                      'font-semibold uppercase text-[9px] px-2 py-0.5 rounded-md border w-fit block mt-0.5',
                       selectedBook.availability === 'available' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
                     ]"
                   >
@@ -215,7 +215,7 @@
                   </span>
                 </div>
                 <div>
-                  <span class="block text-[10px] text-slate-400 uppercase font-black tracking-wider">Location / Shelf</span>
+                  <span class="block text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Location / Shelf</span>
                   <span class="font-bold text-slate-700">{{ selectedBook.location || 'N/A' }}</span>
                 </div>
               </div>
@@ -224,7 +224,7 @@
 
           <!-- Description -->
           <div class="space-y-2">
-            <h4 class="text-xs font-black uppercase tracking-wider text-slate-450">Synopsis / Description</h4>
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-450">Synopsis / Description</h4>
             <p class="text-slate-600 text-xs leading-relaxed bg-slate-50/30 p-4 border border-slate-100 rounded-2xl whitespace-pre-line">{{ selectedBook.description || 'No description available for this book.' }}</p>
           </div>
 
@@ -232,12 +232,12 @@
           <div v-if="selectedBook.type?.toLowerCase() === 'physical' && selectedBook.availability === 'available'" class="bg-blue-50/30 border border-blue-100/50 p-5 rounded-2xl space-y-4">
             <div class="flex items-center justify-between">
               <div>
-                <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Reservation Duration</h4>
+                <h4 class="text-xs font-semibold text-slate-800 uppercase tracking-wide">Reservation Duration</h4>
                 <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Select how many days you would like to reserve the book.</p>
               </div>
               <div class="text-right">
-                <span class="block text-[9px] text-slate-400 uppercase font-black tracking-wider">Max Period</span>
-                <span class="text-xs font-black text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 mt-1 inline-block">
+                <span class="block text-[9px] text-slate-400 uppercase font-semibold tracking-wider">Max Period</span>
+                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 mt-1 inline-block">
                   {{ maxAllowedDays }} Days
                 </span>
               </div>
@@ -246,7 +246,7 @@
             <!-- Slider + Number Input -->
             <div class="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-xl border border-slate-100">
               <div class="flex-1 w-full flex items-center space-x-3.5">
-                <span class="text-xs font-bold text-slate-400">1d</span>
+                <span class="text-xs font-medium text-slate-400">1d</span>
                 <input 
                   type="range" 
                   min="1" 
@@ -254,7 +254,7 @@
                   v-model.number="reservationDays" 
                   class="flex-1 accent-blue-650 h-1.5 bg-slate-100 rounded-lg cursor-pointer"
                 />
-                <span class="text-xs font-bold text-slate-400">{{ maxAllowedDays }}d</span>
+                <span class="text-xs font-medium text-slate-400">{{ maxAllowedDays }}d</span>
               </div>
               
               <div class="flex items-center space-x-2">
@@ -265,7 +265,7 @@
                   v-model.number="reservationDays" 
                   class="w-16 px-3 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-center font-bold text-slate-700 text-xs shadow-sm"
                 />
-                <span class="text-xs font-bold text-slate-500">Days</span>
+                <span class="text-xs font-medium text-slate-500">Days</span>
               </div>
             </div>
           </div>
@@ -275,7 +275,7 @@
         <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end space-x-3">
           <button 
             @click="isDetailsModalOpen = false" 
-            class="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-extrabold border border-slate-200 transition-all active:scale-98"
+            class="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold border border-slate-200 transition-all active:scale-98"
           >
             Close
           </button>
@@ -284,14 +284,14 @@
           <template v-if="selectedBook.type?.toLowerCase() === 'digital'">
             <button 
               @click="readBook(selectedBook)" 
-              class="px-5 py-2.5 bg-green-600 hover:bg-green-750 text-white rounded-xl text-xs font-extrabold transition-all shadow-md shadow-green-500/10 flex items-center space-x-1.5 active:scale-98"
+              class="px-5 py-2.5 bg-green-600 hover:bg-green-750 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-green-500/10 flex items-center space-x-1.5 active:scale-98"
             >
               <Eye class="w-3.5 h-3.5" />
               <span>Read Online</span>
             </button>
             <button 
               @click="downloadBook(selectedBook)" 
-              class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-extrabold transition-all shadow-md shadow-slate-800/10 flex items-center space-x-1.5 active:scale-98"
+              class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-slate-800/10 flex items-center space-x-1.5 active:scale-98"
             >
               <Download class="w-3.5 h-3.5" />
               <span>Download PDF</span>
@@ -303,7 +303,7 @@
             <button 
               @click="submitReservation" 
               :disabled="reserving === selectedBook.id"
-              class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white rounded-xl text-xs font-extrabold transition-all shadow-md shadow-blue-500/15 flex items-center space-x-1.5 active:scale-98 disabled:opacity-50"
+              class="px-5 py-2.5 bg-blue-600 hover:opacity-95 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-blue-500/15 flex items-center space-x-1.5 active:scale-98 disabled:opacity-50"
             >
               <span v-if="reserving === selectedBook.id" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               <BookIcon v-else class="w-3.5 h-3.5" />

@@ -40,7 +40,7 @@
             <Bell class="w-5 h-5" />
             <span 
               v-if="unreadCount > 0"
-              class="absolute top-2 right-2 w-4.5 h-4.5 bg-blue-600 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-white font-extrabold animate-pulse"
+              class="absolute top-2 right-2 w-4.5 h-4.5 bg-blue-600 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-white font-semibold animate-pulse"
             >
               {{ unreadCount > 9 ? '9+' : unreadCount }}
             </span>
@@ -49,8 +49,8 @@
           <!-- Notifications Dropdown -->
           <div v-if="showNotifications" class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-fade-in">
             <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
-              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Notifications</h3>
-              <span class="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full" v-if="unreadCount > 0">
+              <h3 class="text-xs font-semibold text-slate-800 uppercase tracking-wider">Notifications</h3>
+              <span class="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full" v-if="unreadCount > 0">
                 {{ unreadCount }} New
               </span>
             </div>
@@ -74,7 +74,7 @@
                     </div>
                     <div class="flex-1 text-left">
                       <div class="flex items-center justify-between mb-0.5">
-                        <span class="text-xs font-bold text-slate-800">{{ notification.title }}</span>
+                        <span class="text-xs font-semibold text-slate-800">{{ notification.title }}</span>
                         <span class="text-[9px] text-slate-400 font-semibold">{{ formatDate(notification.created_at) }}</span>
                       </div>
                       <p class="text-[11px] text-slate-500 leading-normal">{{ notification.message }}</p>
@@ -88,7 +88,7 @@
             <div v-if="notifications.length > 0" class="p-3 border-t border-slate-100 text-center bg-slate-50/10">
               <button 
                 @click="router.push('/student/notifications'); showNotifications = false"
-                class="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors"
+                class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
               >
                 View All Notifications
               </button>
@@ -112,7 +112,7 @@
               <span v-else class="text-xs">{{ userInitials }}</span>
             </div>
             <div class="hidden sm:block text-left">
-              <div class="text-xs font-bold text-slate-800 leading-none">{{ user?.name }}</div>
+              <div class="text-xs font-semibold text-slate-800 leading-none">{{ user?.name }}</div>
               <div class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mt-1.5 leading-none">
                 {{ user?.user_type?.replace('_', ' ') }}
               </div>
@@ -123,7 +123,7 @@
           <!-- User Dropdown -->
           <div v-if="showUserMenu" class="absolute right-0 mt-3 w-52 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 p-1.5 animate-fade-in text-left">
             <div class="px-3 py-2.5 border-b border-slate-100 mb-1.5">
-              <div class="text-xs font-bold text-slate-800">{{ user?.name }}</div>
+              <div class="text-xs font-semibold text-slate-800">{{ user?.name }}</div>
               <div class="text-[10px] text-slate-400 truncate mt-0.5">{{ user?.email }}</div>
             </div>
             <div class="space-y-0.5">
@@ -137,7 +137,7 @@
               </router-link>
               <button 
                 @click="handleLogout"
-                class="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-bold text-red-655 hover:bg-red-50 rounded-xl transition-colors text-left"
+                class="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-red-655 hover:bg-red-50 rounded-xl transition-colors text-left"
               >
                 <LogOut class="w-4 h-4" />
                 <span>Sign Out</span>

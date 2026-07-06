@@ -1,0 +1,73 @@
+
+@keyframes fadeIn-87fdc2ce {
+from {
+    opacity: 0;
+    transform: translateY(4px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-87fdc2ce] {
+  animation: fadeIn-87fdc2ce 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Force the Super Admin sidebar to use standard font stack for sizing consistency */
+aside[data-v-87fdc2ce],
+aside[data-v-87fdc2ce] * {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* Elegant solid purple-600 background */
+.bg-purple-700[data-v-87fdc2ce] {
+  background-color: #6903c3;
+}
+
+/* Darker contrast for menus/dropdowns */
+.bg-purple-800[data-v-87fdc2ce] {
+  background-color: #6903c3;
+}
+.text-purple-700[data-v-87fdc2ce] {
+  color:#6903c3;
+}
+.text-purple-200[data-v-87fdc2ce] {
+  color: #E9D5FF;
+}
+.bg-purple-950\/30[data-v-87fdc2ce] {
+  background-color: rgba(59, 7, 100, 0.3);
+}
+
+/* Hide scrollbar across all browsers while keeping scroll functional */
+nav[data-v-87fdc2ce]::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fadeIn-5ba7e0a3 {
+from {
+    opacity: 0;
+    transform: translateY(6px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-5ba7e0a3] {
+  animation: fadeIn-5ba7e0a3 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.text-slate-655[data-v-5ba7e0a3] {
+  color: #475569;
+}
+.text-red-655[data-v-5ba7e0a3] {
+  color: #ef4444;
+}
+.bg-purple-600\/10[data-v-5ba7e0a3] {
+  background-color: rgba(147, 51, 234, 0.1);
+}
+.text-purple-600[data-v-5ba7e0a3] {
+  color: #9333EA;
+}
+.border-purple-500\/10[data-v-5ba7e0a3] {
+  border-color: rgba(168, 85, 247, 0.1);
+}

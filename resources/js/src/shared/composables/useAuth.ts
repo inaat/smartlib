@@ -130,12 +130,40 @@ export function useAuth() {
     const markNotificationAsRead = async (notificationId: string | number) => {
         try {
             const idAsString = notificationId.toString();
-            await studentAPI.markNotificationRead(idAsString);
+            await studentAPI.markNotificationRead(Number(notificationId));
             notifications.value = notifications.value.map(notif =>
                 notif.id.toString() === idAsString ? { ...notif, is_read: true } : notif
             );
         } catch (error) {
             console.error('Failed to mark notification as read:', error);
+        }
+    };
+
+    const markAllNotificationsAsRead = async () => {
+        try {
+            await studentAPI.markAllNotificationsRead();
+            notifications.value = notifications.value.map(notif => ({ ...notif, is_read: true }));
+        } catch (error) {
+            console.error('Failed to mark all notifications as read:', error);
+        }
+    };
+
+    const clearAllNotifications = async () => {
+        try {
+            await studentAPI.clearAllNotifications();
+            notifications.value = [];
+        } catch (error) {
+            console.error('Failed to clear all notifications:', error);
+        }
+    };
+
+    const deleteNotification = async (notificationId: string | number) => {
+        try {
+            const idAsString = notificationId.toString();
+            await studentAPI.deleteNotification(Number(notificationId));
+            notifications.value = notifications.value.filter(notif => notif.id.toString() !== idAsString);
+        } catch (error) {
+            console.error('Failed to delete notification:', error);
         }
     };
 
@@ -218,6 +246,9 @@ export function useAuth() {
         logout,
         updateUser,
         markNotificationAsRead,
+        markAllNotificationsAsRead,
+        clearAllNotifications,
+        deleteNotification,
         checkAuth,
         fetchSettings,
         checkUniqueness,

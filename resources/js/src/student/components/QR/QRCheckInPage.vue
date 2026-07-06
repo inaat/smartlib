@@ -10,7 +10,7 @@
           <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 mb-4">
             <QrCode class="w-8 h-8" />
           </div>
-          <h1 class="text-xl font-black text-slate-800 tracking-tight leading-none mb-1.5">Scan to Check In</h1>
+          <h1 class="text-xl font-semibold text-slate-800 tracking-tight leading-none mb-1.5">Scan to Check In</h1>
           <p class="text-xs text-slate-400 font-semibold leading-normal">Please scan the QR code on your seat label.</p>
         </div>
 
@@ -22,17 +22,17 @@
         >
           <div class="flex items-center space-x-2.5">
             <MapPin class="w-4 h-4 flex-shrink-0" />
-            <span class="font-bold text-xs uppercase tracking-wider">{{ locationMessage }}</span>
+            <span class="font-semibold text-xs uppercase tracking-wider">{{ locationMessage }}</span>
           </div>
-          <button v-if="locationError" class="text-[10px] font-black uppercase tracking-wider underline">Retry</button>
+          <button v-if="locationError" class="text-[10px] font-semibold uppercase tracking-wider underline">Retry</button>
         </div>
 
         <!-- Map -->
         <div v-if="locationReady && latitude && longitude" class="mb-5 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
           <div id="map" class="w-full h-52 bg-slate-50"></div>
-          <div class="bg-slate-50/50 border-t border-slate-100 px-4 py-2.5 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <div class="bg-slate-50/50 border-t border-slate-100 px-4 py-2.5 flex items-center justify-between text-[10px] font-medium text-slate-400 uppercase tracking-wider">
             <span>📍 {{ latitude?.toFixed(5) }}, {{ longitude?.toFixed(5) }}</span>
-            <button @click="centerMap" class="text-blue-600 hover:text-blue-700 font-extrabold">Re-center</button>
+            <button @click="centerMap" class="text-blue-600 hover:text-blue-700 font-semibold">Re-center</button>
           </div>
         </div>
 
@@ -46,7 +46,7 @@
         <div v-if="!isScanning && !qrCode" class="space-y-3">
           <button
             @click="startScanner"
-            class="w-full py-3.5 px-6 bg-blue-600 hover:bg-blue-700 border border-blue-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-sm hover:shadow hover-lift transition-all duration-200 flex items-center justify-center space-x-2 active:scale-98"
+            class="w-full py-3.5 px-6 bg-blue-600 hover:bg-blue-700 border border-blue-700 text-white text-xs font-semibold uppercase tracking-wider rounded-xl shadow-sm hover:shadow hover-lift transition-all duration-200 flex items-center justify-center space-x-2 active:scale-98"
           >
             <Camera class="w-4 h-4" />
             <span>Scan QR Code</span>
@@ -54,7 +54,7 @@
 
           <div v-if="bookingId || route.query.auto_checkin" class="relative flex items-center my-2">
             <div class="flex-1 border-t border-slate-100"></div>
-            <span class="px-3 text-[9px] uppercase font-bold text-slate-400 tracking-widest leading-none">or</span>
+            <span class="px-3 text-[9px] uppercase font-medium text-slate-400 tracking-widest leading-none">or</span>
             <div class="flex-1 border-t border-slate-100"></div>
           </div>
 
@@ -62,7 +62,7 @@
             v-if="bookingId || route.query.auto_checkin"
             @click="performCheckInManual"
             :disabled="isCheckingIn"
-            class="w-full py-3.5 px-6 bg-white border border-emerald-300 text-emerald-700 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-emerald-50/50 hover-lift transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-98 shadow-sm"
+            class="w-full py-3.5 px-6 bg-white border border-emerald-300 text-emerald-700 text-xs font-semibold uppercase tracking-wider rounded-xl hover:bg-emerald-50/50 hover-lift transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-98 shadow-sm"
           >
             <CheckCircle v-if="!isCheckingIn" class="w-4 h-4" />
             <span v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-605"></span>
@@ -72,32 +72,32 @@
 
         <div v-if="qrCode && !isCheckingIn" class="space-y-3 text-center">
           <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-left">
-            <p class="font-black text-xs uppercase tracking-wider">QR Code Scanned!</p>
+            <p class="font-semibold text-xs uppercase tracking-wider">QR Code Scanned!</p>
             <p class="text-xs font-medium break-all mt-1 text-emerald-700/90 leading-relaxed">{{ qrCode }}</p>
           </div>
           <button
             @click="performCheckInWithScanner"
             :disabled="isCheckingIn"
-            class="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-755 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-sm hover-lift transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-98"
+            class="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-755 text-white text-xs font-semibold uppercase tracking-wider rounded-xl shadow-sm hover-lift transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-98"
           >
             <span>Confirm Check-In</span>
           </button>
-          <button @click="resetScanner" class="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-500 transition-colors">Scan Again</button>
+          <button @click="resetScanner" class="text-xs font-semibold text-slate-400 uppercase tracking-widest hover:text-slate-500 transition-colors">Scan Again</button>
         </div>
 
         <!-- Debug toggle -->
         <div class="mt-4 text-center">
-          <button @click="showDebug = !showDebug" class="text-[10px] font-bold text-slate-300 hover:text-slate-400 uppercase tracking-widest transition-colors">
+          <button @click="showDebug = !showDebug" class="text-[10px] font-medium text-slate-300 hover:text-slate-400 uppercase tracking-widest transition-colors">
             {{ showDebug ? 'Hide Debug' : 'Debug Options' }}
           </button>
         </div>
         <div v-if="showDebug" class="mt-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-3">
           <div>
-            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Booking ID</label>
+            <label class="block text-[9px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Booking ID</label>
             <input v-model="bookingId" placeholder="Booking ID" class="block w-full p-2 bg-white rounded-xl border border-slate-200 text-xs outline-none" />
           </div>
           <div>
-            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Mock QR Value</label>
+            <label class="block text-[9px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Mock QR Value</label>
             <input v-model="qrCode" placeholder="QR Code" class="block w-full p-2 bg-white rounded-xl border border-slate-200 text-xs outline-none" />
           </div>
         </div>
@@ -111,12 +111,12 @@
     <transition name="slide-up">
       <div v-if="showNearbyLibraries" class="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden text-left">
 
-        <div class="px-6 py-5 bg-gradient-to-r from-amber-50/50 to-orange-50/50 border-b border-amber-100/50 flex items-center space-x-3.5">
+        <div class="px-6 py-5 bg-amber-50/40 border-b border-amber-100/50 flex items-center space-x-3.5">
           <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center flex-shrink-0">
             <MapPin class="w-5 h-5" />
           </div>
           <div>
-            <h3 class="font-extrabold text-slate-800 text-sm tracking-tight leading-none mb-1">Not Near Your Library</h3>
+            <h3 class="font-semibold text-slate-800 text-sm tracking-tight leading-none mb-1">Not Near Your Library</h3>
             <p class="text-[10px] text-slate-400 font-semibold leading-none">Libraries close to your location:</p>
           </div>
           <button @click="showNearbyLibraries = false" class="ml-auto p-1.5 hover:bg-amber-100/50 border border-transparent hover:border-amber-200 rounded-xl transition-all">
@@ -127,13 +127,13 @@
         <!-- Loading -->
         <div v-if="loadingNearby" class="p-8 flex flex-col items-center space-y-2">
           <div class="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
-          <p class="text-xs font-bold text-slate-405 uppercase tracking-wider animate-pulse">Finding nearby libraries...</p>
+          <p class="text-xs font-semibold text-slate-405 uppercase tracking-wider animate-pulse">Finding nearby libraries...</p>
         </div>
 
         <!-- Empty -->
         <div v-else-if="nearbyLibraries.length === 0" class="p-8 text-center text-slate-455">
           <Navigation class="w-8 h-8 text-slate-300 mx-auto mb-2" />
-          <p class="text-xs font-bold italic">No libraries found within 50 km radius.</p>
+          <p class="text-xs font-medium italic">No libraries found within 50 km radius.</p>
         </div>
 
         <!-- Library Cards -->
@@ -149,14 +149,14 @@
               class="w-14 h-14 rounded-2xl object-cover flex-shrink-0 shadow-sm border border-slate-100"
             />
             <div class="flex-1 min-w-0">
-              <p class="font-extrabold text-slate-800 text-sm truncate leading-tight">{{ lib.name }}</p>
+              <p class="font-semibold text-slate-800 text-sm truncate leading-tight">{{ lib.name }}</p>
               <p class="text-[11px] text-slate-400 truncate mt-1 font-medium leading-none">{{ lib.address }}</p>
               <div class="flex items-center space-x-1.5 mt-2">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-50 border border-blue-100 text-blue-600">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider bg-blue-50 border border-blue-100 text-blue-600">
                   <Navigation class="w-2.5 h-2.5 mr-1" />
                   {{ lib.distance_km < 1 ? (lib.distance_km * 1000).toFixed(0) + ' m' : lib.distance_km + ' km' }}
                 </span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 border border-emerald-200 text-emerald-700">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider bg-emerald-50 border border-emerald-200 text-emerald-700">
                   Open
                 </span>
               </div>
@@ -172,7 +172,7 @@
         </div>
 
         <div class="px-6 py-3.5 bg-slate-50/50 border-t border-slate-100">
-          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-center flex items-center justify-center">
+          <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider text-center flex items-center justify-center">
             <span>Tap</span>
             <ArrowRight class="w-3.5 h-3.5 mx-1 text-blue-600 bg-blue-50 border border-blue-100 rounded-md p-0.5" />
             <span>to view and book a seat at the library</span>

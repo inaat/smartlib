@@ -12,7 +12,7 @@
           <AlertTriangle class="w-5 h-5" />
         </div>
         <div>
-          <h3 class="text-sm font-bold text-rose-800 uppercase tracking-wider">Your subscription has expired</h3>
+          <h3 class="text-sm font-semibold text-rose-800 uppercase tracking-wider">Your subscription has expired</h3>
           <p class="text-xs text-rose-605/90 mt-1">Please select and subscribe to a plan below to resume library and seat booking access.</p>
         </div>
       </div>
@@ -25,11 +25,11 @@
         <div class="relative z-10 text-left">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div class="text-left">
-              <div class="inline-flex items-center px-3 py-1 rounded-full bg-white/15 border border-white/20 text-white text-[10px] font-bold uppercase tracking-wider mb-4">
+              <div class="inline-flex items-center px-3 py-1 rounded-full bg-white/15 border border-white/20 text-white text-[10px] font-medium uppercase tracking-wider mb-4">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
                 Active Subscription
               </div>
-              <h2 class="text-3xl font-black tracking-tight mb-2 text-white leading-tight">{{ user.active_subscription.subscription_plan?.name }}</h2>
+              <h2 class="text-3xl font-bold tracking-tight mb-2 text-white leading-tight">{{ user.active_subscription.subscription_plan?.name }}</h2>
               <p class="text-blue-100 text-sm max-w-xl mb-5 font-normal leading-relaxed">{{ user.active_subscription.subscription_plan?.description }}</p>
               <div class="flex flex-wrap gap-4 text-xs font-semibold text-white/90">
                 <div class="flex items-center bg-white/10 border border-white/15 px-3 py-1.5 rounded-xl">
@@ -43,8 +43,8 @@
               </div>
             </div>
             <div class="flex flex-col items-start md:items-end gap-1 bg-white/10 border border-white/15 rounded-2xl p-4 md:p-6 min-w-[140px] text-left md:text-right">
-              <div class="text-[10px] font-extrabold text-blue-200 uppercase tracking-widest leading-none">Days Remaining</div>
-              <div class="text-4xl font-black text-white mt-1.5 leading-none">{{ calculateRemainingDays(user.active_subscription.expires_at) }}</div>
+              <div class="text-[10px] font-semibold text-blue-200 uppercase tracking-widest leading-none">Days Remaining</div>
+              <div class="text-4xl font-bold text-white mt-1.5 leading-none">{{ calculateRemainingDays(user.active_subscription.expires_at) }}</div>
             </div>
           </div>
 
@@ -84,7 +84,7 @@
 
       <!-- Choose Your Plan Header -->
       <div class="text-left mt-10 mb-8">
-        <h2 class="text-2xl font-black text-slate-800 tracking-tight font-outfit">Choose Your Plan</h2>
+        <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-outfit">Choose Your Plan</h2>
       </div>
 
       <!-- All Plans Grid -->
@@ -102,14 +102,14 @@
           <!-- Badge overlay -->
           <div 
             v-if="plan.name.toLowerCase().includes('premium') && plan.name.toLowerCase().includes('monthly')" 
-            class="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-[#f97316] text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-md shadow-orange-500/15 border border-orange-400/20 z-10 whitespace-nowrap animate-pulse-slow"
+            class="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-[#f97316] text-white px-4 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider flex items-center space-x-1.5 shadow-md shadow-orange-500/15 border border-orange-400/20 z-10 whitespace-nowrap animate-pulse-slow"
           >
             <span class="text-[10px]">⭐</span>
             <span>Most Popular</span>
           </div>
           <div 
             v-else-if="plan.name.toLowerCase().includes('premium')" 
-            class="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-md shadow-blue-500/15 border border-blue-400/20 z-10 whitespace-nowrap animate-pulse-slow"
+            class="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider flex items-center space-x-1.5 shadow-md shadow-blue-500/15 border border-blue-400/20 z-10 whitespace-nowrap animate-pulse-slow"
           >
             <span class="text-[10px]">👑</span>
             <span>Recommended</span>
@@ -119,11 +119,11 @@
           <div class="p-8 flex-grow flex flex-col">
             <!-- Header Section (Plan title, Price, bookings) -->
             <div class="text-center w-full mb-6">
-              <h3 class="text-sm font-extrabold text-slate-800 tracking-tight uppercase leading-none mb-3.5">{{ plan.name }}</h3>
+              <h3 class="text-sm font-semibold text-slate-800 tracking-tight uppercase leading-none mb-3.5">{{ plan.name }}</h3>
               
               <div class="flex flex-col items-center justify-center">
                 <div class="flex items-baseline justify-center">
-                  <span class="text-3xl font-black text-slate-900">PKR {{ formatPrice(plan.price) }}</span>
+                  <span class="text-3xl font-bold text-slate-900">PKR {{ formatPrice(plan.price) }}</span>
                   <span class="ml-1 text-slate-400 text-xs font-semibold">
                     {{ 
                       plan.price == 0 ? '/forever' : formatDuration(plan.duration_days)
@@ -131,7 +131,7 @@
                   </span>
                 </div>
                 <!-- Bookings Count description -->
-                <p class="text-xs font-bold text-slate-500 mt-2.5 leading-none">
+                <p class="text-xs font-medium text-slate-500 mt-2.5 leading-none">
                   {{ 
                     plan.monthly_seat_bookings_limit 
                       ? `${plan.monthly_seat_bookings_limit} bookings` 
@@ -151,7 +151,7 @@
                 <svg class="h-4 w-4 text-[#22c55e] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-                <span class="ml-3 text-xs text-slate-600 font-bold leading-normal text-left">
+                <span class="ml-3 text-xs text-slate-600 font-medium leading-normal text-left">
                   {{ plan.daily_seat_bookings_limit ? `${plan.daily_seat_bookings_limit} Daily Seat Bookings` : 'Unlimited Daily Seat Bookings' }}
                 </span>
               </li>
@@ -222,7 +222,7 @@
             <button
               v-if="isCurrentPlan(plan.id) && !isPlanExpired"
               disabled
-              class="w-full bg-[#f1f5f9] border border-slate-200 text-slate-400 rounded-xl px-4 py-3.5 text-xs font-black uppercase tracking-wider cursor-default flex items-center justify-center space-x-2"
+              class="w-full bg-[#f1f5f9] border border-slate-200 text-slate-400 rounded-xl px-4 py-3.5 text-xs font-semibold uppercase tracking-wider cursor-default flex items-center justify-center space-x-2"
             >
               <span>Current Plan</span>
             </button>
@@ -233,7 +233,7 @@
               @click="subscribe(plan)"
               :disabled="subscribingPlanId !== null || !!user?.pending_order"
               :class="[
-                'w-full rounded-xl px-4 py-3.5 text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-2 border shadow-sm duration-200',
+                'w-full rounded-xl px-4 py-3.5 text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 border shadow-sm duration-200',
                 user?.pending_order?.plan_id === plan.id
                   ? 'bg-amber-50 text-amber-700 border-amber-300 cursor-not-allowed shadow-none'
                   : (!!user?.pending_order

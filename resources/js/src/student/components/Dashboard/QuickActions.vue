@@ -1,6 +1,6 @@
 <template>
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
-    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center">
+    <h2 class="text-sm font-semibold text-slate-800 uppercase tracking-wider mb-5 flex items-center">
       <Zap class="w-4 h-4 mr-2 text-blue-600 fill-current" />
       Quick Actions
     </h2>
@@ -18,7 +18,7 @@
             <div :class="['w-9 h-9 rounded-xl flex items-center justify-center mb-3.5 shadow-sm text-white bg-gradient-to-br', action.gradient]">
               <component :is="action.icon" class="w-4.5 h-4.5" />
             </div>
-            <h3 class="font-bold text-slate-800 text-xs tracking-wide">{{ action.title }}</h3>
+            <h3 class="font-semibold text-slate-800 text-xs tracking-wide">{{ action.title }}</h3>
             <p class="text-[10px] text-slate-400 font-medium mt-1 leading-normal">{{ action.description }}</p>
           </div>
           
@@ -41,28 +41,28 @@ const actions = [
     description: 'Locate partner study spaces',
     icon: MapPin,
     link: '/student/libraries',
-    gradient: 'from-blue-600 to-cyan-500 shadow-blue-500/10'
+    gradient: 'from-blue-600 to-blue-500 shadow-blue-500/10'
   },
   {
     title: 'Browse Books',
     description: 'Search & request physical books',
     icon: BookOpen,
     link: '/student/books',
-    gradient: 'from-emerald-600 to-teal-500 shadow-emerald-500/10'
+    gradient: 'from-emerald-600 to-emerald-500 shadow-emerald-500/10'
   },
   {
     title: 'View Events',
     description: 'Check academic seminars',
     icon: Calendar,
     link: '/student/events',
-    gradient: 'from-purple-600 to-indigo-500 shadow-purple-500/10'
+    gradient: 'from-purple-600 to-purple-500 shadow-purple-500/10'
   },
   {
     title: 'My Profile',
     description: 'Manage details & settings',
     icon: User,
     link: '/student/profile',
-    gradient: 'from-orange-500 to-amber-500 shadow-orange-500/10'
+    gradient: 'from-orange-500 to-orange-400 shadow-orange-500/10'
   }
 ];
 </script>

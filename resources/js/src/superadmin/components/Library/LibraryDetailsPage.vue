@@ -2,7 +2,7 @@
   <div class="p-6 space-y-6">
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-20">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
     </div>
 
     <!-- Library Details -->
@@ -35,7 +35,7 @@
 
       <!-- Library Info Card -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="h-48 bg-gradient-to-br from-indigo-50 to-purple-50 relative">
+        <div class="h-48 bg-gradient-to-br from-purple-50 to-fuchsia-50 relative">
           <img
             v-if="library.photo"
             :src="library.photo_url"
@@ -43,7 +43,7 @@
             alt="Library cover"
           />
           <div v-else class="w-full h-full flex items-center justify-center">
-            <Building2 class="w-16 h-16 text-indigo-300" />
+            <Building2 class="w-16 h-16 text-purple-300" />
           </div>
         </div>
 
@@ -89,7 +89,7 @@
               Parking Available
             </div>
             <div v-if="library.latitude && library.longitude" class="flex items-center text-sm text-gray-600">
-              <MapPin class="w-4 h-4 mr-2 text-indigo-600" />
+              <MapPin class="w-4 h-4 mr-2 text-purple-600" />
               {{ library.latitude }}, {{ library.longitude }}
             </div>
           </div>
@@ -149,7 +149,7 @@
       <p class="text-gray-500 mt-2">The library you're looking for doesn't exist.</p>
       <router-link
         to="/superadmin/libraries"
-        class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+        class="mt-4 inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
       >
         <ArrowLeft class="w-4 h-4 mr-2" />
         Back to Libraries

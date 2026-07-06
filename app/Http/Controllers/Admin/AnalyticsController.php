@@ -66,12 +66,36 @@ class AnalyticsController extends Controller
             'digital_books' => Book::whereIn('library_id', $myLibraryIds)->where('type', 'digital')->count(),
         ];
 
-        // Monthly booking stats
-        $monthlyBookings = (clone $bookingQuery)->selectRaw('DATE(created_at) as date, COUNT(*) as count')
-            ->where('created_at', '>=', now()->subDays(30))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        // Booking trends stats based on range parameter
+        $range = request()->query('range', 'monthly');
+        
+        if ($range === 'weekly') {
+            $monthlyBookings = (clone $bookingQuery)->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                ->where('created_at', '>=', now()->subDays(7))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()
+                ->map(function ($item) {
+                    $item->date = Carbon::parse($item->date)->format('D');
+                    return $item;
+                });
+        } elseif ($range === 'yearly') {
+            $monthlyBookings = (clone $bookingQuery)->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as date, COUNT(*) as count")
+                ->where('created_at', '>=', now()->subMonths(12))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()
+                ->map(function ($item) {
+                    $item->date = Carbon::parse($item->date . '-01')->format('M');
+                    return $item;
+                });
+        } else { // monthly (default)
+            $monthlyBookings = (clone $bookingQuery)->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                ->where('created_at', '>=', now()->subDays(30))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
+        }
 
         // Top libraries by bookings
         $topLibraries = (clone $librariesQuery)->withCount('seatBookings')

@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@keyframes fadeIn-8d276dd5 {
+from {
+    opacity: 0;
+    transform: translateY(4px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-8d276dd5] {
+  animation: fadeIn-8d276dd5 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Smooth submenu expand/collapse via max-height + opacity */
+.space-mgmt-submenu[data-v-8d276dd5] {
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+}
+.submenu-open[data-v-8d276dd5] {
+  max-height: 250px; /* enough for 3 sub-items */
+  opacity: 1;
+}
+.submenu-closed[data-v-8d276dd5] {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Hide scrollbar across all browsers while keeping scroll functional */
+nav[data-v-8d276dd5]::-webkit-scrollbar {
+  display: none;
+}
+
+
+.font-outfit[data-v-8576c45a] {
+  font-family: 'Outfit', sans-serif;
+}
+@keyframes fadeIn-8576c45a {
+from {
+    opacity: 0;
+    transform: translateY(6px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-8576c45a] {
+  animation: fadeIn-8576c45a 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.text-slate-655[data-v-8576c45a] {
+  color: #475569;
+}
+.text-red-655[data-v-8576c45a] {
+  color: #ef4444;
+}

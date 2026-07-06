@@ -8,17 +8,17 @@
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
       <div>
-        <div class="flex items-center text-xs text-slate-400 font-extrabold uppercase tracking-wide mb-1.5">
+        <div class="flex items-center text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1.5">
           <router-link to="/student/libraries" class="hover:text-blue-650 transition-colors">Libraries</router-link>
           <ChevronRight class="w-3.5 h-3.5 mx-1 text-slate-300" />
           <span class="text-slate-500">{{ library?.name }}</span>
         </div>
-        <h1 class="text-xl font-extrabold text-slate-800 leading-none">Select Your Seat</h1>
+        <h1 class="text-xl font-bold text-slate-800 leading-none">Select Your Seat</h1>
       </div>
 
       <!-- Stats bar -->
       <div class="flex flex-wrap items-center gap-2 bg-slate-50 border border-slate-100 p-1.5 rounded-xl">
-        <div class="flex items-center px-3 py-1 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+        <div class="flex items-center px-3 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
           <div class="w-2.5 h-2.5 rounded-full bg-[#29B072] mr-2"></div>
           <span>Available</span>
         </div>
@@ -55,31 +55,39 @@
       <!-- Sidebar: Booking Summary -->
       <div class="space-y-6">
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 sticky top-24 text-left">
-          <h3 class="text-sm font-extrabold text-slate-700 uppercase tracking-wider mb-5">Booking Summary</h3>
+          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-5">Booking Summary</h3>
 
           <div v-if="selectedSeat" class="space-y-5">
             <div class="p-3.5 bg-blue-50/50 rounded-xl border border-blue-100/50">
               <div class="flex items-center mb-1.5">
                 <Armchair class="w-4.5 h-4.5 text-blue-600 mr-2" />
-                <span class="font-extrabold text-blue-900 text-sm">Seat {{ selectedSeat.seat_number }}</span>
+                <span class="font-bold text-blue-900 text-sm">Seat {{ selectedSeat.seat_number }}</span>
               </div>
-              <p class="text-[10px] text-blue-600/90 font-extrabold uppercase tracking-wide leading-none">
+              <p class="text-[10px] text-blue-600/90 font-semibold uppercase tracking-wide leading-none">
                 {{ getFloorName(selectedSeat.floor_id) }} • {{ getSectionName(selectedSeat.section_id) }}
               </p>
-              <p class="text-[10px] text-blue-500 font-bold mt-1.5 uppercase tracking-wide capitalize leading-none">{{ selectedSeat.seat_type }} Seat</p>
+              <p class="text-[10px] text-blue-500 font-medium mt-1.5 uppercase tracking-wide capitalize leading-none">{{ selectedSeat.seat_type }} Seat</p>
             </div>
 
             <!-- Gender mismatch warning -->
             <div v-if="isGenderMismatch(selectedSeat)" class="p-3 bg-red-50/60 rounded-xl border border-red-100/50 flex items-start space-x-2">
               <UserX class="w-4.5 h-4.5 text-red-500 flex-shrink-0" />
-              <p class="text-[11px] text-red-600 font-bold leading-normal">This section is restricted to another gender.</p>
+              <p class="text-[11px] text-red-600 font-medium leading-normal">This section is restricted to another gender.</p>
+            </div>
+
+            <!-- Academic Level mismatch warning -->
+            <div v-if="isLevelMismatch(selectedSeat)" class="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start space-x-2">
+              <AlertCircle class="w-4.5 h-4.5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p class="text-[11px] text-amber-800 font-medium leading-normal">
+                This seat is reserved for {{ getSectionLevelName(selectedSeat.section_id) }} students.
+              </p>
             </div>
 
             <template v-else>
               <div class="space-y-4">
                 <div>
-                  <label class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5 block">Duration</label>
-                  <select v-model="bookingDuration" :disabled="maxAvailableHours === 0" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                  <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Duration</label>
+                  <select v-model="bookingDuration" :disabled="maxAvailableHours === 0" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                     <option v-for="opt in durationOptions" :key="opt.value" :value="opt.value">
                       {{ opt.label }}
                     </option>
@@ -89,35 +97,35 @@
                 <!-- Closing time notice / closed error -->
                 <div v-if="showClosingTimeNotice" class="p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-start space-x-2">
                   <AlertCircle class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <p class="text-[10px] text-amber-800 font-bold leading-normal m-0">
+                  <p class="text-[10px] text-amber-800 font-medium leading-normal m-0">
                     You can book this seat for a maximum of {{ formatHours(maxAvailableHours) }} because the library closes at {{ formatTimeOnly(libraryClosingTime) }}.
                   </p>
                 </div>
 
                 <div v-if="maxAvailableHours === 0" class="p-3 bg-red-50 border border-red-100 rounded-xl flex items-start space-x-2">
                   <AlertCircle class="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                  <p class="text-[10px] text-red-650 font-bold leading-normal m-0">
+                  <p class="text-[10px] text-red-650 font-medium leading-normal m-0">
                     The library is closed during the selected start time. Please choose another date or time.
                   </p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5 block">Date</label>
+                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Date</label>
                     <input
                       type="date"
                       v-model="selectedDate"
                       :min="minDate"
                       :max="maxDate"
-                      class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                      class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                     />
                   </div>
                   <div>
-                    <label class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5 block">Start Time</label>
+                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Start Time</label>
                     <input
                       type="time"
                       v-model="selectedTime"
-                      class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                      class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                     />
                   </div>
                 </div>
@@ -128,7 +136,7 @@
                   v-if="selectedSeat.status === 'available'"
                   @click="confirmBooking"
                   :disabled="submitting || maxAvailableHours === 0"
-                  class="w-full py-3 bg-blue-600 text-white rounded-xl text-xs font-extrabold shadow-md shadow-blue-500/10 hover:opacity-95 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
+                  class="w-full py-3 bg-blue-600 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/10 hover:opacity-95 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
                 >
                   <span v-if="submitting" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                   <span>{{ submitting ? 'Confirming...' : 'Confirm Booking' }}</span>
@@ -137,7 +145,7 @@
                 <div v-else class="space-y-3">
                   <div class="p-5 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-100 text-center relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-16 h-16 bg-orange-500/5 rounded-full -mr-8 -mt-8"></div>
-                    <p class="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest mb-2.5 leading-none">Seat Occupied</p>
+                    <p class="text-[9px] text-slate-400 font-semibold uppercase tracking-widest mb-2.5 leading-none">Seat Occupied</p>
                     <div class="flex items-center justify-center space-x-1.5 mb-3.5 leading-none">
                       <Clock class="w-4.5 h-4.5 text-orange-500" />
                       <p class="text-xl font-black text-slate-800 leading-none">
@@ -147,14 +155,14 @@
                     
                     <div class="space-y-3">
                       <div class="p-2.5 bg-orange-50 border border-orange-100 rounded-xl text-center leading-normal">
-                        <p class="text-[9px] text-orange-700 font-black uppercase tracking-wider">Waitlist Active</p>
-                        <p class="text-[8.5px] text-orange-655 font-bold uppercase mt-0.5 tracking-tighter">Claim spot to secure this seat next</p>
+                        <p class="text-[9px] text-orange-700 font-semibold uppercase tracking-wider">Waitlist Active</p>
+                        <p class="text-[8.5px] text-orange-655 font-medium uppercase mt-0.5 tracking-tighter">Claim spot to secure this seat next</p>
                       </div>
                       
                       <button
                         @click="joinQueue"
                         :disabled="submitting"
-                        class="w-full py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl text-xs font-extrabold shadow-md shadow-orange-500/10 hover:opacity-95 active:scale-98 transition-all flex items-center justify-center space-x-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="w-full py-2.5 bg-orange-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-500/10 hover:bg-orange-600 active:scale-98 transition-all flex items-center justify-center space-x-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Zap v-if="!submitting" class="w-4 h-4 text-white fill-current" />
                         <span v-else class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -163,7 +171,7 @@
 
                       <button 
                         @click="router.push('/student/my-queue')"
-                        class="text-[9px] text-blue-600 font-extrabold hover:underline uppercase tracking-tight w-full text-center mt-1 block leading-none"
+                        class="text-[9px] text-blue-600 font-semibold hover:underline uppercase tracking-tight w-full text-center mt-1 block leading-none"
                       >
                         View My Waitlists →
                       </button>
@@ -186,7 +194,7 @@
         <div class="bg-orange-50/50 p-5 rounded-2xl border border-orange-100 text-left">
           <div class="flex items-center mb-2">
             <Zap class="w-4.5 h-4.5 text-orange-600 mr-2 fill-current" />
-            <h4 class="font-extrabold text-orange-900 text-xs uppercase tracking-wide">Quick Tip</h4>
+            <h4 class="font-semibold text-orange-900 text-xs uppercase tracking-wide">Quick Tip</h4>
           </div>
           <p class="text-[11px] text-orange-800/90 leading-relaxed font-semibold">
             Seats near windows are popular in the morning. Group study areas require all members to check in within 15 minutes.
@@ -201,11 +209,11 @@
         <div class="w-16 h-16 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle class="w-8 h-8" />
         </div>
-        <h2 class="text-lg font-extrabold text-slate-800 mb-1">Booking Confirmed!</h2>
+        <h2 class="text-lg font-semibold text-slate-800 mb-1">Booking Confirmed!</h2>
         <p class="text-xs text-slate-400 mb-6 leading-relaxed">Your seat has been reserved. Please check in within 15 minutes of your start time.</p>
         <button
           @click="goToBookings"
-          class="w-full py-3 bg-blue-600 text-white rounded-xl text-xs font-extrabold shadow-md shadow-blue-500/10 hover:opacity-95 active:scale-98 transition-all"
+          class="w-full py-3 bg-blue-600 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/10 hover:opacity-95 active:scale-98 transition-all"
         >
           View My Bookings
         </button>
@@ -416,6 +424,19 @@ const isGenderMismatch = (seat: any) => {
   return studentUser.gender !== section.gender;
 };
 
+const isLevelMismatch = (seat: any) => {
+  const section = sections.value.find(s => s.id === seat.section_id);
+  if (!section || !section.academic_level || section.academic_level === 'all') return false;
+  const studentUser = user.value as any;
+  if (!studentUser || !studentUser.ca_level) return true;
+  return studentUser.ca_level !== section.academic_level;
+};
+
+const getSectionLevelName = (sectionId: number) => {
+  const section = sections.value.find(s => s.id === sectionId);
+  return section?.academic_level || 'All Levels';
+};
+
 const handleSeatClick = (seat: any) => {
   selectedSeat.value = selectedSeat.value?.id === seat.id ? null : seat;
 };
@@ -471,6 +492,30 @@ const confirmBooking = async () => {
     showSuccessModal.value = true;
   } catch (error: any) {
     console.error('Booking failed:', error);
+    if (error.response?.status === 403 && error.response?.data?.restricted) {
+      const data = error.response.data;
+      if (data.can_request_override) {
+        const confirmRequest = await showConfirm(
+          'Seat Restricted',
+          `${data.message} Since all seats for your level (${data.user_level}) are currently occupied, you can submit an override request to the librarian.`,
+          'Request Override'
+        );
+        if (confirmRequest) {
+          submitting.value = true;
+          try {
+            await studentAPI.requestOverride(selectedSeat.value.id);
+            showSuccess('Request Sent', 'Your override request has been submitted to the librarian for approval.');
+          } catch (reqErr: any) {
+            showError('Request Failed', reqErr.response?.data?.message || 'Failed to submit override request.');
+          } finally {
+            submitting.value = false;
+          }
+        }
+      } else {
+        showError('Seat Restricted', `${data.message} You cannot request an override because there are still available seats assigned to your level (${data.user_level}).`);
+      }
+      return;
+    }
     const errorMessage = error.response?.data?.message || error.message || 'Failed to create booking. Please try again.';
     showError('Booking Failed', errorMessage);
   } finally {
@@ -489,6 +534,30 @@ const joinQueue = async () => {
     fetchSeats();
   } catch (error: any) {
     console.error('Queue joining failed:', error);
+    if (error.response?.status === 403 && error.response?.data?.restricted) {
+      const data = error.response.data;
+      if (data.can_request_override) {
+        const confirmRequest = await showConfirm(
+          'Seat Restricted',
+          `${data.message} Since all seats for your level (${data.user_level}) are currently occupied, you can submit an override request to the librarian.`,
+          'Request Override'
+        );
+        if (confirmRequest) {
+          submitting.value = true;
+          try {
+            await studentAPI.requestOverride(selectedSeat.value.id);
+            showSuccess('Request Sent', 'Your override request has been submitted to the librarian for approval.');
+          } catch (reqErr: any) {
+            showError('Request Failed', reqErr.response?.data?.message || 'Failed to submit override request.');
+          } finally {
+            submitting.value = false;
+          }
+        }
+      } else {
+        showError('Seat Restricted', `${data.message} You cannot request an override because there are still available seats assigned to your level (${data.user_level}).`);
+      }
+      return;
+    }
     const errorMessage = error.response?.data?.message || error.message || 'Could not join the queue.';
     showError('Queue Error', errorMessage);
   } finally {

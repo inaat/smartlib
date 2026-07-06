@@ -63,6 +63,7 @@
               <th class="px-6 py-4 font-semibold">Floor level</th>
               <th class="px-6 py-4 font-semibold">Seat stats</th>
               <th class="px-6 py-4 font-semibold">Gender Rule</th>
+              <th class="px-6 py-4 font-semibold">Academic Level</th>
               <th class="px-6 py-4 font-semibold">Status</th>
               <th class="px-6 py-4 text-right font-semibold">Actions</th>
             </tr>
@@ -91,6 +92,19 @@
                   ]"
                 >
                   {{ section.gender === 'male' ? 'Male Only' : section.gender === 'female' ? 'Female Only' : 'Mixed' }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <span
+                  :class="[
+                    'px-2.5 py-0.5 rounded text-[9px] font-bold uppercase border',
+                    section.academic_level === 'PRC' ? 'bg-amber-50 border-amber-100 text-amber-700' :
+                    section.academic_level === 'CAF' ? 'bg-cyan-50 border-cyan-100 text-cyan-700' :
+                    section.academic_level === 'Final' ? 'bg-purple-50 border-purple-100 text-purple-700' :
+                    'bg-slate-50 border-slate-200 text-slate-600'
+                  ]"
+                >
+                  {{ section.academic_level === 'all' || !section.academic_level ? 'All Levels' : section.academic_level }}
                 </span>
               </td>
               <td class="px-6 py-4">
@@ -187,6 +201,20 @@
               <option value="female">Female Only</option>
             </select>
           </div>
+          
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Academic Level Restriction</label>
+            <select
+              v-model="form.academic_level"
+              required
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50 cursor-pointer"
+            >
+              <option value="all">Available for All</option>
+              <option value="PRC">PRC Students Only</option>
+              <option value="CAF">CAF Students Only</option>
+              <option value="Final">Final Year Students Only</option>
+            </select>
+          </div>
 
           <div>
             <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Total Seats</label>
@@ -266,6 +294,7 @@ const form = ref({
   floor_id: null as number | null,
   name: '',
   gender: 'mixed',
+  academic_level: 'all',
   total_seats: 0,
   description: '',
   is_active: true
@@ -299,6 +328,7 @@ const openCreateModal = () => {
     floor_id: floors.value[0]?.id || null,
     name: '',
     gender: 'mixed',
+    academic_level: 'all',
     total_seats: 0,
     description: '',
     is_active: true
@@ -313,6 +343,7 @@ const editSection = (section: any) => {
     floor_id: section.floor_id,
     name: section.name,
     gender: section.gender || 'mixed',
+    academic_level: section.academic_level || 'all',
     total_seats: section.total_seats,
     description: section.description || '',
     is_active: section.is_active
@@ -332,9 +363,10 @@ const saveSection = async () => {
     }
     await fetchSections();
     showModal.value = false;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving section:', error);
-    showError('Save Failed', 'Failed to save section.');
+    const message = error.response?.data?.message || 'Failed to save section.';
+    showError('Save Failed', message);
   } finally {
     loading.value = false;
   }

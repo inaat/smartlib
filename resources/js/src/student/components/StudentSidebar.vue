@@ -2,7 +2,7 @@
   <!-- Sidebar -->
   <aside
     :class="[
-      'fixed inset-y-0 left-0 z-50 flex flex-col bg-blue-700 border-r border-blue-800/40 shadow-2xl transition-all duration-300 ease-in-out',
+      'fixed inset-y-0 left-0 z-50 flex flex-col bg-blue-600 border-r border-white/10 shadow-2xl transition-all duration-300 ease-in-out',
       // Mobile: always full width sidebar, translate in/out
       'w-72',
       // Desktop overrides: sticky and width depends on collapsed state
@@ -23,6 +23,7 @@
       <div v-if="!showCollapsed" class="flex items-center space-x-3 animate-fade-in">
         <!-- Logo Icon -->
         <div class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-white shadow-md shadow-white/5 group-hover:scale-105 transition-transform flex-shrink-0">
+          <!-- Logo SVG -->
           <svg viewBox="0 0 32 32" class="w-5 h-5 text-white" fill="currentColor">
             <circle cx="11" cy="16" r="4.5" />
             <circle cx="21" cy="16" r="4.5" />
@@ -30,7 +31,7 @@
           </svg>
         </div>
         <div v-if="!isCollapsed || !isDesktop" class="flex flex-col text-left">
-          <h1 class="text-sm font-extrabold text-white tracking-tight leading-none animate-fade-in">SmartLib</h1>
+          <h1 class="text-sm font-bold text-white tracking-tight leading-none animate-fade-in">SmartLib</h1>
           <p class="text-[9px] font-bold text-blue-200 tracking-wider uppercase mt-1 leading-none animate-fade-in">Student Portal</p>
         </div>
       </div>
@@ -92,7 +93,7 @@
                     ? 'justify-center w-12 h-12 mx-auto my-1 rounded-xl animate-fade-in'
                     : 'px-3 py-3 mx-1.5 my-1 space-x-2 rounded-xl font-medium text-sm',
                   isLinkActive
-                    ? 'bg-white text-blue-700 shadow-md shadow-blue-950/15 animate-fade-in'
+                    ? 'bg-white text-blue-600 shadow-md shadow-blue-950/15 animate-fade-in'
                     : 'text-white hover:bg-white/10'
                 ]"
               >
@@ -100,7 +101,7 @@
                   :is="item.icon"
                   :class="[
                     'w-5 h-5 transition-colors',
-                    isLinkActive ? 'text-blue-700' : 'text-white/90 group-hover:text-white'
+                    isLinkActive ? 'text-blue-600' : 'text-white/90 group-hover:text-white'
                   ]"
                 />
                 <span v-if="!showCollapsed" class="tracking-wide animate-fade-in">{{ item.label }}</span>
@@ -118,14 +119,14 @@
               :class="[
                 'flex items-center transition-all duration-200 group cursor-pointer relative py-3 select-none',
                 showCollapsed ? 'justify-center w-12 h-12 mx-auto my-1 rounded-xl' : 'px-3 py-3 mx-1.5 my-1 space-x-2 rounded-xl font-medium text-sm',
-                isReservationsDropdownActive && showCollapsed ? 'bg-white text-blue-700 shadow-md' : '',
+                isReservationsDropdownActive && showCollapsed ? 'bg-white text-blue-600 shadow-md' : '',
                 isReservationsDropdownActive && !showCollapsed ? 'text-white font-semibold' : 'text-white hover:bg-white/10'
               ]"
             >
               <BookMarked
                 :class="[
                   'w-5 h-5 transition-colors',
-                  isReservationsDropdownActive && showCollapsed ? 'text-blue-700' : (isReservationsDropdownActive ? 'text-white' : 'text-white/90 group-hover:text-white')
+                  isReservationsDropdownActive && showCollapsed ? 'text-blue-600' : (isReservationsDropdownActive ? 'text-white' : 'text-white/90 group-hover:text-white')
                 ]"
               />
               <span v-if="!showCollapsed" class="tracking-wide animate-fade-in flex-1">Reservations</span>
@@ -139,7 +140,7 @@
             <Teleport to="body">
               <div
                 v-if="showReservationsPopover && showCollapsed"
-                class="fixed z-[9999] animate-fade-in w-48 bg-blue-700 border border-white/10 rounded-2xl shadow-xl p-1.5 flex flex-col space-y-1 text-left"
+                class="fixed z-[9999] animate-fade-in w-48 bg-blue-600 border border-white/10 rounded-2xl shadow-xl p-1.5 flex flex-col space-y-1 text-left"
                 :style="{
                   top: `${reservationsPopoverTop}px`,
                   left: '80px'
@@ -160,7 +161,7 @@
                     :class="[
                       'flex items-center space-x-2.5 px-3 py-2 rounded-xl transition-colors text-xs font-semibold cursor-pointer',
                       isSubActive
-                        ? 'text-blue-700 bg-white shadow-sm'
+                        ? 'text-blue-600 bg-white shadow-sm'
                         : 'text-white hover:bg-white/10'
                     ]"
                   >
@@ -171,16 +172,18 @@
               </div>
             </Teleport>
 
-            <!-- Expanded Nested Submenu (Tree line design) -->
-            <transition name="slide-fade">
-              <div
-                v-if="isReservationsExpanded && !showCollapsed"
-                class="relative ml-6 mt-1 space-y-1 animate-fade-in"
-              >
+            <!-- Expanded Nested Submenu (Tree line design) - smooth max-height transition -->
+            <div
+              :class="[
+                'reservations-submenu overflow-hidden transition-all duration-300 ease-in-out',
+                isReservationsExpanded && !showCollapsed ? 'submenu-open' : 'submenu-closed'
+              ]"
+            >
+              <div class="relative ml-6 mt-1 space-y-1">
                 <div
                   v-for="(subItem, index) in reservationsSubItems"
                   :key="subItem.path"
-                  class="relative pl-5 animate-fade-in"
+                  class="relative pl-5"
                 >
                   <!-- Tree connecting line vertical -->
                   <div 
@@ -202,7 +205,7 @@
                       :class="[
                         'flex items-center space-x-2.5 px-3 py-2 rounded-xl transition-all text-xs font-semibold cursor-pointer',
                         isSubActive
-                          ? 'text-blue-700 bg-white shadow-sm'
+                          ? 'text-blue-600 bg-white shadow-sm'
                           : 'text-white hover:bg-white/10'
                       ]"
                     >
@@ -210,7 +213,7 @@
                         :is="subItem.icon" 
                         :class="[
                           'w-4 h-4', 
-                          isSubActive ? 'text-blue-700' : 'text-white/80 group-hover:text-white'
+                          isSubActive ? 'text-blue-600' : 'text-white/80 group-hover:text-white'
                         ]" 
                       />
                       <span>{{ subItem.label }}</span>
@@ -218,7 +221,7 @@
                   </router-link>
                 </div>
               </div>
-            </transition>
+            </div>
           </div>
 
           <!-- Normal Nav Items (After Reservations Dropdown) -->
@@ -237,7 +240,7 @@
                     ? 'justify-center w-12 h-12 mx-auto my-1 rounded-xl animate-fade-in'
                     : 'px-3 py-3 mx-1.5 my-1 space-x-2 rounded-xl font-medium text-sm',
                   isLinkActive
-                    ? 'bg-white text-blue-700 shadow-md shadow-blue-950/15 animate-fade-in'
+                    ? 'bg-white text-blue-600 shadow-md shadow-blue-950/15 animate-fade-in'
                     : 'text-white hover:bg-white/10'
                 ]"
               >
@@ -245,7 +248,7 @@
                   :is="item.icon"
                   :class="[
                     'w-5 h-5 transition-colors',
-                    isLinkActive ? 'text-blue-700' : 'text-white/90 group-hover:text-white'
+                    isLinkActive ? 'text-blue-600' : 'text-white/90 group-hover:text-white'
                   ]"
                 />
                 <span v-if="!showCollapsed" class="tracking-wide animate-fade-in">{{ item.label }}</span>
@@ -255,7 +258,7 @@
         </div>
       </div>
 
-      <!-- Others Section -->
+      <!-- Quick Access Section -->
       <div>
         <h3
           v-if="!showCollapsed"
@@ -282,7 +285,7 @@
                   ? 'justify-center w-12 h-12 mx-auto my-1 rounded-xl animate-fade-in'
                   : 'px-3 py-3 mx-1.5 my-1 space-x-2 rounded-xl font-medium text-sm',
                 isLinkActive
-                  ? 'bg-white text-blue-700 shadow-md shadow-blue-950/15 animate-fade-in'
+                  ? 'bg-white text-blue-600 shadow-md shadow-blue-950/15 animate-fade-in'
                   : 'text-white hover:bg-white/10'
               ]"
             >
@@ -290,7 +293,7 @@
                 :is="item.icon"
                 :class="[
                   'w-5 h-5 transition-colors',
-                  isLinkActive ? 'text-blue-700' : 'text-white/90 group-hover:text-white'
+                  isLinkActive ? 'text-blue-600' : 'text-white/90 group-hover:text-white'
                 ]"
               />
               <span v-if="!showCollapsed" class="tracking-wide animate-fade-in">{{ item.label }}</span>
@@ -300,27 +303,98 @@
       </div>
     </nav>
 
-    <!-- Footer Area (Sign Out Button Only) -->
-    <div class="p-4 border-t border-white/10 bg-transparent flex-shrink-0 flex flex-col justify-end">
-      <button
-        @click="handleLogout"
-        @mouseenter="handleMouseEnter($event, 'Sign Out')"
-        @mouseleave="handleMouseLeave"
-        :class="[
-          'flex items-center transition-all duration-200 group cursor-pointer w-full text-left',
-          showCollapsed
-            ? 'justify-center w-12 h-12 mx-auto rounded-xl text-red-200 hover:bg-red-950/30'
-            : 'px-4 py-3 mx-3 text-white hover:bg-white/10 font-semibold text-sm rounded-xl'
-        ]"
-      >
-        <LogOut
+    <!-- Footer Area (User Profile Only) -->
+    <div class="p-4 border-t border-white/10 bg-transparent z-10 flex flex-col justify-end flex-shrink-0 min-h-0">
+      
+      <!-- User Profile Card -->
+      <div class="relative">
+        <div 
+          @mouseenter="handleMouseEnter($event, 'User Profile & Menu')"
+          @mouseleave="handleMouseLeave"
           :class="[
-            'w-5 h-5 transition-colors',
-            showCollapsed ? 'text-red-200' : 'text-white/90 group-hover:text-white mr-3'
+            'flex items-center justify-between rounded-2xl hover:bg-white/10 transition-colors relative cursor-pointer group',
+            isCollapsed && isDesktop ? 'p-1 justify-center' : 'p-2'
           ]"
-        />
-        <span v-if="!showCollapsed" class="tracking-wide animate-fade-in">Sign Out</span>
-      </button>
+          @click="toggleProfileDropdown"
+        >
+          <!-- Profile Avatar -->
+          <div class="w-9 h-9 rounded-full bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-xs flex-shrink-0 overflow-hidden">
+            <img 
+              v-if="user?.profile_picture" 
+              :src="getProfilePictureUrl(user.profile_picture)" 
+              alt="Profile" 
+              class="w-full h-full object-cover"
+            />
+            <span v-else>{{ userInitials }}</span>
+          </div>
+
+          <!-- Profile Details (Expanded Only) -->
+          <div v-if="!showCollapsed" class="flex-1 ml-3 min-w-0 text-left">
+            <span class="text-xs font-bold text-white truncate block">{{ user?.name }}</span>
+            <span class="text-[10px] text-blue-200 truncate block mt-0.5">{{ user?.email }}</span>
+          </div>
+
+          <!-- Profile More Options button (Expanded Only) -->
+          <div v-if="!showCollapsed" class="p-1 hover:bg-white/10 rounded-lg transition-colors">
+            <MoreVertical class="w-4 h-4 text-white/80 hover:text-white" />
+          </div>
+        </div>
+
+        <!-- Profile Dropdown Menu (Expanded / Mobile state) -->
+        <div
+          v-if="showProfileDropdown && !showCollapsed"
+          class="absolute bottom-14 left-0 right-0 bg-blue-600 border border-slate-400 rounded-2xl shadow-xl p-1.5 z-[100] flex flex-col space-y-0.5 animate-fade-in text-left"
+        >
+          <router-link
+            to="/student/profile"
+            @click="showProfileDropdown = false"
+            class="flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 rounded-xl transition-colors"
+          >
+            <User class="w-4 h-4 text-white/80" />
+            <span>My Profile</span>
+          </router-link>
+          <button
+            @click="handleLogout"
+            class="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-bold text-red-200 hover:bg-red-950/30 rounded-xl transition-colors text-left"
+          >
+            <LogOut class="w-4 h-4" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+
+        <!-- Profile Floating Menu (desktop collapsed only) -->
+        <Teleport to="body">
+          <div
+            v-if="showProfileDropdown && showCollapsed"
+            class="fixed z-[9999] animate-fade-in w-48 bg-blue-600 border border-white/10 rounded-2xl shadow-xl p-1.5 flex flex-col space-y-0.5 text-left"
+            :style="{
+              bottom: `${profileDropdownBottom}px`,
+              left: '80px'
+            }"
+            @click.stop
+          >
+            <div class="px-3 py-1.5 text-[10px] font-bold text-white/60 uppercase tracking-widest border-b border-white/10 mb-1">
+              {{ user?.name }}
+            </div>
+            <router-link
+              to="/student/profile"
+              @click="showProfileDropdown = false"
+              class="flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 rounded-xl transition-colors"
+            >
+              <User class="w-4 h-4 text-white/80" />
+              <span>My Profile</span>
+            </router-link>
+            <button
+              @click="handleLogout"
+              class="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-bold text-red-200 hover:bg-red-950/30 rounded-xl transition-colors text-left"
+            >
+              <LogOut class="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </Teleport>
+      </div>
+      
     </div>
   </aside>
 
@@ -342,7 +416,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuth } from '@/shared/composables/useAuth';
 import { 
@@ -361,6 +435,8 @@ import {
   CalendarCheck,
   Armchair,
   Clock,
+  MoreVertical,
+  User
 } from 'lucide-vue-next';
 
 import { useSwal } from '@/shared/composables/useSwal';
@@ -385,15 +461,20 @@ const showCollapsed = computed(() => props.isCollapsed && isDesktop.value);
 
 const showReservationsPopover = ref(false);
 
+// Profile Dropdown state
+const showProfileDropdown = ref(false);
+
 // Teleported elements positioning state
 const activeTooltipText = ref('');
 const activeTooltipTop = ref(0);
 const showGlobalTooltip = ref(false);
 const reservationsPopoverTop = ref(0);
+const profileDropdownBottom = ref(0);
 
 const handleMouseEnter = (event: MouseEvent, label: string) => {
   if (!showCollapsed.value) return;
   if (label === 'Reservations' && showReservationsPopover.value) return;
+  if (label === 'User Profile & Menu' && showProfileDropdown.value) return;
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
   activeTooltipText.value = label;
@@ -406,6 +487,7 @@ const handleMouseLeave = () => {
 };
 
 const handleLogout = async () => {
+  showProfileDropdown.value = false;
   if (await showConfirm('Sign Out', 'Are you sure you want to sign out?', 'Yes, Sign Out')) {
     await authLogout();
   }
@@ -435,24 +517,54 @@ const handleReservationsToggle = (event: Event) => {
   }
 };
 
+// Auto-close dropdowns smoothly when sidebar collapses
+watch(showCollapsed, (collapsed) => {
+  if (collapsed) {
+    isReservationsExpanded.value = false;
+    showProfileDropdown.value = false;
+    showReservationsPopover.value = false;
+  }
+});
+
 const isReservationsDropdownActive = computed(() => {
   return route.path.includes('/student/my-bookings') || route.path.includes('/student/my-reservations');
 });
 
-// Watch to sync dropdown expand with active state on initial load or route change
-watch(isReservationsDropdownActive, (active) => {
-  if (active && !showCollapsed.value) {
-    isReservationsExpanded.value = true;
+// User initials generator for default avatar
+const userInitials = computed(() => {
+  if (!user.value?.name) return 'ST';
+  const parts = user.value.name.split(' ');
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
   }
-}, { immediate: true });
+  return parts[0][0].toUpperCase();
+});
+
+// Profile Dropdown Click-Outside handler
+const toggleProfileDropdown = (event: Event) => {
+  event.stopPropagation();
+  if (showCollapsed.value) {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    profileDropdownBottom.value = window.innerHeight - rect.bottom;
+    if (!showProfileDropdown.value) {
+      showGlobalTooltip.value = false;
+    }
+  }
+  showProfileDropdown.value = !showProfileDropdown.value;
+};
 
 // Close all menus when clicking outside
 const closeAllDropdowns = () => {
+  showProfileDropdown.value = false;
   showReservationsPopover.value = false;
   handleMouseLeave();
 };
 
 onMounted(() => {
+  if (route.path.includes('/student/my-bookings') || route.path.includes('/student/my-reservations')) {
+    isReservationsExpanded.value = true;
+  }
   document.addEventListener('click', closeAllDropdowns);
   window.addEventListener('resize', handleResize);
 });
@@ -482,6 +594,12 @@ const quickAccessItems = [
   { path: '/student/subscription', label: 'Subscription', icon: CreditCard },
   { path: '/student/support', label: 'Support & Complaints', icon: LifeBuoy },
 ];
+
+// Utility to generate profile image path
+const getProfilePictureUrl = (path: string) => {
+  if (path.startsWith('http')) return path;
+  return `/storage/${path}`;
+};
 </script>
 
 <style scoped>
@@ -500,17 +618,36 @@ const quickAccessItems = [
   animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Slide Fade Transition for Sub-menu options */
-.slide-fade-enter-active {
-  transition: all 0.2s ease-out;
+/* Smooth submenu expand/collapse via max-height + opacity */
+.reservations-submenu {
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
 }
-.slide-fade-leave-active {
-  transition: all 0.15s cubic-bezier(1, 0.5, 0.8, 1);
+.submenu-open {
+  max-height: 200px; /* enough for 2-3 sub-items */
+  opacity: 1;
 }
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-8px);
+.submenu-closed {
+  max-height: 0;
   opacity: 0;
+}
+
+/* Force the Student sidebar to use the same default system sans-serif font stack as the Librarian sidebar for exact size alignment */
+aside,
+aside * {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* Vibrant Blue background replacement for the primary color */
+.bg-blue-600 {
+  background-color: #0061FF;
+}
+
+.bg-blue-dark {
+  background-color: #004ecc;
+}
+
+.text-red-655 {
+  color: #ef4444;
 }
 
 /* Hide scrollbar across all browsers while keeping scroll functional */

@@ -13,7 +13,7 @@
         ]"
       >
         <BarChart3 class="w-4 h-4" />
-        <span>Analytics</span>
+        <span>Analytics </span>
       </button>
       <button
         @click="activeView = 'reports'"
@@ -32,8 +32,8 @@
     <!-- Analytics View -->
     <div v-if="activeView === 'analytics'">
       <!-- Header Controls -->
-      <div class="flex justify-end items-center mb-6">
-        <div class="flex items-center space-x-3">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left mb-6">
+        <div class="flex items-center space-x-3 sm:ml-auto">
           <select 
             v-model="timeRange" 
             class="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 bg-white text-xs font-semibold text-slate-600 cursor-pointer shadow-sm appearance-none pr-8 relative"

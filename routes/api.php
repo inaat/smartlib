@@ -82,6 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/bookings/{booking}/checkout', [BookingController::class, 'checkOut'])->name('bookings.checkout');
         Route::post('/bookings/{booking}/extend', [BookingController::class, 'extend'])->name('bookings.extend');
         Route::post('/bookings/join-queue', [BookingController::class, 'joinQueue'])->name('bookings.join-queue');
+        Route::post('/bookings/override-requests', [BookingController::class, 'requestOverride'])->name('bookings.override-requests.store');
         Route::get('/my-queue', [BookingController::class, 'myQueue'])->name('bookings.my-queue');
         Route::delete('/my-queue/{id}', [BookingController::class, 'leaveQueue'])->name('bookings.leave-queue');
         Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
@@ -137,7 +138,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update.post');
     Route::get('/notifications', [ProfileController::class, 'notifications'])->name('notifications');
+    Route::post('/notifications/read-all', [ProfileController::class, 'markAllNotificationsRead'])->name('notifications.read-all');
+    Route::post('/notifications/clear-all', [ProfileController::class, 'clearAllNotifications'])->name('notifications.clear-all');
     Route::post('/notifications/{notification}/read', [ProfileController::class, 'markNotificationRead'])->name('notifications.read');
+    Route::delete('/notifications/{notification}', [ProfileController::class, 'destroyNotification'])->name('notifications.destroy');
 
     // Admin Routes
     Route::prefix('admin')->middleware(['role:super_admin|admin|librarian'])->name('api.admin.')->group(function () {
@@ -340,6 +344,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/bookings/{id}/check-in', [LibrarianBooking::class, 'checkIn'])->name('bookings.checkin');
         Route::post('/bookings/{id}/check-out', [LibrarianBooking::class, 'checkOut'])->name('bookings.checkout');
         Route::post('/bookings/{id}/cancel', [LibrarianBooking::class, 'cancel'])->name('bookings.cancel');
+        Route::get('/override-requests', [LibrarianBooking::class, 'getOverrideRequests'])->name('override-requests.index');
+        Route::post('/override-requests/{id}/approve', [LibrarianBooking::class, 'approveOverrideRequest'])->name('override-requests.approve');
+        Route::post('/override-requests/{id}/reject', [LibrarianBooking::class, 'rejectOverrideRequest'])->name('override-requests.reject');
 
         // Attendance
         Route::get('/attendance', [\App\Http\Controllers\Librarian\AttendanceController::class, 'index'])->name('attendance.index');

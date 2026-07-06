@@ -2,7 +2,7 @@
   <div v-if="!user">
     <slot />
   </div>
-  <div v-else class="min-h-screen bg-gray-50 flex">
+  <div v-else class="h-screen bg-gray-50 flex overflow-hidden">
     <!-- Sidebar -->
     <OwnerSidebar :is-open="sidebarOpen" @close="sidebarOpen = false" />
     
@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/shared/composables/useAuth';
 import OwnerSidebar from './OwnerSidebar.vue';
 import OwnerTopbar from './OwnerTopbar.vue';
@@ -35,7 +35,38 @@ import OwnerTopbar from './OwnerTopbar.vue';
 const { user, fetchSettings } = useAuth();
 const sidebarOpen = ref(false);
 
+const lockBody = () => {
+  document.documentElement.style.margin = '0';
+  document.documentElement.style.padding = '0';
+  document.documentElement.style.overflow = 'hidden';
+  document.documentElement.style.height = '100%';
+  document.documentElement.style.width = '100%';
+  document.body.style.margin = '0';
+  document.body.style.padding = '0';
+  document.body.style.overflow = 'hidden';
+  document.body.style.height = '100%';
+  document.body.style.width = '100%';
+};
+
+const unlockBody = () => {
+  document.documentElement.style.margin = '';
+  document.documentElement.style.padding = '';
+  document.documentElement.style.overflow = '';
+  document.documentElement.style.height = '';
+  document.documentElement.style.width = '';
+  document.body.style.margin = '';
+  document.body.style.padding = '';
+  document.body.style.overflow = '';
+  document.body.style.height = '';
+  document.body.style.width = '';
+};
+
 onMounted(() => {
   fetchSettings();
+  lockBody();
+});
+
+onUnmounted(() => {
+  unlockBody();
 });
 </script>

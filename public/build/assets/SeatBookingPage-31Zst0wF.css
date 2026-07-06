@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit[data-v-72859b0f] {
+  font-family: 'Outfit', sans-serif;
+}
+@keyframes fadeIn-72859b0f {
+from {
+    opacity: 0;
+    transform: translateY(6px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-72859b0f] {
+  animation: fadeIn-72859b0f 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.bg-blue-600[data-v-72859b0f] {
+  background-color: #2563eb;
+}
+.bg-blue-600[data-v-72859b0f]:hover {
+  background-color: #1d4ed8;
+}
+.text-indigo-800[data-v-72859b0f] {
+  color: #312e81;
+}
+.text-orange-800[data-v-72859b0f] {
+  color: #c2410c;
+}
+.text-red-600[data-v-72859b0f] {
+  color: #dc2626;
+}
+.active\:scale-98[data-v-72859b0f]:active {
+  transform: scale(0.98);
+}
+.scale-102[data-v-72859b0f] {
+  transform: scale(1.02);
+}

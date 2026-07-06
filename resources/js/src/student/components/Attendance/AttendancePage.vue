@@ -11,10 +11,10 @@
           <Calendar class="w-5.5 h-5.5" />
         </div>
         <div class="relative z-10">
-          <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-2">This Month</p>
-          <p class="text-3xl font-black text-slate-800 leading-none">
+          <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-2">This Month</p>
+          <p class="text-3xl font-bold text-slate-800 leading-none">
             {{ stats.attendance_this_month || 0 }} 
-            <span class="text-xs font-bold text-slate-400 ml-1 uppercase tracking-wide">Days</span>
+            <span class="text-xs font-semibold text-slate-400 ml-1 uppercase tracking-wide">Days</span>
           </p>
         </div>
       </div>
@@ -31,7 +31,7 @@
           <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-2">Current Streak</p>
           <p class="text-3xl font-black text-slate-800 leading-none">
             {{ stats.current_streak || 0 }} 
-            <span class="text-xs font-bold text-slate-400 ml-1 uppercase tracking-wide">Days</span>
+            <span class="text-xs font-semibold text-slate-400 ml-1 uppercase tracking-wide">Days</span>
           </p>
         </div>
       </div>
@@ -48,7 +48,7 @@
           <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-2">Total Hours</p>
           <p class="text-3xl font-black text-slate-800 leading-none">
             {{ stats.total_hours || 0 }} 
-            <span class="text-xs font-bold text-slate-400 ml-1 uppercase tracking-wide">Hours</span>
+            <span class="text-xs font-semibold text-slate-400 ml-1 uppercase tracking-wide">Hours</span>
           </p>
         </div>
       </div>
@@ -62,7 +62,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2">
             <CalendarCheck class="w-5 h-5 text-blue-500" />
-            <span class="text-base font-black text-slate-800">{{ calendarTitle }}</span>
+            <span class="text-base font-bold text-slate-800">{{ calendarTitle }}</span>
           </div>
           <div class="flex items-center space-x-1">
             <button @click="prevMonth" class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/50 text-slate-400 hover:text-slate-700 transition-all active:scale-95">
@@ -77,7 +77,7 @@
         <!-- Weekday headers -->
         <div class="grid grid-cols-7 text-center">
           <div v-for="d in ['S','M','T','W','T','F','S']" :key="d + Math.random()"
-            class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest py-1">{{ d }}</div>
+            class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest py-1">{{ d }}</div>
         </div>
 
         <!-- Calendar Grid -->
@@ -94,7 +94,7 @@
             :key="dateStr"
             :title="info.attended ? `You attended · ${formatDuration(info.total_minutes)}` : 'No attendance'"
             :class="[
-              'mx-auto flex items-center justify-center rounded-full w-9 h-9 text-xs font-extrabold transition-all relative select-none',
+              'mx-auto flex items-center justify-center rounded-full w-9 h-9 text-xs font-semibold transition-all relative select-none',
               isToday(dateStr)
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 scale-105'
                 : info.attended
@@ -112,26 +112,26 @@
 
         <!-- Footer Stats -->
         <div class="border-t border-slate-100 pt-5 space-y-4">
-          <div class="flex items-center justify-between text-xs font-bold">
+          <div class="flex items-center justify-between text-xs font-medium">
             <span class="text-slate-400 uppercase tracking-wide">Days attended</span>
-            <span class="font-extrabold text-slate-800">{{ calendarData.total_attended }} days</span>
+            <span class="font-semibold text-slate-800">{{ calendarData.total_attended }} days</span>
           </div>
           <div class="flex items-center justify-between text-xs font-bold">
             <span class="text-slate-400 uppercase tracking-wide">Attendance rate</span>
-            <span class="font-extrabold text-emerald-600">
+            <span class="font-semibold text-emerald-600">
               {{ calendarData.total_days > 0 ? Math.round((calendarData.total_attended / calendarData.total_days) * 100) : 0 }}%
             </span>
           </div>
           <!-- Progress bar -->
           <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div
-              class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-700"
+              class="h-full bg-emerald-500 rounded-full transition-all duration-700"
               :style="{ width: calendarData.total_days > 0 ? `${Math.round((calendarData.total_attended / calendarData.total_days) * 100)}%` : '0%' }"
             ></div>
           </div>
           <!-- Legend -->
           <div class="flex flex-wrap gap-x-4 gap-y-1.5 pt-1">
-            <div class="flex items-center space-x-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">
+            <div class="flex items-center space-x-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
               <div class="w-2.5 h-2.5 rounded-full bg-emerald-50 border border-emerald-300"></div>
               <span>Attended</span>
             </div>
@@ -151,7 +151,7 @@
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/30">
           <div class="text-left">
-            <h2 class="text-base font-extrabold text-slate-800">Attendance Logs</h2>
+            <h2 class="text-base font-semibold text-slate-800">Attendance Logs</h2>
             <p class="text-xs text-slate-400 mt-0.5">A detailed record of your library visits</p>
           </div>
           <button @click="fetchAttendance" class="p-2.5 hover:bg-slate-50 rounded-xl transition-all text-slate-500 hover:text-blue-600 border border-slate-200/50 shadow-sm active:scale-98">
@@ -161,16 +161,16 @@
 
         <div v-if="loading" class="p-24 flex flex-col items-center justify-center space-y-3">
           <div class="w-9 h-9 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p class="text-slate-400 font-extrabold animate-pulse uppercase tracking-wider text-[10px]">Loading logs...</p>
+          <p class="text-slate-400 font-semibold animate-pulse uppercase tracking-wider text-[10px]">Loading logs...</p>
         </div>
 
         <div v-else-if="attendance.length === 0" class="p-16 text-center">
           <div class="w-16 h-16 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400 shadow-inner">
             <FileText class="w-7 h-7" />
           </div>
-          <h3 class="text-base font-bold text-slate-800 mb-1">No Attendance Yet</h3>
+          <h3 class="text-base font-semibold text-slate-800 mb-1">No Attendance Yet</h3>
           <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">Start by booking a seat and checking in. Your attendance will automatically appear here.</p>
-          <router-link to="/student/libraries" class="mt-6 inline-flex items-center space-x-1.5 bg-blue-600 hover:from-blue-700 hover:to-cyan-600 text-white px-5 py-2.5 rounded-xl font-extrabold shadow-md shadow-blue-500/10 active:scale-98 transition-all uppercase tracking-wider text-[10px]">
+          <router-link to="/student/libraries" class="mt-6 inline-flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-md shadow-blue-500/10 active:scale-98 transition-all uppercase tracking-wider text-[10px]">
             <Armchair class="w-4 h-4" />
             <span>Book Your First Seat</span>
           </router-link>
@@ -179,7 +179,7 @@
         <div v-else class="overflow-x-auto">
           <table class="w-full text-left">
             <thead>
-              <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] uppercase font-black tracking-wider text-slate-400">
+              <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] uppercase font-semibold tracking-wider text-slate-400">
                 <th class="px-6 py-3.5">Date</th>
                 <th class="px-6 py-3.5">Library</th>
                 <th class="px-6 py-3.5">Check In</th>
@@ -192,39 +192,39 @@
               <tr v-for="log in attendance" :key="log.id" class="hover:bg-slate-50/30 transition-colors group">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 font-black text-xs group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-300">
+                    <div class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-300">
                       {{ getDay(log.date) }}
                     </div>
                     <div class="text-left">
-                      <div class="text-xs font-bold text-slate-800 leading-snug">{{ formatDate(log.date) }}</div>
-                      <div class="text-[9px] text-slate-400 font-extrabold uppercase mt-0.5 leading-none">{{ getDayName(log.date) }}</div>
+                      <div class="text-xs font-semibold text-slate-800 leading-snug">{{ formatDate(log.date) }}</div>
+                      <div class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5 leading-none">{{ getDayName(log.date) }}</div>
                     </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 text-left">
-                  <div class="text-xs font-bold text-slate-700">{{ log.library?.name || 'N/A' }}</div>
+                  <div class="text-xs font-semibold text-slate-700">{{ log.library?.name || 'N/A' }}</div>
                 </td>
                 <td class="px-6 py-4">
-                  <div class="flex items-center text-[11px] font-extrabold text-emerald-600 bg-emerald-50/60 border border-emerald-100/50 px-2.5 py-1 rounded-lg w-fit">
+                  <div class="flex items-center text-[11px] font-semibold text-emerald-600 bg-emerald-50/60 border border-emerald-100/50 px-2.5 py-1 rounded-lg w-fit">
                     <Clock class="w-3 h-3 mr-1.5" />
                     {{ formatTime(log.check_in_time) }}
                   </div>
                 </td>
                 <td class="px-6 py-4">
-                  <div v-if="log.check_out_time" class="flex items-center text-[11px] font-extrabold text-red-500 bg-red-50/60 border border-red-100/50 px-2.5 py-1 rounded-lg w-fit">
+                  <div v-if="log.check_out_time" class="flex items-center text-[11px] font-semibold text-red-500 bg-red-50/60 border border-red-100/50 px-2.5 py-1 rounded-lg w-fit">
                     <Clock class="w-3 h-3 mr-1.5" />
                     {{ formatTime(log.check_out_time) }}
                   </div>
-                  <div v-else class="flex items-center text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50/50 border border-blue-100/30 px-2.5 py-1 rounded-lg w-fit animate-pulse">
+                  <div v-else class="flex items-center text-[9px] font-semibold uppercase tracking-widest text-blue-600 bg-blue-50/50 border border-blue-100/30 px-2.5 py-1 rounded-lg w-fit animate-pulse">
                     Present Now
                   </div>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <div class="text-xs font-black text-slate-700">{{ log.total_minutes ? formatDuration(log.total_minutes) : '--' }}</div>
+                  <div class="text-xs font-bold text-slate-700">{{ log.total_minutes ? formatDuration(log.total_minutes) : '--' }}</div>
                 </td>
                 <td class="px-6 py-4 text-right">
                   <span :class="[
-                    'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border',
+                    'text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border',
                     log.marked_manually ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-slate-50 text-slate-400 border-slate-100'
                   ]">
                     {{ log.marked_manually ? 'Manual' : 'Auto' }}
@@ -234,7 +234,7 @@
             </tbody>
           </table>
 
-          <div class="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+          <div class="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
             <div>Showing {{ attendance.length }} records</div>
           </div>
         </div>

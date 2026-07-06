@@ -1,11 +1,7 @@
 <template>
-  <div class="p-6 space-y-6 bg-gray-50 min-h-screen">
+  <div class="space-y-6">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">System Settings</h1>
-        <p class="text-gray-500 mt-1">Configure global application parameters and appearance</p>
-      </div>
+    <div class="flex justify-end">
       <div class="flex items-center space-x-3">
         <button
           @click="fetchSettings"
@@ -18,7 +14,7 @@
         <button
           @click="saveAllSettings"
           :disabled="saving || loading"
-          class="px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all flex items-center space-x-2 shadow-md hover:shadow-lg disabled:opacity-50"
+          class="px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all flex items-center space-x-2 shadow-md hover:shadow-lg disabled:opacity-50"
         >
           <Save v-if="!saving" class="w-4 h-4" />
           <RefreshCw v-else class="w-4 h-4 animate-spin" />
@@ -28,7 +24,7 @@
     </div>
 
     <div v-if="loading" class="flex flex-col items-center justify-center py-24">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
       <p class="text-gray-500 font-medium">Loading system settings...</p>
     </div>
 
@@ -42,7 +38,7 @@
           :class="[
             'w-full text-left px-4 py-3 rounded-xl transition-all flex items-center space-x-3 font-medium',
             activeGroup === key 
-              ? 'bg-indigo-600 text-white shadow-md' 
+              ? 'bg-purple-600 text-white shadow-md' 
               : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-100'
           ]"
         >
@@ -74,8 +70,8 @@
                   <button
                     @click="toggleBoolean(setting)"
                     :class="[
-                      'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2',
-                      setting.value === 'true' || setting.value === true ? 'bg-indigo-600' : 'bg-gray-200'
+                      'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2',
+                      setting.value === 'true' || setting.value === true ? 'bg-purple-600' : 'bg-gray-200'
                     ]"
                   >
                     <span
@@ -101,7 +97,7 @@
                   <input
                     v-model="setting.value"
                     type="text"
-                    class="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none text-sm font-mono"
+                    class="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all outline-none text-sm font-mono"
                   />
                 </div>
 
@@ -110,7 +106,7 @@
                   v-else-if="setting.type === 'number'"
                   v-model="setting.value"
                   type="number"
-                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all outline-none"
                 />
 
                 <!-- Textarea Type -->
@@ -118,7 +114,7 @@
                   v-else-if="setting.type === 'textarea'"
                   v-model="setting.value"
                   rows="4"
-                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all outline-none"
                 ></textarea>
 
                 <!-- Default Text Type -->
@@ -126,7 +122,7 @@
                   v-else
                   v-model="setting.value"
                   type="text"
-                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all outline-none"
                 />
               </div>
             </div>
@@ -136,7 +132,7 @@
             <button
               @click="saveAllSettings"
               :disabled="saving"
-              class="px-8 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-200 transition-all disabled:opacity-50 flex items-center space-x-2"
+              class="px-8 py-3 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 font-bold shadow-lg shadow-purple-200 transition-all disabled:opacity-50 flex items-center space-x-2"
             >
               <Save v-if="!saving" class="w-5 h-5" />
               <RefreshCw v-else class="w-5 h-5 animate-spin" />

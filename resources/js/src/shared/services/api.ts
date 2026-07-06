@@ -148,6 +148,11 @@ export const studentAPI = {
     return response.data;
   },
 
+  async requestOverride(seatId: number) {
+    const response = await api.post('/student/bookings/override-requests', { seat_id: seatId });
+    return response.data;
+  },
+
   async cancelBooking(bookingId: number) {
     const response = await api.post(`/student/bookings/${bookingId}/cancel`);
     return response.data;
@@ -227,6 +232,21 @@ export const studentAPI = {
 
   async markNotificationRead(notificationId: number) {
     const response = await api.post(`/notifications/${notificationId}/read`);
+    return response.data;
+  },
+
+  async markAllNotificationsRead() {
+    const response = await api.post('/notifications/read-all');
+    return response.data;
+  },
+
+  async clearAllNotifications() {
+    const response = await api.post('/notifications/clear-all');
+    return response.data;
+  },
+
+  async deleteNotification(notificationId: number | string) {
+    const response = await api.delete(`/notifications/${notificationId}`);
     return response.data;
   },
   async getAnalytics() {
@@ -576,6 +596,21 @@ export const librarianAPI = {
 
   async deleteSection(sectionId: number) {
     const response = await api.delete(`/librarian/sections/${sectionId}`);
+    return response.data;
+  },
+
+  async getOverrideRequests() {
+    const response = await api.get('/librarian/override-requests');
+    return response.data;
+  },
+
+  async approveOverrideRequest(id: number) {
+    const response = await api.post(`/librarian/override-requests/${id}/approve`);
+    return response.data;
+  },
+
+  async rejectOverrideRequest(id: number) {
+    const response = await api.post(`/librarian/override-requests/${id}/reject`);
     return response.data;
   },
 

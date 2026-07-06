@@ -130,7 +130,7 @@
                   </div>
                   <div class="text-left">
                     <div class="text-sm font-medium text-slate-700">{{ record.user?.name }}</div>
-                    <div class="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5 uppercase">ID: {{ record.user?.crn || 'N/A' }}</div>
+                    <div class="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5 uppercase">CRN: {{ record.user?.crn || 'N/A' }}</div>
                   </div>
                 </div>
               </td>
@@ -166,13 +166,50 @@
                 >
                   Check Out
                 </button>
-                <span v-else class="text-xs text-slate-900 font-semibold">-</span>
+                <span v-else class="text-xs text-slate-400 font-semibold">-</span>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
+      <!-- Pagination Block -->
+      <div v-if="pagination.total > 0" class="bg-slate-50/50 px-6 py-4 border-t border-slate-100">
+        <div class="flex items-center justify-between">
+          <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Showing <span class="text-slate-700 font-bold">{{ pagination.from }}</span> to <span class="text-slate-700 font-bold">{{ pagination.to }}</span> of <span class="text-slate-700 font-bold">{{ pagination.total }}</span> entries
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <button
+              @click="changePage(pagination.current_page - 1)"
+              :disabled="pagination.current_page === 1"
+              class="px-3.5 py-1.5 border border-slate-200 bg-white rounded-xl text-slate-550 font-bold hover:bg-slate-50 transition-colors disabled:opacity-50 text-xs cursor-pointer shadow-sm"
+            >
+              Previous
+            </button>
+            <button
+              v-for="page in pagination.last_page"
+              :key="page"
+              @click="changePage(page)"
+              :class="[
+                'w-8.5 h-8.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm',
+                pagination.current_page === page
+                  ? 'bg-emerald-700 text-white'
+                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+              ]"
+            >
+              {{ page }}
+            </button>
+            <button
+              @click="changePage(pagination.current_page + 1)"
+              :disabled="pagination.current_page === pagination.last_page"
+              class="px-3.5 py-1.5 border border-slate-200 bg-white rounded-xl text-slate-550 font-bold hover:bg-slate-50 transition-colors disabled:opacity-50 text-xs cursor-pointer shadow-sm"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Mark Attendance Modal Dialog -->

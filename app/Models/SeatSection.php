@@ -15,6 +15,7 @@ class SeatSection extends Model
         'floor_id',
         'name',
         'gender',
+        'academic_level',
         'total_seats',
         'description',
         'is_active',

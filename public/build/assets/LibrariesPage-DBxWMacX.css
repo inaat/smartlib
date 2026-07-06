@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+.hover-lift[data-v-adf4a8cd] {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift[data-v-adf4a8cd]:hover {
+  transform: translateY(-4px);
+}
+.active\:scale-98[data-v-adf4a8cd]:active {
+  transform: scale(0.98);
+}
+
+
+.font-outfit[data-v-5afe82fa] {
+  font-family: 'Outfit', sans-serif;
+}
+.active\:scale-98[data-v-5afe82fa]:active {
+  transform: scale(0.98);
+}

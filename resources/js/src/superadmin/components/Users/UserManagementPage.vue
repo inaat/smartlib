@@ -1,116 +1,83 @@
 <template>
-  <div class="p-6 space-y-6 bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Student Management</h1>
-        <p class="text-gray-500 mt-1">Manage all registered students, their subscriptions and library assignments</p>
-      </div>
+  <div class="space-y-6">
+    <!-- Header Controls -->
+    <div class="flex justify-end items-center mb-6">
       <div class="flex items-center space-x-3">
         <button
-          @click="fetchUsers"
-          :disabled="loading"
-          class="px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex items-center space-x-2 shadow-sm disabled:opacity-50"
-        >
-          <RefreshCw :class="['w-4 h-4 text-gray-500', loading ? 'animate-spin' : '']" />
-          <span class="text-sm font-semibold text-gray-700">{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
-        </button>
-        <button
           @click="openCreateModal"
-          class="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all flex items-center space-x-2 shadow-md hover:shadow-lg"
+          class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors flex items-center space-x-2 text-xs font-bold shadow-sm cursor-pointer animate-in fade-in duration-200"
         >
           <Plus class="w-4 h-4" />
-          <span class="text-sm font-semibold">Add Student</span>
+          <span>Add Student</span>
         </button>
       </div>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-500">Total Students</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1">{{ users.length }}</p>
-          </div>
-          <div class="p-3 bg-blue-50 rounded-xl">
-            <Users class="w-6 h-6 text-blue-600" />
-          </div>
+    <!-- Stats Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
+        <div class="text-left">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Students</p>
+          <h3 class="text-2xl font-black text-slate-800 mt-1.5">{{ users.length }}</h3>
         </div>
-        <div class="mt-4 flex items-center text-xs text-green-600 font-medium">
-          <TrendingUp class="w-3 h-3 mr-1" />
-          <span>{{ newThisMonth }} new this month</span>
+        <div class="p-3.5 rounded-xl bg-purple-50 text-purple-600">
+          <Users class="w-5 h-5" />
         </div>
       </div>
 
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-500">Active Plans</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1">{{ activeSubscriptionsCount }}</p>
-          </div>
-          <div class="p-3 bg-green-50 rounded-xl">
-            <CreditCard class="w-6 h-6 text-green-600" />
-          </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
+        <div class="text-left">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Plans</p>
+          <h3 class="text-2xl font-black text-slate-800 mt-1.5">{{ activeSubscriptionsCount }}</h3>
         </div>
-        <div class="mt-4 flex items-center text-xs text-gray-500">
-          <span>{{ Math.round((activeSubscriptionsCount / (users.length || 1)) * 100) }}% conversion rate</span>
+        <div class="p-3.5 rounded-xl bg-green-50 text-green-600">
+          <CreditCard class="w-5 h-5" />
         </div>
       </div>
 
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-500">Pending Approval</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1">{{ pendingCount }}</p>
-          </div>
-          <div class="p-3 bg-amber-50 rounded-xl">
-            <Clock class="w-6 h-6 text-amber-600" />
-          </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
+        <div class="text-left">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pending</p>
+          <h3 class="text-2xl font-black text-slate-800 mt-1.5">{{ pendingCount }}</h3>
         </div>
-        <div class="mt-4 flex items-center text-xs text-amber-600 font-medium">
-          <span>Requires attention</span>
+        <div class="p-3.5 rounded-xl bg-amber-50 text-amber-600">
+          <Clock class="w-5 h-5" />
         </div>
       </div>
 
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-500">Total Bookings</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1">{{ totalBookings }}</p>
-          </div>
-          <div class="p-3 bg-purple-50 rounded-xl">
-            <Calendar class="w-6 h-6 text-purple-600" />
-          </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
+        <div class="text-left">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Bookings</p>
+          <h3 class="text-2xl font-black text-slate-800 mt-1.5">{{ totalBookings }}</h3>
         </div>
-        <div class="mt-4 flex items-center text-xs text-gray-500">
-          <span>Across all libraries</span>
+        <div class="p-3.5 rounded-xl bg-blue-50 text-blue-600">
+          <Calendar class="w-5 h-5" />
         </div>
       </div>
     </div>
 
-    <!-- Filters & Search -->
-    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center gap-4">
-      <div class="relative flex-1">
-        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search by name, email, or CRN..."
-          class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
-        />
-      </div>
-      <div class="flex items-center gap-3">
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+      <div class="flex flex-col md:flex-row items-center gap-4">
+        <div class="relative flex-1 w-full">
+          <Search class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+          <input
+            type="text"
+            v-model="searchQuery"
+            placeholder="Search by name, ID, or email..."
+            class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-655 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none placeholder-slate-400"
+          />
+        </div>
         <select
           v-model="filterLibrary"
-          class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+          class="w-full md:w-48 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-655 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none cursor-pointer"
         >
           <option value="">All Libraries</option>
           <option v-for="lib in libraries" :key="lib.id" :value="lib.id">{{ lib.name }}</option>
         </select>
         <select
           v-model="filterStatus"
-          class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+          class="w-full md:w-48 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-655 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none cursor-pointer"
         >
           <option value="">All Status</option>
           <option value="approved">Approved</option>
@@ -118,107 +85,118 @@
           <option value="suspended">Suspended</option>
           <option value="banned">Banned</option>
         </select>
+        <button
+          @click="fetchUsers"
+          :disabled="loading"
+          class="p-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 rounded-xl transition-colors cursor-pointer shadow-sm"
+          title="Refresh Data"
+        >
+          <RefreshCw :class="['w-4 h-4', loading ? 'animate-spin' : '']" />
+        </button>
       </div>
     </div>
 
-    <!-- Users Table -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div v-if="loading && users.length === 0" class="flex flex-col items-center justify-center py-24">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-        <p class="text-gray-500 font-medium">Loading students...</p>
-      </div>
-
-      <div v-else-if="filteredUsers.length === 0" class="flex flex-col items-center justify-center py-24">
-        <div class="p-4 bg-gray-50 rounded-full mb-4">
-          <Search class="w-8 h-8 text-gray-300" />
-        </div>
-        <p class="text-gray-500 font-medium">No students found matching your criteria</p>
-        <button @click="resetFilters" class="mt-2 text-indigo-600 hover:underline text-sm font-semibold">Clear all filters</button>
-      </div>
-
-      <div v-else class="overflow-x-auto">
+    <!-- Students Table List -->
+    <div v-if="loading && users.length === 0" class="flex justify-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+    </div>
+    <div v-else-if="filteredUsers.length === 0" class="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
+      <Users class="w-12 h-12 text-slate-300 mx-auto mb-4" />
+      <p class="text-xs font-bold text-slate-455 uppercase tracking-widest">No students found matching your criteria.</p>
+    </div>
+    <div v-else class="bg-white rounded-2xl shadow-sm border border-slate-100/80 overflow-hidden">
+      <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-100">
-          <thead>
-            <tr class="bg-gray-50/50">
-              <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Student</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CRN & Level</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Subscription</th>
-              <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+          <thead class="bg-gray-50/50">
+            <tr>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Student</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">CRN & Level</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Subscription</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Status</th>
+              <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-widest">Action</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-50">
-            <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50/80 transition-colors group">
+          <tbody class="divide-y divide-gray-100 bg-white">
+            <tr 
+              v-for="user in filteredUsers" 
+              :key="user.id"
+              class="hover:bg-slate-50/50 transition-colors"
+            >
+              <!-- Student Initial Avatar & Name -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="relative">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm">
-                      {{ user.name.charAt(0) }}
-                    </div>
-                    <div v-if="user.is_active" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                <div class="flex items-center space-x-3.5">
+                  <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center bg-purple-50 border border-purple-200 text-purple-600 font-bold text-sm">
+                    {{ user.name.charAt(0).toUpperCase() }}
                   </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-bold text-gray-900">{{ user.name }}</div>
-                    <div class="text-xs text-gray-500">{{ user.email }}</div>
+                  <div class="text-left">
+                    <div class="text-sm font-medium text-slate-700">{{ user.name }}</div>
+                    <div class="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5 uppercase">{{ user.email }}</div>
                   </div>
                 </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ user.crn }}</div>
-                <div class="text-xs text-gray-500">{{ user.ca_level || 'No Level' }}</div>
               </td>
 
-              <td class="px-6 py-4 whitespace-nowrap">
+              <!-- CRN & CA Level -->
+              <td class="px-6 py-4 whitespace-nowrap text-left">
+                <div class="text-xs font-bold text-slate-700">CRN: {{ user.crn || 'N/A' }}</div>
+                <div class="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5 uppercase">Level: {{ user.ca_level || 'No Level' }}</div>
+              </td>
+
+              <!-- Subscription -->
+              <td class="px-6 py-4 whitespace-nowrap text-left">
                 <div v-if="user.active_subscription" class="flex flex-col">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100">
                     {{ user.active_subscription.subscription_plan?.name }}
                   </span>
-                  <span class="text-[10px] text-gray-500 mt-1">Expires: {{ formatDate(user.active_subscription.expires_at) }}</span>
+                  <span class="text-[9px] text-slate-400 mt-1">Expires: {{ formatDate(user.active_subscription.expires_at) }}</span>
                 </div>
-                <div v-else class="text-xs text-gray-400">No active plan</div>
+                <div v-else class="text-xs text-slate-400 italic">No active plan</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+
+              <!-- Status Badge -->
+              <td class="px-6 py-4 whitespace-nowrap text-left">
                 <button
                   @click.stop="cycleUserStatus(user)"
                   :disabled="statusUpdating === user.id"
                   :class="[
-                    'px-2.5 py-1 inline-flex text-[10px] leading-4 font-bold uppercase tracking-wider rounded-full shadow-sm hover:opacity-80 transition-all disabled:opacity-50 cursor-pointer border-none',
-                    user.status === 'approved' ? 'bg-green-100 text-green-700' : 
-                    user.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
-                    user.status === 'suspended' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                    'text-[9px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider border transition-all disabled:opacity-50 cursor-pointer bg-white',
+                    user.status === 'approved' ? 'bg-green-50 border-green-100 text-green-700' : 
+                    user.status === 'pending' ? 'bg-amber-55 border-amber-100 text-amber-700' : 
+                    user.status === 'suspended' ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-red-50 border-red-100 text-red-700'
                   ]"
                 >
-                  <RefreshCw v-if="statusUpdating === user.id" class="w-2.5 h-2.5 animate-spin mr-1" />
+                  <RefreshCw v-if="statusUpdating === user.id" class="w-2.5 h-2.5 animate-spin mr-1 inline-block" />
                   {{ user.status }}
                 </button>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex items-center justify-end space-x-2 transition-opacity">
+
+              <!-- Actions -->
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <div class="flex items-center justify-end space-x-2">
                   <button 
                     v-if="user.status === 'pending'"
                     @click="approveUser(user)" 
-                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    class="p-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-green-700 hover:text-green-800 transition-all cursor-pointer shadow-sm"
                     title="Approve Student"
                   >
                     <UserCheck class="w-4 h-4" />
                   </button>
                   <button 
                     @click="editUser(user)" 
-                    class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    class="p-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-purple-700 hover:text-purple-800 transition-all cursor-pointer shadow-sm"
                     title="Edit Student"
                   >
                     <Edit2 class="w-4 h-4" />
                   </button>
                   <button 
                     @click="openBanModal(user)" 
-                    class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                    class="p-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-orange-750 hover:text-orange-800 transition-all cursor-pointer shadow-sm"
                     title="Ban Student"
                   >
                     <Ban class="w-4 h-4" />
                   </button>
                   <button 
                     @click="confirmDelete(user)" 
-                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    class="p-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-red-655 hover:text-red-700 transition-all cursor-pointer shadow-sm"
                     title="Delete Student"
                   >
                     <Trash2 class="w-4 h-4" />
@@ -232,58 +210,56 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div class="px-8 py-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-between">
-          <div>
-            <h3 class="text-xl font-bold">{{ isEditing ? 'Edit Student' : 'Add New Student' }}</h3>
-            <p class="text-indigo-100 text-xs mt-1">{{ isEditing ? 'Update student profile information' : 'Register a new student in the system' }}</p>
-          </div>
-          <button @click="showModal = false" class="p-2 hover:bg-white/20 rounded-xl transition-colors">
-            <X class="w-6 h-6" />
+    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 border border-slate-100 flex flex-col">
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between text-left">
+          <h2 class="text-lg font-bold text-slate-800">{{ isEditing ? 'Edit Student' : 'Add New Student' }}</h2>
+          <button @click="showModal = false" class="p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">
+            <X class="w-5 h-5 text-slate-450" />
           </button>
         </div>
 
-        <form @submit.prevent="saveUser" class="p-8 space-y-5">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div class="space-y-1.5">
-              <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Full Name</label>
-              <input
-                v-model="form.name"
-                type="text"
-                required
-                placeholder="e.g. John Doe"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
-              />
-            </div>
-            <div class="space-y-1.5">
-              <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Email Address</label>
-              <input
-                v-model="form.email"
-                type="email"
-                required
-                placeholder="john@example.com"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
-              />
-            </div>
+        <!-- Form Body -->
+        <form @submit.prevent="saveUser" class="p-6 space-y-4 text-left">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Full Name</label>
+            <input
+              v-model="form.name"
+              type="text"
+              required
+              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
+              placeholder="e.g. John Doe"
+            />
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div class="space-y-1.5">
-              <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">CRN / Student ID</label>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Email Address</label>
+            <input
+              v-model="form.email"
+              type="email"
+              required
+              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
+              placeholder="john@example.com"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Student ID (CRN)</label>
               <input
                 v-model="form.crn"
-                type="number"
+                type="text"
                 required
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
                 placeholder="e.g. 12345"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
               />
             </div>
-            <div class="space-y-1.5">
-              <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">CA Level</label>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">CA Level</label>
               <select
                 v-model="form.ca_level"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-bold text-slate-655 bg-white cursor-pointer"
               >
                 <option value="">Select Level</option>
                 <option value="PRC">PRC</option>
@@ -293,23 +269,25 @@
             </div>
           </div>
 
-          <div v-if="!isEditing" class="space-y-1.5">
-            <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Password</label>
+          <div v-if="!isEditing">
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Password</label>
             <input
               v-model="form.password"
               type="password"
               required
-              placeholder="Minimum 8 characters"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
+              minlength="8"
+              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
+              placeholder="Min. 8 characters"
             />
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div class="space-y-1.5">
-              <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Account Status</label>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Account Status</label>
               <select
                 v-model="form.status"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                required
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-bold text-slate-655 bg-white cursor-pointer"
               >
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
@@ -317,11 +295,11 @@
                 <option value="banned">Banned</option>
               </select>
             </div>
-            <div class="space-y-1.5">
-              <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Gender</label>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Gender</label>
               <select
                 v-model="form.gender"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-bold text-slate-655 bg-white cursor-pointer"
               >
                 <option value="">Select Gender</option>
                 <option value="male">Male</option>
@@ -330,76 +308,82 @@
             </div>
           </div>
 
-          <div class="flex items-center space-x-4 pt-6">
+          <!-- Form Actions Footer -->
+          <div class="pt-4 flex items-center space-x-3">
             <button
               type="button"
               @click="showModal = false"
-              class="flex-1 px-6 py-3 border border-gray-200 text-gray-700 rounded-2xl hover:bg-gray-50 font-bold transition-all"
+              class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition-colors text-xs cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               :disabled="saving"
-              class="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-200 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+              class="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold cursor-pointer"
             >
-              <RefreshCw v-if="saving" class="w-4 h-4 animate-spin" />
-              <span>{{ saving ? 'Saving...' : (isEditing ? 'Update Student' : 'Create Student') }}</span>
+              <span v-if="saving">Saving...</span>
+              <span v-else>{{ isEditing ? 'Update Student' : 'Create Student' }}</span>
             </button>
           </div>
         </form>
       </div>
     </div>
+
     <!-- Ban Modal -->
-    <div v-if="showBanModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-red-600 text-white flex items-center justify-between">
-          <div>
-            <h3 class="text-xl font-bold">Ban Student</h3>
-            <p class="text-orange-100 text-xs mt-1">Restrict {{ banForm.userName }} from accessing libraries</p>
-          </div>
-          <button @click="showBanModal = false" class="p-2 hover:bg-white/20 rounded-xl transition-colors">
-            <X class="w-6 h-6" />
+    <div v-if="showBanModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 border border-slate-100 flex flex-col">
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between text-left">
+          <h2 class="text-lg font-bold text-slate-800">Ban Student</h2>
+          <button @click="showBanModal = false" class="p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">
+            <X class="w-5 h-5 text-slate-450" />
           </button>
         </div>
 
-        <form @submit.prevent="submitBan" class="p-8 space-y-5">
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Ban Duration (Days)</label>
+        <!-- Form Body -->
+        <form @submit.prevent="submitBan" class="p-6 space-y-4 text-left">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Restrict Access For</label>
+            <p class="text-xs text-slate-500 mt-1 mb-2 font-medium">Student: {{ banForm.userName }}</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Ban Duration (Days)</label>
             <input
               v-model="banForm.days"
               type="number"
               min="1"
               placeholder="Leave empty for lifetime ban"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all outline-none"
+              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
             />
           </div>
           
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Reason</label>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Reason</label>
             <textarea
               v-model="banForm.reason"
               rows="3"
               placeholder="Reason for banning"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all outline-none resize-none"
+              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white resize-none"
             ></textarea>
           </div>
 
-          <div class="flex items-center space-x-4 pt-4">
+          <div class="pt-4 flex items-center space-x-3">
             <button
               type="button"
               @click="showBanModal = false"
-              class="flex-1 px-6 py-3 border border-gray-200 text-gray-700 rounded-2xl hover:bg-gray-50 font-bold transition-all"
+              class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition-colors text-xs cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               :disabled="banning"
-              class="flex-1 px-6 py-3 bg-red-600 text-white rounded-2xl hover:bg-red-700 font-bold shadow-lg shadow-red-200 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+              class="flex-1 px-4 py-2.5 bg-red-655 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold cursor-pointer"
             >
-              <RefreshCw v-if="banning" class="w-4 h-4 animate-spin" />
-              <span>{{ banning ? 'Banning...' : 'Confirm Ban' }}</span>
+              <span v-if="banning">Banning...</span>
+              <span v-else>Confirm Ban</span>
             </button>
           </div>
         </form>
@@ -423,7 +407,6 @@ import {
   Plus,
   TrendingUp,
   Calendar,
-  Library as LibraryIcon,
   Ban
 } from 'lucide-vue-next';
 import { adminAPI } from '@/shared/services/api';
@@ -575,7 +558,7 @@ const submitBan = async () => {
     });
     showBanModal.value = false;
     alert(`User ${banForm.value.userName} banned successfully.`);
-    // Optionally refetch users if API injects ban info into user object
+    await fetchUsers();
   } catch (error) {
     console.error('Error banning user:', error);
     alert('Failed to ban user.');
@@ -584,28 +567,33 @@ const submitBan = async () => {
   }
 };
 
-const unbanUser = async (user: any) => {
-  if (!confirm(`Are you sure you want to unban ${user.name}?`)) return;
-  try {
-    await adminAPI.unbanUser(user.id);
-    alert(`User ${user.name} unbanned successfully.`);
-  } catch (error) {
-    console.error('Error unbanning user:', error);
-  }
-};
-
 const saveUser = async () => {
   saving.value = true;
   try {
+    const payload: any = { ...form.value };
+    if (!payload.ca_level) delete payload.ca_level;
+    if (!payload.crn) delete payload.crn;
+    if (!payload.gender) delete payload.gender;
+    if (isEditing.value && !payload.password) {
+      delete payload.password;
+    }
+
     if (isEditing.value && form.value.id) {
-      await adminAPI.updateUser(form.value.id, form.value);
+      await adminAPI.updateUser(form.value.id, payload);
     } else {
-      await adminAPI.createUser(form.value);
+      await adminAPI.createUser(payload);
     }
     await fetchUsers();
     showModal.value = false;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving student:', error);
+    const errData = error.response?.data;
+    if (errData?.errors) {
+      const messages = Object.values(errData.errors).flat().join('\n');
+      alert(messages);
+    } else if (errData?.message) {
+      alert(errData.message);
+    }
   } finally {
     saving.value = false;
   }
@@ -632,35 +620,29 @@ const cycleUserStatus = async (user: any) => {
     await adminAPI.updateUser(user.id, { status: nextStatus });
     user.status = nextStatus;
   } catch (error) {
-    console.error('Error cycling status:', error);
+    console.error('Error updating status:', error);
   } finally {
     statusUpdating.value = null;
   }
 };
 
 const confirmDelete = async (user: any) => {
-  if (confirm(`Are you sure you want to delete student "${user.name}"? This action cannot be undone.`)) {
+  if (confirm(`Are you sure you want to delete student "${user.name}"?`)) {
     try {
       await adminAPI.deleteUser(user.id);
       await fetchUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error deleting student:', error);
     }
   }
 };
 
-const resetFilters = () => {
-  searchQuery.value = '';
-  filterLibrary.value = '';
-  filterStatus.value = '';
-};
-
-const formatDate = (date: string) => {
-  if (!date) return 'N/A';
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return 'N/A';
   try {
-    return format(parseISO(date), 'MMM dd, yyyy');
+    return format(parseISO(dateStr), 'MMM dd, yyyy');
   } catch {
-    return 'Invalid Date';
+    return dateStr;
   }
 };
 
@@ -669,3 +651,24 @@ onMounted(() => {
   fetchLibraries();
 });
 </script>
+
+<style scoped>
+.text-slate-850 {
+  color: #1e293b;
+}
+.text-slate-550 {
+  color: #64748b;
+}
+.text-slate-455 {
+  color: #475569;
+}
+.text-slate-505 {
+  color: #334155;
+}
+.text-slate-655 {
+  color: #475569;
+}
+.text-red-655 {
+  color: #ef4444;
+}
+</style>

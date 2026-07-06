@@ -100,7 +100,7 @@
                   </div>
                   <div class="text-left">
                     <div class="text-sm font-medium text-slate-700">{{ student.name }}</div>
-                    <div class="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5 uppercase">ID: {{ student.crn || 'N/A' }}</div>
+                    <div class="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5 uppercase">CRN: {{ student.crn || 'N/A' }}</div>
                   </div>
                 </div>
               </td>

@@ -44,10 +44,22 @@ class SeatSectionController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'gender' => 'required|string|in:male,female,mixed',
+            'academic_level' => 'nullable|string|in:PRC,CAF,Final,all',
             'total_seats' => 'required|integer|min:1',
             'description' => 'nullable|string',
             'floor_id' => 'required|exists:floors,id',
         ]);
+
+        // Calculate and validate floor capacity
+        $floor = \App\Models\Floor::findOrFail($validated['floor_id']);
+        $currentSeatsOnFloor = SeatSection::where('floor_id', $floor->id)->sum('total_seats');
+        $newTotalSeats = $currentSeatsOnFloor + $validated['total_seats'];
+
+        if ($floor->capacity > 0 && $newTotalSeats > $floor->capacity) {
+            return response()->json([
+                'message' => "Cannot add seats. The total seats across all sections cannot exceed the floor capacity of {$floor->capacity} seats."
+            ], 422);
+        }
 
         // Check if total seats exceeds library capacity (Skipped as capacity column is missing)
         $library = Library::findOrFail($libraryId);
@@ -56,6 +68,7 @@ class SeatSectionController extends Controller
             'library_id' => $libraryId,
             'name' => $validated['name'],
             'gender' => $validated['gender'],
+            'academic_level' => $validated['academic_level'] ?? 'all',
             'total_seats' => $validated['total_seats'],
             'description' => $validated['description'] ?? null,
             'floor_id' => $validated['floor_id'] ?? null,
@@ -105,10 +118,27 @@ class SeatSectionController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'gender' => 'sometimes|string|in:male,female,mixed',
+            'academic_level' => 'sometimes|string|in:PRC,CAF,Final,all',
             'description' => 'nullable|string',
             'is_active' => 'sometimes|boolean',
             'floor_id' => 'nullable|exists:floors,id',
+            'total_seats' => 'sometimes|integer|min:1',
         ]);
+
+        $targetFloorId = $validated['floor_id'] ?? $section->floor_id;
+        $newSeatsCount = $validated['total_seats'] ?? $section->total_seats;
+
+        $floor = \App\Models\Floor::findOrFail($targetFloorId);
+        $currentSeatsOnFloor = SeatSection::where('floor_id', $floor->id)
+            ->where('id', '!=', $section->id)
+            ->sum('total_seats');
+        $newTotalSeats = $currentSeatsOnFloor + $newSeatsCount;
+
+        if ($floor->capacity > 0 && $newTotalSeats > $floor->capacity) {
+            return response()->json([
+                'message' => "Cannot add seats. The total seats across all sections cannot exceed the floor capacity of {$floor->capacity} seats."
+            ], 422);
+        }
 
         $section->update($validated);
 

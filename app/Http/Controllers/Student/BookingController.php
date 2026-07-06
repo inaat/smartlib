@@ -119,6 +119,37 @@ class BookingController extends Controller
             }
         }
 
+        // Check academic level restriction if section has one
+        if ($section && $section->academic_level && $section->academic_level !== 'all') {
+            if ($user->ca_level !== $section->academic_level) {
+                // Check if they have an approved override request for this seat
+                $hasApprovedOverride = \App\Models\OverrideRequest::where('user_id', $user->id)
+                    ->where('seat_id', $seat->id)
+                    ->where('status', 'approved')
+                    ->exists();
+
+                if (!$hasApprovedOverride) {
+                    $userLevel = $user->ca_level;
+                    $availableSeatsOfUserLevel = Seat::whereHas('seatSection', function ($q) use ($libraryId, $userLevel) {
+                        $q->where('library_id', $libraryId)
+                          ->where('academic_level', $userLevel);
+                    })
+                    ->where('status', 'available')
+                    ->count();
+
+                    $allOccupied = ($availableSeatsOfUserLevel === 0);
+
+                    return response()->json([
+                        'message' => "This seat is restricted to {$section->academic_level} students.",
+                        'restricted' => true,
+                        'can_request_override' => $allOccupied,
+                        'user_level' => $userLevel,
+                        'seat_level' => $section->academic_level
+                    ], 403);
+                }
+            }
+        }
+
         // Check if user already has an active or pending booking
         $activeBookingForUser = SeatBooking::where('user_id', $user->id)
             ->whereIn('status', ['booked', 'checked_in'])
@@ -637,6 +668,35 @@ class BookingController extends Controller
             }
         }
 
+        // Check academic level restriction if section has one
+        if ($section && $section->academic_level && $section->academic_level !== 'all') {
+            if ($user->ca_level !== $section->academic_level) {
+                $hasApprovedOverride = \App\Models\OverrideRequest::where('user_id', $user->id)
+                    ->where('seat_id', $seat->id)
+                    ->where('status', 'approved')
+                    ->exists();
+
+                if (!$hasApprovedOverride) {
+                    $availableSeatsOfUserLevel = Seat::whereHas('seatSection', function ($q) use ($seat, $user) {
+                        $q->where('library_id', $seat->floor->library_id ?? $seat->library_id)
+                          ->where('academic_level', $user->ca_level);
+                    })
+                    ->where('status', 'available')
+                    ->count();
+
+                    $allOccupied = ($availableSeatsOfUserLevel === 0);
+
+                    return response()->json([
+                        'message' => "This seat is restricted to {$section->academic_level} students.",
+                        'restricted' => true,
+                        'can_request_override' => $allOccupied,
+                        'user_level' => $user->ca_level,
+                        'seat_level' => $section->academic_level
+                    ], 403);
+                }
+            }
+        }
+
 
         // Check if already in queue for this seat
         $existingQueue = SmartQueue::where('user_id', $user->id)
@@ -675,5 +735,69 @@ class BookingController extends Controller
             'message' => 'Successfully joined the queue.',
             'position' => $queue->queue_position
         ]);
+    }
+
+    public function requestOverride(Request $request)
+    {
+        $request->validate([
+            'seat_id' => 'required|exists:seats,id',
+        ]);
+
+        $user = $request->user();
+        $seat = Seat::with(['floor.library', 'seatSection'])->findOrFail($request->seat_id);
+        $libraryId = $seat->floor->library_id ?? $seat->library_id;
+
+        // Check if there is already a pending or approved override request for this seat and user
+        $existing = \App\Models\OverrideRequest::where('user_id', $user->id)
+            ->where('seat_id', $seat->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'message' => "You already have a {$existing->status} override request for this seat."
+            ], 400);
+        }
+
+        // Validate that all seats of their own level are indeed occupied/reserved
+        $userLevel = $user->ca_level;
+        $availableSeatsOfUserLevel = Seat::whereHas('seatSection', function ($q) use ($libraryId, $userLevel) {
+            $q->where('library_id', $libraryId)
+              ->where('academic_level', $userLevel);
+        })
+        ->where('status', 'available')
+        ->count();
+
+        if ($availableSeatsOfUserLevel > 0) {
+            return response()->json([
+                'message' => "You cannot request an override. There are still available seats assigned to your level ({$userLevel})."
+            ], 400);
+        }
+
+        // Create the override request
+        $overrideRequest = \App\Models\OverrideRequest::create([
+            'user_id' => $user->id,
+            'seat_id' => $seat->id,
+            'library_id' => $libraryId,
+            'status' => 'pending',
+        ]);
+
+        // Notify librarians
+        $librarians = \App\Models\User::role('librarian')->where('library_id', $libraryId)->get();
+        foreach ($librarians as $lib) {
+            \App\Models\Notification::send(
+                $lib->id,
+                'system',
+                'New Override Request',
+                "Student {$user->name} has requested an override for seat {$seat->seat_number}.",
+                $overrideRequest
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Override request submitted successfully. Please wait for librarian approval.',
+            'request' => $overrideRequest
+        ], 201);
     }
 }

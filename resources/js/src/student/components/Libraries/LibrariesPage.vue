@@ -6,7 +6,7 @@
         <button
           @click="viewMode = 'list'"
           :class="[
-            'px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wide transition-all active:scale-98 flex items-center space-x-1.5',
+            'px-4 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all active:scale-98 flex items-center space-x-1.5',
             viewMode === 'list' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-700'
           ]"
         >
@@ -16,7 +16,7 @@
         <button
           @click="viewMode = 'map'"
           :class="[
-            'px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wide transition-all active:scale-98 flex items-center space-x-1.5',
+            'px-4 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all active:scale-98 flex items-center space-x-1.5',
             viewMode === 'map' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-700'
           ]"
         >
@@ -64,7 +64,7 @@
       <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-inner">
         <MapPin class="w-7 h-7" />
       </div>
-      <h3 class="text-base font-bold text-slate-800 mb-1">No libraries found</h3>
+      <h3 class="text-base font-semibold text-slate-800 mb-1">No libraries found</h3>
       <p class="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">Try adjusting your search query or choosing another facility filter.</p>
     </div>
   </div>

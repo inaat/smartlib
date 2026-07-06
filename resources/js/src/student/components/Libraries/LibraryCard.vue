@@ -16,7 +16,7 @@
       <div class="absolute top-3 right-3 z-10">
         <span 
           :class="[
-            'px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider shadow-sm border leading-none block backdrop-blur-md',
+            'px-2.5 py-1 rounded-xl text-[9px] font-semibold uppercase tracking-wider shadow-sm border leading-none block backdrop-blur-md',
             isOpen 
               ? 'bg-emerald-500/90 text-white border-emerald-400/20' 
               : 'bg-rose-500/90 text-white border-rose-400/20'
@@ -27,7 +27,7 @@
       </div>
 
       <!-- Rating Badge (bottom left overlay) -->
-      <div v-if="library.average_rating" class="absolute bottom-3 left-3 bg-slate-900/70 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[10px] font-extrabold flex items-center space-x-1 border border-white/10 shadow-sm">
+      <div v-if="library.average_rating" class="absolute bottom-3 left-3 bg-slate-900/70 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1 border border-white/10 shadow-sm">
         <span class="text-amber-400">★</span>
         <span>{{ library.average_rating.toFixed(1) }}</span>
       </div>
@@ -39,7 +39,7 @@
         <!-- Name & Address -->
         <div class="flex items-start justify-between gap-2.5">
           <div class="min-w-0">
-            <h3 class="text-base font-extrabold text-slate-800 group-hover:text-blue-600 transition-colors leading-snug truncate" :title="library.name">
+            <h3 class="text-base font-semibold text-slate-800 group-hover:text-blue-600 transition-colors leading-snug truncate" :title="library.name">
               {{ library.name }}
             </h3>
             <div class="flex items-center text-xs text-slate-400 font-semibold mt-1 truncate" :title="library.address">
@@ -47,7 +47,7 @@
               <span class="truncate">{{ library.address }}</span>
             </div>
           </div>
-          <span v-if="library.distance_km" class="text-[10px] font-extrabold text-blue-600 bg-blue-50/50 border border-blue-100 px-2 py-0.5 rounded-lg flex-shrink-0 leading-none self-start">
+          <span v-if="library.distance_km" class="text-[10px] font-semibold text-blue-600 bg-blue-50/50 border border-blue-100 px-2 py-0.5 rounded-lg flex-shrink-0 leading-none self-start">
             {{ library.distance_km }}km
           </span>
         </div>
@@ -62,11 +62,11 @@
         <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
           <div class="flex items-center min-w-0">
             <Users class="w-4 h-4 mr-2 text-slate-400 flex-shrink-0" />
-            <span class="text-xs text-slate-500 font-bold truncate">
+            <span class="text-xs text-slate-500 font-medium truncate">
               {{ library.availableSeats }} / {{ library.totalSeats }} seats free
             </span>
           </div>
-          <span :class="['text-[9px] font-black px-2.5 py-0.5 rounded-lg border shadow-sm flex-shrink-0 leading-none', getAvailabilityColor()]">
+          <span :class="['text-[9px] font-semibold px-2.5 py-0.5 rounded-lg border shadow-sm flex-shrink-0 leading-none', getAvailabilityColor()]">
             {{ Math.round(availabilityPercentage) }}% free
           </span>
         </div>
@@ -76,12 +76,12 @@
           <div 
             v-for="facility in (library.facilities || []).slice(0, 3)" 
             :key="facility" 
-            class="flex items-center bg-slate-50 border border-slate-100/50 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-lg"
+            class="flex items-center bg-slate-50 border border-slate-100/50 text-slate-500 text-[10px] font-medium px-2 py-0.5 rounded-lg"
           >
             <component :is="getFacilityIcon(facility)" class="w-3 h-3 text-slate-400" v-if="getFacilityIcon(facility)" />
             <span class="ml-1 leading-none">{{ facility }}</span>
           </div>
-          <span v-if="(library.facilities || []).length > 3" class="text-[9px] font-extrabold text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg">
+          <span v-if="(library.facilities || []).length > 3" class="text-[9px] font-medium text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg">
             +{{ library.facilities.length - 3 }} more
           </span>
         </div>
@@ -92,13 +92,13 @@
         <div class="flex space-x-2.5">
           <router-link
             :to="`/student/libraries/${library.id}/seats`"
-            class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold shadow-sm active:scale-98 transition-all flex items-center justify-center leading-none text-center"
+            class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm active:scale-98 transition-all flex items-center justify-center leading-none text-center"
           >
             Book Seat
           </router-link>
           <router-link
             :to="`/student/libraries/${library.id}`"
-            class="flex-1 py-2 px-3 bg-white border border-slate-350 hover:border-slate-400 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-bold active:scale-98 transition-all flex items-center justify-center leading-none text-center"
+            class="flex-1 py-2 px-3 bg-white border border-slate-350 hover:border-slate-400 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-semibold active:scale-98 transition-all flex items-center justify-center leading-none text-center"
           >
             View Details
           </router-link>

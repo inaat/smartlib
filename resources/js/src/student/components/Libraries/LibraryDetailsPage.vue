@@ -6,7 +6,7 @@
 
   <div v-else-if="library" class="space-y-6 pb-12 font-outfit">
     <!-- Breadcrumbs/Back Link -->
-    <div class="flex items-center text-xs text-slate-400 font-extrabold uppercase tracking-wide text-left">
+    <div class="flex items-center text-xs text-slate-400 font-semibold uppercase tracking-wide text-left">
       <router-link to="/student/libraries" class="hover:text-blue-650 transition-colors">Libraries</router-link>
       <ChevronRight class="w-3.5 h-3.5 mx-1 text-slate-300" />
       <span class="text-slate-500">{{ library.name }}</span>
@@ -21,7 +21,7 @@
       />
       <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
       <div class="absolute bottom-0 left-0 p-6 md:p-8 text-white text-left">
-        <h1 class="text-2xl md:text-3xl font-black mb-2">{{ library.name }}</h1>
+        <h1 class="text-2xl md:text-3xl font-bold mb-2">{{ library.name }}</h1>
         <div class="flex items-center text-slate-200 text-xs font-semibold">
           <MapPin class="w-4.5 h-4.5 mr-1.5 text-red-500" />
           {{ library.address }}
@@ -34,7 +34,7 @@
       <div class="lg:col-span-2 space-y-6">
         <!-- About -->
         <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left">
-          <h2 class="text-sm font-extrabold text-slate-700 uppercase tracking-wider mb-4">About the Library</h2>
+          <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">About the Library</h2>
           <p class="text-slate-600 text-xs md:text-sm leading-relaxed">
             {{ library.description || 'Welcome to ' + library.name + '. We provide a quiet and productive environment for students to study and research. Our facilities are designed to cater to all your academic needs.' }}
           </p>
@@ -45,8 +45,8 @@
                 <Users class="w-5.5 h-5.5" />
               </div>
               <div class="text-left leading-none">
-                <p class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Capacity</p>
-                <p class="font-extrabold text-slate-800 text-sm leading-none">{{ library.capacity }} Seats</p>
+                <p class="text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Capacity</p>
+                <p class="font-bold text-slate-800 text-sm leading-none">{{ library.capacity }} Seats</p>
               </div>
             </div>
             <div class="flex items-center space-x-3">
@@ -54,8 +54,8 @@
                 <CheckCircle class="w-5.5 h-5.5" />
               </div>
               <div class="text-left leading-none">
-                <p class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Available</p>
-                <p class="font-extrabold text-slate-800 text-sm leading-none">{{ library.availableSeats }} Seats</p>
+                <p class="text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Available</p>
+                <p class="font-bold text-slate-800 text-sm leading-none">{{ library.availableSeats }} Seats</p>
               </div>
             </div>
             <div class="flex items-center space-x-3">
@@ -63,8 +63,8 @@
                 <Clock class="w-5.5 h-5.5" />
               </div>
               <div class="text-left leading-none">
-                <p class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Status</p>
-                <p class="font-extrabold text-slate-800 text-sm leading-none" :class="isOpen ? 'text-emerald-600' : 'text-red-500'">{{ isOpen ? 'Open Now' : 'Closed' }}</p>
+                <p class="text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Status</p>
+                <p class="font-bold text-slate-800 text-sm leading-none" :class="isOpen ? 'text-emerald-600' : 'text-red-500'">{{ isOpen ? 'Open Now' : 'Closed' }}</p>
               </div>
             </div>
           </div>
@@ -72,7 +72,7 @@
 
         <!-- Facilities -->
         <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left">
-          <h2 class="text-sm font-extrabold text-slate-700 uppercase tracking-wider mb-5">Facilities & Amenities</h2>
+          <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-5">Facilities & Amenities</h2>
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             <div 
               v-for="facility in library.facilities" 
@@ -80,14 +80,14 @@
               class="flex flex-col items-center p-4 rounded-xl bg-slate-50 border border-slate-100/50 hover:border-blue-200 hover:bg-blue-50/30 transition-all group"
             >
               <component :is="getFacilityIcon(facility)" class="w-7 h-7 text-slate-400 group-hover:text-blue-650 mb-2 transition-colors" />
-              <span class="text-xs font-bold text-slate-700 text-center leading-none">{{ facility }}</span>
+              <span class="text-xs font-medium text-slate-700 text-center leading-none">{{ facility }}</span>
             </div>
           </div>
         </section>
 
         <!-- Rules -->
         <section v-if="library.rules && library.rules.length" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left">
-          <h2 class="text-sm font-extrabold text-slate-700 uppercase tracking-wider mb-4">Library Rules</h2>
+          <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Library Rules</h2>
           <div class="space-y-3.5">
             <div v-for="(rule, index) in library.rules" :key="index" class="flex items-start space-x-3">
               <div class="mt-0.5 p-1 bg-orange-50 border border-orange-100 text-orange-600 rounded-lg">
@@ -101,17 +101,17 @@
         <!-- Ratings & Feedback -->
         <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-sm font-extrabold text-slate-700 uppercase tracking-wider">Ratings & Feedback</h2>
+            <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Ratings & Feedback</h2>
             <div class="flex items-center bg-yellow-50/50 px-3 py-1 rounded-lg border border-yellow-100/60 leading-none">
               <Star class="w-4.5 h-4.5 text-yellow-500 fill-yellow-500 mr-1.5" />
-              <span class="text-base font-black text-yellow-700">{{ library.average_rating || '0.0' }}</span>
-              <span class="text-slate-400 text-xs font-bold ml-1.5">/ 5.0</span>
+              <span class="text-base font-bold text-yellow-700">{{ library.average_rating || '0.0' }}</span>
+              <span class="text-slate-400 text-xs font-medium ml-1.5">/ 5.0</span>
             </div>
           </div>
 
           <!-- Submit Review Form -->
           <div v-if="!userReview" class="bg-slate-50/50 rounded-xl p-5 mb-6 border border-slate-100">
-            <h3 class="font-extrabold text-slate-800 text-xs uppercase mb-3">Write a Review</h3>
+            <h3 class="font-semibold text-slate-800 text-xs uppercase mb-3">Write a Review</h3>
             <div class="space-y-4">
               <div class="flex items-center space-x-1.5">
                 <button 
@@ -136,7 +136,7 @@
               <button 
                 @click="submitReview"
                 :disabled="submittingReview || !newReview.rating"
-                class="bg-blue-600 hover:opacity-95 text-white text-xs font-extrabold rounded-xl px-5 py-2 shadow-md shadow-blue-500/10 active:scale-98 transition-all disabled:opacity-50 flex items-center"
+                class="bg-blue-600 hover:opacity-95 text-white text-xs font-semibold rounded-xl px-5 py-2 shadow-md shadow-blue-500/10 active:scale-98 transition-all disabled:opacity-50 flex items-center"
               >
                 <RefreshCw v-if="submittingReview" class="w-3.5 h-3.5 mr-1.5 animate-spin" />
                 <span>{{ submittingReview ? 'Submitting...' : 'Submit Review' }}</span>
@@ -147,7 +147,7 @@
           <!-- User's Review (if exists) -->
           <div v-else class="bg-blue-50/40 rounded-xl p-4 mb-6 border border-blue-100/50 relative">
             <div class="flex justify-between items-start mb-2.5">
-              <h3 class="font-extrabold text-blue-900 text-xs uppercase tracking-wide">Your Review</h3>
+              <h3 class="font-semibold text-blue-900 text-xs uppercase tracking-wide">Your Review</h3>
               <button 
                 @click="deleteReview(userReview.id)"
                 class="text-red-500 hover:text-red-655 transition-colors p-1"
@@ -184,7 +184,7 @@
                   />
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between mb-1.5">
-                      <h4 class="font-bold text-slate-800 text-xs leading-none truncate pr-3">{{ review.user.name }}</h4>
+                      <h4 class="font-semibold text-slate-800 text-xs leading-none truncate pr-3">{{ review.user.name }}</h4>
                       <span class="text-[10px] text-slate-400 font-semibold flex-shrink-0">{{ formatDateRelative(review.created_at) }}</span>
                     </div>
                     <div class="flex items-center mb-1.5 leading-none">
@@ -201,7 +201,7 @@
             </div>
             <div v-else-if="!userReview" class="text-center py-10 bg-slate-50/50 rounded-xl border border-dashed border-slate-200/80">
               <Star class="w-6 h-6 text-slate-300 mx-auto mb-2" />
-              <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">No reviews yet. Be the first to share your thoughts!</p>
+              <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">No reviews yet. Be the first to share your thoughts!</p>
             </div>
           </div>
         </section>
@@ -211,11 +211,11 @@
       <div class="space-y-6">
         <!-- Booking Card -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 sticky top-24 text-left">
-          <h3 class="text-base font-extrabold text-slate-800 mb-1.5">Reserve a Seat</h3>
+          <h3 class="text-base font-semibold text-slate-800 mb-1.5">Reserve a Seat</h3>
           <p class="text-slate-500 text-xs mb-5 leading-relaxed font-semibold">Book your preferred spot in advance to ensure a productive study session.</p>
           
           <div class="space-y-2 mb-6">
-            <div class="flex justify-between text-xs font-bold leading-none">
+            <div class="flex justify-between text-xs font-medium leading-none">
               <span class="text-slate-400 uppercase tracking-wide">Available Seats</span>
               <span class="text-green-600">{{ library.availableSeats }} / {{ library.capacity }}</span>
             </div>
@@ -229,7 +229,7 @@
 
           <router-link 
             :to="`/student/libraries/${library.id}/seats`"
-            class="block w-full bg-blue-600 text-white text-center py-3 rounded-xl text-xs font-extrabold shadow-md shadow-blue-500/10 hover:opacity-95 active:scale-98 transition-all uppercase tracking-wider"
+            class="block w-full bg-blue-600 text-white text-center py-3 rounded-xl text-xs font-semibold shadow-md shadow-blue-500/10 hover:opacity-95 active:scale-98 transition-all uppercase tracking-wider"
           >
             Select & Book Seat
           </router-link>
@@ -248,7 +248,7 @@
 
         <!-- Operating Hours -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left">
-          <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-4">Operating Hours</h3>
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">Operating Hours</h3>
           <div class="space-y-3">
             <div 
               v-for="day in library.operating_days" 
@@ -260,7 +260,7 @@
               <span v-if="day.isOpen" class="text-slate-800">
                 {{ day.openTime }} - {{ day.closeTime }}
               </span>
-              <span v-else class="text-red-500 font-bold">Closed</span>
+              <span v-else class="text-red-500 font-semibold">Closed</span>
             </div>
           </div>
         </div>
@@ -269,8 +269,8 @@
   </div>
 
   <div v-else class="text-center py-20 font-outfit">
-    <h2 class="text-lg font-bold text-slate-800 mb-2">Library not found</h2>
-    <router-link to="/student/libraries" class="text-blue-600 hover:underline text-xs font-bold">
+    <h2 class="text-lg font-semibold text-slate-800 mb-2">Library not found</h2>
+    <router-link to="/student/libraries" class="text-blue-600 hover:underline text-xs font-semibold">
       Back to Libraries
     </router-link>
   </div>

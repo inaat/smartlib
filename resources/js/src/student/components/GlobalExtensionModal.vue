@@ -4,13 +4,13 @@
       <div class="w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce">
         <Clock class="w-12 h-12" />
       </div>
-      <h2 class="text-3xl font-black text-gray-800 mb-3 text-center">{{ isExpired ? "Time's Up!" : "Session Ending Soon" }}</h2>
+      <h2 class="text-3xl font-semibold text-gray-800 mb-3 text-center">{{ isExpired ? "Time's Up!" : "Session Ending Soon" }}</h2>
       <p class="text-gray-500 mb-6 text-center leading-relaxed">
         Your session for Seat {{ expiredBooking?.seat?.seat_number }} {{ isExpired ? 'has ended' : 'will end in 15 minutes' }}.
       </p>
 
       <div v-if="!isExpired" class="p-4 bg-orange-50 rounded-xl border border-orange-100 mb-8 text-center">
-        <p class="text-[10px] text-orange-700 font-bold uppercase tracking-widest leading-tight">
+        <p class="text-[10px] text-orange-700 font-semibold uppercase tracking-widest leading-tight">
           Extension Lock Notice
         </p>
         <p class="text-xs text-orange-600 mt-1">
@@ -24,7 +24,7 @@
           :key="mins"
           @click="selectedExtension = mins"
           :class="[
-            'py-4 rounded-2xl font-bold transition-all border-2',
+            'py-4 rounded-2xl font-semibold transition-all border-2',
             selectedExtension === mins 
               ? 'bg-blue-600 border-blue-600 text-white shadow-lg scale-105' 
               : 'bg-gray-50 border-transparent text-gray-600 hover:bg-gray-100'
@@ -38,13 +38,13 @@
         <button 
           @click="handleExtend"
           :disabled="extending"
-          class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl hover:shadow-blue-200 disabled:opacity-50"
+          class="w-full bg-blue-600 text-white py-5 rounded-2xl font-semibold hover:bg-blue-700 transition-all shadow-xl hover:shadow-blue-200 disabled:opacity-50"
         >
           {{ extending ? 'Extending...' : 'Extend Session' }}
         </button>
         <button 
           @click="closeModal"
-          class="w-full bg-white text-gray-400 py-4 rounded-2xl font-bold hover:text-gray-600 transition-all"
+          class="w-full bg-white text-gray-400 py-4 rounded-2xl font-medium hover:text-gray-600 transition-all"
         >
           No thanks, I'm done
         </button>

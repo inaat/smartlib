@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 font-outfit text-slate-700">
+  <div class="space-y-6 text-slate-700">
     
     <!-- Stats Cards Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -10,7 +10,11 @@
         :class="[
           'p-5 rounded-2xl border transition-all cursor-pointer shadow-sm relative overflow-hidden group text-left flex flex-col justify-between min-h-[110px]',
           filterStatus === 'all' 
-            ? (userRole === 'student' ? 'bg-gradient-to-br from-blue-600 to-blue-700 border-blue-700 text-white shadow-blue-500/10' : 'bg-gradient-to-br from-emerald-600 to-teal-700 border-emerald-600 text-white shadow-emerald-500/10')
+            ? (userRole === 'student' 
+                ? 'bg-gradient-to-br from-blue-600 to-blue-700 border-blue-700 text-white shadow-blue-500/10' 
+                : (userRole === 'admin' 
+                    ? 'bg-gradient-to-br from-purple-600 to-purple-700 border-purple-650 text-white shadow-purple-500/10' 
+                    : 'bg-gradient-to-br from-emerald-600 to-teal-700 border-emerald-600 text-white shadow-emerald-500/10'))
             : 'bg-white border-slate-100 hover:border-slate-200 hover:translate-y-[-1px] text-slate-800'
         ]"
       >
@@ -19,7 +23,7 @@
         </div>
         <div class="flex justify-between items-start relative z-10">
           <div>
-            <p :class="['text-[10px] font-bold uppercase tracking-wider', filterStatus === 'all' ? 'text-blue-100' : 'text-slate-400']">Total Tickets</p>
+            <p :class="['text-[10px] font-bold uppercase tracking-wider', filterStatus === 'all' ? 'text-white/80' : 'text-slate-400']">Total Tickets</p>
             <h4 class="text-3xl font-extrabold mt-2 tracking-tight">{{ stats.all }}</h4>
           </div>
           <div :class="['p-2.5 rounded-xl border', filterStatus === 'all' ? 'bg-white/10 border-white/20 text-white' : 'bg-slate-50 border-slate-100 text-slate-500']">
@@ -34,7 +38,11 @@
         :class="[
           'p-5 rounded-2xl border transition-all cursor-pointer shadow-sm relative overflow-hidden group text-left flex flex-col justify-between min-h-[110px]',
           filterStatus === 'open'
-            ? (userRole === 'student' ? 'bg-gradient-to-br from-blue-600 to-blue-700 border-blue-700 text-white shadow-blue-500/10' : 'bg-gradient-to-br from-emerald-600 to-teal-700 border-emerald-600 text-white shadow-emerald-500/10')
+            ? (userRole === 'student' 
+                ? 'bg-gradient-to-br from-blue-600 to-blue-700 border-blue-700 text-white shadow-blue-500/10' 
+                : (userRole === 'admin' 
+                    ? 'bg-gradient-to-br from-purple-600 to-purple-700 border-purple-650 text-white shadow-purple-500/10' 
+                    : 'bg-gradient-to-br from-emerald-600 to-teal-700 border-emerald-600 text-white shadow-emerald-500/10'))
             : 'bg-white border-slate-100 hover:border-slate-200 hover:translate-y-[-1px] text-slate-800'
         ]"
       >
@@ -43,7 +51,7 @@
         </div>
         <div class="flex justify-between items-start relative z-10">
           <div>
-            <p :class="['text-[10px] font-bold uppercase tracking-wider', filterStatus === 'open' ? 'text-blue-100' : 'text-slate-400']">Open Tickets</p>
+            <p :class="['text-[10px] font-bold uppercase tracking-wider', filterStatus === 'open' ? 'text-white/80' : 'text-slate-400']">Open Tickets</p>
             <h4 class="text-3xl font-extrabold mt-2 tracking-tight">{{ stats.open }}</h4>
           </div>
           <div :class="['p-2.5 rounded-xl border', filterStatus === 'open' ? 'bg-white/10 border-white/20 text-white' : 'bg-amber-50 border-amber-100/80 text-amber-600']">
@@ -58,7 +66,11 @@
         :class="[
           'p-5 rounded-2xl border transition-all cursor-pointer shadow-sm relative overflow-hidden group text-left flex flex-col justify-between min-h-[110px]',
           filterStatus === 'closed'
-            ? (userRole === 'student' ? 'bg-gradient-to-br from-blue-600 to-blue-700 border-blue-700 text-white shadow-blue-500/10' : 'bg-gradient-to-br from-emerald-600 to-teal-700 border-emerald-600 text-white shadow-emerald-500/10')
+            ? (userRole === 'student' 
+                ? 'bg-gradient-to-br from-blue-600 to-blue-700 border-blue-700 text-white shadow-blue-500/10' 
+                : (userRole === 'admin' 
+                    ? 'bg-gradient-to-br from-purple-600 to-purple-700 border-purple-650 text-white shadow-purple-500/10' 
+                    : 'bg-gradient-to-br from-emerald-600 to-teal-700 border-emerald-600 text-white shadow-emerald-500/10'))
             : 'bg-white border-slate-100 hover:border-slate-200 hover:translate-y-[-1px] text-slate-800'
         ]"
       >
@@ -67,7 +79,7 @@
         </div>
         <div class="flex justify-between items-start relative z-10">
           <div>
-            <p :class="['text-[10px] font-bold uppercase tracking-wider', filterStatus === 'closed' ? 'text-blue-100' : 'text-slate-400']">Resolved / Closed</p>
+            <p :class="['text-[10px] font-bold uppercase tracking-wider', filterStatus === 'closed' ? 'text-white/80' : 'text-slate-400']">Resolved / Closed</p>
             <h4 class="text-3xl font-extrabold mt-2 tracking-tight">{{ stats.closed }}</h4>
           </div>
           <div :class="['p-2.5 rounded-xl border', filterStatus === 'closed' ? 'bg-white/10 border-white/20 text-white' : 'bg-emerald-50 border-emerald-100/80 text-emerald-600']">
@@ -85,7 +97,7 @@
         
         <!-- List Header -->
         <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-white text-left">
-          <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Tickets</h2>
+          <h2 class="text-xs font-bold text-slate-850 uppercase tracking-wider">Tickets</h2>
           <button 
             v-if="userRole === 'student'"
             @click="showCreateModal = true"
@@ -104,7 +116,7 @@
               v-model="searchQuery"
               type="text" 
               placeholder="Search tickets..." 
-              class="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-4 focus:ring-slate-100/50 bg-slate-50/50 transition-all outline-none"
+              class="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-slate-350 focus:bg-white rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-slate-100/50 bg-slate-50/50 transition-all outline-none"
             />
           </div>
         </div>
@@ -130,20 +142,22 @@
               :class="[
                 'p-4 cursor-pointer hover:bg-slate-50/50 transition-all text-left border-l-4 relative',
                 selectedTicket?.id === ticket.id 
-                  ? (userRole === 'student' ? 'bg-blue-50/30 border-blue-600' : 'bg-emerald-50/30 border-emerald-600') 
+                  ? (userRole === 'student' 
+                      ? 'bg-blue-50/30 border-blue-600' 
+                      : (userRole === 'admin' ? 'bg-purple-50/30 border-purple-600' : 'bg-emerald-50/30 border-emerald-600'))
                   : 'border-transparent'
               ]"
             >
               <!-- Ticket Title and status pills -->
               <div class="flex justify-between items-start gap-2 mb-2">
-                <h3 :class="['text-xs font-bold truncate pr-1', selectedTicket?.id === ticket.id ? 'text-slate-800' : 'text-slate-700']">
+                <h3 :class="['text-xs font-bold truncate pr-1', selectedTicket?.id === ticket.id ? 'text-slate-800' : 'text-slate-750']">
                   {{ ticket.subject }}
                 </h3>
                 <div class="flex flex-shrink-0 gap-1.5 items-center">
                   <!-- Category -->
                   <span :class="[
                     'text-[8px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border',
-                    ticket.ticket_type === 'library' ? 'bg-indigo-50 border-indigo-100 text-indigo-650' : 'bg-amber-50 border-amber-100 text-amber-650'
+                    ticket.ticket_type === 'library' ? 'bg-indigo-50 border-indigo-100 text-indigo-700' : 'bg-amber-50 border-amber-100 text-amber-700'
                   ]">
                     {{ ticket.ticket_type }}
                   </span>
@@ -191,7 +205,7 @@
           <!-- Conversation Header -->
           <div class="bg-white p-4 border-b border-slate-100 flex justify-between items-center shadow-sm relative z-10 text-left">
             <div class="flex items-center space-x-3.5">
-              <div class="w-9 h-9 border border-slate-100 rounded-xl bg-slate-50 flex items-center justify-center text-slate-650">
+              <div class="w-9 h-9 border border-slate-100 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600">
                 <User class="w-4 h-4" />
               </div>
               <div>
@@ -201,7 +215,7 @@
                   <span class="px-1.5 py-0.5 rounded bg-slate-50 border border-slate-100 text-[8px] uppercase font-bold text-slate-500">
                     {{ selectedTicket.ticket_type }}
                   </span>
-                  <span v-if="selectedTicket.library" class="text-slate-500 font-bold">• {{ selectedTicket.library.name }}</span>
+                  <span v-if="selectedTicket.library" class="text-slate-550 font-bold">• {{ selectedTicket.library.name }}</span>
                 </p>
               </div>
             </div>
@@ -251,7 +265,9 @@
               <div :class="[
                 'max-w-[70%] p-4 rounded-2xl text-xs font-medium leading-relaxed shadow-sm text-left relative',
                 message.user_id === currentUser?.id 
-                  ? (userRole === 'student' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-emerald-700 text-white rounded-br-none') 
+                  ? (userRole === 'student' 
+                      ? 'bg-blue-600 text-white rounded-br-none' 
+                      : (userRole === 'admin' ? 'bg-purple-650 text-white rounded-br-none' : 'bg-emerald-700 text-white rounded-br-none'))
                   : 'bg-white text-slate-700 rounded-bl-none border border-slate-100/70'
               ]">
                 <!-- Sender Metadata -->
@@ -290,7 +306,9 @@
                 :disabled="!newMessage.trim() || sending"
                 :class="[
                   'p-2.5 text-white rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border border-transparent',
-                  userRole === 'student' ? 'bg-blue-650 hover:bg-blue-700' : 'bg-emerald-700 hover:bg-emerald-800'
+                  userRole === 'student' 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : (userRole === 'admin' ? 'bg-purple-650 hover:bg-purple-700' : 'bg-emerald-700 hover:bg-emerald-800')
                 ]"
               >
                 <Send v-if="!sending" class="w-4 h-4" />
@@ -320,50 +338,48 @@
     </div>
 
     <!-- Create Ticket Modal -->
-    <div v-if="showCreateModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in" @click="showCreateModal = false"></div>
-      <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 text-left animate-in duration-200">
+    <div v-if="showCreateModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+      <div class="relative bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 text-left animate-in duration-200">
         
         <!-- Modal Header -->
-        <div class="p-6 border-b border-slate-55 flex justify-between items-center bg-slate-50/20">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center text-left">
           <div>
-            <h3 class="text-base font-bold text-slate-800 tracking-tight leading-none mb-1.5">Submit Support Ticket</h3>
-            <p class="text-[10px] text-slate-400 font-semibold">Our support desk will respond shortly.</p>
+            <h2 class="text-lg font-bold text-slate-800">Submit Support Ticket</h2>
           </div>
-          <button @click="showCreateModal = false" class="text-slate-400 hover:text-slate-650 p-1.5 rounded-lg hover:bg-slate-150 transition-colors cursor-pointer">
-            <X class="w-4 h-4" />
+          <button @click="showCreateModal = false" class="p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">
+            <X class="w-5 h-5 text-slate-450" />
           </button>
         </div>
         
         <!-- Modal Form -->
         <form @submit.prevent="handleCreateTicket" class="p-6 space-y-4 text-left">
           <div>
-            <label class="block text-[10px] font-extrabold text-slate-450 uppercase tracking-widest mb-1.5">Subject</label>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Subject</label>
             <input 
               v-model="createForm.subject"
               type="text"
               required
               placeholder="e.g., Seat Booking Issue, Library Card Access"
-              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-100/50 focus:border-slate-300 focus:bg-white transition-all outline-none"
+              class="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none bg-white"
             />
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-[10px] font-extrabold text-slate-450 uppercase tracking-widest mb-1.5">Category</label>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Category</label>
               <select 
                 v-model="createForm.ticket_type"
-                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-100/50 focus:border-slate-300 focus:bg-white transition-all outline-none"
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-655 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none bg-white cursor-pointer"
               >
                 <option value="library">Library Issue</option>
                 <option value="system">System Issue</option>
               </select>
             </div>
             <div>
-              <label class="block text-[10px] font-extrabold text-slate-450 uppercase tracking-widest mb-1.5">Priority</label>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Priority</label>
               <select 
                 v-model="createForm.priority"
-                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-100/50 focus:border-slate-300 focus:bg-white transition-all outline-none"
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-655 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none bg-white cursor-pointer"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -375,11 +391,11 @@
 
           <!-- Select Library (Conditional) -->
           <div v-if="createForm.ticket_type === 'library'">
-            <label class="block text-[10px] font-extrabold text-slate-450 uppercase tracking-widest mb-1.5">Select Library</label>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Select Library</label>
             <select 
               v-model="createForm.library_id"
               required
-              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-100/50 focus:border-slate-300 focus:bg-white transition-all outline-none"
+              class="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-655 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none bg-white cursor-pointer"
             >
               <option :value="null" disabled>Select a library</option>
               <option v-for="lib in libraries" :key="lib.id" :value="lib.id">{{ lib.name }}</option>
@@ -387,13 +403,13 @@
           </div>
 
           <div>
-            <label class="block text-[10px] font-extrabold text-slate-450 uppercase tracking-widest mb-1.5">Description</label>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Description</label>
             <textarea 
               v-model="createForm.message"
               required
               rows="4"
               placeholder="Describe your issue in detail..."
-              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-100/50 focus:border-slate-300 focus:bg-white transition-all outline-none resize-none"
+              class="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none bg-white resize-none"
             ></textarea>
           </div>
 
@@ -433,7 +449,8 @@ import {
   LifeBuoy,
   Ticket,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Building2
 } from 'lucide-vue-next';
 import { supportAPI, studentAPI } from '@/shared/services/api';
 import { useAuth } from '@/shared/composables/useAuth';
@@ -650,12 +667,6 @@ watch(selectedTicket, () => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-
-.font-outfit {
-  font-family: 'Outfit', sans-serif;
-}
-
 .animate-fade-in {
   animation: fade-in 0.22s ease-out;
 }
@@ -682,5 +693,33 @@ watch(selectedTicket, () => {
   to {
     opacity: 1;
   }
+}
+
+.bg-purple-650 {
+  background-color: #8B5CF6;
+}
+.text-indigo-700 {
+  color: #4338CA;
+}
+.text-indigo-650 {
+  color: #4F46E5;
+}
+.text-amber-650 {
+  color: #D97706;
+}
+.text-slate-850 {
+  color: #1e293b;
+}
+.text-slate-550 {
+  color: #64748b;
+}
+.text-slate-455 {
+  color: #475569;
+}
+.text-slate-505 {
+  color: #334155;
+}
+.text-red-655 {
+  color: #ef4444;
 }
 </style>
