@@ -34,12 +34,14 @@ class AnalyticsController extends Controller
         // Get bookings for the current time range
         $bookings = $library->seatBookings()
             ->where('seat_bookings.booking_time', '>=', $startDate)
+            ->where('seat_bookings.status', '!=', 'cancelled')
             ->get();
 
         // Get bookings for the previous time range
         $previousBookings = $library->seatBookings()
             ->where('seat_bookings.booking_time', '>=', $previousStartDate)
             ->where('seat_bookings.booking_time', '<', $startDate)
+            ->where('seat_bookings.status', '!=', 'cancelled')
             ->get();
 
         // Calculate stats
@@ -215,6 +217,7 @@ class AnalyticsController extends Controller
             ->join('seats', 'seat_bookings.seat_id', '=', 'seats.id')
             ->where('seat_bookings.library_id', $library->id)
             ->where('seat_bookings.booking_time', '>=', $startDate)
+            ->where('seat_bookings.status', '!=', 'cancelled')
             ->select('seats.seat_number as number', DB::raw('COUNT(*) as bookings'))
             ->groupBy('seats.id', 'seats.seat_number')
             ->orderByDesc('bookings')
@@ -223,6 +226,47 @@ class AnalyticsController extends Controller
             ->map(function ($seat) use ($totalBookings) {
                 $seat->utilization = $totalBookings > 0 ? round(($seat->bookings / $totalBookings) * 100, 1) : 0;
                 return (array)$seat;
+            });
+
+        // Book Reservation Status Counts
+        $bookReservationStats = DB::table('book_reservations')
+            ->join('books', 'book_reservations.book_id', '=', 'books.id')
+            ->where('books.library_id', $library->id)
+            ->where('book_reservations.created_at', '>=', $startDate)
+            ->select('book_reservations.status', DB::raw('COUNT(*) as count'))
+            ->groupBy('book_reservations.status')
+            ->get();
+
+        $issuedCount = 0;
+        $returnedCount = 0;
+        $pendingCount = 0;
+
+        foreach ($bookReservationStats as $stat) {
+            if (in_array($stat->status, ['collected', 'overdue'])) {
+                $issuedCount += $stat->count;
+            } elseif ($stat->status === 'returned') {
+                $returnedCount += $stat->count;
+            } elseif (in_array($stat->status, ['pending', 'approved', 'pending_return'])) {
+                $pendingCount += $stat->count;
+            }
+        }
+
+        // Most Issued Books
+        $mostIssuedBooks = DB::table('book_reservations')
+            ->join('books', 'book_reservations.book_id', '=', 'books.id')
+            ->where('books.library_id', $library->id)
+            ->where('book_reservations.created_at', '>=', $startDate)
+            ->whereNotIn('book_reservations.status', ['rejected', 'cancelled'])
+            ->select('books.title', DB::raw('COUNT(*) as count'))
+            ->groupBy('books.id', 'books.title')
+            ->orderByDesc('count')
+            ->take(6)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'title' => $item->title,
+                    'count' => (int) $item->count,
+                ];
             });
 
         return response()->json([
@@ -255,6 +299,13 @@ class AnalyticsController extends Controller
             'popularTimeSlots' => $popularTimeSlots,
             'topStudents' => $topStudents,
             'popularSeats' => $popularSeats,
+            'bookStats' => [
+                'issued' => $issuedCount,
+                'returned' => $returnedCount,
+                'pending' => $pendingCount,
+                'total' => $issuedCount + $returnedCount + $pendingCount,
+            ],
+            'mostIssuedBooks' => $mostIssuedBooks,
             'timeRange' => $timeRange,
         ]);
     }

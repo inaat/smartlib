@@ -363,7 +363,7 @@ const editEvent = (event: any) => {
     title: event.title,
     description: event.description,
     library_id: event.library_id,
-    date: event.date,
+    date: event.date ? event.date.substring(0, 10) : '',
     start_time: event.start_time,
     end_time: event.end_time,
     venue: event.venue,

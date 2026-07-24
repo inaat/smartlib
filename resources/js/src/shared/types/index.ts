@@ -76,13 +76,22 @@ export interface Seat {
   id: number;
   library_id: number;
   seat_number: string;
-  status: 'available' | 'reserved' | 'occupied' | 'maintenance' | 'free_soon';
+  status: 'available' | 'reserved' | 'occupied' | 'maintenance' | 'free_soon' | 'overstay' | 'serious_overstay';
   type: 'regular' | 'premium' | 'group' | 'silent' | 'collaborative';
   qr_code?: string;
   next_available_time?: string;
   current_booking_id?: string;
   floor: number;
+  floor_id?: number;
   section_id?: number;
+  table_id?: number;
+  cabin_number?: string;
+  cabin_features?: {
+    power_outlet?: boolean;
+    computer?: boolean;
+    ac?: boolean;
+    [key: string]: any;
+  };
   near_window: boolean;
   socket_count: number;
   has_computer: boolean;
@@ -95,7 +104,24 @@ export interface Seat {
   libraryId?: number;
   nextAvailableTime?: string;
   position?: { x: number; y: number }; // Computed for seat map
+  position_x?: number;
+  position_y?: number;
   library?: Library;
+}
+
+// Study Table Type
+export interface StudyTable {
+  id: number;
+  library_id: number;
+  floor_id: number;
+  section_id?: number;
+  capacity: number; // 2, 4, 6, 8
+  label: string;
+  position_x: number;
+  position_y: number;
+  created_at?: string;
+  updated_at?: string;
+  seats?: Seat[];
 }
 
 // Book Type - Matches Laravel Book Model

@@ -85,11 +85,27 @@ class BookingController extends Controller
             'seat_id' => 'required|exists:seats,id',
             'booking_time' => 'required|date',
             'scheduled_end_time' => 'required|date|after:booking_time',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
         $user = $request->user();
         $seat = Seat::with(['floor.library', 'seatSection'])->findOrFail($request->seat_id);
         $libraryId = $seat->floor->library_id;
+
+        // Location-based booking restriction
+        $library = $seat->floor->library;
+        if ($request->latitude && $request->longitude && $library->latitude && $library->longitude) {
+            $distance = $this->calculateDistance(
+                $request->latitude, $request->longitude,
+                $library->latitude, $library->longitude
+            );
+            if ($distance > 50000) { // 50 km in meters
+                return response()->json([
+                    'message' => 'You can only book seats at libraries near your current location. This library is too far away.'
+                ], 403);
+            }
+        }
 
         // Check for active ban
         if ($user->isBannedFrom($libraryId)) {
@@ -173,36 +189,69 @@ class BookingController extends Controller
         $today = \Carbon\Carbon::today();
 
         // Check advance booking days limit
+        $advanceLimit = $plan->advance_booking_days ?? -1;
         $daysInAdvance = $today->diffInDays($bookingDate->startOfDay(), false);
         
-        if ($plan->advance_booking_days !== -1) {
-            if ($daysInAdvance > $plan->advance_booking_days) {
+        if ($advanceLimit !== -1) {
+            if ($daysInAdvance > $advanceLimit) {
                 return response()->json([
-                    'message' => "Your plan only allows booking {$plan->advance_booking_days} days in advance",
-                    'limit' => $plan->advance_booking_days,
+                    'message' => "Your plan only allows booking {$advanceLimit} days in advance",
+                    'limit' => $advanceLimit,
                     'requested' => $daysInAdvance
                 ], 400);
             }
         }
 
         // Check daily seat booking limit
-        if ($plan->daily_seat_bookings_limit !== -1) {
+        $dailyLimit = $plan->daily_seat_bookings_limit ?? -1;
+        if ($dailyLimit === 0) {
+            $dailyLimit = -1;
+        }
+
+        if ($dailyLimit !== -1) {
             $todayBookings = SeatBooking::where('user_id', $user->id)
                 ->whereDate('booking_time', $bookingDate->toDateString())
-                ->whereIn('status', ['booked', 'checked_in'])
+                ->whereIn('status', ['booked', 'checked_in', 'checked_out'])
                 ->count();
 
-            if ($todayBookings >= $plan->daily_seat_bookings_limit) {
+            if ($todayBookings >= $dailyLimit) {
                 return response()->json([
-                    'message' => "You have reached your daily seat booking limit ({$plan->daily_seat_bookings_limit})",
-                    'limit' => $plan->daily_seat_bookings_limit,
+                    'message' => "You have reached your daily seat booking limit ({$dailyLimit})",
+                    'limit' => $dailyLimit,
                     'current' => $todayBookings
                 ], 400);
             }
         }
 
+        // Check monthly seat booking limit
+        $monthlyLimit = $plan->monthly_seat_bookings_limit ?? -1;
+        if ($monthlyLimit === 0) {
+            $monthlyLimit = -1;
+        }
+
+        if ($monthlyLimit !== -1) {
+            $currentMonthBookings = SeatBooking::where('user_id', $user->id)
+                ->whereYear('booking_time', $bookingDate->year)
+                ->whereMonth('booking_time', $bookingDate->month)
+                ->whereIn('status', ['booked', 'checked_in', 'checked_out'])
+                ->count();
+
+            if ($currentMonthBookings >= $monthlyLimit) {
+                return response()->json([
+                    'message' => "You have reached your monthly seat booking limit ({$monthlyLimit})",
+                    'limit' => $monthlyLimit,
+                    'current' => $currentMonthBookings
+                ], 400);
+            }
+        }
+
         // Check library access limit
-        if ($plan->libraries_access_limit !== -1) {
+        $libraryLimit = $plan->libraries_access_limit ?? -1;
+        if ($libraryLimit === 0) {
+            $libraryLimit = -1;
+        }
+
+        if ($libraryLimit !== -1) {
             $libraryId = $seat->floor->library_id;
             
             // Get distinct libraries user has booked in the current subscription period
@@ -214,10 +263,10 @@ class BookingController extends Controller
                 ->toArray();
 
             // If booking a new library that exceeds limit
-            if (!in_array($libraryId, $usedLibraries) && count($usedLibraries) >= $plan->libraries_access_limit) {
+            if (!in_array($libraryId, $usedLibraries) && count($usedLibraries) >= $libraryLimit) {
                 return response()->json([
-                    'message' => "Your plan allows access to only {$plan->libraries_access_limit} libraries. You have already used: " . count($usedLibraries),
-                    'limit' => $plan->libraries_access_limit,
+                    'message' => "Your plan allows access to only {$libraryLimit} libraries. You have already used: " . count($usedLibraries),
+                    'limit' => $libraryLimit,
                     'current' => count($usedLibraries)
                 ], 400);
             }
@@ -417,9 +466,9 @@ class BookingController extends Controller
                 $library->longitude
             );
 
-            if ($distance > 10) { // 10 meters
+            if ($distance > 100) { // 100 meters
                 return response()->json([
-                    'message' => 'You must be within 10 meters of the library to check in.',
+                    'message' => 'You must be within 100 meters of the library to check in.',
                     'distance' => round($distance, 2) . ' meters'
                 ], 400);
             }
@@ -437,23 +486,11 @@ class BookingController extends Controller
 
         $booking->seat->update(['status' => 'occupied']);
 
-        // Track arrival for today and update streak once per day
+        // Track arrival for today and update streak
         $today = now()->toDateString();
-        if ($user->last_checkin_date !== $today) {
-            $yesterday = now()->subDay()->toDateString();
-            if ($user->last_streak_date === $yesterday) {
-                $user->current_streak += 1;
-            } else {
-                $user->current_streak = 1;
-            }
-
-            if ($user->current_streak > $user->max_streak) {
-                $user->max_streak = $user->current_streak;
-            }
-            $user->last_streak_date = $today;
-            $user->last_checkin_date = $today;
-            $user->save();
-        }
+        $user->last_checkin_date = $today;
+        $user->save();
+        $user->calculateStudyStreak();
  
         // Auto mark attendance for this booking
         \App\Models\Attendance::firstOrCreate([
@@ -656,6 +693,26 @@ class BookingController extends Controller
 
         if ($seat->status === 'available') {
             return response()->json(['message' => 'Seat is currently available. You can book it directly.'], 400);
+        }
+
+        // Only allow joining waitlist on free_soon seats
+        // A seat is free_soon if it is checked_in and has <= 10 minutes remaining.
+        $activeBooking = SeatBooking::where('seat_id', $seat->id)
+            ->whereIn('status', ['booked', 'checked_in'])
+            ->orderBy('scheduled_end_time', 'desc')
+            ->first();
+
+        if (!$activeBooking) {
+            return response()->json(['message' => 'Seat is not currently occupied. You cannot join the queue.'], 400);
+        }
+
+        $endTime = $activeBooking->extended_until ?? $activeBooking->scheduled_end_time;
+        $remainingMinutes = now()->diffInMinutes($endTime, false);
+
+        if ($remainingMinutes <= 0 || $remainingMinutes > 10 || $activeBooking->status !== 'checked_in') {
+            return response()->json([
+                'message' => 'You can only join the waitlist when the seat status is Free Soon (10 minutes or less remaining).'
+            ], 400);
         }
 
         $section = $seat->seatSection;

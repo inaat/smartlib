@@ -190,14 +190,24 @@
                   placeholder="e.g. 74.3587"
                 />
               </div>
-              <button
-                type="button"
-                @click="getCurrentLocation"
-                class="px-3 py-2.5 text-emerald-600 hover:bg-emerald-50 rounded-xl font-semibold text-xs flex items-center space-x-1.5 transition-all border border-emerald-100 cursor-pointer flex-shrink-0"
-              >
-                <MapPin class="w-3.5 h-3.5" />
-                <span>Auto-detect</span>
-              </button>
+              <div class="flex items-center space-x-2 flex-shrink-0">
+                <button
+                  type="button"
+                  @click="getCurrentLocation"
+                  class="px-3 py-2.5 text-emerald-600 hover:bg-emerald-50 rounded-xl font-semibold text-xs flex items-center space-x-1.5 transition-all border border-emerald-100 cursor-pointer"
+                >
+                  <Navigation class="w-3.5 h-3.5" />
+                  <span>Auto-detect</span>
+                </button>
+                <button
+                  type="button"
+                  @click="openMapModal"
+                  class="px-3 py-2.5 bg-emerald-600 text-white hover:bg-emerald-750 rounded-xl font-semibold text-xs flex items-center space-x-1.5 transition-all shadow-sm cursor-pointer"
+                >
+                  <Map class="w-3.5 h-3.5 text-white" />
+                  <span>Select on Map</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -338,42 +348,63 @@
           <div class="p-5 bg-emerald-50/50 rounded-xl border border-emerald-100 mt-2">
             <h4 class="font-semibold text-sm text-slate-700 mb-4 flex items-center space-x-2">
               <Layout class="w-4 h-4 text-emerald-600" />
-              <span>Seat Layout Display Mode</span>
+              <span>Seat Layout System Redesign</span>
             </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Individual Seats -->
               <div
-                @click="libraryData.seat_layout_mode = 'layout'"
+                @click="libraryData.seat_layout_mode = 'individual'"
                 :class="[
-                  'p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center space-x-4',
-                  libraryData.seat_layout_mode === 'layout'
-                    ? 'bg-white border-emerald-500 shadow-sm'
-                    : 'bg-white/50 border-transparent hover:border-emerald-200'
+                  'p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-start gap-3 bg-white',
+                  libraryData.seat_layout_mode === 'individual'
+                    ? 'border-emerald-500 shadow-sm'
+                    : 'border-slate-150 hover:border-emerald-200'
                 ]"
               >
-                <div :class="['p-2.5 rounded-lg', libraryData.seat_layout_mode === 'layout' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-400']">
-                  <Map class="w-5 h-5" />
+                <div :class="['p-2.5 rounded-lg', libraryData.seat_layout_mode === 'individual' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500']">
+                  <Armchair class="w-5 h-5" />
                 </div>
                 <div>
-                  <p class="font-semibold text-sm text-slate-700">Layout Mode</p>
-                  <p class="text-[11px] text-slate-400 mt-0.5">Visual map with XY positions</p>
+                  <p class="font-semibold text-sm text-slate-700">Individual Seats</p>
+                  <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Classic seat-by-seat layout placed anywhere on floor plan.</p>
                 </div>
               </div>
 
+              <!-- Study Tables -->
               <div
-                @click="libraryData.seat_layout_mode = 'grid'"
+                @click="libraryData.seat_layout_mode = 'tables'"
                 :class="[
-                  'p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center space-x-4',
-                  libraryData.seat_layout_mode === 'grid'
-                    ? 'bg-white border-emerald-500 shadow-sm'
-                    : 'bg-white/50 border-transparent hover:border-emerald-200'
+                  'p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-start gap-3 bg-white',
+                  libraryData.seat_layout_mode === 'tables'
+                    ? 'border-emerald-500 shadow-sm'
+                    : 'border-slate-150 hover:border-emerald-200'
                 ]"
               >
-                <div :class="['p-2.5 rounded-lg', libraryData.seat_layout_mode === 'grid' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-400']">
+                <div :class="['p-2.5 rounded-lg', libraryData.seat_layout_mode === 'tables' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500']">
                   <Grid class="w-5 h-5" />
                 </div>
                 <div>
-                  <p class="font-semibold text-sm text-slate-700">Grid View</p>
-                  <p class="text-[11px] text-slate-400 mt-0.5">Organized row-by-row list</p>
+                  <p class="font-semibold text-sm text-slate-700">Study Tables</p>
+                  <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Chairs grouped around desks (2/4/6/8-person capacities).</p>
+                </div>
+              </div>
+
+              <!-- Personal Study Cabins -->
+              <div
+                @click="libraryData.seat_layout_mode = 'cabins'"
+                :class="[
+                  'p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-start gap-3 bg-white',
+                  libraryData.seat_layout_mode === 'cabins'
+                    ? 'border-emerald-500 shadow-sm'
+                    : 'border-slate-150 hover:border-emerald-200'
+                ]"
+              >
+                <div :class="['p-2.5 rounded-lg', libraryData.seat_layout_mode === 'cabins' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500']">
+                  <Building2 class="w-5 h-5" />
+                </div>
+                <div>
+                  <p class="font-semibold text-sm text-slate-700">Personal Cabins</p>
+                  <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Private enclosed study rooms with customizable features.</p>
                 </div>
               </div>
             </div>
@@ -382,11 +413,85 @@
 
       </div>
     </template>
+    <!-- Map Picker Modal -->
+    <div v-if="showMapModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh] md:max-h-[85vh] text-left">
+        <!-- Header -->
+        <div class="px-6 py-4 bg-gradient-to-r from-emerald-700 to-teal-800 text-white flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <MapPin class="w-5 h-5 text-emerald-350" />
+            <h3 class="font-bold text-sm uppercase tracking-wider">Select Location on Map</h3>
+          </div>
+          <button @click="closeMapModal" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer">
+            <X class="w-5 h-5 text-white" />
+          </button>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 space-y-4 flex-grow flex flex-col min-h-0">
+          <p class="text-xs text-slate-500 font-medium">Click on the map or drag the marker to pin your library's exact coordinates.</p>
+          
+          <!-- Search input -->
+          <div>
+            <input
+              id="picker-search-input"
+              type="text"
+              placeholder="Search location or address (e.g. Lahore, Pakistan)..."
+              class="w-full px-4 py-2.5 border border-gray-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs text-slate-705 font-medium bg-slate-50/50 outline-none"
+            />
+          </div>
+
+          <!-- Map Canvas -->
+          <div class="relative w-full h-[350px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+            <div id="picker-map" style="width: 100%; height: 100%; min-height: 350px;"></div>
+          </div>
+
+          <!-- Coordinate Info -->
+          <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-slate-700 font-outfit">
+            <div class="flex space-x-6">
+              <div>
+                <span class="text-slate-400 font-medium uppercase tracking-wider block text-[9px] mb-0.5">Latitude</span>
+                <span class="font-mono text-sm">{{ tempLatitude !== null ? tempLatitude.toFixed(6) : 'None' }}</span>
+              </div>
+              <div>
+                <span class="text-slate-400 font-medium uppercase tracking-wider block text-[9px] mb-0.5">Longitude</span>
+                <span class="font-mono text-sm">{{ tempLongitude !== null ? tempLongitude.toFixed(6) : 'None' }}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              @click="detectLocationForMap"
+              class="px-3 py-1.5 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 rounded-xl flex items-center space-x-1.5 transition-all text-[11px] cursor-pointer"
+            >
+              <Navigation class="w-3.5 h-3.5" />
+              <span>My Location</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end space-x-3">
+          <button
+            @click="closeMapModal"
+            class="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold active:scale-98 transition-all cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmMapLocation"
+            class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold active:scale-98 transition-all flex items-center space-x-1.5 shadow-sm shadow-emerald-500/10 cursor-pointer"
+          >
+            <Save class="w-4 h-4" />
+            <span>Confirm Location</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { useAuth } from '@/shared/composables/useAuth';
 import { useRouter } from 'vue-router';
 import {
@@ -409,7 +514,9 @@ import {
   Clock,
   CheckSquare,
   FileText,
-  Settings
+  Settings,
+  X,
+  Navigation
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 
@@ -508,6 +615,159 @@ const occupancyRate = computed(() => {
   return Math.round((libraryData.value.current_occupancy / libraryData.value.total_seats) * 100);
 });
 
+const showMapModal = ref(false);
+const tempLatitude = ref<number | null>(null);
+const tempLongitude = ref<number | null>(null);
+
+let pickerMap: any = null;
+let pickerMarker: any = null;
+declare const google: any;
+
+const loadGoogleMapsScript = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (typeof google !== 'undefined' && google.maps) { resolve(); return; }
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Google Maps'));
+    document.head.appendChild(script);
+  });
+};
+
+const openMapModal = async () => {
+  showMapModal.value = true;
+  tempLatitude.value = libraryData.value.latitude || 31.5204;
+  tempLongitude.value = libraryData.value.longitude || 74.3587;
+  await nextTick();
+  setTimeout(() => {
+    initializePickerMap();
+    if (!libraryData.value.latitude || !libraryData.value.longitude) {
+      detectLocationForMap();
+    }
+  }, 150);
+};
+
+const closeMapModal = () => {
+  showMapModal.value = false;
+  pickerMap = null;
+  pickerMarker = null;
+};
+
+const initializePickerMap = async () => {
+  try {
+    await loadGoogleMapsScript();
+  } catch (error) {
+    showError('Map Error', 'Could not load Google Maps.');
+    return;
+  }
+  
+  const defaultPos = { lat: tempLatitude.value || 31.5204, lng: tempLongitude.value || 74.3587 };
+  
+  pickerMap = new google.maps.Map(document.getElementById('picker-map') as HTMLElement, {
+    center: defaultPos,
+    zoom: 15,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+  });
+
+  pickerMarker = new google.maps.Marker({
+    position: defaultPos,
+    map: pickerMap,
+    draggable: true,
+    title: 'Drag to adjust library location',
+    animation: google.maps.Animation.DROP
+  });
+
+  // Setup Autocomplete
+  const input = document.getElementById('picker-search-input') as HTMLInputElement;
+  if (input) {
+    // Clear input first
+    input.value = '';
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      fields: ['geometry', 'name', 'formatted_address']
+    });
+
+    autocomplete.bindTo('bounds', pickerMap);
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!place.geometry || !place.geometry.location) {
+        showWarning('Location Not Found', 'No details available for: ' + place.name);
+        return;
+      }
+
+      if (place.geometry.viewport) {
+        pickerMap.fitBounds(place.geometry.viewport);
+      } else {
+        pickerMap.setCenter(place.geometry.location);
+        pickerMap.setZoom(17);
+      }
+
+      pickerMarker.setPosition(place.geometry.location);
+      tempLatitude.value = place.geometry.location.lat();
+      tempLongitude.value = place.geometry.location.lng();
+    });
+  }
+
+  // Update coordinates when marker is dragged
+  pickerMarker.addListener('dragend', () => {
+    const pos = pickerMarker.getPosition();
+    if (pos) {
+      tempLatitude.value = pos.lat();
+      tempLongitude.value = pos.lng();
+    }
+  });
+
+  // Update marker position on map click
+  pickerMap.addListener('click', (event: any) => {
+    const latLng = event.latLng;
+    if (latLng) {
+      pickerMarker.setPosition(latLng);
+      tempLatitude.value = latLng.lat();
+      tempLongitude.value = latLng.lng();
+    }
+  });
+};
+
+const detectLocationForMap = () => {
+  if (!navigator.geolocation) {
+    showWarning('Not Supported', 'Geolocation is not supported by your browser');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      tempLatitude.value = lat;
+      tempLongitude.value = lng;
+      if (typeof google !== 'undefined' && google.maps && pickerMap && pickerMarker) {
+        const newPos = new google.maps.LatLng(lat, lng);
+        pickerMap.setCenter(newPos);
+        pickerMap.setZoom(16);
+        pickerMarker.setPosition(newPos);
+      }
+      showSuccess('Detected', 'Precise coordinates auto-detected successfully!');
+    },
+    (error) => {
+      console.error('Error getting location:', error);
+      showError('Location Error', 'Unable to retrieve your location.');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+};
+
+const confirmMapLocation = () => {
+  if (tempLatitude.value !== null && tempLongitude.value !== null) {
+    libraryData.value.latitude = tempLatitude.value;
+    libraryData.value.longitude = tempLongitude.value;
+    showSuccess('Location Selected', `Coordinates set to ${tempLatitude.value.toFixed(5)}, ${tempLongitude.value.toFixed(5)}`);
+    closeMapModal();
+  }
+};
+
 const getCurrentLocation = () => {
   if (!navigator.geolocation) {
     showWarning('Not Supported', 'Geolocation is not supported by your browser');
@@ -518,11 +778,13 @@ const getCurrentLocation = () => {
     (position) => {
       libraryData.value.latitude = position.coords.latitude;
       libraryData.value.longitude = position.coords.longitude;
+      showSuccess('Success', 'Coordinates auto-detected successfully!');
     },
     (error) => {
       console.error('Error getting location:', error);
       showError('Location Error', 'Unable to retrieve your location. Please enter manually.');
-    }
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
 };
 

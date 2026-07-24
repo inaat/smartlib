@@ -11,7 +11,7 @@
           <Calendar class="w-5.5 h-5.5" />
         </div>
         <div class="relative z-10">
-          <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-2">This Month</p>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-2">This Month</p>
           <p class="text-3xl font-bold text-slate-800 leading-none">
             {{ stats.attendance_this_month || 0 }} 
             <span class="text-xs font-semibold text-slate-400 ml-1 uppercase tracking-wide">Days</span>
@@ -28,8 +28,8 @@
           <Zap class="w-5.5 h-5.5" />
         </div>
         <div class="relative z-10">
-          <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-2">Current Streak</p>
-          <p class="text-3xl font-black text-slate-800 leading-none">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-2">Current Streak</p>
+          <p class="text-3xl font-bold text-slate-800 leading-none">
             {{ stats.current_streak || 0 }} 
             <span class="text-xs font-semibold text-slate-400 ml-1 uppercase tracking-wide">Days</span>
           </p>
@@ -45,8 +45,8 @@
           <Clock class="w-5.5 h-5.5" />
         </div>
         <div class="relative z-10">
-          <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-2">Total Hours</p>
-          <p class="text-3xl font-black text-slate-800 leading-none">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-2">Total Hours</p>
+          <p class="text-3xl font-bold text-slate-800 leading-none">
             {{ stats.total_hours || 0 }} 
             <span class="text-xs font-semibold text-slate-400 ml-1 uppercase tracking-wide">Hours</span>
           </p>
@@ -131,15 +131,15 @@
           </div>
           <!-- Legend -->
           <div class="flex flex-wrap gap-x-4 gap-y-1.5 pt-1">
-            <div class="flex items-center space-x-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
+            <div class="flex items-center space-x-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
               <div class="w-2.5 h-2.5 rounded-full bg-emerald-50 border border-emerald-300"></div>
               <span>Attended</span>
             </div>
-            <div class="flex items-center space-x-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">
+            <div class="flex items-center space-x-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
               <div class="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
               <span>Today</span>
             </div>
-            <div class="flex items-center space-x-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">
+            <div class="flex items-center space-x-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
               <div class="w-2.5 h-2.5 rounded-full bg-white border border-slate-200"></div>
               <span>Absent</span>
             </div>
@@ -151,7 +151,7 @@
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/30">
           <div class="text-left">
-            <h2 class="text-base font-semibold text-slate-800">Attendance Logs</h2>
+            <h2 class="text-base font-bold text-slate-800">Attendance Logs</h2>
             <p class="text-xs text-slate-400 mt-0.5">A detailed record of your library visits</p>
           </div>
           <button @click="fetchAttendance" class="p-2.5 hover:bg-slate-50 rounded-xl transition-all text-slate-500 hover:text-blue-600 border border-slate-200/50 shadow-sm active:scale-98">

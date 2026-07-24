@@ -23,31 +23,48 @@ class LibraryController extends Controller
         $libraries = Library::where('is_active', true)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
+            ->with(['facilities'])
+            ->select('libraries.*')
             ->selectRaw("
-                *,
-                ( 6371 * acos(
+                ( 6371 * acos( LEAST(1.0, GREATEST(-1.0, 
                     cos( radians(?) ) *
                     cos( radians( latitude ) ) *
                     cos( radians( longitude ) - radians(?) ) +
                     sin( radians(?) ) *
                     sin( radians( latitude ) )
-                ) ) AS distance_km
+                )) ) ) AS distance_km
             ", [$lat, $lng, $lat])
-            ->having('distance_km', '<=', $radius)
+            ->withCount([
+                'seats as totalSeats',
+                'seats as availableSeats' => function ($query) {
+                    $query->where('status', 'available');
+                },
+                'seats as currentOccupancy' => function ($query) {
+                    $query->where('status', 'occupied');
+                }
+            ])
             ->orderBy('distance_km')
             ->get();
 
         $data = $libraries->map(function ($library) {
             return [
-                'id'           => $library->id,
-                'name'         => $library->name,
-                'address'      => $library->address,
-                'photo_url'    => $library->photo_url,
-                'latitude'     => $library->latitude,
-                'longitude'    => $library->longitude,
-                'is_active'    => $library->is_active,
-                'distance_km'  => round($library->distance_km, 2),
-                'average_rating' => $library->average_rating,
+                'id'              => $library->id,
+                'name'            => $library->name,
+                'description'     => $library->description,
+                'address'         => $library->address,
+                'photo'           => $library->photo,
+                'photo_url'       => $library->photo_url,
+                'latitude'        => $library->latitude,
+                'longitude'       => $library->longitude,
+                'is_active'       => $library->is_active,
+                'distance_km'     => round($library->distance_km, 2),
+                'average_rating'  => $library->average_rating,
+                'openingHours'    => $library->opening_hours,
+                'totalSeats'      => $library->totalSeats ?? 0,
+                'availableSeats'  => $library->availableSeats ?? 0,
+                'currentOccupancy' => $library->currentOccupancy ?? 0,
+                'facilities'      => $library->facilities->pluck('name')->toArray(),
+                'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
             ];
         });
 
@@ -166,21 +183,41 @@ class LibraryController extends Controller
         $library = Library::with(['floors', 'seatSections', 'operatingHours'])->findOrFail($id);
         
         $seats = $library->seats()
-            ->select(['seats.id', 'seats.floor_id', 'seats.section_id', 'seats.seat_number', 'seats.seat_type', 'seats.zone', 'seats.status', 'seats.position_x', 'seats.position_y', 'seats.has_computer', 'seats.near_window', 'seats.socket_count'])
+            ->select([
+                'seats.id', 
+                'seats.floor_id', 
+                'seats.section_id', 
+                'seats.table_id', 
+                'seats.cabin_number', 
+                'seats.cabin_features', 
+                'seats.seat_number', 
+                'seats.seat_type', 
+                'seats.zone', 
+                'seats.status', 
+                'seats.position_x', 
+                'seats.position_y', 
+                'seats.has_computer', 
+                'seats.near_window', 
+                'seats.socket_count'
+            ])
             ->orderBy('section_id')
             ->orderBy('seat_number')
             ->get();
 
         // Add remaining time for occupied/booked seats
         $seats->transform(function($seat) {
-            if ($seat->status !== 'available') {
+            if ($seat->status !== 'available' && $seat->status !== 'maintenance') {
                 $lastBooking = \App\Models\SeatBooking::where('seat_id', $seat->id)
                     ->whereIn('status', ['booked', 'checked_in'])
                     ->latest('scheduled_end_time')
                     ->first();
                 
                 if ($lastBooking) {
-                    $seat->remaining_minutes = (int) now()->diffInMinutes($lastBooking->scheduled_end_time, false);
+                    $remaining = (int) now()->diffInMinutes($lastBooking->scheduled_end_time, false);
+                    $seat->remaining_minutes = $remaining;
+                    if ($remaining > 0 && $remaining <= 10 && $seat->status === 'occupied') {
+                        $seat->status = 'free_soon';
+                    }
                 }
             }
             return $seat;
@@ -199,6 +236,8 @@ class LibraryController extends Controller
             ];
         });
 
+        $tables = \App\Models\StudyTable::where('library_id', $library->id)->get();
+
         return response()->json([
             'library' => [
                 'id' => $library->id,
@@ -208,7 +247,8 @@ class LibraryController extends Controller
             ],
             'floors' => $library->floors,
             'sections' => $library->seatSections,
-            'seats' => $seats
+            'seats' => $seats,
+            'tables' => $tables,
         ]);
     }
 }

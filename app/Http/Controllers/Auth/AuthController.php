@@ -25,15 +25,27 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'email' => ['Invalid email'],
             ]);
         }
 
-        if (!$user->is_active) {
+        if (!Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Your account has been deactivated. Please contact support.'],
+                'password' => ['Invalid password'],
+            ]);
+        }
+
+        if (!$user->is_active || $user->status !== 'approved') {
+            throw ValidationException::withMessages([
+                'email' => ['Your account is inactive. Please contact support.'],
+            ]);
+        }
+
+        if ($user->role === 'librarian' && !$user->library_id) {
+            throw ValidationException::withMessages([
+                'email' => ['No library has been assigned to your account. Please contact support.'],
             ]);
         }
 
@@ -50,9 +62,9 @@ class AuthController extends Controller
         // Load relationships
         $user->load(['userSubscriptions' => function($query) {
             $query->where('status', 'active')->latest();
-        }, 'libraries']);
+        }, 'libraries', 'library']);
 
-        $libraryId = $user->libraries->first()?->id;
+        $libraryId = $user->library_id;
 
         return response()->json([
             'user' => [
@@ -71,6 +83,7 @@ class AuthController extends Controller
                 'isApproved' => $user->is_active, // For frontend compatibility
                 'role' => $user->role, // For frontend compatibility
                 'library_id' => $libraryId,
+                'library' => $user->library,
                 'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
                 'pending_order' => $user->pendingOrder()->with('plan')->first(),
                 'profile_picture' => $user->profile_picture,
@@ -128,6 +141,7 @@ class AuthController extends Controller
             'trial_ends_at' => $trialEndsAt,
         ]);
 
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
         $user->assignRole('student');
 
         // Create subscription if plan selected
@@ -251,11 +265,21 @@ class AuthController extends Controller
     {
         $user = $request->user();
         
+        if (!$user->is_active || $user->status !== 'approved') {
+            $user->tokens()->delete();
+            return response()->json(['message' => 'Your account is inactive.'], 403);
+        }
+        
+        if ($user->role === 'librarian' && !$user->library_id) {
+            $user->tokens()->delete();
+            return response()->json(['message' => 'No library has been assigned to your account.'], 403);
+        }
+
         $user->load(['userSubscriptions' => function($query) {
             $query->where('status', 'active')->latest();
-        }, 'libraries']);
+        }, 'libraries', 'library']);
 
-        $libraryId = $user->libraries->first()?->id;
+        $libraryId = $user->library_id;
 
         return response()->json([
             'id' => $user->id,
@@ -273,6 +297,7 @@ class AuthController extends Controller
             'isApproved' => $user->is_active,
             'role' => $user->role,
             'library_id' => $libraryId,
+            'library' => $user->library,
             'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
             'pending_order' => $user->pendingOrder()->with('plan')->first(),
             'profile_picture' => $user->profile_picture,

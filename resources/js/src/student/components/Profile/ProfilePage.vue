@@ -189,15 +189,15 @@
             <div v-if="user?.active_subscription" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
               <div class="flex justify-between text-xs border-b border-white/10 pb-2">
                 <span class="text-white/60 font-semibold">Book Reservations</span>
-                <span class="font-bold">{{ user.active_subscription.subscription_plan?.book_reservations_limit === -1 ? 'Unlimited' : user.active_subscription.subscription_plan?.book_reservations_limit || 'N/A' }}</span>
+                <span class="font-bold">{{ user.active_subscription.subscription_plan?.book_reservations_limit === -1 || !user.active_subscription.subscription_plan?.book_reservations_limit ? 'Unlimited' : user.active_subscription.subscription_plan?.book_reservations_limit }}</span>
               </div>
               <div class="flex justify-between text-xs border-b border-white/10 pb-2">
                 <span class="text-white/60 font-semibold">Daily Seat Bookings</span>
-                <span class="font-bold">{{ user.active_subscription.subscription_plan?.daily_seat_bookings_limit === -1 ? 'Unlimited' : user.active_subscription.subscription_plan?.daily_seat_bookings_limit || 'N/A' }}</span>
+                <span class="font-bold">{{ user.active_subscription.subscription_plan?.daily_seat_bookings_limit === -1 || !user.active_subscription.subscription_plan?.daily_seat_bookings_limit ? 'Unlimited' : user.active_subscription.subscription_plan?.daily_seat_bookings_limit }}</span>
               </div>
               <div class="flex justify-between text-xs border-b border-white/10 pb-2">
                 <span class="text-white/60 font-semibold">Library Access</span>
-                <span class="font-bold">{{ user.active_subscription.subscription_plan?.libraries_access_limit === -1 ? 'Unlimited' : user.active_subscription.subscription_plan?.libraries_access_limit || 'N/A' }}</span>
+                <span class="font-bold">{{ user.active_subscription.subscription_plan?.libraries_access_limit === -1 || !user.active_subscription.subscription_plan?.libraries_access_limit ? 'Unlimited' : user.active_subscription.subscription_plan?.libraries_access_limit }}</span>
               </div>
               <div class="flex justify-between text-xs border-b border-white/10 pb-2">
                 <span class="text-white/60 font-semibold">Advance Booking</span>

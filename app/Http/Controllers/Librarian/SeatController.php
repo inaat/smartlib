@@ -89,6 +89,12 @@ class SeatController extends Controller
                         $status = 'reserved';
                     } elseif ($currentBooking->check_in_time) {
                         $status = 'occupied';
+                        if ($endTime) {
+                            $remaining = $now->diffInMinutes($endTime, false);
+                            if ($remaining > 0 && $remaining <= 10) {
+                                $status = 'free_soon';
+                            }
+                        }
                     }
 
                     $bookingData = [
@@ -115,6 +121,9 @@ class SeatController extends Controller
                     'is_maintenance' => $seat->is_maintenance || $seat->status === 'maintenance',
                     'is_active' => $seat->is_active,
                     'section_id' => $seat->section_id,
+                    'table_id' => $seat->table_id,
+                    'cabin_number' => $seat->cabin_number,
+                    'cabin_features' => $seat->cabin_features,
                     'floor_id' => $seat->floor->id ?? null,
                     'floor' => $seat->floor,
                     'seat_section' => $seat->seatSection,
@@ -161,6 +170,9 @@ class SeatController extends Controller
             'status' => 'nullable|in:available,reserved,maintenance,occupied',
             'floor_id' => 'required|integer|exists:floors,id',
             'section_id' => 'nullable|integer|exists:seat_sections,id',
+            'table_id' => 'nullable|integer|exists:study_tables,id',
+            'cabin_number' => 'nullable|string',
+            'cabin_features' => 'nullable|array',
             'has_computer' => 'nullable|boolean',
             'near_window' => 'nullable|boolean',
             'socket_count' => 'nullable|integer|min:0',
@@ -190,6 +202,17 @@ class SeatController extends Controller
         // Get library from floor
         $floor = \App\Models\Floor::findOrFail($validated['floor_id']);
         $library = $floor->library;
+
+        // Check floor capacity
+        $currentSeatsOnFloor = Seat::where('floor_id', $floor->id)->count();
+        if ($floor->capacity > 0 && ($currentSeatsOnFloor + 1) > $floor->capacity) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => "Cannot add seat. The total seats on this floor cannot exceed the floor capacity of {$floor->capacity} seats."
+                ], 422);
+            }
+            return back()->withErrors(['floor_id' => "The total seats on this floor cannot exceed the floor capacity of {$floor->capacity} seats."]);
+        }
 
         // Generate QR code
         $qrContent = base64_encode(json_encode([
@@ -254,6 +277,9 @@ class SeatController extends Controller
             'status' => 'sometimes|in:available,reserved,maintenance,occupied',
             'floor_id' => 'nullable|integer|exists:floors,id',
             'section_id' => 'nullable|integer|exists:seat_sections,id',
+            'table_id' => 'nullable|integer|exists:study_tables,id',
+            'cabin_number' => 'nullable|string',
+            'cabin_features' => 'nullable|array',
             'has_computer' => 'nullable|boolean',
             'near_window' => 'nullable|boolean',
             'socket_count' => 'nullable|integer|min:0',
@@ -330,5 +356,31 @@ class SeatController extends Controller
         $seats = $library->seats;
 
         return view('librarian.seats.qr-codes', compact('seats', 'library'));
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'seats' => 'required|array',
+            'seats.*.id' => 'required|integer|exists:seats,id',
+            'seats.*.position_x' => 'nullable|integer',
+            'seats.*.position_y' => 'nullable|integer',
+            'seats.*.seat_number' => 'nullable|string',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+            foreach ($validated['seats'] as $seatData) {
+                $seat = Seat::find($seatData['id']);
+                if ($seat) {
+                    $updateData = [];
+                    if (array_key_exists('position_x', $seatData)) $updateData['position_x'] = $seatData['position_x'];
+                    if (array_key_exists('position_y', $seatData)) $updateData['position_y'] = $seatData['position_y'];
+                    if (array_key_exists('seat_number', $seatData)) $updateData['seat_number'] = $seatData['seat_number'];
+                    $seat->update($updateData);
+                }
+            }
+        });
+
+        return response()->json(['success' => true, 'message' => 'Seats updated successfully']);
     }
 }

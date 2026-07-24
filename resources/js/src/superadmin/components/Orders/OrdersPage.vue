@@ -419,7 +419,7 @@ const confirmReject = async () => {
 
 const getStatusClass = (status: string) => {
   switch (status) {
-    case 'pending': return 'bg-amber-100 text-amber-700';
+    case 'pending': return 'bg-red-100 text-red-700';
     case 'approved': 
     case 'active': return 'bg-green-100 text-green-700';
     case 'rejected': 

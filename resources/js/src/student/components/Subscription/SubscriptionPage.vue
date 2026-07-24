@@ -52,23 +52,23 @@
           <div class="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 pt-8 border-t border-white/15">
             <div class="bg-white/10 border border-white/15 rounded-2xl p-4 hover:bg-white/15 transition-colors duration-200">
               <div class="text-[10px] font-extrabold text-blue-200 uppercase tracking-widest mb-1.5 leading-none">Daily Seats</div>
-              <div class="text-xl font-bold text-white leading-none">{{ user.active_subscription.subscription_plan?.daily_seat_bookings_limit || '∞' }}</div>
+              <div class="text-xl font-bold text-white leading-none">{{ user.active_subscription.subscription_plan?.daily_seat_bookings_limit === -1 || !user.active_subscription.subscription_plan?.daily_seat_bookings_limit ? '∞' : user.active_subscription.subscription_plan?.daily_seat_bookings_limit }}</div>
             </div>
             <div class="bg-white/10 border border-white/15 rounded-2xl p-4 hover:bg-white/15 transition-colors duration-200">
               <div class="text-[10px] font-extrabold text-blue-200 uppercase tracking-widest mb-1.5 leading-none">Monthly Seats</div>
-              <div class="text-xl font-bold text-white leading-none">{{ user.active_subscription.subscription_plan?.monthly_seat_bookings_limit || '∞' }}</div>
+              <div class="text-xl font-bold text-white leading-none">{{ user.active_subscription.subscription_plan?.monthly_seat_bookings_limit === -1 || !user.active_subscription.subscription_plan?.monthly_seat_bookings_limit ? '∞' : user.active_subscription.subscription_plan?.monthly_seat_bookings_limit }}</div>
             </div>
             <div class="bg-white/10 border border-white/15 rounded-2xl p-4 hover:bg-white/15 transition-colors duration-200">
               <div class="text-[10px] font-extrabold text-blue-200 uppercase tracking-widest mb-1.5 leading-none">Libraries Access</div>
-              <div class="text-xl font-bold text-white leading-none">{{ user.active_subscription.subscription_plan?.libraries_access_limit || '∞' }}</div>
+              <div class="text-xl font-bold text-white leading-none">{{ user.active_subscription.subscription_plan?.libraries_access_limit === -1 || !user.active_subscription.subscription_plan?.libraries_access_limit ? '∞' : user.active_subscription.subscription_plan?.libraries_access_limit }}</div>
             </div>
             <div class="bg-white/10 border border-white/15 rounded-2xl p-4 hover:bg-white/15 transition-colors duration-200">
               <div class="text-[10px] font-extrabold text-blue-200 uppercase tracking-widest mb-1.5 leading-none">Books Access</div>
-              <div class="text-xl font-bold text-white leading-none">{{ user.active_subscription.subscription_plan?.books_access_limit || '∞' }}</div>
+              <div class="text-xl font-bold text-white leading-none">{{ user.active_subscription.subscription_plan?.books_access_limit === -1 || !user.active_subscription.subscription_plan?.books_access_limit ? '∞' : user.active_subscription.subscription_plan?.books_access_limit }}</div>
             </div>
             <div class="bg-white/10 border border-white/15 rounded-2xl p-4 hover:bg-white/15 transition-colors duration-200">
               <div class="text-[10px] font-extrabold text-blue-200 uppercase tracking-widest mb-1.5 leading-none">Events Limit</div>
-              <div class="text-xl font-bold text-white leading-none">{{ user.active_subscription.subscription_plan?.events_joining_limit || '∞' }}</div>
+              <div class="text-xl font-bold text-white leading-none">{{ user.active_subscription.subscription_plan?.events_joining_limit === -1 || !user.active_subscription.subscription_plan?.events_joining_limit ? '∞' : user.active_subscription.subscription_plan?.events_joining_limit }}</div>
             </div>
             <div class="bg-white/10 border border-white/15 rounded-2xl p-4 hover:bg-white/15 transition-colors duration-200">
               <div class="text-[10px] font-extrabold text-blue-200 uppercase tracking-widest mb-1.5 leading-none">Adv. Booking</div>
@@ -88,141 +88,108 @@
       </div>
 
       <!-- All Plans Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 font-outfit items-stretch mb-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch mb-12">
         <div 
           v-for="plan in plans" 
           :key="plan.id"
-          class="bg-white rounded-3xl shadow-sm hover:shadow-xl hover:shadow-slate-100/80 border transition-all duration-300 hover-lift relative text-left flex flex-col justify-between"
           :class="[
-            plan.name.toLowerCase().includes('premium') && plan.name.toLowerCase().includes('monthly') ? 'border-[#f97316] ring-4 ring-[#f97316]/5' : 
-            plan.name.toLowerCase().includes('premium') ? 'border-[#8b5cf6] ring-4 ring-[#8b5cf6]/5' : 
-            'border-slate-200/80'
+            plan.name.toLowerCase().includes('premium') || plan.name.toLowerCase().includes('pro')
+              ? 'bg-white border-2 border-blue-650 rounded-3xl p-8 shadow-xl shadow-blue-500/5 flex flex-col justify-between text-left relative transform lg:-translate-y-2'
+              : 'bg-white border border-slate-200 rounded-3xl p-8 shadow-sm hover:border-slate-400 hover:shadow-md transition-all duration-300 flex flex-col justify-between text-left'
           ]"
         >
           <!-- Badge overlay -->
           <div 
-            v-if="plan.name.toLowerCase().includes('premium') && plan.name.toLowerCase().includes('monthly')" 
-            class="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-[#f97316] text-white px-4 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider flex items-center space-x-1.5 shadow-md shadow-orange-500/15 border border-orange-400/20 z-10 whitespace-nowrap animate-pulse-slow"
+            v-if="plan.name.toLowerCase().includes('premium') || plan.name.toLowerCase().includes('pro')" 
+            class="absolute -top-3.5 right-6 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-blue-700"
           >
-            <span class="text-[10px]">⭐</span>
-            <span>Most Popular</span>
-          </div>
-          <div 
-            v-else-if="plan.name.toLowerCase().includes('premium')" 
-            class="absolute -top-3.5 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider flex items-center space-x-1.5 shadow-md shadow-blue-500/15 border border-blue-400/20 z-10 whitespace-nowrap animate-pulse-slow"
-          >
-            <span class="text-[10px]">👑</span>
-            <span>Recommended</span>
+            Popular Choice
           </div>
 
           <!-- Card Content -->
-          <div class="p-8 flex-grow flex flex-col">
+          <div class="flex-grow flex flex-col">
             <!-- Header Section (Plan title, Price, bookings) -->
-            <div class="text-center w-full mb-6">
-              <h3 class="text-sm font-semibold text-slate-800 tracking-tight uppercase leading-none mb-3.5">{{ plan.name }}</h3>
+            <div>
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">{{ plan.name.includes('Monthly') ? 'Monthly Membership' : 'Membership Tier' }}</span>
+              <h3 class="text-xl font-extrabold text-slate-800">{{ plan.name }}</h3>
+              <p v-if="plan.description" class="text-xs text-slate-500 mt-1 font-semibold leading-relaxed">
+                {{ plan.description }}
+              </p>
               
-              <div class="flex flex-col items-center justify-center">
-                <div class="flex items-baseline justify-center">
-                  <span class="text-3xl font-bold text-slate-900">PKR {{ formatPrice(plan.price) }}</span>
-                  <span class="ml-1 text-slate-400 text-xs font-semibold">
-                    {{ 
-                      plan.price == 0 ? '/forever' : formatDuration(plan.duration_days)
-                    }}
+              <div class="price-box my-6 flex flex-col items-start justify-center">
+                <div class="flex items-center gap-2 mb-1" v-if="plan.features?.discount_type && plan.features?.discount_type !== 'none'">
+                  <span class="text-xs text-slate-400 line-through">PKR {{ formatPrice(plan.features?.original_price) }}</span>
+                  <span class="text-[9px] font-black uppercase bg-green-50 border border-green-200 text-green-600 px-2 py-0.5 rounded">
+                    {{ plan.features?.discount_type === 'percentage' ? `${plan.features?.discount_value}% OFF` : `PKR ${plan.features?.discount_value} OFF` }}
                   </span>
                 </div>
-                <!-- Bookings Count description -->
-                <p class="text-xs font-medium text-slate-500 mt-2.5 leading-none">
-                  {{ 
-                    plan.monthly_seat_bookings_limit 
-                      ? `${plan.monthly_seat_bookings_limit} bookings` 
-                      : (plan.daily_seat_bookings_limit ? `${plan.daily_seat_bookings_limit} bookings/day` : 'Unlimited bookings')
-                  }}
-                </p>
-                <!-- Description -->
-                <p v-if="plan.description" class="text-xs text-slate-500/80 mt-3 line-clamp-2 max-w-[220px] text-center font-medium leading-relaxed">
-                  {{ plan.description }}
-                </p>
+                <div class="flex items-baseline">
+                  <span class="text-3xl font-black text-slate-900">PKR {{ formatPrice(plan.price) }}</span>
+                  <span class="text-xs font-semibold text-slate-550 ml-1.5">
+                    / {{ plan.price == 0 ? 'forever' : formatDuration(plan.duration_days) }}
+                  </span>
+                </div>
               </div>
             </div>
 
             <!-- Features List -->
             <ul class="w-full space-y-3.5 text-left border-t border-slate-100/80 pt-6">
-              <li class="flex items-start">
-                <svg class="h-4 w-4 text-[#22c55e] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="ml-3 text-xs text-slate-600 font-medium leading-normal text-left">
-                  {{ plan.daily_seat_bookings_limit ? `${plan.daily_seat_bookings_limit} Daily Seat Bookings` : 'Unlimited Daily Seat Bookings' }}
+              <li class="flex items-center space-x-2.5 text-xs text-slate-650 font-semibold">
+                <Check class="h-4 w-4 text-blue-650 flex-shrink-0" />
+                <span>
+                  {{ plan.daily_seat_bookings_limit === -1 || !plan.daily_seat_bookings_limit ? 'Unlimited Daily Seat Bookings' : `${plan.daily_seat_bookings_limit} Daily Seat Bookings` }}
                 </span>
               </li>
-              <li class="flex items-start">
-                <svg class="h-4 w-4 text-[#22c55e] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="ml-3 text-xs text-slate-600 font-bold leading-normal text-left">
-                  {{ plan.monthly_seat_bookings_limit ? `${plan.monthly_seat_bookings_limit} Monthly Seat Bookings` : 'Unlimited Monthly Seat Bookings' }}
+              <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+                <span>
+                  {{ plan.monthly_seat_bookings_limit === -1 || !plan.monthly_seat_bookings_limit ? 'Unlimited Monthly Seat Bookings' : `${plan.monthly_seat_bookings_limit} Monthly Seat Bookings` }}
                 </span>
               </li>
-              <li class="flex items-start">
-                <svg class="h-4 w-4 text-[#22c55e] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="ml-3 text-xs text-slate-600 font-bold leading-normal text-left">
-                  {{ plan.libraries_access_limit ? `${plan.libraries_access_limit} Libraries Access` : 'Unlimited Libraries Access' }}
+              <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+                <span>
+                  {{ plan.libraries_access_limit === -1 || !plan.libraries_access_limit ? 'Unlimited Libraries Access' : `${plan.libraries_access_limit} Libraries Access` }}
                 </span>
               </li>
-              <li class="flex items-start">
-                <svg class="h-4 w-4 text-[#22c55e] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="ml-3 text-xs text-slate-600 font-bold leading-normal text-left">
-                  {{ plan.books_access_limit ? `${plan.books_access_limit} Books Access` : 'Unlimited Books Access' }}
+              <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+                <span>
+                  {{ plan.books_access_limit === -1 || !plan.books_access_limit ? 'Unlimited Books Access' : `${plan.books_access_limit} Books Access` }}
                 </span>
               </li>
-              <li class="flex items-start">
-                <svg class="h-4 w-4 text-[#22c55e] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="ml-3 text-xs text-slate-600 font-bold leading-normal text-left">
-                  {{ plan.events_joining_limit ? `${plan.events_joining_limit} Events Joining` : 'Unlimited Events Joining' }}
+              <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+                <span>
+                  {{ plan.events_joining_limit === -1 || !plan.events_joining_limit ? 'Unlimited Events Joining' : `${plan.events_joining_limit} Events Joining` }}
                 </span>
               </li>
-              <li class="flex items-start">
-                <svg class="h-4 w-4 text-[#22c55e] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="ml-3 text-xs text-slate-600 font-bold leading-normal text-left">
+              <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+                <span>
                   <span v-if="plan.advance_booking_days === -1">Unlimited Advance Booking</span>
                   <span v-else-if="plan.advance_booking_days === 0">Same Day Booking Only</span>
                   <span v-else>{{ plan.advance_booking_days }} Days Advance Booking</span>
                 </span>
               </li>
-              <li v-if="plan.digital_books_access" class="flex items-start">
-                <svg class="h-4 w-4 text-[#22c55e] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="ml-3 text-xs text-slate-600 font-bold leading-normal text-left">
-                  Digital Books Access
-                </span>
+              <li v-if="plan.digital_books_access" class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+                <span>Digital Books Access</span>
               </li>
-              <li v-if="plan.priority_booking" class="flex items-start">
-                <svg class="h-4 w-4 text-[#22c55e] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="ml-3 text-xs text-slate-600 font-bold leading-normal text-left">
-                  Priority Seat Booking
-                </span>
+              <li v-if="plan.priority_booking" class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+                <span>Priority Seat Booking</span>
               </li>
             </ul>
           </div>
 
           <!-- Button Container -->
-          <div class="p-8 pt-0 mt-auto w-full">
+          <div class="mt-8 w-full">
             <!-- Current Active Plan Button -->
             <button
               v-if="isCurrentPlan(plan.id) && !isPlanExpired"
               disabled
-              class="w-full bg-[#f1f5f9] border border-slate-200 text-slate-400 rounded-xl px-4 py-3.5 text-xs font-semibold uppercase tracking-wider cursor-default flex items-center justify-center space-x-2"
+              class="w-full bg-slate-100 border border-slate-200 text-slate-400 rounded-2xl py-3.5 text-xs font-bold uppercase tracking-wider cursor-default flex items-center justify-center space-x-2"
             >
               <span>Current Plan</span>
             </button>
@@ -233,12 +200,14 @@
               @click="subscribe(plan)"
               :disabled="subscribingPlanId !== null || !!user?.pending_order"
               :class="[
-                'w-full rounded-xl px-4 py-3.5 text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 border shadow-sm duration-200',
+                'w-full py-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 border shadow-sm duration-200',
                 user?.pending_order?.plan_id === plan.id
                   ? 'bg-amber-50 text-amber-700 border-amber-300 cursor-not-allowed shadow-none'
                   : (!!user?.pending_order
                       ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed shadow-none'
-                      : getPlanBtnClass(plan.name))
+                      : (plan.name.toLowerCase().includes('premium') || plan.name.toLowerCase().includes('pro')
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/15 border-transparent'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-transparent'))
               ]"
             >
               <template v-if="subscribingPlanId === plan.id">
@@ -273,7 +242,8 @@ import {
   Loader2, 
   Clock, 
   RefreshCw, 
-  Zap 
+  Zap,
+  Check
 } from 'lucide-vue-next';
 
 const { user, checkAuth, isPlanExpired } = useAuth();

@@ -15,14 +15,6 @@ class UserController extends Controller
         $query = User::where('status', 'pending')
             ->where('role', 'student');
 
-        if (auth()->user()->role === 'super_admin') {
-            $myLibraryIds = Library::where('created_by', auth()->id())->pluck('id');
-            $query->where(function($q) use ($myLibraryIds) {
-                $q->where('created_by', auth()->id())
-                  ->orWhereIn('library_id', $myLibraryIds);
-            });
-        }
-
         $users = $query->latest()->paginate(20);
 
         return view('admin.users.pending', compact('users'));
@@ -31,14 +23,6 @@ class UserController extends Controller
     public function students()
     {
         $query = User::where('role', 'student');
-
-        if (auth()->user()->role === 'super_admin') {
-            $myLibraryIds = Library::where('created_by', auth()->id())->pluck('id');
-            $query->where(function($q) use ($myLibraryIds) {
-                $q->where('created_by', auth()->id())
-                  ->orWhereIn('library_id', $myLibraryIds);
-            });
-        }
 
         $students = $query->latest()->paginate(20);
 
@@ -49,14 +33,6 @@ class UserController extends Controller
     {
         $query = User::where('role', 'librarian')
             ->with('library');
-
-        if (auth()->user()->role === 'super_admin') {
-            $myLibraryIds = Library::where('created_by', auth()->id())->pluck('id');
-            $query->where(function($q) use ($myLibraryIds) {
-                $q->where('created_by', auth()->id())
-                  ->orWhereIn('library_id', $myLibraryIds);
-            });
-        }
 
         if (request()->expectsJson() || request()->is('api/*')) {
             return response()->json($query->latest()->get());
@@ -71,14 +47,6 @@ class UserController extends Controller
         $query = User::where('role', 'student')
             ->withCount('seatBookings as bookings_count')
             ->with(['library', 'activeSubscription.subscription_plan', 'bans']);
-
-        if (auth()->user()->role === 'super_admin') {
-            $myLibraryIds = Library::where('created_by', auth()->id())->pluck('id');
-            $query->where(function($q) use ($myLibraryIds) {
-                $q->where('created_by', auth()->id())
-                  ->orWhereIn('library_id', $myLibraryIds);
-            });
-        }
 
         $users = $query->latest()->get();
 
@@ -121,6 +89,7 @@ class UserController extends Controller
             'created_by' => auth()->id(),
         ]);
 
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => $request->role, 'guard_name' => 'web']);
         $user->assignRole($request->role);
 
         if ($request->expectsJson() || $request->is('api/*')) {
@@ -155,7 +124,12 @@ class UserController extends Controller
 
         $user->update($request->only(['name', 'email', 'role', 'status', 'library_id', 'ca_level', 'phone', 'crn']));
         
+        if ($user->status !== 'approved') {
+            $user->tokens()->delete();
+        }
+        
         if ($request->filled('role')) {
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => $request->role, 'guard_name' => 'web']);
             $user->syncRoles($request->role);
         }
 

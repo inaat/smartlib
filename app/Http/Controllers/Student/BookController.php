@@ -46,6 +46,7 @@ class BookController extends Controller
                 'type' => $book->type,
                 'category' => $book->category,
                 'availability' => $book->availability,
+                'borrowing_period' => $book->borrowing_period,
                 'digital_access' => $book->digital_access,
                 'library' => $book->library ? [
                     'id' => $book->library->id,
@@ -72,6 +73,7 @@ class BookController extends Controller
             'type' => $book->type,
             'category' => $book->category,
             'availability' => $book->availability,
+            'borrowing_period' => $book->borrowing_period,
             'digital_access' => $book->digital_access,
             'library' => $book->library ? [
                 'id' => $book->library->id,
@@ -85,7 +87,21 @@ class BookController extends Controller
     public function reserve(Request $request, $id)
     {
         $user = $request->user();
-        $book = Book::findOrFail($id);
+        $book = Book::with('library')->findOrFail($id);
+
+        // Location-based reservation restriction
+        $library = $book->library;
+        if ($request->latitude && $request->longitude && $library && $library->latitude && $library->longitude) {
+            $distance = $this->calculateDistance(
+                $request->latitude, $request->longitude,
+                $library->latitude, $library->longitude
+            );
+            if ($distance > 50000) { // 50 km in meters
+                return response()->json([
+                    'message' => 'You can only reserve books at libraries near your current location. This library is too far away.'
+                ], 403);
+            }
+        }
 
         if ($book->availability !== 'available') {
             return response()->json(['message' => 'Book is not available'], 400);
@@ -124,6 +140,27 @@ class BookController extends Controller
                     'message' => "You have reached your book reservation limit ({$bookLimit}). Please return existing reservations first.",
                     'limit' => $bookLimit,
                     'current' => $activeReservations
+                ], 400);
+            }
+        }
+
+        // Check books access limit (total reservations in the current subscription period)
+        $booksAccessLimit = $plan->books_access_limit ?? -1;
+        if ($booksAccessLimit === 0) {
+            $booksAccessLimit = -1;
+        }
+
+        if ($booksAccessLimit !== -1) {
+            $totalPeriodReservations = BookReservation::where('user_id', $user->id)
+                ->where('created_at', '>=', $activeSubscription->started_at)
+                ->whereIn('status', ['pending', 'approved', 'collected', 'pending_return', 'returned', 'overdue'])
+                ->count();
+
+            if ($totalPeriodReservations >= $booksAccessLimit) {
+                return response()->json([
+                    'message' => "You have reached your total books access limit for this subscription period ({$booksAccessLimit}).",
+                    'limit' => $booksAccessLimit,
+                    'current' => $totalPeriodReservations
                 ], 400);
             }
         }
@@ -217,5 +254,21 @@ class BookController extends Controller
             'message' => 'Return request submitted successfully. Please wait for librarian approval.',
             'reservation' => $reservation
         ]);
+    }
+
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000; // meters
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 }

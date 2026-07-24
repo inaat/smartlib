@@ -62,23 +62,23 @@
           <div class="space-y-3">
             <div class="flex items-center text-sm text-gray-600">
               <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              {{ plan.daily_seat_bookings_limit || 'Unlimited' }} Daily Seat Bookings
+              {{ plan.daily_seat_bookings_limit === -1 || !plan.daily_seat_bookings_limit ? 'Unlimited' : plan.daily_seat_bookings_limit }} Daily Seat Bookings
             </div>
             <div class="flex items-center text-sm text-gray-600">
               <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              {{ plan.monthly_seat_bookings_limit || 'Unlimited' }} Monthly Seat Bookings
+              {{ plan.monthly_seat_bookings_limit === -1 || !plan.monthly_seat_bookings_limit ? 'Unlimited' : plan.monthly_seat_bookings_limit }} Monthly Seat Bookings
             </div>
             <div class="flex items-center text-sm text-gray-600">
               <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              {{ plan.libraries_access_limit || 'Unlimited' }} Libraries Access
+              {{ plan.libraries_access_limit === -1 || !plan.libraries_access_limit ? 'Unlimited' : plan.libraries_access_limit }} Libraries Access
             </div>
             <div class="flex items-center text-sm text-gray-600">
               <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              {{ plan.books_access_limit || 'Unlimited' }} Books Access
+              {{ plan.books_access_limit === -1 || !plan.books_access_limit ? 'Unlimited' : plan.books_access_limit }} Books Access
             </div>
             <div class="flex items-center text-sm text-gray-600">
               <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              {{ plan.events_joining_limit || 'Unlimited' }} Events Joining
+              {{ plan.events_joining_limit === -1 || !plan.events_joining_limit ? 'Unlimited' : plan.events_joining_limit }} Events Joining
             </div>
             <div class="flex items-center text-sm text-gray-600">
               <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />

@@ -42,6 +42,19 @@
             </select>
             <ChevronDown class="absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           </div>
+
+          <!-- Library Filter -->
+          <div class="relative min-w-[160px] group">
+            <LibraryIcon class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+            <select
+              v-model="filterLibrary"
+              class="w-full pl-11 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-sm text-slate-700 appearance-none cursor-pointer"
+            >
+              <option value="">All Libraries</option>
+              <option v-for="lib in libraryOptions" :key="lib.id" :value="lib.id">{{ lib.name }}</option>
+            </select>
+            <ChevronDown class="absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          </div>
         </div>
       </div>
     </div>
@@ -318,6 +331,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { 
   Search, 
   Filter, 
@@ -331,8 +345,11 @@ import {
 } from 'lucide-vue-next';
 import { studentAPI } from '@/shared/services/api';
 import { useSwal } from '@/shared/composables/useSwal';
+import { useGeolocation } from '@/shared/composables/useGeolocation';
 
+const route = useRoute();
 const { showSuccess, showError, showWarning } = useSwal();
+const { latitude, longitude } = useGeolocation();
 
 const books = ref<any[]>([]);
 const loading = ref(true);
@@ -357,6 +374,7 @@ const openDetailsModal = (book: any) => {
 const searchQuery = ref('');
 const filterCategory = ref('');
 const filterType = ref('');
+const filterLibrary = ref<string | number>('');
 
 // Computed filtered books
 const filteredBooks = computed(() => {
@@ -369,8 +387,21 @@ const filteredBooks = computed(() => {
     const matchesCategory = !filterCategory.value || book.category === filterCategory.value;
     const matchesType = !filterType.value || book.type?.toLowerCase() === filterType.value.toLowerCase();
 
-    return matchesSearch && matchesCategory && matchesType;
+    const matchesLibrary = !filterLibrary.value || book.library_id == filterLibrary.value || book.library?.id == filterLibrary.value;
+
+    return matchesSearch && matchesCategory && matchesType && matchesLibrary;
   });
+});
+
+const libraryOptions = computed(() => {
+  const seen = new Map<number, string>();
+  books.value.forEach(b => {
+    const lib = b.library;
+    if (lib && lib.id && !seen.has(lib.id)) {
+      seen.set(lib.id, lib.name);
+    }
+  });
+  return Array.from(seen.entries()).map(([id, name]) => ({ id, name }));
 });
 
 // Categories list
@@ -399,7 +430,7 @@ const submitReservation = async () => {
 
   reserving.value = selectedBook.value.id;
   try {
-    await studentAPI.reserveBook(selectedBook.value.id, reservationDays.value);
+    await studentAPI.reserveBook(selectedBook.value.id, reservationDays.value, latitude.value ?? undefined, longitude.value ?? undefined);
     showSuccess('Requested!', 'Your reservation request was submitted. Awaiting librarian approval.');
     isDetailsModalOpen.value = false;
     await fetchBooks();
@@ -436,9 +467,15 @@ const resetFilters = () => {
   searchQuery.value = '';
   filterCategory.value = '';
   filterType.value = '';
+  filterLibrary.value = '';
 };
 
 onMounted(() => {
+  // Pre-set library filter from query params (from 'Reserve Book' on library card)
+  const libraryParam = route.query.library;
+  if (libraryParam) {
+    filterLibrary.value = Number(libraryParam);
+  }
   fetchBooks();
 });
 </script>

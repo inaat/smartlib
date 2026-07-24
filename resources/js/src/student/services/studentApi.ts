@@ -47,6 +47,18 @@ export const studentAPI = {
     }
   },
 
+  async getNearbyLibraries(lat: number, lng: number, radiusKm: number = 50): Promise<any[]> {
+    try {
+      const response = await api.get('/student/libraries/nearby', {
+        params: { lat, lng, radius_km: radiusKm }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
   async getLibrarySeats(libraryId: string): Promise<Seat[]> {
     try {
       const response = await api.get(`/student/libraries/${libraryId}/seats`);
@@ -142,9 +154,9 @@ export const studentAPI = {
     }
   },
 
-  async reserveBook(bookId: string): Promise<Reservation> {
+  async reserveBook(bookId: string, latitude?: number, longitude?: number): Promise<Reservation> {
     try {
-      const response = await api.post(`/student/books/${bookId}/reserve`);
+      const response = await api.post(`/student/books/${bookId}/reserve`, { latitude, longitude });
       return response.data;
     } catch (error) {
       handleApiError(error);

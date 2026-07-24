@@ -45,6 +45,10 @@ export function useApp() {
                 const user = JSON.parse(userStr);
                 const userRole = user.role || user.user_type;
 
+                if (userRole === 'owner') {
+                    return;
+                }
+
                 if (userRole === 'admin' || userRole === 'super_admin' || userRole === 'librarian') {
                     const data = await adminAPI.getLibraries();
                     libraries.value = data;

@@ -114,6 +114,13 @@ export const studentAPI = {
     return response.data;
   },
 
+  async getNearbyLibraries(lat: number, lng: number, radiusKm: number = 50) {
+    const response = await api.get('/student/libraries/nearby', {
+      params: { lat, lng, radius_km: radiusKm }
+    });
+    return response.data;
+  },
+
   async getSeats(libraryId: number) {
     const response = await api.get(`/student/libraries/${libraryId}/seats`);
     return response.data;
@@ -190,8 +197,8 @@ export const studentAPI = {
     return response.data;
   },
 
-  async reserveBook(bookId: number, days?: number) {
-    const response = await api.post(`/student/books/${bookId}/reserve`, { days });
+  async reserveBook(bookId: number, days?: number, latitude?: number, longitude?: number) {
+    const response = await api.post(`/student/books/${bookId}/reserve`, { days, latitude, longitude });
     return response.data;
   },
 
@@ -490,8 +497,33 @@ export const librarianAPI = {
     return response.data;
   },
 
+  async bulkUpdateSeats(data: any) {
+    const response = await api.post('/librarian/seats/bulk-update', data);
+    return response.data;
+  },
+
   async deleteSeat(id: number) {
     const response = await api.delete(`/librarian/seats/${id}`);
+    return response.data;
+  },
+
+  async getStudyTables() {
+    const response = await api.get('/librarian/study-tables');
+    return response.data;
+  },
+
+  async createStudyTable(data: any) {
+    const response = await api.post('/librarian/study-tables', data);
+    return response.data;
+  },
+
+  async updateStudyTable(id: number, data: any) {
+    const response = await api.put(`/librarian/study-tables/${id}`, data);
+    return response.data;
+  },
+
+  async deleteStudyTable(id: number) {
+    const response = await api.delete(`/librarian/study-tables/${id}`);
     return response.data;
   },
 
@@ -530,8 +562,8 @@ export const librarianAPI = {
     return response.data;
   },
 
-  async getReservedBooks() {
-    const response = await api.get('/librarian/books/reservations');
+  async getReservedBooks(params?: any) {
+    const response = await api.get('/librarian/books/reservations', { params });
     return response.data;
   },
 
@@ -774,8 +806,8 @@ export const ownerAPI = {
 
 // Support API
 export const supportAPI = {
-  async getTickets(role: 'student' | 'librarian' | 'admin') {
-    const response = await api.get(`/${role}/support-tickets`);
+  async getTickets(role: 'student' | 'librarian' | 'admin', params?: any) {
+    const response = await api.get(`/${role}/support-tickets`, { params });
     return response.data;
   },
 

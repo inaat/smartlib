@@ -30,86 +30,116 @@
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
       <div
         v-for="plan in plans"
         :key="plan.id"
-        class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow"
+        :class="[
+          plan.name.toLowerCase().includes('premium') || plan.name.toLowerCase().includes('pro')
+            ? 'bg-white border-2 border-indigo-650 rounded-3xl p-8 shadow-xl shadow-indigo-500/5 relative flex flex-col justify-between text-left transition-all duration-300 transform md:-translate-y-2'
+            : 'bg-white border border-slate-200 rounded-3xl p-8 shadow-sm hover:border-slate-400 hover:shadow-md transition-all duration-300 flex flex-col justify-between text-left'
+        ]"
       >
-        <div class="p-6 flex-1">
-          <div class="flex items-center justify-between mb-4">
-            <div class="p-2 bg-indigo-50 rounded-lg">
-              <CreditCard class="w-6 h-6 text-indigo-600" />
-            </div>
-            <span
-              :class="[
-                'px-2 py-1 rounded-full text-xs font-medium',
-                plan.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-              ]"
-            >
-              {{ plan.status === 'active' ? 'Active' : 'Inactive' }}
-            </span>
-          </div>
-
-          <h3 class="text-xl font-bold text-gray-900 mb-1">{{ plan.name }}</h3>
-          <p class="text-sm text-gray-500 mb-4 line-clamp-2">{{ plan.description }}</p>
-
-          <div class="flex items-baseline space-x-1 mb-6">
-            <span class="text-3xl font-bold text-gray-900">Rs. {{ plan.price }}</span>
-            <span class="text-gray-500 text-sm">/ {{ plan.duration_days }} days</span>
-          </div>
-
-          <div class="space-y-3 font-medium">
-            <div class="flex items-center text-sm text-gray-600">
-              <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              {{ plan.daily_seat_bookings_limit || 'Unlimited' }} Daily Seat Bookings
-            </div>
-            <div class="flex items-center text-sm text-gray-600">
-              <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              {{ plan.monthly_seat_bookings_limit || 'Unlimited' }} Monthly Seat Bookings
-            </div>
-            <div class="flex items-center text-sm text-gray-600">
-              <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              {{ plan.libraries_access_limit || 'Unlimited' }} Libraries Access
-            </div>
-            <div class="flex items-center text-sm text-gray-600">
-              <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              {{ plan.books_access_limit || 'Unlimited' }} Books Access
-            </div>
-            <div class="flex items-center text-sm text-gray-600">
-              <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              {{ plan.events_joining_limit || 'Unlimited' }} Events Joining
-            </div>
-            <div class="flex items-center text-sm text-gray-600">
-              <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              <span v-if="plan.advance_booking_days === -1">Unlimited Advance Booking</span>
-              <span v-else-if="plan.advance_booking_days === 0">Same Day Booking Only</span>
-              <span v-else>{{ plan.advance_booking_days }} Days Advance Booking</span>
-            </div>
-            <div v-if="plan.digital_books_access" class="flex items-center text-sm text-gray-600">
-              <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              Digital Books Access
-            </div>
-            <div v-if="plan.priority_booking" class="flex items-center text-sm text-gray-600">
-              <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" />
-              Priority Seat Booking
-            </div>
-          </div>
+        <div class="absolute -top-3.5 right-6 flex items-center space-x-2">
+          <!-- Status Badge -->
+          <span
+            :class="[
+              'px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border',
+              plan.status === 'active' 
+                ? 'bg-green-50 border-green-200 text-green-700' 
+                : 'bg-red-50 border-red-200 text-red-700'
+            ]"
+          >
+            {{ plan.status === 'active' ? 'Active' : 'Inactive' }}
+          </span>
+          <!-- Featured Badge -->
+          <span 
+            v-if="plan.name.toLowerCase().includes('premium') || plan.name.toLowerCase().includes('pro')" 
+            class="bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border border-indigo-700"
+          >
+            Featured
+          </span>
         </div>
 
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+        <!-- Card Content -->
+        <div class="flex-grow flex flex-col">
+          <!-- Header Section (Plan title, Price, description) -->
+          <div>
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">{{ plan.duration_days }} Days Validity</span>
+            <h3 class="text-xl font-extrabold text-slate-800">{{ plan.name }}</h3>
+            <p v-if="plan.description" class="text-xs text-slate-500 mt-1 font-semibold leading-relaxed">
+              {{ plan.description }}
+            </p>
+            
+            <div class="price-box my-6 flex flex-col items-start justify-center">
+              <div class="flex items-center gap-2 mb-1" v-if="plan.features?.discount_type && plan.features?.discount_type !== 'none'">
+                <span class="text-xs text-slate-400 line-through">Rs. {{ plan.features?.original_price }}</span>
+                <span class="text-[9px] font-black uppercase bg-green-50 border border-green-200 text-green-600 px-2 py-0.5 rounded">
+                  {{ plan.features?.discount_type === 'percentage' ? `${plan.features?.discount_value}% OFF` : `Rs. ${plan.features?.discount_value} OFF` }}
+                </span>
+              </div>
+              <div class="flex items-baseline">
+                <span class="text-3xl font-black text-slate-900">Rs. {{ plan.price }}</span>
+                <span class="text-xs font-semibold text-slate-550 ml-1.5">/ {{ plan.duration_days }} days</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Features List -->
+          <ul class="w-full space-y-3.5 text-left border-t border-slate-100/80 pt-6">
+            <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+              <Check class="h-4 w-4 text-indigo-650 flex-shrink-0" />
+              <span>{{ plan.daily_seat_bookings_limit === -1 || !plan.daily_seat_bookings_limit ? 'Unlimited' : plan.daily_seat_bookings_limit }} Daily Seat Bookings</span>
+            </li>
+            <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+              <Check class="h-4 w-4 text-indigo-650 flex-shrink-0" />
+              <span>{{ plan.monthly_seat_bookings_limit === -1 || !plan.monthly_seat_bookings_limit ? 'Unlimited' : plan.monthly_seat_bookings_limit }} Monthly Seat Bookings</span>
+            </li>
+            <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+              <Check class="h-4 w-4 text-indigo-655 flex-shrink-0" />
+              <span>{{ plan.libraries_access_limit === -1 || !plan.libraries_access_limit ? 'Unlimited' : plan.libraries_access_limit }} Libraries Access</span>
+            </li>
+            <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+              <Check class="h-4 w-4 text-indigo-655 flex-shrink-0" />
+              <span>{{ plan.books_access_limit === -1 || !plan.books_access_limit ? 'Unlimited' : plan.books_access_limit }} Books Access</span>
+            </li>
+            <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+              <Check class="h-4 w-4 text-indigo-655 flex-shrink-0" />
+              <span>{{ plan.events_joining_limit === -1 || !plan.events_joining_limit ? 'Unlimited' : plan.events_joining_limit }} Events Joining</span>
+            </li>
+            <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+              <Check class="h-4 w-4 text-indigo-655 flex-shrink-0" />
+              <span>
+                <span v-if="plan.advance_booking_days === -1">Unlimited Advance Booking</span>
+                <span v-else-if="plan.advance_booking_days === 0">Same Day Booking Only</span>
+                <span v-else>{{ plan.advance_booking_days }} Days Advance Booking</span>
+              </span>
+            </li>
+            <li v-if="plan.digital_books_access" class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+              <Check class="h-4 w-4 text-indigo-655 flex-shrink-0" />
+              <span>Digital Books Access</span>
+            </li>
+            <li v-if="plan.priority_booking" class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
+              <Check class="h-4 w-4 text-indigo-655 flex-shrink-0" />
+              <span>Priority Seat Booking</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Action Buttons Footer -->
+        <div class="flex items-center justify-between border-t border-slate-100 pt-6 mt-8">
           <button
             @click="editPlan(plan)"
-            class="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center"
+            class="text-xs font-bold text-indigo-600 hover:text-indigo-750 flex items-center bg-indigo-50 hover:bg-indigo-100/70 px-3.5 py-2 rounded-xl transition-all"
           >
-            <Edit2 class="w-4 h-4 mr-1" />
+            <Edit2 class="w-3.5 h-3.5 mr-1.5" />
             Edit Plan
           </button>
           <button
             @click="confirmDelete(plan)"
-            class="text-sm font-medium text-red-600 hover:text-red-700 flex items-center"
+            class="text-xs font-bold text-rose-600 hover:text-rose-750 flex items-center bg-rose-50 hover:bg-rose-100/70 px-3.5 py-2 rounded-xl transition-all"
           >
-            <Trash2 class="w-4 h-4 mr-1" />
+            <Trash2 class="w-3.5 h-3.5 mr-1.5" />
             Delete
           </button>
         </div>
@@ -149,27 +179,102 @@
               ></textarea>
             </div>
 
+            <!-- Plan Duration & Preset Selector -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Price (Rs.)</label>
-              <input
-                v-model.number="form.price"
-                type="number"
-                required
-                min="0"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              />
+              <label class="block text-sm font-medium text-gray-700 mb-1">Plan Duration</label>
+              <select
+                v-model="durationPresetInput"
+                @change="onDurationPresetChange"
+                class="w-full px-4 py-2.5 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm font-semibold"
+              >
+                <option value="7">1 Week (7 Days)</option>
+                <option value="30">1 Month (30 Days)</option>
+                <option value="90">Quarterly (90 Days)</option>
+                <option value="365">Yearly (365 Days)</option>
+                <option value="custom">Custom Days...</option>
+              </select>
             </div>
 
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Duration (Days)</label>
+            <div v-if="durationPresetInput === 'custom'">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Custom Duration (Days)</label>
               <input
                 v-model.number="form.duration_days"
                 type="number"
                 required
                 min="1"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm font-semibold"
               />
             </div>
+
+            <!-- Pricing Model Selection -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Pricing Model</label>
+              <div class="grid grid-cols-2 gap-3.5">
+                <button
+                  type="button"
+                  @click="setFreeModel(true)"
+                  :class="[
+                    'px-4 py-2 border rounded-lg text-sm font-bold text-center transition-all',
+                    isFreePlanInput
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700 shadow-sm'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ]"
+                >
+                  Free Plan
+                </button>
+                <button
+                  type="button"
+                  @click="setFreeModel(false)"
+                  :class="[
+                    'px-4 py-2 border rounded-lg text-sm font-bold text-center transition-all',
+                    !isFreePlanInput
+                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700 shadow-sm'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ]"
+                >
+                  Paid Plan
+                </button>
+              </div>
+            </div>
+
+            <!-- Paid Plan Specific Inputs -->
+            <template v-if="!isFreePlanInput">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Original Price (PKR)</label>
+                <input
+                  v-model.number="originalPriceInput"
+                  type="number"
+                  required
+                  min="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm font-semibold"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Apply Discount</label>
+                <select
+                  v-model="discountTypeInput"
+                  class="w-full px-4 py-2.5 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm font-semibold"
+                >
+                  <option value="none">No Discount</option>
+                  <option value="percentage">Percentage Discount (%)</option>
+                  <option value="fixed">Fixed Amount Discount (Rs.)</option>
+                </select>
+              </div>
+
+              <div v-if="discountTypeInput !== 'none'">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  Discount Value {{ discountTypeInput === 'percentage' ? '(%)' : '(Rs.)' }}
+                </label>
+                <input
+                  v-model.number="discountValueInput"
+                  type="number"
+                  required
+                  min="1"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm font-semibold"
+                />
+              </div>
+            </template>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Free Trial (Days)</label>
@@ -315,7 +420,8 @@ import {
   Edit2, 
   Trash2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Check
 } from 'lucide-vue-next';
 import { ownerAPI } from '@/shared/services/api';
 import { useSwal } from '@/shared/composables/useSwal';
@@ -327,6 +433,27 @@ const loading = ref(false);
 const saving = ref(false);
 const showModal = ref(false);
 const isEditing = ref(false);
+
+const originalPriceInput = ref(0);
+const discountTypeInput = ref('none'); // 'none', 'percentage', 'fixed'
+const discountValueInput = ref(0);
+const durationPresetInput = ref('30'); // '7', '30', '90', '365', 'custom'
+const isFreePlanInput = ref(false);
+
+const setFreeModel = (val: boolean) => {
+  isFreePlanInput.value = val;
+  if (val) {
+    originalPriceInput.value = 0;
+    discountTypeInput.value = 'none';
+    discountValueInput.value = 0;
+  }
+};
+
+const onDurationPresetChange = () => {
+  if (durationPresetInput.value !== 'custom') {
+    form.value.duration_days = Number(durationPresetInput.value);
+  }
+};
 
 const form = ref({
   id: null as number | null,
@@ -345,7 +472,8 @@ const form = ref({
   book_reservations_limit: 0,
   digital_books_access: false,
   priority_booking: false,
-  status: 'active'
+  status: 'active',
+  features: {} as any
 });
 
 const fetchPlans = async () => {
@@ -362,6 +490,12 @@ const fetchPlans = async () => {
 
 const openCreateModal = () => {
   isEditing.value = false;
+  originalPriceInput.value = 0;
+  discountTypeInput.value = 'none';
+  discountValueInput.value = 0;
+  durationPresetInput.value = '30';
+  isFreePlanInput.value = false;
+
   form.value = {
     id: null,
     name: '',
@@ -379,13 +513,37 @@ const openCreateModal = () => {
     book_reservations_limit: 0,
     digital_books_access: false,
     priority_booking: false,
-    status: 'active'
+    status: 'active',
+    features: {}
   };
   showModal.value = true;
 };
 
 const editPlan = (plan: any) => {
   isEditing.value = true;
+  
+  let features = plan.features;
+  if (typeof features === 'string') {
+    try {
+      features = JSON.parse(features);
+    } catch (e) {
+      features = {};
+    }
+  }
+  if (!features) features = {};
+
+  isFreePlanInput.value = features.is_free === 'true' || Number(plan.price) === 0;
+  originalPriceInput.value = features.original_price !== undefined ? Number(features.original_price) : Number(plan.price);
+  discountTypeInput.value = features.discount_type || 'none';
+  discountValueInput.value = features.discount_value !== undefined ? Number(features.discount_value) : 0;
+
+  const days = plan.duration_days;
+  if ([7, 30, 90, 365].includes(days)) {
+    durationPresetInput.value = String(days);
+  } else {
+    durationPresetInput.value = 'custom';
+  }
+
   form.value = {
     id: plan.id,
     name: plan.name,
@@ -403,13 +561,38 @@ const editPlan = (plan: any) => {
     book_reservations_limit: plan.book_reservations_limit || 0,
     digital_books_access: !!plan.digital_books_access,
     priority_booking: !!plan.priority_booking,
-    status: plan.status
+    status: plan.status,
+    features: features
   };
   showModal.value = true;
 };
 
 const savePlan = async () => {
   saving.value = true;
+  
+  let finalPrice = 0;
+  if (isFreePlanInput.value) {
+    finalPrice = 0;
+  } else {
+    const orig = Number(originalPriceInput.value) || 0;
+    const val = Number(discountValueInput.value) || 0;
+    if (discountTypeInput.value === 'percentage') {
+      finalPrice = Math.max(0, orig * (1 - val / 100));
+    } else if (discountTypeInput.value === 'fixed') {
+      finalPrice = Math.max(0, orig - val);
+    } else {
+      finalPrice = orig;
+    }
+  }
+
+  form.value.price = finalPrice;
+  form.value.features = {
+    original_price: String(originalPriceInput.value),
+    discount_type: String(discountTypeInput.value),
+    discount_value: String(discountValueInput.value),
+    is_free: String(isFreePlanInput.value)
+  };
+
   try {
     if (isEditing.value && form.value.id) {
       await ownerAPI.updateSubscriptionPlan(form.value.id, form.value);

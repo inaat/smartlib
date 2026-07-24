@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             LibrarySeeder::class,
             SubscriptionPlanSeeder::class,
             BookSeeder::class,
+            SystemSettingSeeder::class,
             // BookingSeeder::class,
             // EventSeeder::class,
             // ProductivitySeeder::class,

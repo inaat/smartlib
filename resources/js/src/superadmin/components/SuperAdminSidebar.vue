@@ -391,8 +391,7 @@ const mainNavItems = [
 ];
 
 const systemItems = [
-  { path: '/superadmin/analytics', label: 'Analytics', icon: BarChart3 },
-  { path: '/superadmin/reports', label: 'Reports', icon: FileBarChart },
+  { path: '/superadmin/analytics', label: 'Analytics & Reports', icon: BarChart3 },
   { path: '/superadmin/support', label: 'Support & Complaints', icon: LifeBuoy },
   { path: '/superadmin/settings', label: 'System Settings', icon: Settings },
 ];

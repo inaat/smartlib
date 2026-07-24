@@ -27,15 +27,6 @@
           <button v-if="locationError" class="text-[10px] font-semibold uppercase tracking-wider underline">Retry</button>
         </div>
 
-        <!-- Map -->
-        <div v-if="locationReady && latitude && longitude" class="mb-5 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-          <div id="map" class="w-full h-52 bg-slate-50"></div>
-          <div class="bg-slate-50/50 border-t border-slate-100 px-4 py-2.5 flex items-center justify-between text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-            <span>📍 {{ latitude?.toFixed(5) }}, {{ longitude?.toFixed(5) }}</span>
-            <button @click="centerMap" class="text-blue-600 hover:text-blue-700 font-semibold">Re-center</button>
-          </div>
-        </div>
-
         <!-- QR Reader -->
         <div class="mb-5">
           <div id="reader" class="rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 min-h-[260px]"></div>
@@ -50,23 +41,6 @@
           >
             <Camera class="w-4 h-4" />
             <span>Scan QR Code</span>
-          </button>
-
-          <div v-if="bookingId || route.query.auto_checkin" class="relative flex items-center my-2">
-            <div class="flex-1 border-t border-slate-100"></div>
-            <span class="px-3 text-[9px] uppercase font-medium text-slate-400 tracking-widest leading-none">or</span>
-            <div class="flex-1 border-t border-slate-100"></div>
-          </div>
-
-          <button
-            v-if="bookingId || route.query.auto_checkin"
-            @click="performCheckInManual"
-            :disabled="isCheckingIn"
-            class="w-full py-3.5 px-6 bg-white border border-emerald-300 text-emerald-700 text-xs font-semibold uppercase tracking-wider rounded-xl hover:bg-emerald-50/50 hover-lift transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-98 shadow-sm"
-          >
-            <CheckCircle v-if="!isCheckingIn" class="w-4 h-4" />
-            <span v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-605"></span>
-            <span>{{ isCheckingIn ? 'Checking In...' : 'Direct Check In' }}</span>
           </button>
         </div>
 
@@ -83,23 +57,6 @@
             <span>Confirm Check-In</span>
           </button>
           <button @click="resetScanner" class="text-xs font-semibold text-slate-400 uppercase tracking-widest hover:text-slate-500 transition-colors">Scan Again</button>
-        </div>
-
-        <!-- Debug toggle -->
-        <div class="mt-4 text-center">
-          <button @click="showDebug = !showDebug" class="text-[10px] font-medium text-slate-300 hover:text-slate-400 uppercase tracking-widest transition-colors">
-            {{ showDebug ? 'Hide Debug' : 'Debug Options' }}
-          </button>
-        </div>
-        <div v-if="showDebug" class="mt-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-3">
-          <div>
-            <label class="block text-[9px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Booking ID</label>
-            <input v-model="bookingId" placeholder="Booking ID" class="block w-full p-2 bg-white rounded-xl border border-slate-200 text-xs outline-none" />
-          </div>
-          <div>
-            <label class="block text-[9px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Mock QR Value</label>
-            <input v-model="qrCode" placeholder="QR Code" class="block w-full p-2 bg-white rounded-xl border border-slate-200 text-xs outline-none" />
-          </div>
         </div>
 
       </div>
@@ -185,8 +142,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
-import { QrCode, MapPin, Camera, CheckCircle, Navigation, ArrowRight, X } from 'lucide-vue-next';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { QrCode, MapPin, Camera, Navigation, ArrowRight, X } from 'lucide-vue-next';
 import { studentAPI } from '@/student/services/studentApi';
 import { useRouter, useRoute } from 'vue-router';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -207,19 +164,14 @@ const latitude = ref<number | null>(null);
 const longitude = ref<number | null>(null);
 const locationError = ref<string | null>(null);
 const locationReady = ref(false);
-const showDebug = ref(false);
 const cameraError = ref<string | null>(null);
 
 // Nearby libraries state
 const showNearbyLibraries = ref(false);
-declare const google: any;
-
 const nearbyLibraries = ref<any[]>([]);
 const loadingNearby = ref(false);
 
 let html5QrCode: Html5Qrcode | null = null;
-let map: any = null;
-let marker: any = null;
 
 const locationMessage = computed(() => {
   if (locationError.value) return 'Location Error — tap to retry';
@@ -232,40 +184,6 @@ const locationStatusClass = computed(() => {
   if (locationReady.value) return 'bg-emerald-50 border-emerald-200 text-emerald-700';
   return 'bg-amber-50 border-amber-200 text-amber-700';
 });
-
-// ─── Google Maps ────────────────────────────────────────────────────────────
-const loadGoogleMapsScript = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (typeof google !== 'undefined' && google.maps) { resolve(); return; }
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Google Maps'));
-    document.head.appendChild(script);
-  });
-};
-
-const initializeMap = async () => {
-  if (!latitude.value || !longitude.value) return;
-  try { await loadGoogleMapsScript(); } catch { return; }
-  await nextTick();
-  const position = { lat: latitude.value, lng: longitude.value };
-  map = new google.maps.Map(document.getElementById('map') as HTMLElement, {
-    center: position, zoom: 16,
-    mapTypeControl: false, streetViewControl: false, fullscreenControl: true,
-  });
-  marker = new google.maps.Marker({ position, map, title: 'Your Location', animation: google.maps.Animation.DROP });
-};
-
-const centerMap = () => {
-  if (map && latitude.value && longitude.value) {
-    const position = { lat: latitude.value, lng: longitude.value };
-    map.setCenter(position);
-    marker?.setPosition(position);
-  }
-};
 
 // ─── Geolocation ────────────────────────────────────────────────────────────
 const getLocation = (): Promise<void> => {
@@ -282,7 +200,6 @@ const getLocation = (): Promise<void> => {
         longitude.value = pos.coords.longitude;
         locationReady.value = true;
         locationError.value = null;
-        nextTick(() => initializeMap());
         resolve();
       },
       (err) => {
@@ -324,7 +241,6 @@ const startScanner = async () => {
   if (!locationReady.value) await getLocation();
   isScanning.value = true;
   qrCode.value = '';
-  await nextTick();
   try {
     if (html5QrCode) {
       try { await html5QrCode.stop(); html5QrCode.clear(); } catch {}
@@ -398,7 +314,6 @@ const performCheckIn = async (code: string = '') => {
   }
 };
 
-const performCheckInManual = async () => await performCheckIn('DIRECT_CHECKIN');
 const performCheckInWithScanner = async () => await performCheckIn(qrCode.value);
 
 // ─── Lifecycle ───────────────────────────────────────────────────────────────

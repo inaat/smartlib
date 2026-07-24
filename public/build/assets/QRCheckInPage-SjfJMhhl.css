@@ -1,8 +1,0 @@
-
-.slide-up-enter-active[data-v-22989a0c], .slide-up-leave-active[data-v-22989a0c] {
-  transition: all 0.35s ease;
-}
-.slide-up-enter-from[data-v-22989a0c], .slide-up-leave-to[data-v-22989a0c] {
-  opacity: 0;
-  transform: translateY(20px);
-}

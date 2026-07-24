@@ -464,7 +464,7 @@ const editEvent = (event: Event) => {
     title: event.title,
     type: event.type,
     description: event.description || '',
-    date: event.date || '', // Ensure date format matches input type="date"
+    date: event.date ? event.date.substring(0, 10) : '', // Ensure date format matches YYYY-MM-DD for input type="date"
     start_time: event.start_time?.substring(0, 5) || '',
     end_time: event.end_time?.substring(0, 5) || '',
     venue: event.venue || '',

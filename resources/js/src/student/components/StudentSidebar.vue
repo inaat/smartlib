@@ -78,7 +78,7 @@
         
         <div class="space-y-1">
           <!-- Normal Nav Items (Before Reservations Dropdown) -->
-          <template v-for="item in mainNavItems.slice(0, 2)" :key="item.path">
+          <template v-for="item in mainNavItems.slice(0, 3)" :key="item.path">
             <router-link
               :to="item.path"
               @click="$emit('close')"
@@ -225,7 +225,7 @@
           </div>
 
           <!-- Normal Nav Items (After Reservations Dropdown) -->
-          <template v-for="item in mainNavItems.slice(2)" :key="item.path">
+          <template v-for="item in mainNavItems.slice(3)" :key="item.path">
             <router-link
               :to="item.path"
               @click="$emit('close')"
@@ -577,14 +577,15 @@ onUnmounted(() => {
 // Exclude Profile, Bookings, and Book Reservations from mainNavItems list
 const mainNavItems = [
   { path: '/student/dashboard', label: 'Dashboard', icon: Home, exact: true },
-  { path: '/student/books', label: 'Browse Books', icon: BookOpen },
-  { path: '/student/my-queue', label: 'Waitlist', icon: Clock },
-  { path: '/student/events', label: 'Events & Seminars', icon: Calendar },
   { path: '/student/libraries', label: 'Find Library', icon: MapPin },
+  { path: '/student/books', label: 'Browse Books', icon: BookOpen },
+  { path: '/student/events', label: 'Events & Seminars', icon: Calendar },
+  { path: '/student/my-queue', label: 'Waitlist', icon: Clock },
+  
 ];
 
 const reservationsSubItems = [
-  { path: '/student/my-bookings', label: 'Seat Bookings', icon: Armchair },
+  { path: '/student/my-bookings', label: 'Seat Reservations', icon: Armchair },
   { path: '/student/my-reservations', label: 'Book Reservations', icon: BookMarked },
 ];
 

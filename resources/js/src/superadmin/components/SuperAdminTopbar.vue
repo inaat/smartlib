@@ -154,8 +154,7 @@ const pageTitle = computed(() => {
   if (path.includes('/superadmin/sections')) return 'Section Management';
   if (path.includes('/superadmin/seats')) return 'Seat Management';
   if (path.includes('/superadmin/settings')) return 'System Settings';
-  if (path.includes('/superadmin/analytics')) return 'Analytics';
-  if (path.includes('/superadmin/reports')) return 'Reports';
+  if (path.includes('/superadmin/analytics') || path.includes('/superadmin/reports')) return 'Analytics & Reports';
   if (path.includes('/superadmin/profile')) return 'My Profile';
   return (route.meta?.title as string) || 'Dashboard';
 });
@@ -179,8 +178,7 @@ const pageSubtitle = computed(() => {
   if (path.includes('/superadmin/sections')) return 'Configure sections and zones within library floors';
   if (path.includes('/superadmin/seats')) return 'Configure seats, rules, and layout templates';
   if (path.includes('/superadmin/settings')) return 'Manage system configurations, policies, and parameters';
-  if (path.includes('/superadmin/analytics')) return 'View system occupancy, check-ins, and usage charts';
-  if (path.includes('/superadmin/reports')) return 'Generate and export system utilization reports';
+  if (path.includes('/superadmin/analytics') || path.includes('/superadmin/reports')) return 'View system occupancy, check-ins, charts, and generate reports';
   if (path.includes('/superadmin/profile')) return 'Update your credentials and account information';
   return '';
 });

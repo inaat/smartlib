@@ -18,11 +18,6 @@
 
       <!-- Content -->
       <div class="flex flex-col items-center mb-6 relative z-10">
-        <!-- Elegant Header Icon instead of Timer -->
-        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 border border-blue-100/60 shadow-inner">
-          <Clock class="w-8 h-8" />
-        </div>
-
         <!-- Seat & Library details banner -->
         <div class="w-full bg-slate-50 border border-slate-100/80 rounded-2xl p-4 flex items-center gap-3.5 mb-6">
           <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
@@ -85,7 +80,7 @@
 
           <!-- Custom Duration Slider / Input -->
           <div>
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center justify-between mb-2.5">
               <label class="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Custom Duration</label>
               <div class="flex items-center gap-1.5">
                 <input
@@ -98,16 +93,18 @@
                 <span class="text-[10px] font-medium text-slate-400">min</span>
               </div>
             </div>
-            <div class="flex items-center gap-4">
-              <span class="text-[10px] font-semibold text-slate-450 font-mono">10m</span>
+            <div class="space-y-1.5">
               <input
                 type="range"
                 v-model.number="extensionDuration"
                 :min="10"
                 :max="maxExtensionMinutes"
-                class="flex-1 accent-blue-600 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer"
+                class="w-full accent-blue-600 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer"
               />
-              <span class="text-[10px] font-semibold text-slate-450 font-mono">{{ maxExtensionMinutes }}m</span>
+              <div class="flex justify-between text-[10px] font-semibold text-slate-400/80 font-mono leading-none">
+                <span>Min: {{ formatMinutes(10) }}</span>
+                <span>Max: {{ formatMinutes(maxExtensionMinutes) }}</span>
+              </div>
             </div>
           </div>
 
@@ -324,6 +321,23 @@ const formatTimeOnly = (date: Date | null) => {
     minute: '2-digit',
     hour12: true
   });
+};
+
+const formatMinutes = (mins: number) => {
+  if (!mins || isNaN(mins)) return '0 minutes';
+  if (mins < 60) {
+    return `${mins} minutes`;
+  }
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  
+  if (h === 1) {
+    if (m === 0) return '1 hour';
+    return `1 hour ${m} minutes`;
+  } else {
+    if (m === 0) return `${h} hours`;
+    return `${h} hours ${m} minutes`;
+  }
 };
 
 const closeModal = () => {

@@ -18,13 +18,13 @@ class EventController extends Controller
             $user = Auth::user();
             if ($user->role === 'super_admin') {
                 $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
-                $events = Event::withCount('registrations')->whereIn('library_id', $myLibraryIds)->latest()->get();
+                $events = Event::with('registrations.user', 'library')->withCount('registrations')->whereIn('library_id', $myLibraryIds)->latest()->get();
             } elseif (in_array($user->role, ['admin', 'owner'])) {
-                $events = Event::withCount('registrations')->latest()->get();
+                $events = Event::with('registrations.user', 'library')->withCount('registrations')->latest()->get();
             } elseif ($user->library_id) {
-                $events = Event::withCount('registrations')->where('library_id', $user->library_id)->latest()->get();
+                $events = Event::with('registrations.user', 'library')->withCount('registrations')->where('library_id', $user->library_id)->latest()->get();
             } else {
-                $events = Event::withCount('registrations')->latest()->get();
+                $events = Event::with('registrations.user', 'library')->withCount('registrations')->latest()->get();
             }
             
             // Map to include registered_count as a direct property if needed, 

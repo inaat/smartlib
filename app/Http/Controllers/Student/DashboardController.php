@@ -141,12 +141,9 @@ class DashboardController extends Controller
             ];
         }
 
-        // Update and get stored streak
-        if ($user->last_streak_date && $user->last_streak_date < now()->subDay()->toDateString()) {
-            $user->current_streak = 0;
-            $user->save();
-        }
-        $studyStreak = $user->current_streak;
+        // Update and get stored streak dynamically
+        $streakData = $user->calculateStudyStreak();
+        $studyStreak = $streakData['current_streak'];
 
         // Session statistics
         $totalSessions = $completedBookings->count();

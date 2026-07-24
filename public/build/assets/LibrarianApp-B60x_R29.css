@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@keyframes fadeIn-31bfae1b {
+from {
+    opacity: 0;
+    transform: translateY(4px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-31bfae1b] {
+  animation: fadeIn-31bfae1b 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Smooth submenu expand/collapse via max-height + opacity */
+.space-mgmt-submenu[data-v-31bfae1b] {
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+}
+.submenu-open[data-v-31bfae1b] {
+  max-height: 250px; /* enough for 3 sub-items */
+  opacity: 1;
+}
+.submenu-closed[data-v-31bfae1b] {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Hide scrollbar across all browsers while keeping scroll functional */
+nav[data-v-31bfae1b]::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent native browser drag-and-drop preview and text highlight selection inside sidebar */
+aside[data-v-31bfae1b], aside[data-v-31bfae1b] * {
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+
+.font-outfit[data-v-8576c45a] {
+  font-family: 'Outfit', sans-serif;
+}
+@keyframes fadeIn-8576c45a {
+from {
+    opacity: 0;
+    transform: translateY(6px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-8576c45a] {
+  animation: fadeIn-8576c45a 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.text-slate-655[data-v-8576c45a] {
+  color: #475569;
+}
+.text-red-655[data-v-8576c45a] {
+  color: #ef4444;
+}

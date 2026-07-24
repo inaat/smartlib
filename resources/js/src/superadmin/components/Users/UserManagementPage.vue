@@ -125,8 +125,11 @@
               <!-- Student Initial Avatar & Name -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center space-x-3.5">
-                  <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center bg-purple-50 border border-purple-200 text-purple-600 font-bold text-sm">
-                    {{ user.name.charAt(0).toUpperCase() }}
+                  <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center shadow-sm">
+                    <img v-if="user.profile_picture" :src="getProfilePictureUrl(user.profile_picture)" class="w-full h-full object-cover rounded-lg" />
+                    <div v-else class="w-full h-full flex items-center justify-center bg-purple-50 border border-purple-200 text-purple-600 font-bold text-sm rounded-lg">
+                      {{ user.name.charAt(0).toUpperCase() }}
+                    </div>
                   </div>
                   <div class="text-left">
                     <div class="text-sm font-medium text-slate-700">{{ user.name }}</div>
@@ -635,6 +638,12 @@ const confirmDelete = async (user: any) => {
       console.error('Error deleting student:', error);
     }
   }
+};
+
+const getProfilePictureUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `/storage/${path}`;
 };
 
 const formatDate = (dateStr: string) => {

@@ -40,10 +40,11 @@
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <!-- Main Content: Seat Map -->
       <div class="lg:col-span-3">
-        <SeatMap
+        <SeatLayoutRenderer
           :seats="seats"
           :floors="floors"
           :sections="sections"
+          :tables="tables"
           :selected-seat="selectedSeat"
           :seat-clickable="true"
           :draggable="false"
@@ -145,7 +146,7 @@
                 <div v-else class="space-y-3">
                   <div class="p-5 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-100 text-center relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-16 h-16 bg-orange-500/5 rounded-full -mr-8 -mt-8"></div>
-                    <p class="text-[9px] text-slate-400 font-semibold uppercase tracking-widest mb-2.5 leading-none">Seat Occupied</p>
+                    <p class="text-[9px] font-bold uppercase tracking-widest mb-2.5 leading-none text-amber-600">Free Soon</p>
                     <div class="flex items-center justify-center space-x-1.5 mb-3.5 leading-none">
                       <Clock class="w-4.5 h-4.5 text-orange-500" />
                       <p class="text-xl font-black text-slate-800 leading-none">
@@ -231,13 +232,15 @@ import {
   ChevronRight, Armchair, Clock, Zap,
   CheckCircle, UserX, AlertCircle
 } from 'lucide-vue-next';
-import SeatMap from '@/shared/components/SeatMap.vue';
+import SeatLayoutRenderer from '@/shared/components/SeatLayout/SeatLayoutRenderer.vue';
 import { useSwal } from '@/shared/composables/useSwal';
+import { useGeolocation } from '@/shared/composables/useGeolocation';
 
 const route = useRoute();
 const router = useRouter();
 
 const { showError, showSuccess } = useSwal();
+const { latitude, longitude } = useGeolocation();
 
 const loading = ref(true);
 const submitting = ref(false);
@@ -247,6 +250,7 @@ const library = ref<any>(null);
 const floors = ref<any[]>([]);
 const sections = ref<any[]>([]);
 const seats = ref<any[]>([]);
+const tables = ref<any[]>([]);
 
 const selectedSeat = ref<any | null>(null);
 const bookingDuration = ref(2);
@@ -406,6 +410,7 @@ const fetchSeats = async () => {
     floors.value = response.floors;
     sections.value = response.sections;
     seats.value = response.seats;
+    tables.value = response.tables || [];
   } catch (error) {
     console.error('Failed to fetch seats:', error);
   } finally {
@@ -438,6 +443,10 @@ const getSectionLevelName = (sectionId: number) => {
 };
 
 const handleSeatClick = (seat: any) => {
+  if (seat.status !== 'available' && seat.status !== 'free_soon') {
+    showError('Seat Unavailable', 'You can only select seats that are Available or Free Soon.');
+    return;
+  }
   selectedSeat.value = selectedSeat.value?.id === seat.id ? null : seat;
 };
 
@@ -487,6 +496,8 @@ const confirmBooking = async () => {
       library_id: library.value.id,
       booking_time: formatLocalDatetime(startTime),
       scheduled_end_time: formatLocalDatetime(endTime),
+      latitude: latitude.value,
+      longitude: longitude.value,
     });
 
     showSuccessModal.value = true;

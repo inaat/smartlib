@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit[data-v-772ba695] {
+  font-family: 'Outfit', sans-serif;
+}
+.hover-lift[data-v-772ba695] {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift[data-v-772ba695]:hover {
+  transform: translateY(-4px);
+}
+.active\:scale-98[data-v-772ba695]:active {
+  transform: scale(0.98);
+}
+.bg-blue-600[data-v-772ba695] {
+  background-color: #2563eb;
+}
+.bg-blue-600[data-v-772ba695]:hover {
+  background-color: #1d4ed8;
+}
+.text-slate-600[data-v-772ba695] {
+  color: #475569;
+}

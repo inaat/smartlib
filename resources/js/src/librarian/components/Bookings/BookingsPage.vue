@@ -163,7 +163,7 @@
                     <span>Checked-in at {{ formatTime(booking.check_in_time) }}</span>
                   </div>
                   <div v-else-if="booking.status === 'checked_out'" class="text-xs font-bold text-slate-700 flex items-center space-x-1">
-                    <LogOut class="w-4 h-4 text-blue-600" />
+                    <LogOut class="w-4 h-4 text-red-600" />
                     <span>Checked-out at {{ formatTime(booking.check_out_time) }}</span>
                   </div>
                   <div v-else-if="booking.status === 'booked'" class="text-xs font-bold text-slate-500 flex items-center space-x-1">
@@ -188,23 +188,26 @@
                     <button
                       v-if="booking.status === 'booked'"
                       @click="handleCheckIn(booking.id)"
-                      class="px-3.5 py-2 font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-sm transition-all cursor-pointer"
+                      class="p-2 text-slate-655 hover:text-emerald-700 bg-slate-50 hover:bg-emerald-50/50 rounded-xl transition-all border border-slate-100 cursor-pointer shadow-sm"
+                      title="Check In"
                     >
-                      Check In
+                      <UserCheck class="w-4 h-4" />
                     </button>
                     <button
                       v-if="booking.status === 'checked_in'"
                       @click="handleCheckOut(booking.id)"
-                      class="px-3.5 py-2 font-bold text-white bg-blue-655 hover:bg-blue-700 rounded-xl shadow-sm transition-all cursor-pointer"
+                      class="p-2 text-slate-655 hover:text-red-700 bg-slate-50 hover:bg-red-100/50 rounded-xl transition-all border border-slate-100 cursor-pointer shadow-sm"
+                      title="Check Out"
                     >
-                      Check Out
+                      <LogOut class="w-4 h-4" />
                     </button>
                     <button
                       v-if="booking.status === 'booked'"
                       @click="handleCancel(booking.id)"
-                      class="px-3 py-2 font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-100/50 rounded-xl shadow-sm transition-all cursor-pointer"
+                      class="p-2 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-100/50 rounded-xl shadow-sm transition-all cursor-pointer"
+                      title="Cancel Booking"
                     >
-                      Cancel
+                      <XCircle class="w-4 h-4" />
                     </button>
                   </div>
                 </td>
@@ -440,7 +443,7 @@
             <button
               v-if="selectedBooking.status === 'checked_in'"
               @click="handleCheckOut(selectedBooking.id); selectedBooking = null"
-              class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm"
+              class="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-750 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm"
             >
               Check Out Student
             </button>

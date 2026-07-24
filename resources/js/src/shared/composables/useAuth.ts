@@ -70,22 +70,20 @@ export function useAuth() {
     };
 
     const login = async (email: string, password: string, remember: boolean = false) => {
-        isLoading.value = true;
         try {
             const response = await authAPI.login(email, password, remember);
             user.value = response.user;
             localStorage.setItem('smart-lib-user', JSON.stringify(response.user));
             await loadNotifications(response.user);
         } catch (error: any) {
-            console.error('Login failed:', error);
+            if (error.response?.status !== 422) {
+                console.error('Login failed:', error);
+            }
             throw error;
-        } finally {
-            isLoading.value = false;
         }
     };
 
     const register = async (userData: any) => {
-        isLoading.value = true;
         try {
             const response = await authAPI.register(userData);
             user.value = response.user;
@@ -96,21 +94,20 @@ export function useAuth() {
                 console.error('Registration failed:', error);
             }
             throw error;
-        } finally {
-            isLoading.value = false;
         }
     };
 
     const logout = async () => {
+        isLoading.value = true;
         try {
             await authAPI.logout();
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
-            user.value = null;
-            notifications.value = [];
             localStorage.removeItem('smart-lib-user');
             localStorage.removeItem('auth_token');
+            user.value = null;
+            notifications.value = [];
             window.location.href = '/login';
         }
     };

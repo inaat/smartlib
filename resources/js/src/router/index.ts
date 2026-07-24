@@ -300,8 +300,7 @@ const router = createRouter({
                 },
                 {
                     path: 'reports',
-                    name: 'superadmin-reports',
-                    component: () => import('@/superadmin/components/Reports/ReportsPage.vue')
+                    redirect: { name: 'superadmin-analytics' }
                 },
                 {
                     path: 'attendance',

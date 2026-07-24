@@ -16,13 +16,23 @@ class BookReservationController extends Controller
         $user = $request->user();
         
         // Get all reservations with user and book details
-        $query = BookReservation::with(['user', 'book', 'book.library'])
-            ->whereHas('book', function($q) use ($user) {
+        $query = BookReservation::with(['user', 'book', 'book.library.users'])
+            ->whereHas('book', function($q) use ($user, $request) {
                 // If librarian has a specific library, filter by it
                 if ($user->library_id) {
                     $q->where('library_id', $user->library_id);
+                } elseif ($request->has('library_id') && $request->library_id !== 'all') {
+                    $q->where('library_id', $request->library_id);
                 }
             });
+
+        // Filter by date range if provided
+        if ($request->has('from_date') && $request->from_date) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+        if ($request->has('to_date') && $request->to_date) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
 
         // Filter by status if provided
         if ($request->has('status') && $request->status !== 'all') {

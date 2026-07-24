@@ -41,12 +41,14 @@ class AttendanceController extends Controller
             ->distinct('date')
             ->count('date');
 
+        $streakData = $user->calculateStudyStreak();
+
         return response()->json([
             'total_days' => $totalDays,
             'total_hours' => round($totalMinutes / 60, 1),
             'attendance_this_month' => $monthDays,
-            'current_streak' => $user->current_streak,
-            'max_streak' => $user->max_streak,
+            'current_streak' => $streakData['current_streak'],
+            'max_streak' => $streakData['max_streak'],
         ]);
     }
 

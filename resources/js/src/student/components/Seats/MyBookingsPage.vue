@@ -38,82 +38,106 @@
         <div 
           v-for="booking in activeBookings" 
           :key="booking.id"
-          class="bg-white rounded-2xl p-5 border border-slate-100 hover:border-slate-200/80 shadow-sm hover:shadow-xl hover:shadow-slate-100/50 transition-all duration-350 group relative overflow-hidden text-left"
+          class="bg-white rounded-3xl p-6 border border-slate-100/60 shadow-lg shadow-slate-100/50 hover:shadow-xl hover:shadow-slate-100/80 transition-all duration-350 group relative overflow-hidden text-left"
         >
-          <!-- Status Banner for Active now -->
-          <div v-if="booking.status === 'checked_in'" class="absolute top-0 right-0 px-3.5 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9px] font-bold uppercase tracking-widest rounded-bl-xl shadow-sm border border-emerald-400/20">
-            Active Now
+          <!-- Active Now floating badge -->
+          <div class="absolute top-4 right-4 flex items-center gap-2">
+            <span v-if="booking.status === 'checked_in'" class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100/60 rounded-full text-[10px] font-bold uppercase tracking-wider">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Active Now
+            </span>
+            <span v-else class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100/60 rounded-full text-[10px] font-bold uppercase tracking-wider">
+              Upcoming Session
+            </span>
           </div>
 
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div class="flex items-start gap-4">
+            <!-- Left Info Area -->
+            <div class="flex flex-col sm:flex-row sm:items-center gap-5 flex-1 min-w-0">
+              <!-- Chair Icon Wrapper with gradient glow -->
               <div :class="[
-                'p-4 rounded-xl border flex-shrink-0 transition-all duration-300',
-                booking.status === 'checked_in' ? 'bg-emerald-50/60 border-emerald-100 text-emerald-600' : 'bg-blue-50/60 border-blue-100 text-blue-600 group-hover:bg-gradient-to-br group-hover:from-blue-600 group-hover:to-cyan-500 group-hover:text-white group-hover:border-blue-500'
+                'w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-inner',
+                booking.status === 'checked_in' 
+                  ? 'bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-600 border border-emerald-100/70' 
+                  : 'bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-600 border border-blue-100/70 group-hover:from-blue-600 group-hover:to-blue-700 group-hover:text-white'
               ]">
-                <Armchair class="w-8 h-8" />
+                <Armchair class="w-7 h-7" />
               </div>
-              <div class="space-y-1 min-w-0">
-                <div class="flex items-center gap-2">
-                  <h3 class="font-bold text-slate-800 text-lg">Seat {{ booking.seat?.seat_number }}</h3>
-                  <span :class="[
-                    'px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide border',
-                    booking.status === 'checked_in' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-blue-50 text-blue-700 border-blue-100'
-                  ]">
+
+              <!-- Main details -->
+              <div class="space-y-1.5 min-w-0">
+                <div class="flex items-center gap-2.5">
+                  <h3 class="font-bold text-slate-800 text-xl tracking-tight">Seat {{ booking.seat?.seat_number }}</h3>
+                  <span class="text-xs font-semibold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100/70 font-mono">
                     #{{ booking.id }}
                   </span>
                 </div>
+                
                 <p class="text-slate-500 text-xs flex items-center font-semibold">
                   <MapPin class="w-4 h-4 mr-1 text-slate-400" />
                   {{ booking.seat?.library?.name }}
                 </p>
-                <div class="flex flex-wrap gap-1.5 pt-2">
-                  <span v-if="booking.seat?.has_computer" class="flex items-center text-[10px] bg-blue-50 text-blue-600 border border-blue-100/50 px-2.5 py-1 rounded-lg font-bold">
-                    <Monitor class="w-3.5 h-3.5 mr-1" /> PC Included
+
+                <!-- Amenities list -->
+                <div class="flex flex-wrap gap-1.5 pt-1">
+                  <span v-if="booking.seat?.has_computer" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-150/50 px-2.5 py-0.5 rounded-lg font-bold">
+                    <Monitor class="w-3.5 h-3.5 mr-1 text-slate-450" /> PC Included
                   </span>
-                  <span v-if="booking.seat?.near_window" class="flex items-center text-[10px] bg-yellow-50 text-yellow-700 border border-yellow-100/50 px-2.5 py-1 rounded-lg font-bold">
-                    <Layout class="w-3.5 h-3.5 mr-1" /> Near Window
+                  <span v-if="booking.seat?.near_window" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-150/50 px-2.5 py-0.5 rounded-lg font-bold">
+                    <Layout class="w-3.5 h-3.5 mr-1 text-slate-450" /> Window
                   </span>
-                  <span v-if="booking.seat && booking.seat.socket_count > 0" class="flex items-center text-[10px] bg-green-50 text-green-700 border border-green-100/50 px-2.5 py-1 rounded-lg font-bold">
-                    <Zap class="w-3.5 h-3.5 mr-1" /> {{ booking.seat.socket_count }} Socket
+                  <span v-if="booking.seat && booking.seat.socket_count > 0" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-150/50 px-2.5 py-0.5 rounded-lg font-bold">
+                    <Zap class="w-3.5 h-3.5 mr-1 text-slate-450" /> {{ booking.seat.socket_count }} Plug
                   </span>
                 </div>
               </div>
             </div>
 
-            <div class="flex flex-col lg:items-end gap-4 border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-50 flex-shrink-0">
-              <div class="lg:text-right">
-                <p class="text-[9px] font-bold uppercase tracking-widest mb-1" :class="isOverdue(booking) ? 'text-red-550' : 'text-slate-400'">{{ getTimerLabel(booking) }}</p>
-                <p class="text-3xl font-bold font-mono tracking-tight leading-none" :class="isOverdue(booking) ? 'text-red-550' : 'text-slate-800'">
+            <!-- Right Countdown & Actions Area -->
+            <div class="flex flex-col sm:flex-row sm:items-center gap-5 flex-shrink-0 border-t lg:border-t-0 pt-5 lg:pt-0 border-slate-50">
+              <!-- Styled Countdown Box -->
+              <div class="bg-slate-50/70 border border-slate-100/80 rounded-2xl px-5 py-3.5 min-w-[160px] text-center sm:text-left flex flex-col justify-center">
+                <p 
+                  class="text-[9px] font-bold uppercase tracking-widest mb-1.5" 
+                  :class="isOverdue(booking) ? 'text-red-550' : 'text-slate-400'"
+                >
+                  {{ getTimerLabel(booking) }}
+                </p>
+                <p 
+                  class="text-2xl font-black font-mono tracking-tight leading-none" 
+                  :class="isOverdue(booking) ? 'text-red-550' : 'text-slate-800'"
+                >
                   {{ getRemainingTime(booking) }}
                 </p>
               </div>
-              <div class="flex flex-wrap gap-2.5">
+
+              <!-- Action Buttons -->
+              <div class="flex sm:flex-col lg:flex-row gap-2.5 justify-center sm:justify-start min-w-[140px]">
                 <button 
                   v-if="booking.status === 'booked'"
                   @click="handleCheckIn(booking.id)"
-                  class="flex-1 lg:flex-none px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/10 hover:opacity-95 active:scale-98 transition-all"
+                  class="flex-1 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold active:scale-98 transition-all uppercase tracking-wider text-center"
                 >
                   Check In
                 </button>
                 <button 
                   v-if="booking.status === 'booked'"
                   @click="handleCancel(booking.id)"
-                  class="flex-1 lg:flex-none px-5 py-2 bg-white border border-red-200 text-red-500 rounded-xl text-xs font-bold hover:bg-red-50 active:scale-98 transition-all"
+                  class="flex-1 px-5 py-3 bg-white border border-slate-200 text-slate-500 rounded-xl text-xs font-bold hover:bg-slate-50 active:scale-98 transition-all uppercase tracking-wider text-center"
                 >
                   Cancel
                 </button>
                 <button 
                   v-if="booking.status === 'checked_in'"
                   @click="handleCheckOut(booking.id)"
-                  class="flex-1 lg:flex-none px-5 py-2 bg-red-500 text-white rounded-xl text-xs font-bold shadow-md shadow-orange-500/10 hover:opacity-95 active:scale-98 transition-all whitespace-nowrap"
+                  class="flex-1 px-5 py-3 bg-rose-50 text-rose-600 border border-rose-100/60 rounded-xl text-xs font-bold hover:bg-rose-100/60 active:scale-98 transition-all uppercase tracking-wider text-center whitespace-nowrap"
                 >
                   Check Out
                 </button>
                 <button 
                   v-if="booking.status === 'checked_in'"
                   @click="handleExtend(booking)"
-                  class="flex-1 lg:flex-none px-5 py-2 bg-green-600 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/10 hover:opacity-95 active:scale-98 transition-all whitespace-nowrap"
+                  class="flex-1 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold active:scale-98 transition-all uppercase tracking-wider text-center whitespace-nowrap"
                 >
                   Extend Time
                 </button>

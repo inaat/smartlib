@@ -53,7 +53,7 @@
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/80 flex items-center justify-between">
         <div class="text-left">
           <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">Avg. Session Duration</p>
-          <h3 class="text-2xl font-bold text-emerald-600 mt-2.5 leading-none">{{ stats.avg_minutes }} min</h3>
+          <h3 class="text-2xl font-bold text-emerald-600 mt-2.5 leading-none">{{ formatDuration(stats.avg_minutes) }}</h3>
         </div>
         <div class="p-3 bg-emerald-50 border border-emerald-100/50 text-emerald-600 rounded-xl">
           <Clock class="w-5 h-5" />
@@ -146,7 +146,7 @@
               </td>
               
               <td class="px-6 py-4 whitespace-nowrap text-left text-xs font-semibold text-slate-550">
-                {{ record.total_minutes ? record.total_minutes + ' min' : '-' }}
+                {{ record.total_minutes ? formatDuration(record.total_minutes) : '-' }}
               </td>
               
               <td class="px-6 py-4 whitespace-nowrap text-left">
@@ -254,8 +254,8 @@
             <button
               @click="markForm.type = 'check_out'; handleMarkAttendance()"
               :disabled="marking"
-              class="flex flex-col items-center justify-center p-4 border rounded-xl hover:border-blue-600 hover:bg-blue-50/50 group cursor-pointer transition-all"
-              :class="markForm.type === 'check_out' ? 'border-blue-600 bg-blue-50' : 'border-slate-150'"
+              class="flex flex-col items-center justify-center p-4 border rounded-xl hover:border-red-600 hover:bg-red-50/50 group cursor-pointer transition-all"
+              :class="markForm.type === 'check_out' ? 'border-red-600 bg-red-50' : 'border-slate-150'"
             >
               <LogOut class="w-6 h-6 mb-2 text-slate-400 group-hover:text-blue-600" />
               <span class="text-xs font-bold text-slate-600 group-hover:text-blue-600">Check Out</span>
@@ -399,6 +399,18 @@ const formatTime = (time: string) => {
   } catch (e) {
     return time;
   }
+};
+
+const formatDuration = (totalMinutes: number | string | null | undefined) => {
+  const mins = Math.round(Number(totalMinutes) || 0);
+  if (mins <= 0) return '0 min';
+  if (mins < 60) return `${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  const remainingMins = mins % 60;
+  if (remainingMins === 0) {
+    return hrs === 1 ? '1 hr' : `${hrs} hrs`;
+  }
+  return `${hrs} hr ${remainingMins} min`;
 };
 
 const getProfilePictureUrl = (path: string) => {

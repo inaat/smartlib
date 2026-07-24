@@ -24,7 +24,7 @@
         <div 
           v-for="stat in statsCards" 
           :key="stat.label" 
-          class="bg-white px-4 py-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 hover-lift group text-left"
+          class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 hover-lift group text-left"
         >
           <div class="flex items-center space-x-3.5">
             <!-- Icon -->
@@ -33,8 +33,8 @@
             </div>
             <!-- Label & Value -->
             <div class="min-w-0">
-              <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none truncate">{{ stat.label }}</p>
-              <h3 class="text-xl font-bold text-slate-800 mt-1 leading-none">{{ stat.value }}</h3>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none truncate">{{ stat.label }}</p>
+              <h3 class="text-3xl font-bold text-slate-800 mt-1.5 leading-none">{{ stat.value }}</h3>
             </div>
           </div>
         </div>
@@ -48,7 +48,7 @@
               <div class="p-2 bg-blue-50/60 border border-blue-100/50 rounded-xl text-blue-600">
                 <TrendingUp class="w-4.5 h-4.5" />
               </div>
-              <h3 class="font-semibold text-slate-800 text-sm">Study Frequency (Last 30 Days)</h3>
+              <h3 class="font-bold text-slate-800 text-sm">Study Frequency (Last 30 Days)</h3>
             </div>
           </div>
           <div class="h-64 flex items-end justify-between space-x-1.5 px-2">
@@ -80,7 +80,7 @@
             <div class="p-2 bg-purple-50/60 border border-purple-100/50 rounded-xl text-purple-600">
               <MapPin class="w-4.5 h-4.5" />
             </div>
-            <h3 class="font-semibold text-slate-800 text-sm">Favorite Spots</h3>
+            <h3 class="font-bold text-slate-800 text-sm">Favorite Spots</h3>
           </div>
           <div class="p-5">
             <div v-if="topLibraries.length === 0" class="py-12 text-center">
@@ -119,7 +119,7 @@
             <div class="p-2 bg-emerald-50/60 border border-emerald-100/50 rounded-xl text-emerald-600">
               <Activity class="w-4.5 h-4.5" />
             </div>
-            <h3 class="font-semibold text-slate-800 text-sm">Recent Activity</h3>
+            <h3 class="font-bold text-slate-800 text-sm">Recent Activity</h3>
           </div>
           <router-link to="/student/libraries" class="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors">
             Book New Seat

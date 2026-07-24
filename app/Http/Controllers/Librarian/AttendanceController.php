@@ -14,7 +14,7 @@ class AttendanceController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = Attendance::with(['user', 'library']);
+        $query = Attendance::with(['user', 'library', 'seatBooking.seat']);
  
         if ($user->role !== 'super_admin') {
             $library = $user->library;
@@ -23,9 +23,13 @@ class AttendanceController extends Controller
             $query->where('library_id', $request->library_id);
         }
 
-        // Filter by date
-        $date = $request->get('date', Carbon::today()->toDateString());
-        $query->where('date', $date);
+        // Filter by date range or single date
+        if ($request->has('from_date') && $request->has('to_date')) {
+            $query->whereBetween('date', [$request->from_date, $request->to_date]);
+        } else {
+            $date = $request->get('date', Carbon::today()->toDateString());
+            $query->where('date', $date);
+        }
 
         // Search by student name or CRN
         if ($request->has('search')) {
@@ -45,7 +49,10 @@ class AttendanceController extends Controller
             }
         }
 
-        $attendance = $query->latest('check_in_time')->paginate(15);
+        $perPage = $request->input('per_page', 15);
+        $attendance = ($perPage === 'all' || $perPage === -1) 
+            ? $query->latest('check_in_time')->paginate(999999)
+            : $query->latest('check_in_time')->paginate($perPage);
 
         return response()->json($attendance);
     }
@@ -170,6 +177,7 @@ class AttendanceController extends Controller
             
             if ($existing) {
                 $existing->update(['check_out_time' => null]);
+                $student->calculateStudyStreak();
                 return response()->json(['message' => 'Attendance resumed successfully', 'attendance' => $existing]);
             }
  
@@ -180,6 +188,8 @@ class AttendanceController extends Controller
                 'check_in_time' => Carbon::now()->toTimeString(),
                 'marked_manually' => true,
             ]);
+
+            $student->calculateStudyStreak();
  
             return response()->json(['message' => 'Checked in successfully', 'attendance' => $attendance]);
         } else {

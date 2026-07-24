@@ -27,7 +27,7 @@ class DashboardController extends Controller
             'available_seats' => $library->seats()->where('status', 'available')->count(),
             'active_bookings' => $library->seatBookings()->where('status', 'checked_in')->count(),
             'pending_bookings' => $library->seatBookings()->where('status', 'booked')->count(),
-            'today_bookings' => $library->seatBookings()->whereDate('booking_time', today())->count(),
+            'today_bookings' => $library->seatBookings()->whereDate('booking_time', today())->where('status', '!=', 'cancelled')->count(),
             'overdue_bookings' => $library->seatBookings()
                 ->where('status', 'booked')
                 ->where('booking_time', '<', now()->subMinutes(30))
@@ -87,6 +87,7 @@ class DashboardController extends Controller
                             'id' => $booking->user->id,
                             'name' => $booking->user->name,
                             'email' => $booking->user->email,
+                            'profile_picture' => $booking->user->profile_picture,
                         ] : null,
                         'seat' => $booking->seat ? [
                             'id' => $booking->seat->id,

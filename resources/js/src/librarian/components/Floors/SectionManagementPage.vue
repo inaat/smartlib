@@ -222,11 +222,10 @@
               v-model.number="form.total_seats"
               type="number"
               required
-              :disabled="isEditing"
               class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50 disabled:bg-slate-100/50 disabled:text-slate-400"
               placeholder="e.g. 20"
             />
-            <p v-if="isEditing" class="mt-1 text-[10px] text-slate-400 font-bold">Total seats count cannot be modified after creation.</p>
+            <p v-if="isEditing" class="mt-1 text-[10px] text-slate-450 font-bold text-slate-400">Note: Changing the count will automatically create new seat records or delete excess ones to match.</p>
           </div>
 
           <div>
@@ -389,43 +388,64 @@ const printSectionQRs = (section: any) => {
   if (!printWindow) return;
 
   const seats = section.seats || [];
+  const libraryName = user.value?.library?.name || 'SmartLib';
+
   let html = `
     <html>
       <head>
         <title>Print QR Codes - ${section.name}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
         <style>
-          body { font-family: sans-serif; margin: 0; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-          .qr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-          .qr-item { border: 1px solid #ddd; padding: 15px; text-align: center; page-break-inside: avoid; border-radius: 8px; }
-          .qr-image { width: 140px; height: 140px; object-fit: contain; }
-          .seat-number { font-weight: bold; margin-top: 10px; font-size: 16px; color: #333; }
-          .section-info { font-size: 12px; color: #666; margin-top: 4px; }
+          body { font-family: 'Outfit', sans-serif; margin: 0; padding: 40px 20px; background-color: #f8fafc; }
+          .no-print { text-align: right; max-width: 1200px; margin: 0 auto 20px auto; }
+          .no-print button { padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: background 0.2s; }
+          .no-print button:hover { background: #047857; }
+          .header { text-align: center; margin-bottom: 40px; }
+          .header h1 { font-size: 28px; font-weight: 900; color: #0f172a; margin: 0; letter-spacing: -0.025em; }
+          .header p { font-size: 14px; color: #64748b; margin: 6px 0 0 0; }
+          .qr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto; }
+          .qr-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; }
+          .brand-header { width: 100%; border-bottom: 1.5px dashed #e2e8f0; padding-bottom: 12px; margin-bottom: 16px; }
+          .brand-name { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0f172a; letter-spacing: 0.15em; margin: 0; }
+          .library-name { font-size: 12px; font-weight: 600; color: #059669; margin: 4px 0 0 0; }
+          .qr-wrapper { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; display: inline-block; }
+          .qr-image { width: 150px; height: 150px; object-fit: contain; display: block; }
+          .seat-badge { font-size: 20px; font-weight: 900; color: #0f172a; margin: 16px 0 0 0; letter-spacing: -0.025em; }
+          .meta-info { font-size: 11px; font-weight: 600; color: #64748b; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.05em; }
+          .scan-footer { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.08em; margin-top: 14px; border-top: 1px solid #f1f5f9; padding-top: 8px; width: 100%; }
           @media print {
             .no-print { display: none; }
-            body { padding: 0; }
+            body { background: white; padding: 0; }
+            .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+            .qr-card { box-shadow: none; border: 1px solid #cbd5e1; }
           }
         </style>
       </head>
       <body>
-        <div class="no-print" style="position: fixed; top: 20px; right: 20px; z-index: 100;">
-          <button onclick="window.print()" style="padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            Print QR Codes
-          </button>
+        <div class="no-print">
+          <button onclick="window.print()">Print QR Codes</button>
         </div>
         <div class="header">
-          <h1 style="margin: 0; color: #1a1a1a;">Seat QR Codes</h1>
-          <p style="margin: 5px 0; color: #666;">Section: ${section.name} | Floor: ${section.floor?.name || 'N/A'}</p>
+          <h1>Seat QR Codes</h1>
+          <p>Section: ${section.name} | Floor: ${section.floor?.name || 'N/A'}</p>
         </div>
         <div class="qr-grid">
   `;
 
   seats.forEach((seat: any) => {
+    const simpleSeatNum = String(seat.seat_number).replace(/\D/g, '') || seat.seat_number;
     html += `
-      <div class="qr-item">
-        <img src="${seat.qr_code_url || '/storage/qrcodes/seats/seat-' + seat.id + '.svg'}" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
-        <div class="seat-number">Seat ${seat.seat_number}</div>
-        <div class="section-info">${section.name} - ${section.floor?.name || ''}</div>
+      <div class="qr-card">
+        <div class="brand-header">
+          <div class="brand-name">SMARTLIB SYSTEM</div>
+          <div class="library-name">${libraryName}</div>
+        </div>
+        <div class="qr-wrapper">
+          <img src="${seat.qr_code_url || '/storage/qrcodes/seats/seat-' + seat.id + '.svg'}" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
+        </div>
+        <div class="seat-badge">SEAT ${simpleSeatNum}</div>
+        <div class="meta-info">${section.name} &bull; ${section.floor?.name || ''}</div>
+        <div class="scan-footer">Scan to Check-In / Check-Out</div>
       </div>
     `;
   });
@@ -444,36 +464,48 @@ const printAllQRs = () => {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
 
+  const libraryName = user.value?.library?.name || 'SmartLib';
+
   let html = `
     <html>
       <head>
         <title>Print All QR Codes</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
         <style>
-          body { font-family: sans-serif; margin: 0; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-          .section-block { margin-bottom: 50px; }
-          .section-title { font-size: 20px; font-bold; margin-bottom: 15px; padding-left: 10px; border-left: 4px solid #059669; }
-          .qr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-          .qr-item { border: 1px solid #ddd; padding: 15px; text-align: center; page-break-inside: avoid; border-radius: 8px; }
-          .qr-image { width: 140px; height: 140px; object-fit: contain; }
-          .seat-number { font-weight: bold; margin-top: 10px; font-size: 16px; color: #333; }
-          .section-info { font-size: 12px; color: #666; margin-top: 4px; }
+          body { font-family: 'Outfit', sans-serif; margin: 0; padding: 40px 20px; background-color: #f8fafc; }
+          .no-print { text-align: right; max-width: 1200px; margin: 0 auto 20px auto; }
+          .no-print button { padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: background 0.2s; }
+          .no-print button:hover { background: #047857; }
+          .header { text-align: center; margin-bottom: 40px; }
+          .header h1 { font-size: 28px; font-weight: 900; color: #0f172a; margin: 0; letter-spacing: -0.025em; }
+          .header p { font-size: 14px; color: #64748b; margin: 6px 0 0 0; }
+          .section-block { margin-bottom: 50px; page-break-after: always; }
+          .section-title { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 20px; padding-left: 12px; border-left: 4px solid #059669; }
+          .qr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto; }
+          .qr-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; }
+          .brand-header { width: 100%; border-bottom: 1.5px dashed #e2e8f0; padding-bottom: 12px; margin-bottom: 16px; }
+          .brand-name { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0f172a; letter-spacing: 0.15em; margin: 0; }
+          .library-name { font-size: 12px; font-weight: 600; color: #059669; margin: 4px 0 0 0; }
+          .qr-wrapper { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; display: inline-block; }
+          .qr-image { width: 150px; height: 150px; object-fit: contain; display: block; }
+          .seat-badge { font-size: 20px; font-weight: 900; color: #0f172a; margin: 16px 0 0 0; letter-spacing: -0.025em; }
+          .meta-info { font-size: 11px; font-weight: 600; color: #64748b; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.05em; }
+          .scan-footer { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.08em; margin-top: 14px; border-top: 1px solid #f1f5f9; padding-top: 8px; width: 100%; }
           @media print {
             .no-print { display: none; }
-            .section-block { page-break-after: always; }
-            body { padding: 0; }
+            body { background: white; padding: 0; }
+            .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+            .qr-card { box-shadow: none; border: 1px solid #cbd5e1; }
           }
         </style>
       </head>
       <body>
-        <div class="no-print" style="position: fixed; top: 20px; right: 20px; z-index: 100;">
-          <button onclick="window.print()" style="padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            Print All QR Codes
-          </button>
+        <div class="no-print">
+          <button onclick="window.print()">Print All QR Codes</button>
         </div>
         <div class="header">
-          <h1 style="margin: 0; color: #1a1a1a;">Library Seat QR Codes</h1>
-          <p style="margin: 5px 0; color: #666;">Bulk Export - All Sections</p>
+          <h1>Library Seat QR Codes</h1>
+          <p>Bulk Export - All Sections</p>
         </div>
   `;
 
@@ -487,11 +519,19 @@ const printAllQRs = () => {
     `;
 
     section.seats.forEach((seat: any) => {
+      const simpleSeatNum = String(seat.seat_number).replace(/\D/g, '') || seat.seat_number;
       html += `
-        <div class="qr-item">
-          <img src="${seat.qr_code_url || '/storage/qrcodes/seats/seat-' + seat.id + '.svg'}" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
-          <div class="seat-number">Seat ${seat.seat_number}</div>
-          <div class="section-info">${section.name} - ${section.floor?.name || ''}</div>
+        <div class="qr-card">
+          <div class="brand-header">
+            <div class="brand-name">SMARTLIB SYSTEM</div>
+            <div class="library-name">${libraryName}</div>
+          </div>
+          <div class="qr-wrapper">
+            <img src="${seat.qr_code_url || '/storage/qrcodes/seats/seat-' + seat.id + '.svg'}" class="qr-image" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}'" />
+          </div>
+          <div class="seat-badge">SEAT ${simpleSeatNum}</div>
+          <div class="meta-info">${section.name} &bull; ${section.floor?.name || ''}</div>
+          <div class="scan-footer">Scan to Check-In / Check-Out</div>
         </div>
       `;
     });

@@ -31,13 +31,14 @@ class OrderController extends Controller
         DB::beginTransaction();
         try {
             $order->update(['status' => 'approved']);
-            if ($order->plan_id) {
+            $plan = $order->plan;
+
+            if ($order->plan_id && $plan) {
                 // Deactivate existing active subscriptions
                 UserSubscription::where('user_id', $order->user_id)
                     ->where('status', 'active')
-                    ->update(['status' => 'inactive']);
+                    ->update(['status' => 'expired']);
 
-                $plan = $order->plan;
                 UserSubscription::create([
                     'user_id' => $order->user_id,
                     'subscription_plan_id' => $order->plan_id,
@@ -52,13 +53,15 @@ class OrderController extends Controller
             }
             DB::commit();
 
-            \App\Models\Notification::send(
-                $order->user_id,
-                'subscription',
-                'Subscription Approved',
-                "Your subscription to {$plan->name} has been approved. Enjoy your benefits!",
-                $order
-            );
+            if ($plan) {
+                \App\Models\Notification::send(
+                    $order->user_id,
+                    'subscription',
+                    'Subscription Approved',
+                    "Your subscription to {$plan->name} has been approved. Enjoy your benefits!",
+                    $order
+                );
+            }
 
             return response()->json(['message' => 'Order approved successfully']);
         } catch (\Exception $e) {

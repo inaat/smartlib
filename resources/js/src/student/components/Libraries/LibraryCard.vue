@@ -47,8 +47,8 @@
               <span class="truncate">{{ library.address }}</span>
             </div>
           </div>
-          <span v-if="library.distance_km" class="text-[10px] font-semibold text-blue-600 bg-blue-50/50 border border-blue-100 px-2 py-0.5 rounded-lg flex-shrink-0 leading-none self-start">
-            {{ library.distance_km }}km
+          <span v-if="library.distance_km !== undefined && library.distance_km !== null" class="text-[10px] font-semibold text-blue-600 bg-blue-50/50 border border-blue-100 px-2 py-0.5 rounded-lg flex-shrink-0 leading-none self-start">
+            {{ formatDistance(library.distance_km) }}
           </span>
         </div>
 
@@ -115,6 +115,12 @@ import { MapPin, Clock, Users, Wifi, Car, Building2 } from 'lucide-vue-next';
 const props = defineProps<{
   library: any;
 }>();
+
+const formatDistance = (distanceKm?: number) => {
+  if (distanceKm === undefined || distanceKm === null) return '';
+  if (distanceKm < 1.0) return 'Near';
+  return `${distanceKm} km`;
+};
 
 const availabilityPercentage = computed(() => {
   if (!props.library.totalSeats || props.library.totalSeats === 0) return 0;

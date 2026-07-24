@@ -191,6 +191,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/seats/{seat}', [SeatController::class, 'show'])->name('seats.show');
         Route::put('/seats/{seat}', [SeatController::class, 'update'])->name('seats.update');
         Route::delete('/seats/{seat}', [SeatController::class, 'destroy'])->name('seats.destroy');
+        Route::post('/seats/bulk-update', [SeatController::class, 'bulkUpdate'])->name('seats.bulk-update');
 
         // Books
         Route::get('/books', [LibrarianBook::class, 'index'])->name('books.index');
@@ -296,7 +297,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/seats/{seat}', [SeatController::class, 'show'])->name('seats.show');
         Route::put('/seats/{seat}', [SeatController::class, 'update'])->name('seats.update');
         Route::delete('/seats/{seat}', [SeatController::class, 'destroy'])->name('seats.destroy');
+        Route::post('/seats/bulk-update', [SeatController::class, 'bulkUpdate'])->name('seats.bulk-update');
         Route::get('/seats/qr-codes', [SeatController::class, 'generateQRCodes'])->name('seats.qrcodes');
+
+        // Study Tables
+        Route::get('/study-tables', [\App\Http\Controllers\Librarian\StudyTableController::class, 'index'])->name('study-tables.index');
+        Route::post('/study-tables', [\App\Http\Controllers\Librarian\StudyTableController::class, 'store'])->name('study-tables.store');
+        Route::put('/study-tables/{table}', [\App\Http\Controllers\Librarian\StudyTableController::class, 'update'])->name('study-tables.update');
+        Route::delete('/study-tables/{table}', [\App\Http\Controllers\Librarian\StudyTableController::class, 'destroy'])->name('study-tables.destroy');
 
         // Books
         Route::get('/books', [LibrarianBook::class, 'index'])->name('books.index');

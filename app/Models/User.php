@@ -218,5 +218,82 @@ class User extends Authenticatable
 
         return $query->exists();
     }
+
+    /**
+     * Dynamically calculate study streak based on actual attendance & seat booking records.
+     */
+    public function calculateStudyStreak(): array
+    {
+        $attendanceDates = Attendance::where('user_id', $this->id)
+            ->whereNotNull('date')
+            ->pluck('date')
+            ->map(function ($d) {
+                return \Carbon\Carbon::parse($d)->toDateString();
+            });
+
+        $bookingDates = SeatBooking::where('user_id', $this->id)
+            ->whereIn('status', ['checked_in', 'checked_out'])
+            ->whereNotNull('check_in_time')
+            ->get()
+            ->map(function ($b) {
+                return \Carbon\Carbon::parse($b->check_in_time)->toDateString();
+            });
+
+        $allDates = $attendanceDates->merge($bookingDates)
+            ->unique()
+            ->sortDesc()
+            ->values();
+
+        if ($allDates->isEmpty()) {
+            return [
+                'current_streak' => 0,
+                'max_streak' => $this->max_streak ?? 0,
+            ];
+        }
+
+        $today = \Carbon\Carbon::today()->toDateString();
+        $yesterday = \Carbon\Carbon::yesterday()->toDateString();
+
+        $latestDate = $allDates->first();
+
+        // If the latest checkin/attendance date is before yesterday, streak is broken (0).
+        if ($latestDate < $yesterday) {
+            if ($this->current_streak !== 0) {
+                $this->current_streak = 0;
+                $this->save();
+            }
+            return [
+                'current_streak' => 0,
+                'max_streak' => $this->max_streak ?? 0,
+            ];
+        }
+
+        // Count consecutive days backward starting from latestDate
+        $currentStreak = 0;
+        $expectedDate = \Carbon\Carbon::parse($latestDate);
+
+        foreach ($allDates as $dateStr) {
+            if ($dateStr === $expectedDate->toDateString()) {
+                $currentStreak++;
+                $expectedDate->subDay();
+            } else {
+                break;
+            }
+        }
+
+        $maxStreak = max($currentStreak, $this->max_streak ?? 0);
+
+        if ($this->current_streak !== $currentStreak || $this->max_streak !== $maxStreak || $this->last_streak_date !== $latestDate) {
+            $this->current_streak = $currentStreak;
+            $this->max_streak = $maxStreak;
+            $this->last_streak_date = $latestDate;
+            $this->save();
+        }
+
+        return [
+            'current_streak' => $currentStreak,
+            'max_streak' => $maxStreak,
+        ];
+    }
 }
 

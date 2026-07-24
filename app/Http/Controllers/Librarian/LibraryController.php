@@ -151,7 +151,7 @@ class LibraryController extends Controller
             'rules' => 'nullable|array',
             'capacity' => 'sometimes|integer',
             'is_active' => 'sometimes|boolean',
-            'seat_layout_mode' => 'nullable|string|in:layout,grid',
+            'seat_layout_mode' => 'nullable|string|in:individual,tables,cabins',
             'special_features' => 'nullable|array',
             'photo' => 'nullable|image|max:10240',
         ]);

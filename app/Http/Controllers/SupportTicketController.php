@@ -24,7 +24,18 @@ class SupportTicketController extends Controller
             $query->where('library_id', $user->library_id)
                   ->where('ticket_type', 'library');
         } elseif ($user->role === 'super_admin') {
-            $query->where('ticket_type', 'system');
+            if ($request->has('library_id') && $request->library_id !== 'all') {
+                $query->where('library_id', $request->library_id);
+            } elseif (!$request->has('all_types') && !$request->has('from_date')) {
+                $query->where('ticket_type', 'system');
+            }
+        }
+
+        if ($request->has('from_date') && $request->from_date) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+        if ($request->has('to_date') && $request->to_date) {
+            $query->whereDate('created_at', '<=', $request->to_date);
         }
 
         $tickets = $query->latest()->get();

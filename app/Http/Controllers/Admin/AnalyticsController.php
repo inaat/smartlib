@@ -21,18 +21,13 @@ class AnalyticsController extends Controller
         $myLibraryIds = Library::where('created_by', $myId)->pluck('id');
 
         $usersQuery = User::query();
-        if ($isSuperAdmin) {
-            $usersQuery->where(function($q) use ($myId, $myLibraryIds) {
-                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
-            });
-        }
 
         $librariesQuery = Library::query();
         if ($isSuperAdmin) {
             $librariesQuery->where('created_by', $myId);
         }
 
-        $bookingQuery = SeatBooking::query();
+        $bookingQuery = SeatBooking::query()->where('status', '!=', 'cancelled');
         if ($isSuperAdmin) {
             $bookingQuery->whereIn('library_id', $myLibraryIds);
         }
@@ -44,14 +39,23 @@ class AnalyticsController extends Controller
             });
         }
 
+        $range = request()->query('range', 'monthly');
+
+        $dateFilter = match($range) {
+            'today' => now()->startOfDay(),
+            'weekly', 'week' => now()->subDays(7),
+            'yearly', 'year' => now()->subMonths(12),
+            default => now()->subDays(30),
+        };
+
         $analytics = [
             'total_users' => (clone $usersQuery)->count(),
             'total_students' => (clone $usersQuery)->where('role', 'student')->count(),
             'total_librarians' => (clone $usersQuery)->where('role', 'librarian')->count(),
             'total_libraries' => (clone $librariesQuery)->count(),
-            'total_bookings' => (clone $bookingQuery)->count(),
+            'total_bookings' => (clone $bookingQuery)->where('created_at', '>=', $dateFilter)->count(),
             'active_bookings' => (clone $bookingQuery)->whereIn('status', ['booked', 'active', 'checked_in'])->count(),
-            'completed_bookings' => (clone $bookingQuery)->where('status', 'checked_out')->count(),
+            'completed_bookings' => (clone $bookingQuery)->where('created_at', '>=', $dateFilter)->where('status', 'checked_out')->count(),
             'total_revenue' => (float) (clone $subscriptionQuery)->sum('amount_paid'),
             'monthly_revenue' => (float) (clone $subscriptionQuery)->whereMonth('created_at', now()->month)->sum('amount_paid'),
             'total_events' => Event::whereIn('library_id', $myLibraryIds)->count(),
@@ -66,10 +70,13 @@ class AnalyticsController extends Controller
             'digital_books' => Book::whereIn('library_id', $myLibraryIds)->where('type', 'digital')->count(),
         ];
 
-        // Booking trends stats based on range parameter
-        $range = request()->query('range', 'monthly');
-        
-        if ($range === 'weekly') {
+        if ($range === 'today') {
+            $monthlyBookings = (clone $bookingQuery)->selectRaw("DATE_FORMAT(created_at, '%H:00') as date, COUNT(*) as count")
+                ->where('created_at', '>=', now()->startOfDay())
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
+        } elseif ($range === 'weekly' || $range === 'week') {
             $monthlyBookings = (clone $bookingQuery)->selectRaw('DATE(created_at) as date, COUNT(*) as count')
                 ->where('created_at', '>=', now()->subDays(7))
                 ->groupBy('date')
@@ -79,7 +86,7 @@ class AnalyticsController extends Controller
                     $item->date = Carbon::parse($item->date)->format('D');
                     return $item;
                 });
-        } elseif ($range === 'yearly') {
+        } elseif ($range === 'yearly' || $range === 'year') {
             $monthlyBookings = (clone $bookingQuery)->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as date, COUNT(*) as count")
                 ->where('created_at', '>=', now()->subMonths(12))
                 ->groupBy('date')
@@ -89,7 +96,7 @@ class AnalyticsController extends Controller
                     $item->date = Carbon::parse($item->date . '-01')->format('M');
                     return $item;
                 });
-        } else { // monthly (default)
+        } else { // monthly / month (default)
             $monthlyBookings = (clone $bookingQuery)->selectRaw('DATE(created_at) as date, COUNT(*) as count')
                 ->where('created_at', '>=', now()->subDays(30))
                 ->groupBy('date')

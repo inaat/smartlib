@@ -37,11 +37,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/shared/composables/useAuth';
+import { useGeolocation } from '@/shared/composables/useGeolocation';
 import StudentSidebar from './StudentSidebar.vue';
 import StudentTopbar from './StudentTopbar.vue';
 import GlobalExtensionModal from './GlobalExtensionModal.vue';
 
 const { user } = useAuth();
+const { locationGranted, requestLocation } = useGeolocation();
 const sidebarOpen = ref(false);
 const sidebarCollapsed = ref(false);
 
@@ -77,6 +79,10 @@ const unlockBody = () => {
 
 onMounted(() => {
   lockBody();
+  // Request location permission on first app load
+  if (!locationGranted.value) {
+    requestLocation();
+  }
 });
 
 onUnmounted(() => {

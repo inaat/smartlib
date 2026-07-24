@@ -31,7 +31,9 @@ class EventController extends Controller
         $user = $request->user();
         $events->each(function($event) use ($user) {
             $event->registered_count = $event->registrations()->count();
-            $event->is_registered = $event->registrations()->where('user_id', $user->id)->exists();
+            $reg = $event->registrations()->where('user_id', $user->id)->first();
+            $event->is_registered = $reg ? true : false;
+            $event->seat_number = $reg ? $event->registrations()->where('id', '<=', $reg->id)->count() : null;
         });
 
         return response()->json($events);
@@ -40,8 +42,11 @@ class EventController extends Controller
     public function show($id)
     {
         $event = Event::with('library')->findOrFail($id);
+        $user = request()->user();
         $event->registered_count = $event->registrations()->count();
-        $event->is_registered = $event->registrations()->where('user_id', request()->user()->id)->exists();
+        $reg = $event->registrations()->where('user_id', $user->id)->first();
+        $event->is_registered = $reg ? true : false;
+        $event->seat_number = $reg ? $event->registrations()->where('id', '<=', $reg->id)->count() : null;
 
         return response()->json($event);
     }
@@ -50,6 +55,36 @@ class EventController extends Controller
     {
         $user = $request->user();
         $event = Event::with('library')->findOrFail($id);
+
+        // Load active subscription with plan details
+        $activeSubscription = $user->activeSubscription()->with('subscriptionPlan')->first();
+
+        if (!$activeSubscription) {
+            return response()->json(['message' => 'You need an active subscription to register for events'], 400);
+        }
+
+        $plan = $activeSubscription->subscriptionPlan;
+
+        // Check events joining limit
+        $eventsLimit = $plan->events_joining_limit ?? -1;
+        if ($eventsLimit === 0) {
+            $eventsLimit = -1;
+        }
+
+        if ($eventsLimit !== -1) {
+            // Count total event registrations in the current subscription period
+            $totalPeriodRegistrations = EventRegistration::where('user_id', $user->id)
+                ->where('registered_at', '>=', $activeSubscription->started_at)
+                ->count();
+
+            if ($totalPeriodRegistrations >= $eventsLimit) {
+                return response()->json([
+                    'message' => "You have reached your events joining limit for this subscription period ({$eventsLimit}).",
+                    'limit' => $eventsLimit,
+                    'current' => $totalPeriodRegistrations
+                ], 400);
+            }
+        }
 
         // Check if already registered
         $existingRegistration = EventRegistration::where('user_id', $user->id)

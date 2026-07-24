@@ -182,17 +182,18 @@
 
     <!-- Seat Map (Visual) -->
     <div v-if="selectedLibraryId" class="relative mt-4">
-      <SeatMap
+      <SeatLayoutRenderer
         :seats="seats"
         :floors="floors"
         :sections="sections"
+        :tables="tables"
         :selected-seat="selectedSeat"
         :draggable="isLayoutMode"
         :seat-clickable="!isLayoutMode"
-        :layout-mode="isLayoutMode ? 'layout' : 'grid'"
+        :layout-mode="activeLayoutMode"
         @seat-click="selectSeat"
-        @drag-start="onDragStart"
-        @drop="onDrop"
+        @layout-change="handleSeatDrag"
+        @table-layout-change="handleTableDrag"
       />
     </div>
     <div v-else class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-gray-500">
@@ -396,17 +397,20 @@ import {
   Info
 } from 'lucide-vue-next';
 import { useSwal } from '@/shared/composables/useSwal';
+import api from '@/shared/services/api';
 
 const { toast } = useSwal();
 import { superadminAPI } from '../../services/superadminApi';
 import LibrarySelector from '../Shared/LibrarySelector.vue';
-import SeatMap from '@/shared/components/SeatMap.vue';
+import SeatLayoutRenderer from '@/shared/components/SeatLayout/SeatLayoutRenderer.vue';
 
 const selectedLibraryId = ref<number | null>(null);
 const searchQuery = ref('');
 const seats = ref<any[]>([]);
 const floors = ref<any[]>([]);
 const sections = ref<any[]>([]);
+const tables = ref<any[]>([]);
+const activeLayoutMode = ref('individual');
 const showCreateModal = ref(false);
 const selectedSeat = ref<any>(null);
 const loading = ref(false);
@@ -464,6 +468,7 @@ const fetchData = async () => {
     seats.value = [];
     floors.value = [];
     sections.value = [];
+    tables.value = [];
     return;
   }
   loading.value = true;
@@ -471,14 +476,18 @@ const fetchData = async () => {
     const params: any = { library_id: selectedLibraryId.value };
     if (searchQuery.value) params.search = searchQuery.value;
     
-    const [seatsData, floorsData, sectionsData] = await Promise.all([
+    const [seatsData, floorsData, sectionsData, tablesResponse, libraryResponse] = await Promise.all([
       superadminAPI.getSeats(params),
       superadminAPI.getFloors(selectedLibraryId.value),
-      superadminAPI.getSeatSections(selectedLibraryId.value.toString())
+      superadminAPI.getSeatSections(selectedLibraryId.value.toString()),
+      api.get('/librarian/study-tables', { params: { library_id: selectedLibraryId.value } }),
+      api.get(`/admin/libraries/${selectedLibraryId.value}`)
     ]);
     seats.value = seatsData;
     floors.value = floorsData;
     sections.value = sectionsData;
+    tables.value = tablesResponse.data || [];
+    activeLayoutMode.value = libraryResponse.data?.data?.seat_layout_mode || libraryResponse.data?.seat_layout_mode || 'individual';
 
     if (!activeSectionId.value) {
       activeSectionId.value = null;
@@ -500,39 +509,148 @@ watch(selectedLibraryId, () => {
 const autoArrangeLayout = async () => {
   if (!selectedLibraryId.value) return;
   const SwalInstance = (await import('sweetalert2')).default;
-  const result = await SwalInstance.fire({
-    title: `Auto-Arrange Layout?`,
-    text: `This will automatically set X/Y positions for ${seats.value.length} seats to fit a standard desk layout. Existing manual positions will be overwritten.`,
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'Yes, arrange them!',
-    confirmButtonColor: '#7C3AED',
-  });
+  const naturalCompare = (a: string, b: string) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'});
 
-  if (!result.isConfirmed) return;
-
-  isArranging.value = true;
-  try {
-    const coords = eShapeCoordinates;
-
-    const seatsToUpdate = seats.value.slice(0, coords.length);
-    const promises = seatsToUpdate.map((seat: any, index: number) => {
-      const coord = coords[index];
-      seat.position_x = coord.x;
-      seat.position_y = coord.y;
-      return superadminAPI.updateSeat(seat.id, {
-        position_x: coord.x,
-        position_y: coord.y
-      });
+  if (activeLayoutMode.value === 'individual') {
+    const seatsToArrange = seats.value.filter(s => {
+      return s.floor_id === activeFloorId.value && 
+             s.section_id === activeSectionId.value &&
+             s.seat_type !== 'private_room' &&
+             !s.table_id;
     });
 
-    await Promise.all(promises);
-    toast('Arrangement Complete', `${seatsToUpdate.length} seats snapped into layout.`, 'success');
-  } catch (error) {
-    console.error('Error auto-arranging seats:', error);
-    toast('Error', 'Failed to auto-arrange some seats', 'error');
-  } finally {
-    isArranging.value = false;
+    if (seatsToArrange.length === 0) {
+      toast('No Seats', 'No individual seats found in this floor/section to arrange.', 'error');
+      return;
+    }
+
+    const result = await SwalInstance.fire({
+      title: 'Auto-Arrange Seats?',
+      text: `This will arrange all ${seatsToArrange.length} individual seats into straight rows sorted ascending by seat number. Continue?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, arrange them!',
+      confirmButtonColor: '#7C3AED',
+    });
+    if (!result.isConfirmed) return;
+
+    isArranging.value = true;
+    try {
+      const sorted = [...seatsToArrange].sort((a, b) => naturalCompare(a.seat_number, b.seat_number));
+      const seatsPerRow = 10;
+      const colSpacing = 78;
+      const rowSpacing = 95;
+      const startX = 45;
+      const startY = 50;
+
+      const promises = sorted.map((seat, index) => {
+        const row = Math.floor(index / seatsPerRow);
+        const col = index % seatsPerRow;
+        const x = startX + col * colSpacing;
+        const y = startY + row * rowSpacing;
+        return superadminAPI.updateSeat(seat.id, { position_x: x, position_y: y });
+      });
+
+      await Promise.all(promises);
+      toast('Arranged', 'Individual seats arranged in straight rows successfully!', 'success');
+      fetchData();
+    } catch (err: any) {
+      toast('Error', 'Failed to auto-arrange seats', 'error');
+    } finally {
+      isArranging.value = false;
+    }
+  } else if (activeLayoutMode.value === 'tables') {
+    const tablesToArrange = tables.value.filter(t => {
+      return t.floor_id === activeFloorId.value && t.section_id === activeSectionId.value;
+    });
+
+    if (tablesToArrange.length === 0) {
+      toast('No Tables', 'No study tables found in this floor/section to arrange.', 'error');
+      return;
+    }
+
+    const result = await SwalInstance.fire({
+      title: 'Auto-Arrange Tables?',
+      text: `This will arrange all ${tablesToArrange.length} study tables into straight rows sorted ascending by table label. Continue?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, arrange them!',
+      confirmButtonColor: '#7C3AED',
+    });
+    if (!result.isConfirmed) return;
+
+    isArranging.value = true;
+    try {
+      const sorted = [...tablesToArrange].sort((a, b) => naturalCompare(a.label, b.label));
+      const tablesPerRow = 3;
+      const colSpacing = 240;
+      const rowSpacing = 160;
+      const startX = 60;
+      const startY = 60;
+
+      const promises = sorted.map((table, index) => {
+        const row = Math.floor(index / tablesPerRow);
+        const col = index % tablesPerRow;
+        const x = startX + col * colSpacing;
+        const y = startY + row * rowSpacing;
+        return superadminAPI.updateStudyTable(table.id, { position_x: x, position_y: y });
+      });
+
+      await Promise.all(promises);
+      toast('Arranged', 'Study tables arranged successfully!', 'success');
+      fetchData();
+    } catch (err: any) {
+      toast('Error', 'Failed to auto-arrange tables', 'error');
+    } finally {
+      isArranging.value = false;
+    }
+  } else if (activeLayoutMode.value === 'cabins') {
+    const cabinsToArrange = seats.value.filter(s => {
+      return s.floor_id === activeFloorId.value && 
+             s.section_id === activeSectionId.value &&
+             (s.seat_type === 'private_room' || s.cabin_number !== null);
+    });
+
+    if (cabinsToArrange.length === 0) {
+      toast('No Cabins', 'No cabins found in this floor/section to arrange.', 'error');
+      return;
+    }
+
+    const result = await SwalInstance.fire({
+      title: 'Auto-Arrange Cabins?',
+      text: `This will arrange all ${cabinsToArrange.length} private cabins into straight rows sorted ascending by cabin number. Continue?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, arrange them!',
+      confirmButtonColor: '#7C3AED',
+    });
+    if (!result.isConfirmed) return;
+
+    isArranging.value = true;
+    try {
+      const sorted = [...cabinsToArrange].sort((a, b) => naturalCompare(a.cabin_number || a.seat_number, b.cabin_number || b.seat_number));
+      const cabinsPerRow = 5;
+      const colSpacing = 145;
+      const rowSpacing = 190;
+      const startX = 50;
+      const startY = 60;
+
+      const promises = sorted.map((cabin, index) => {
+        const row = Math.floor(index / cabinsPerRow);
+        const col = index % cabinsPerRow;
+        const x = startX + col * colSpacing;
+        const y = startY + row * rowSpacing;
+        return superadminAPI.updateSeat(cabin.id, { position_x: x, position_y: y });
+      });
+
+      await Promise.all(promises);
+      toast('Arranged', 'Private cabins arranged successfully!', 'success');
+      fetchData();
+    } catch (err: any) {
+      toast('Error', 'Failed to auto-arrange cabins', 'error');
+    } finally {
+      isArranging.value = false;
+    }
   }
 };
 
@@ -564,7 +682,11 @@ const getSeatIcon = (status: string) => {
 };
 
 const selectSeat = (seat: any) => {
-  selectedSeat.value = { ...seat };
+  if (selectedSeat.value?.id === seat.id) {
+    selectedSeat.value = null;
+  } else {
+    selectedSeat.value = { ...seat };
+  }
 };
 
 const openCreateModal = () => {
@@ -620,45 +742,31 @@ const confirmDelete = async (seat: any) => {
   }
 };
 
-const onDragStart = (event: DragEvent, seat: any) => {
-  if (!isLayoutMode.value) return;
-  draggedSeat.value = seat;
-  const rect = (event.target as HTMLElement).getBoundingClientRect();
-  dragOffset.value = {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top
-  };
-  event.dataTransfer?.setData('text/plain', seat.id.toString());
+const handleSeatDrag = async (seatId: number, x: number, y: number) => {
+  const seat = seats.value.find(s => s.id === seatId);
+  if (seat) {
+    seat.position_x = x;
+    seat.position_y = y;
+  }
+  try {
+    await superadminAPI.updateSeat(seatId, { position_x: x, position_y: y });
+    toast('Position Saved', `Seat moved to ${x}, ${y}`, 'success');
+  } catch (err) {
+    console.error('Failed to update seat position:', err);
+  }
 };
 
-const onDrop = async (event: DragEvent, sectionSeats: any[]) => {
-  if (!isLayoutMode.value || !draggedSeat.value) return;
-  
-  const container = (event.currentTarget as HTMLElement).getBoundingClientRect();
-  const x = Math.round(event.clientX - container.left - dragOffset.value.x);
-  const y = Math.round(event.clientY - container.top - dragOffset.value.y);
-
-  // Clamp values inside container
-  const finalX = Math.max(0, Math.min(x, container.width - 60));
-  const finalY = Math.max(0, Math.min(y, container.height - 60));
-
+const handleTableDrag = async (tableId: number, x: number, y: number) => {
+  const table = tables.value.find(t => t.id === tableId);
+  if (table) {
+    table.position_x = x;
+    table.position_y = y;
+  }
   try {
-    // Optimistic update
-    draggedSeat.value.position_x = finalX;
-    draggedSeat.value.position_y = finalY;
-
-    await superadminAPI.updateSeat(draggedSeat.value.id, {
-      position_x: finalX,
-      position_y: finalY
-    });
-    
-    toast('Layout Updated', `Seat ${draggedSeat.value.seat_number} repositioned`, 'success');
-  } catch (error) {
-    console.error('Error saving seat position:', error);
-    toast('Error', 'Could not save seat position', 'error');
-    fetchData();
-  } finally {
-    draggedSeat.value = null;
+    await api.put(`/librarian/study-tables/${tableId}`, { position_x: x, position_y: y });
+    toast('Position Saved', `Table moved to ${x}, ${y}`, 'success');
+  } catch (err) {
+    console.error('Failed to update table position:', err);
   }
 };
 

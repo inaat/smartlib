@@ -21,11 +21,6 @@ class DashboardController extends Controller
         $myLibraryIds = Library::where('created_by', $myId)->pluck('id');
 
         $studentsQuery = User::where('role', 'student');
-        if ($isSuperAdmin) {
-            $studentsQuery->where(function($q) use ($myId, $myLibraryIds) {
-                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
-            });
-        }
 
         $librariesQuery = Library::query();
         if ($isSuperAdmin) {
@@ -39,7 +34,7 @@ class DashboardController extends Controller
             });
         }
 
-        $bookingQuery = SeatBooking::query();
+        $bookingQuery = SeatBooking::query()->where('status', '!=', 'cancelled');
         if ($isSuperAdmin) {
             $bookingQuery->whereIn('library_id', $myLibraryIds);
         }
@@ -63,19 +58,10 @@ class DashboardController extends Controller
 
         $pendingUsers = User::where('is_active', false)
             ->where('role', 'student');
-        if ($isSuperAdmin) {
-            $pendingUsers->where(function($q) use ($myId, $myLibraryIds) {
-                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
-            });
-        }
         $pendingUsers = $pendingUsers->latest()->take(5)->get();
 
-        $pendingCount = User::where('is_active', false);
-        if ($isSuperAdmin) {
-            $pendingCount->where(function($q) use ($myId, $myLibraryIds) {
-                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
-            });
-        }
+        $pendingCount = User::where('is_active', false)
+            ->where('role', 'student');
         $pendingCount = $pendingCount->count();
 
         $recentActivity = collect();
@@ -165,11 +151,6 @@ class DashboardController extends Controller
         $myLibraryIds = Library::where('created_by', $myId)->pluck('id');
 
         $studentsQuery = User::where('role', 'student');
-        if ($isSuperAdmin) {
-            $studentsQuery->where(function($q) use ($myId, $myLibraryIds) {
-                $q->where('created_by', $myId)->orWhereIn('library_id', $myLibraryIds);
-            });
-        }
 
         $librariesQuery = Library::query();
         if ($isSuperAdmin) {
@@ -183,7 +164,7 @@ class DashboardController extends Controller
             });
         }
 
-        $bookingQuery = SeatBooking::query();
+        $bookingQuery = SeatBooking::query()->where('status', '!=', 'cancelled');
         if ($isSuperAdmin) {
             $bookingQuery->whereIn('library_id', $myLibraryIds);
         }

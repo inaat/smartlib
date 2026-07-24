@@ -137,7 +137,7 @@
           <button 
             v-if="booking.status === 'checked_in'"
             @click="handleCheckOut(booking.id)"
-            class="flex-1 py-2 px-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl text-xs font-extrabold shadow-md shadow-orange-500/10 transition-all"
+            class="flex-1 py-2 px-3 bg-red-50/50 text-red-600 border border-red-600 rounded-xl text-xs font-extrabold shadow-md shadow-orange-500/10 transition-all"
           >
             Check Out
           </button>
@@ -145,7 +145,7 @@
           <button 
             v-if="booking.status === 'checked_in'"
             @click="handleExtend(booking)"
-            class="flex-1 py-2 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-xs font-extrabold shadow-md shadow-indigo-500/10 transition-all"
+            class="flex-1 py-2 px-3 bg-emerald-50/50 text-emerald-600 border border-emerled-600 rounded-xl text-xs font-extrabold shadow-md shadow-indigo-500/10 transition-all"
           >
             Extend
           </button>

@@ -16,12 +16,12 @@
     ></div>
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col min-h-0 overflow-hidden lg:ml-0">
+    <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
       <!-- Topbar -->
       <LibrarianTopbar @toggle-sidebar="sidebarOpen = !sidebarOpen" />
       
       <!-- Page Content -->
-      <main class="flex-1 overflow-y-auto bg-gray-50">
+      <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
         <router-view />
       </main>
     </div>

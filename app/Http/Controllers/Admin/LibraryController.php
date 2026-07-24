@@ -140,6 +140,20 @@ class LibraryController extends Controller
 
     public function destroy(Library $library)
     {
+        // Revoke tokens of librarians assigned to this library
+        $librarians = User::where('role', 'librarian')
+            ->where(function($query) use ($library) {
+                $query->where('library_id', $library->id)
+                      ->orWhereHas('libraries', function($q) use ($library) {
+                          $q->where('libraries.id', $library->id);
+                      });
+            })
+            ->get();
+
+        foreach ($librarians as $librarian) {
+            $librarian->tokens()->delete();
+        }
+
         $library->delete();
 
         // Check if API request

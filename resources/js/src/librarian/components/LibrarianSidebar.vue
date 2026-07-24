@@ -2,7 +2,7 @@
   <!-- Sidebar -->
   <aside
     :class="[
-      'fixed inset-y-0 left-0 z-50 flex flex-col bg-emerald-700 border-r border-emerald-800/40 shadow-2xl transition-all duration-300 ease-in-out',
+      'fixed inset-y-0 left-0 z-50 flex flex-col bg-emerald-700 border-r border-emerald-800/40 shadow-2xl transition-all duration-300 ease-in-out overflow-x-hidden',
       // Mobile: always full width sidebar, translate in/out
       'w-72',
       // Desktop overrides: sticky and width depends on collapsed state
@@ -49,11 +49,10 @@
       </button>
     </div>
 
-    <!-- Navigation Menu -->
     <nav
       @scroll="closeAllDropdowns"
       :class="[
-        'flex-1 px-2.5 py-5 space-y-5 transition-all duration-300 overflow-y-auto'
+        'flex-1 px-2.5 py-5 space-y-5 transition-all duration-300 overflow-y-auto overflow-x-hidden'
       ]"
       style="scrollbar-width: none; -ms-overflow-style: none;"
     >
@@ -538,5 +537,14 @@ const reportItems = [
 /* Hide scrollbar across all browsers while keeping scroll functional */
 nav::-webkit-scrollbar {
   display: none;
+}
+
+/* Prevent native browser drag-and-drop preview and text highlight selection inside sidebar */
+aside, aside * {
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -ms-user-select: none !important;
 }
 </style>

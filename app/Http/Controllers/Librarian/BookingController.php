@@ -39,6 +39,11 @@ class BookingController extends Controller
             $query->where('library_id', $library->id);
         }
 
+        // Filter by date range if provided
+        if ($request->has('from_date') && $request->has('to_date')) {
+            $query->whereBetween('booking_time', [$request->from_date . ' 00:00:00', $request->to_date . ' 23:59:59']);
+        }
+
         // Filter by status if provided
         if ($request->has('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
@@ -53,7 +58,10 @@ class BookingController extends Controller
             });
         }
 
-        $bookings = $query->latest()->paginate(15);
+        $perPage = $request->input('per_page', 15);
+        $bookings = ($perPage === 'all' || $perPage === -1) 
+            ? $query->latest()->paginate(999999)
+            : $query->latest()->paginate($perPage);
 
         $bookings->getCollection()->transform(function ($booking) {
             return [
@@ -157,6 +165,11 @@ class BookingController extends Controller
             'date' => $now->toDateString(),
             'check_in_time' => $now->toTimeString(),
         ]);
+
+        // Update student's study streak
+        if ($booking->user) {
+            $booking->user->calculateStudyStreak();
+        }
 
         return response()->json([
             'message' => 'Checked in successfully',

@@ -71,6 +71,11 @@ class Library extends Model
         return $this->hasMany(SeatSection::class);
     }
 
+    public function studyTables()
+    {
+        return $this->hasMany(StudyTable::class);
+    }
+
     public function floors()
     {
         return $this->hasMany(Floor::class);

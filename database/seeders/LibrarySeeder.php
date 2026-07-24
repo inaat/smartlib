@@ -14,11 +14,11 @@ class LibrarySeeder extends Seeder
     {
         // Create 5 libraries
         $libraries = [
-            ['name' => 'Central Library', 'address' => '123 Main Street, Karachi', 'opening_time' => '08:00:00', 'closing_time' => '22:00:00'],
-            ['name' => 'North Campus Library', 'address' => '456 University Road, Lahore', 'opening_time' => '07:00:00', 'closing_time' => '23:00:00'],
-            ['name' => 'South Branch Library', 'address' => '789 College Avenue, Islamabad', 'opening_time' => '09:00:00', 'closing_time' => '21:00:00'],
-            ['name' => 'East Wing Library', 'address' => '321 Study Lane, Faisalabad', 'opening_time' => '08:30:00', 'closing_time' => '22:30:00'],
-            ['name' => 'West Side Library', 'address' => '654 Book Street, Multan', 'opening_time' => '08:00:00', 'closing_time' => '22:00:00'],
+            ['name' => 'Central Library', 'address' => '123 Main Street, Karachi', 'opening_time' => '08:00:00', 'closing_time' => '22:00:00', 'latitude' => 24.8607, 'longitude' => 67.0011],
+            ['name' => 'North Campus Library', 'address' => '456 University Road, Lahore', 'opening_time' => '07:00:00', 'closing_time' => '23:00:00', 'latitude' => 31.5204, 'longitude' => 74.3587],
+            ['name' => 'South Branch Library', 'address' => '789 College Avenue, Islamabad', 'opening_time' => '09:00:00', 'closing_time' => '21:00:00', 'latitude' => 33.6844, 'longitude' => 73.0479],
+            ['name' => 'East Wing Library', 'address' => '321 Study Lane, Faisalabad', 'opening_time' => '08:30:00', 'closing_time' => '22:30:00', 'latitude' => 31.4504, 'longitude' => 73.1350],
+            ['name' => 'West Side Library', 'address' => '654 Book Street, Multan', 'opening_time' => '08:00:00', 'closing_time' => '22:00:00', 'latitude' => 30.1575, 'longitude' => 71.5249],
         ];
 
         foreach ($libraries as $index => $library) {
@@ -30,6 +30,8 @@ class LibrarySeeder extends Seeder
                 'name' => $library['name'],
                 'address' => $library['address'],
                 'opening_hours' => $openingHoursStr,
+                'latitude' => $library['latitude'],
+                'longitude' => $library['longitude'],
                 'is_active' => true,
                 'created_by' => 2, // Created by super admin
                 'created_at' => now(),

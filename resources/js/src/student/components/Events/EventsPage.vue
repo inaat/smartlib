@@ -128,30 +128,23 @@
     </div>
 
     <!-- Premium Digital Event Pass Modal -->
-    <div v-if="isPassModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-in fade-in duration-300">
+    <div v-if="isPassModalOpen" class="fixed inset-0 z-50 flex justify-center items-start p-4 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-in fade-in duration-300">
       <div class="max-w-md w-full bg-slate-100 rounded-[32px] border border-slate-200 shadow-2xl overflow-hidden relative flex flex-col my-8">
         
         <!-- Top Header Controls -->
-        <div class="p-5 flex items-center justify-between border-b border-slate-200/80 bg-slate-50">
-          <span class="text-xs font-semibold uppercase tracking-widest text-slate-500">Digital Event Pass</span>
+        <div class="p-5 flex items-center justify-end border-b border-slate-200/80 bg-slate-50 flex-shrink-0">
           <button @click="closePassModal" class="p-2 hover:bg-slate-200 text-slate-500 hover:text-slate-800 rounded-full transition-colors">
             <X class="w-5 h-5" />
           </button>
         </div>
 
         <!-- The Pass Container (captured by html2canvas) -->
-        <div class="p-6 flex justify-center bg-slate-100/50">
+        <div class="p-6 flex flex-col items-center bg-slate-100/50">
           <div ref="passRef" class="w-full max-w-sm bg-white rounded-[24px] border border-slate-200/80 shadow-lg overflow-hidden relative flex flex-col font-outfit text-slate-800" style="width: 360px;">
             
             <!-- Top Header (Library Info & Logo) -->
-            <div class="p-5 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700/20 flex items-center space-x-3 text-white">
-              <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden flex-shrink-0">
-                <img v-if="selectedPassEvent?.library?.photo" :src="selectedPassEvent.library.photo" class="w-full h-full object-cover" />
-                <BookOpen v-else class="w-5 h-5 text-white" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <h4 class="text-sm font-bold uppercase tracking-[0.15em] text-white">GATE PASS</h4>
-              </div>
+            <div class="p-5 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-700/20 flex items-center justify-center text-white">
+              <h4 class="text-sm font-bold uppercase tracking-[0.2em] text-white">DIGITAL PASS</h4>
             </div>
 
             <!-- Main Body (Event details) -->
@@ -181,7 +174,9 @@
                 </div>
                 <div>
                   <span class="text-[8px] font-medium text-slate-400 uppercase tracking-widest">Seat</span>
-                  <p class="text-[11px] font-semibold text-blue-600 mt-0.5">General Admission</p>
+                  <p class="text-[11px] font-semibold text-blue-600 mt-0.5">
+                    {{ selectedPassEvent?.seat_number ? 'Seat ' + selectedPassEvent.seat_number : 'General Admission' }}
+                  </p>
                 </div>
               </div>
             </div>

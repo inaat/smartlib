@@ -1,59 +1,61 @@
 <template>
   <div class="p-6 space-y-6 font-outfit text-slate-700">
     
-    <!-- Tab Switcher -->
-    <div class="flex items-center space-x-1.5 bg-slate-100 rounded-xl p-1 w-fit">
-      <button
-        @click="activeView = 'analytics'"
-        :class="[
-          'px-5 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-2',
-          activeView === 'analytics'
-            ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/40'
-            : 'text-slate-500 hover:text-slate-700'
-        ]"
-      >
-        <BarChart3 class="w-4 h-4" />
-        <span>Analytics </span>
-      </button>
-      <button
-        @click="activeView = 'reports'"
-        :class="[
-          'px-5 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-2',
-          activeView === 'reports'
-            ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/40'
-            : 'text-slate-500 hover:text-slate-700'
-        ]"
-      >
-        <FileBarChart class="w-4 h-4" />
-        <span>Reports</span>
-      </button>
+    <!-- Top Action Header Row: Tab Switcher & Time Range Controls on the same line -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <!-- Tab Switcher -->
+      <div class="flex items-center space-x-1.5 bg-slate-100 rounded-xl p-1 w-fit">
+        <button
+          @click="activeView = 'analytics'"
+          :class="[
+            'px-5 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-2',
+            activeView === 'analytics'
+              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/40'
+              : 'text-slate-500 hover:text-slate-700'
+          ]"
+        >
+          <BarChart3 class="w-4 h-4" />
+          <span>Analytics</span>
+        </button>
+        <button
+          @click="activeView = 'reports'"
+          :class="[
+            'px-5 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-2',
+            activeView === 'reports'
+              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/40'
+              : 'text-slate-500 hover:text-slate-700'
+          ]"
+        >
+          <FileBarChart class="w-4 h-4" />
+          <span>Reports</span>
+        </button>
+      </div>
+
+      <!-- Time Range Controls for Analytics (Aligned on Same Line) -->
+      <div v-if="activeView === 'analytics'" class="flex items-center space-x-3 sm:ml-auto">
+        <select 
+          v-model="timeRange" 
+          class="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 bg-white text-xs font-semibold text-slate-600 cursor-pointer shadow-sm appearance-none pr-8 relative"
+        >
+          <option value="today">Today</option>
+          <option value="week">Last 7 Days</option>
+          <option value="month">Last 30 Days</option>
+          <option value="year">Last Year</option>
+        </select>
+        
+        <button 
+          @click="fetchAnalytics" 
+          :disabled="loading"
+          class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+          title="Refresh Statistics"
+        >
+          <RefreshCw :class="['w-4 h-4 text-slate-500', loading ? 'animate-spin' : '']" />
+        </button>
+      </div>
     </div>
 
     <!-- Analytics View -->
     <div v-if="activeView === 'analytics'">
-      <!-- Header Controls -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left mb-6">
-        <div class="flex items-center space-x-3 sm:ml-auto">
-          <select 
-            v-model="timeRange" 
-            class="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 bg-white text-xs font-semibold text-slate-600 cursor-pointer shadow-sm appearance-none pr-8 relative"
-          >
-            <option value="today">Today</option>
-            <option value="week">Last 7 Days</option>
-            <option value="month">Last 30 Days</option>
-            <option value="year">Last Year</option>
-          </select>
-          
-          <button 
-            @click="fetchAnalytics" 
-            :disabled="loading"
-            class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-sm"
-            title="Refresh Statistics"
-          >
-            <RefreshCw :class="['w-4 h-4 text-slate-500', loading ? 'animate-spin' : '']" />
-          </button>
-        </div>
-      </div>
 
       <!-- Key Metrics Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left mb-6">
@@ -217,6 +219,142 @@
         </div>
       </div>
 
+      <!-- Book Analytics Charts Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left mb-6">
+        <!-- Books Status Donut Chart -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between min-h-[320px]">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Books</h2>
+              <span class="text-xs text-slate-400 font-semibold">{{ timeRangeDescription }}</span>
+            </div>
+            <p class="text-[10px] text-slate-400 font-semibold mb-6">Overview of book borrowing activities and reservation statuses.</p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-around space-y-6 sm:space-y-0 sm:space-x-4 py-4">
+            <!-- SVG Donut Chart -->
+            <div class="relative w-36 h-36 flex items-center justify-center">
+              <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+                <!-- Outer track circle -->
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  fill="transparent"
+                  stroke="#f8fafc"
+                  stroke-width="12"
+                />
+                <!-- Active segments -->
+                <circle
+                  v-for="(seg, idx) in donutSegments"
+                  :key="idx"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  fill="transparent"
+                  :stroke="seg.color"
+                  stroke-width="12"
+                  :stroke-dasharray="seg.strokeDasharray"
+                  :stroke-dashoffset="seg.strokeDashoffset"
+                  stroke-linecap="round"
+                  class="transition-all duration-500"
+                />
+              </svg>
+              <!-- Center text -->
+              <div class="absolute flex flex-col items-center justify-center">
+                <span class="text-3xl font-black text-slate-800 tracking-tight">{{ bookStats.total }}</span>
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-extrabold mt-0.5">Total</span>
+              </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="space-y-3.5 text-left w-full sm:w-auto">
+              <!-- Issued -->
+              <div class="flex items-center justify-between sm:justify-start sm:space-x-8">
+                <div class="flex items-center space-x-2.5">
+                  <span class="w-3 h-3 rounded-full bg-blue-600 ring-4 ring-blue-50"></span>
+                  <span class="text-xs font-bold text-slate-500">Issued</span>
+                </div>
+                <span class="text-xs font-extrabold text-slate-700">{{ bookStats.issued }}</span>
+              </div>
+              <!-- Returned -->
+              <div class="flex items-center justify-between sm:justify-start sm:space-x-8">
+                <div class="flex items-center space-x-2.5">
+                  <span class="w-3 h-3 rounded-full bg-orange-600 ring-4 ring-orange-50"></span>
+                  <span class="text-xs font-bold text-slate-500">Returned</span>
+                </div>
+                <span class="text-xs font-extrabold text-slate-700">{{ bookStats.returned }}</span>
+              </div>
+              <!-- Pending -->
+              <div class="flex items-center justify-between sm:justify-start sm:space-x-8">
+                <div class="flex items-center space-x-2.5">
+                  <span class="w-3 h-3 rounded-full bg-emerald-600 ring-4 ring-emerald-50"></span>
+                  <span class="text-xs font-bold text-slate-500">Pending</span>
+                </div>
+                <span class="text-xs font-extrabold text-slate-700">{{ bookStats.pending }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-4 border-t border-slate-50 mt-4">
+            <router-link :to="{ name: 'librarian-reservations' }" class="text-[10px] font-extrabold text-emerald-700 hover:text-emerald-800 transition-colors uppercase tracking-wider flex items-center space-x-1 cursor-pointer">
+              <span>See list</span>
+              <span>&rarr;</span>
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Most Issued Books Bar Chart -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between min-h-[320px]">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Most Issued</h2>
+              <span class="text-xs text-slate-400 font-semibold">{{ timeRangeDescription }}</span>
+            </div>
+            <p class="text-[10px] text-slate-400 font-semibold mb-6">Top borrowed books in the selected library.</p>
+          </div>
+
+          <div class="h-48 flex items-end justify-between space-x-4 border-b border-slate-100 pb-2 relative pl-10">
+            <!-- Y-Axis Lines and Labels -->
+            <div class="absolute left-0 inset-y-0 w-8 flex flex-col justify-between text-[9px] font-bold text-slate-400 pr-2 border-r border-slate-100 pb-2">
+              <span>{{ yAxisMax }}</span>
+              <span>{{ Math.round(yAxisMax * 0.75) }}</span>
+              <span>{{ Math.round(yAxisMax * 0.5) }}</span>
+              <span>{{ Math.round(yAxisMax * 0.25) }}</span>
+              <span>0</span>
+            </div>
+
+            <!-- Bar Columns -->
+            <div
+              v-for="(book, index) in mostIssuedBooks"
+              :key="index"
+              class="flex-1 h-full flex flex-col justify-end items-center group cursor-pointer relative"
+            >
+              <!-- Popover details -->
+              <div class="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[9px] font-bold py-1 px-2 rounded absolute mb-2 -translate-y-16 shadow pointer-events-none z-20">
+                {{ book.count }} issued
+              </div>
+
+              <!-- Bar Track and Active Fill -->
+              <div class="w-3.5 h-full bg-slate-50/50 border border-slate-100 rounded-full flex items-end justify-center relative overflow-hidden">
+                <div
+                  class="w-full bg-gradient-to-t from-emerald-600 to-teal-500 rounded-full transition-all duration-500 group-hover:brightness-105"
+                  :style="{ height: (book.count / yAxisMax * 100) + '%' }"
+                ></div>
+              </div>
+
+              <!-- X-Axis Label -->
+              <span class="text-[9px] font-bold text-slate-400 mt-2 truncate w-14 text-center" :title="book.title">
+                {{ book.title }}
+              </span>
+            </div>
+            <div v-if="mostIssuedBooks.length === 0" class="w-full h-full flex items-center justify-center text-slate-400 text-xs italic">
+              No borrowing statistics for this period
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Student Activity & Popular Seats lists -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left">
         
@@ -304,7 +442,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, defineAsyncComponent } from 'vue';
+import { ref, onMounted, watch, defineAsyncComponent, computed } from 'vue';
 import {
   Users,
   Calendar,
@@ -346,6 +484,78 @@ const peakHours = ref<any[]>([]);
 const topStudents = ref<any[]>([]);
 const popularSeats = ref<any[]>([]);
 
+const bookStats = ref({
+  issued: 0,
+  returned: 0,
+  pending: 0,
+  total: 0
+});
+const mostIssuedBooks = ref<any[]>([]);
+
+const timeRangeDescription = computed(() => {
+  const mapping: Record<string, string> = {
+    today: 'Today',
+    week: 'Last 7 Days',
+    month: 'Last 30 Days',
+    year: 'Last Year'
+  };
+  return mapping[timeRange.value] || 'Last 7 Days';
+});
+
+const yAxisMax = computed(() => {
+  const max = Math.max(...mostIssuedBooks.value.map(b => b.count), 0);
+  if (max === 0) return 10;
+  return Math.ceil(max / 5) * 5;
+});
+
+const donutSegments = computed(() => {
+  const total = bookStats.value.total;
+  if (total === 0) {
+    return [];
+  }
+
+  const segments = [];
+  let accumulated = 0;
+
+  // 1. Issued (Blue)
+  if (bookStats.value.issued > 0) {
+    const len = (bookStats.value.issued / total) * 314.159;
+    const offset = (accumulated / total) * 314.159;
+    segments.push({
+      color: '#2563eb',
+      strokeDasharray: `${len} 314.159`,
+      strokeDashoffset: -offset
+    });
+    accumulated += bookStats.value.issued;
+  }
+
+  // 2. Returned (Orange)
+  if (bookStats.value.returned > 0) {
+    const len = (bookStats.value.returned / total) * 314.159;
+    const offset = (accumulated / total) * 314.159;
+    segments.push({
+      color: '#ea580c',
+      strokeDasharray: `${len} 314.159`,
+      strokeDashoffset: -offset
+    });
+    accumulated += bookStats.value.returned;
+  }
+
+  // 3. Pending (Green)
+  if (bookStats.value.pending > 0) {
+    const len = (bookStats.value.pending / total) * 314.159;
+    const offset = (accumulated / total) * 314.159;
+    segments.push({
+      color: '#10b981',
+      strokeDasharray: `${len} 314.159`,
+      strokeDashoffset: -offset
+    });
+    accumulated += bookStats.value.pending;
+  }
+
+  return segments;
+});
+
 const fetchAnalytics = async () => {
   loading.value = true;
   try {
@@ -371,6 +581,10 @@ const fetchAnalytics = async () => {
 
     // Map popular seats
     popularSeats.value = data.popularSeats;
+
+    // Map book stats
+    bookStats.value = data.bookStats || { issued: 0, returned: 0, pending: 0, total: 0 };
+    mostIssuedBooks.value = data.mostIssuedBooks || [];
 
   } catch (error) {
     console.error('Error fetching analytics:', error);

@@ -74,14 +74,34 @@ class SeatSectionController extends Controller
             'floor_id' => $validated['floor_id'] ?? null,
         ]);
 
-        // Auto-create seats for this section
-        for ($i = 1; $i <= $validated['total_seats']; $i++) {
-            $seatNumber = "{$section->name}-{$i}";
+        // Auto-create seats for this section (skip existing seat numbers)
+        $created = 0;
+        $counter = 1;
+        while ($created < $validated['total_seats']) {
+            $seatNumber = "{$section->name}-{$counter}";
+
+            // Skip if this seat number already exists in the library
+            $exists = Seat::where('seat_number', $seatNumber)
+                ->whereHas('floor', function($query) use ($libraryId) {
+                    $query->where('library_id', $libraryId);
+                })->exists();
+
+            if ($exists) {
+                $counter++;
+                continue;
+            }
+
             $qrContent = base64_encode(json_encode([
                 'type' => 'seat',
                 'seat_number' => $seatNumber,
                 'library_id' => $libraryId,
             ]));
+
+            // Also skip if QR code already exists
+            if (Seat::where('qr_code', $qrContent)->exists()) {
+                $counter++;
+                continue;
+            }
 
             $seat = Seat::create([
                 'floor_id' => $section->floor_id,
@@ -100,6 +120,9 @@ class SeatSectionController extends Controller
             } catch (\Exception $e) {
                 \Log::error("QR Code generation failed for seat {$seat->id}: " . $e->getMessage());
             }
+
+            $created++;
+            $counter++;
         }
 
         $section->load('seats');
@@ -137,9 +160,77 @@ class SeatSectionController extends Controller
             ], 422);
         }
 
-        $section->update($validated);
+        $oldSeatsCount = $section->total_seats;
 
-        return response()->json($section);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($section, $validated, $newSeatsCount, $oldSeatsCount, $libraryId) {
+            $section->update($validated);
+
+            if ($newSeatsCount > $oldSeatsCount) {
+                // Create extra seats (skip existing seat numbers)
+                $seatsToCreate = $newSeatsCount - $oldSeatsCount;
+                $created = 0;
+                $counter = $oldSeatsCount + 1;
+                while ($created < $seatsToCreate) {
+                    $seatNumber = "{$section->name}-{$counter}";
+
+                    // Skip if this seat number already exists in the library
+                    $exists = Seat::where('seat_number', $seatNumber)
+                        ->whereHas('floor', function($query) use ($libraryId) {
+                            $query->where('library_id', $libraryId);
+                        })->exists();
+
+                    if ($exists) {
+                        $counter++;
+                        continue;
+                    }
+
+                    $qrContent = base64_encode(json_encode([
+                        'type' => 'seat',
+                        'seat_number' => $seatNumber,
+                        'library_id' => $libraryId,
+                    ]));
+
+                    // Also skip if QR code already exists
+                    if (Seat::where('qr_code', $qrContent)->exists()) {
+                        $counter++;
+                        continue;
+                    }
+
+                    $seat = Seat::create([
+                        'floor_id' => $section->floor_id,
+                        'section_id' => $section->id,
+                        'seat_number' => $seatNumber,
+                        'status' => 'available',
+                        'seat_type' => 'open',
+                        'qr_code' => $qrContent,
+                        'qr_generated_at' => now(),
+                    ]);
+
+                    try {
+                        $qrImage = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(300)->generate($qrContent);
+                        \Illuminate\Support\Facades\Storage::disk('public')->put("qrcodes/seats/seat-{$seat->id}.svg", $qrImage);
+                    } catch (\Exception $e) {
+                        \Log::error("QR Code generation failed for seat {$seat->id}: " . $e->getMessage());
+                    }
+
+                    $created++;
+                    $counter++;
+                }
+            } elseif ($newSeatsCount < $oldSeatsCount) {
+                // Delete extra seats (ordered by highest suffix index)
+                $seatsToDelete = $section->seats()
+                    ->orderByRaw('CAST(SUBSTRING_INDEX(seat_number, "-", -1) AS UNSIGNED) DESC')
+                    ->take($oldSeatsCount - $newSeatsCount)
+                    ->get();
+
+                foreach ($seatsToDelete as $s) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete("qrcodes/seats/seat-{$s->id}.svg");
+                    $s->delete();
+                }
+            }
+        });
+
+        return response()->json($section->fresh());
     }
 
     public function destroy($sectionId)
