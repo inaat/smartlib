@@ -151,4 +151,33 @@ class BookReservationController extends Controller
             'reservation' => $reservation
         ]);
     }
+
+    /**
+     * Send return notification reminder to student
+     */
+    public function notifyStudent(Request $request, $id)
+    {
+        $reservation = BookReservation::with(['book', 'user'])->findOrFail($id);
+
+        $dueDateStr = $reservation->due_date ? \Carbon\Carbon::parse($reservation->due_date)->format('M d, Y') : 'N/A';
+        
+        $isOverdue = $reservation->isOverdue() || $reservation->status === 'overdue';
+        $title = $isOverdue ? "URGENT: Overdue Book Return Reminder" : "Book Return Reminder";
+        $message = $isOverdue 
+            ? "URGENT: Your borrowed book \"{$reservation->book->title}\" is OVERDUE (Due date was {$dueDateStr}). Please return it to the library immediately!"
+            : "Reminder: Please return your borrowed book \"{$reservation->book->title}\" to the library by {$dueDateStr}.";
+
+        \App\Models\Notification::send(
+            $reservation->user_id,
+            'book_reminder',
+            $title,
+            $message,
+            $reservation
+        );
+
+        return response()->json([
+            'message' => "Notification sent to {$reservation->user->name} successfully",
+            'reservation' => $reservation
+        ]);
+    }
 }

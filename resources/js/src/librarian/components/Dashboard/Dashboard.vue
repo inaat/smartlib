@@ -147,31 +147,52 @@
 
       <!-- Quick Actions & Alerts -->
       <div class="space-y-6">
-        <!-- Alerts -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div class="p-6 border-b border-gray-100 text-left">
+        <!-- System Alerts -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden text-left">
+          <div class="p-6 border-b border-gray-100 flex items-center justify-between">
             <h2 class="text-lg font-bold text-slate-700">System Alerts</h2>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">Live Status</span>
           </div>
-          <div class="p-6 space-y-4">
-            <div class="flex items-start space-x-3 p-3.5 bg-rose-50/50 border border-rose-100/60 rounded-2xl text-left">
-              <AlertCircle class="w-5 h-5 text-rose-600 mt-0.5 flex-shrink-0" />
+          <div class="p-6 space-y-3.5">
+            <!-- Overstay Alert -->
+            <div 
+              @click="$router.push({ name: 'librarian-live-map' })"
+              class="flex items-start space-x-3 p-3.5 bg-rose-50/60 border border-rose-100 rounded-2xl cursor-pointer hover:bg-rose-50 transition-all group"
+            >
+              <AlertTriangle class="w-4.5 h-4.5 text-rose-600 mt-0.5 flex-shrink-0 group-hover:scale-110 transition-transform" />
               <div>
-                <h4 class="text-xs font-bold text-rose-900 uppercase tracking-wider">Overdue Check-ins</h4>
-                <p class="text-[11px] text-rose-700 mt-1 font-semibold">{{ stats.overdueCheckIns }} students have missed check-in times</p>
+                <h4 class="text-xs font-bold text-rose-900 uppercase tracking-wider">Overstay Alerts</h4>
+                <p class="text-[11px] text-rose-700 mt-0.5 font-medium leading-relaxed">
+                  {{ stats.overstay_count }} students currently in overstay or serious overstay.
+                </p>
               </div>
             </div>
-            <div class="flex items-start space-x-3 p-3.5 bg-amber-50/50 border border-amber-100/60 rounded-2xl text-left">
-              <AlertCircle class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+
+            <!-- Pending Level Overrides -->
+            <div 
+              @click="$router.push({ path: '/librarian/bookings', query: { tab: 'override_requests' } })"
+              class="flex items-start space-x-3 p-3.5 bg-amber-50/60 border border-amber-100 rounded-2xl cursor-pointer hover:bg-amber-50 transition-all group"
+            >
+              <ShieldAlert class="w-4.5 h-4.5 text-amber-600 mt-0.5 flex-shrink-0 group-hover:scale-110 transition-transform" />
               <div>
-                <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider">Maintenance Needed</h4>
-                <p class="text-[11px] text-amber-700 mt-1 font-semibold">{{ stats.maintenanceSeats }} seats currently require repair</p>
+                <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider">Level Override Requests</h4>
+                <p class="text-[11px] text-amber-700 mt-0.5 font-medium leading-relaxed">
+                  {{ stats.pending_overrides }} student override requests awaiting librarian approval.
+                </p>
               </div>
             </div>
-            <div class="flex items-start space-x-3 p-3.5 bg-blue-50/50 border border-blue-100/60 rounded-2xl text-left">
-              <AlertCircle class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+
+            <!-- Pending Support Complaints -->
+            <div 
+              @click="$router.push('/librarian/support')"
+              class="flex items-start space-x-3 p-3.5 bg-purple-50/60 border border-purple-100 rounded-2xl cursor-pointer hover:bg-purple-50 transition-all group"
+            >
+              <MessageSquare class="w-4.5 h-4.5 text-purple-600 mt-0.5 flex-shrink-0 group-hover:scale-110 transition-transform" />
               <div>
-                <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Event Today</h4>
-                <p class="text-[11px] text-blue-700 mt-1 font-semibold">Study Workshop is scheduled for 3:00 PM</p>
+                <h4 class="text-xs font-bold text-purple-900 uppercase tracking-wider">Helpdesk Tickets</h4>
+                <p class="text-[11px] text-purple-700 mt-0.5 font-medium leading-relaxed">
+                  {{ stats.pending_tickets }} student support tickets need attention.
+                </p>
               </div>
             </div>
           </div>
@@ -216,51 +237,99 @@
       </div>
     </div>
 
-    <!-- Today's Schedule -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 relative">
+    <!-- Quick Workspace Operations -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 relative text-left">
       <div v-if="loading" class="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10 rounded-xl">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-650"></div>
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
       </div>
-      <div class="p-6 border-b border-gray-100">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-bold text-slate-700">Upcoming Schedule</h2>
-          <div class="flex items-center space-x-1 p-1 bg-slate-100 rounded-xl">
-            <button class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 shadow-sm cursor-pointer">
-              All
-            </button>
-            <button class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors cursor-pointer">
-              Events
-            </button>
-            <button class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors cursor-pointer">
-              Maintenance
-            </button>
-          </div>
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-slate-700">Librarian Operations & Quick Tools</h2>
+          <p class="text-[11px] text-slate-400 font-medium mt-0.5">Quick access to essential library management features</p>
         </div>
       </div>
       <div class="p-6">
-        <div v-if="todaySchedule.length === 0 && !loading" class="text-center py-8 text-slate-400 text-sm">
-          No schedule items for today.
-        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div
-            v-for="event in todaySchedule"
-            :key="event.id"
-            class="p-4 border-l-4 bg-slate-50 border-y border-r border-slate-100/50 rounded-r-2xl hover:shadow-md hover:border-slate-200/80 transition-all text-left flex flex-col justify-between"
-            :class="event.color"
+          <router-link
+            :to="{ name: 'librarian-live-map' }"
+            class="p-5 bg-emerald-50/40 hover:bg-emerald-50/90 border border-emerald-100/80 rounded-2xl transition-all group flex flex-col justify-between"
           >
             <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ event.time }}</span>
-                <component :is="event.icon" class="w-4 h-4 text-slate-400" />
+              <div class="flex items-center justify-between mb-3">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-100/80 text-emerald-800 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Live View
+                </span>
+                <MapPin class="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform" />
               </div>
-              <h4 class="font-bold text-slate-700 text-xs leading-normal">{{ event.title }}</h4>
-              <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">{{ event.description }}</p>
+              <h4 class="font-bold text-slate-800 text-sm mb-1">Live Seat Map</h4>
+              <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Real-time seat occupancy & layout monitor across all floors.</p>
             </div>
-            <div v-if="event.joinedCount !== undefined" class="mt-3 flex items-center text-[10px] font-bold text-slate-500/80 bg-slate-200/50 rounded-full px-2 py-0.5 w-max">
-               <Users class="w-3.5 h-3.5 mr-1 text-slate-400" />
-               <span>{{ event.joinedCount }} joined</span>
+            <div class="mt-4 flex items-center text-xs font-bold text-emerald-700">
+              <span>Open Seat Map</span>
+              <span class="ml-1 group-hover:translate-x-1 transition-transform">→</span>
             </div>
-          </div>
+          </router-link>
+
+          <router-link
+            to="/librarian/attendance"
+            class="p-5 bg-blue-50/40 hover:bg-blue-50/90 border border-blue-100/80 rounded-2xl transition-all group flex flex-col justify-between"
+          >
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="px-2.5 py-0.5 bg-blue-100/80 text-blue-800 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  Today's Logs
+                </span>
+                <UserCheck class="w-5 h-5 text-blue-600 group-hover:scale-110 transition-transform" />
+              </div>
+              <h4 class="font-bold text-slate-800 text-sm mb-1">Student Attendance</h4>
+              <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Track student check-in times, check-outs, and active durations.</p>
+            </div>
+            <div class="mt-4 flex items-center text-xs font-bold text-blue-700">
+              <span>View Attendance</span>
+              <span class="ml-1 group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </router-link>
+
+          <router-link
+            to="/librarian/sections"
+            class="p-5 bg-amber-50/40 hover:bg-amber-50/90 border border-amber-100/80 rounded-2xl transition-all group flex flex-col justify-between"
+          >
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="px-2.5 py-0.5 bg-amber-100/80 text-amber-800 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  QR Cards
+                </span>
+                <Printer class="w-5 h-5 text-amber-600 group-hover:scale-110 transition-transform" />
+              </div>
+              <h4 class="font-bold text-slate-800 text-sm mb-1">Print QR Codes</h4>
+              <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Print subsection QR codes with seat names & academic levels.</p>
+            </div>
+            <div class="mt-4 flex items-center text-xs font-bold text-amber-700">
+              <span>Print Cards</span>
+              <span class="ml-1 group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </router-link>
+
+          <router-link
+            to="/librarian/support"
+            class="p-5 bg-rose-50/40 hover:bg-rose-50/90 border border-rose-100/80 rounded-2xl transition-all group flex flex-col justify-between"
+          >
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="px-2.5 py-0.5 bg-rose-100/80 text-rose-800 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  Helpdesk
+                </span>
+                <MessageSquare class="w-5 h-5 text-rose-600 group-hover:scale-110 transition-transform" />
+              </div>
+              <h4 class="font-bold text-slate-800 text-sm mb-1">Student Complaints</h4>
+              <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Review and resolve reported seat or library issues.</p>
+            </div>
+            <div class="mt-4 flex items-center text-xs font-bold text-rose-700">
+              <span>Manage Helpdesk</span>
+              <span class="ml-1 group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </router-link>
         </div>
       </div>
     </div>
@@ -268,7 +337,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuth } from '@/shared/composables/useAuth';
 import {
   Calendar,
@@ -279,7 +348,12 @@ import {
   AlertCircle,
   MoreVertical,
   BookOpen,
-  MessageSquare
+  MessageSquare,
+  MapPin,
+  Printer,
+  AlertTriangle,
+  ShieldAlert,
+  Wrench
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 import { format } from 'date-fns';
@@ -309,7 +383,9 @@ const stats = ref({
   totalBooks: 0,
   totalEvents: 0,
   maintenanceSeats: 0,
-  pending_tickets: 0
+  pending_tickets: 0,
+  pending_overrides: 0,
+  overstay_count: 0
 });
 
 interface RecentBooking {
@@ -339,8 +415,8 @@ const occupancyRate = computed(() => {
   return Math.round((stats.value.activeStudents / stats.value.totalSeats) * 100);
 });
 
-const fetchDashboardData = async () => {
-  loading.value = true;
+const fetchDashboardData = async (isSilent = false) => {
+  if (!isSilent) loading.value = true;
   try {
     const data = await librarianAPI.getDashboard();
     
@@ -355,7 +431,9 @@ const fetchDashboardData = async () => {
       totalBooks: data.stats.total_books || 0,
       totalEvents: data.stats.total_events || 0,
       maintenanceSeats: data.stats.maintenance_seats || 0,
-      pending_tickets: data.stats.pending_tickets || 0
+      pending_tickets: data.stats.pending_tickets || 0,
+      pending_overrides: data.stats.pending_overrides || 0,
+      overstay_count: data.stats.overstay_count || 0
     };
 
     // Map recent bookings
@@ -388,7 +466,7 @@ const fetchDashboardData = async () => {
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
   } finally {
-    loading.value = false;
+    if (!isSilent) loading.value = false;
   }
 };
 
@@ -403,25 +481,20 @@ const getProfilePictureUrl = (path: string) => {
   return `/storage/${path}`;
 };
 
+let pollDashboardTimer: any = null;
+
 onMounted(() => {
   fetchDashboardData();
+  pollDashboardTimer = setInterval(() => {
+    fetchDashboardData(true);
+  }, 5000);
 });
 
-const todaySchedule = computed(() => {
-  const schedule = [
-    {
-      id: 'open',
-      time: '08:00 AM',
-      title: 'Library Opens',
-      description: 'Regular opening hours',
-      icon: Building2,
-      color: 'border-l-blue-500',
-      joinedCount: undefined
-    },
-    ...upcomingEvents.value
-  ];
-  return schedule;
+onUnmounted(() => {
+  if (pollDashboardTimer) clearInterval(pollDashboardTimer);
 });
+
+
 </script>
 
 <style scoped>

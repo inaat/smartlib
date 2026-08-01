@@ -53,9 +53,9 @@
               <span>Due: {{ formatDate(reservation.due_date) }}</span>
             </div>
             <div class="flex items-center">
-              <AlertCircle class="w-4 h-4 mr-2 flex-shrink-0" :class="getDaysRemainingColor(reservation.due_date)" />
-              <span class="font-semibold uppercase tracking-wide text-[10px]" :class="getDaysRemainingColor(reservation.due_date)">
-                {{ getDaysRemaining(reservation.due_date) }}
+              <AlertCircle class="w-4 h-4 mr-2 flex-shrink-0" :class="getDaysRemainingColor(reservation)" />
+              <span class="font-semibold uppercase tracking-wide text-[10px]" :class="getDaysRemainingColor(reservation)">
+                {{ getDaysRemaining(reservation) }}
               </span>
             </div>
           </div>
@@ -181,9 +181,11 @@ const formatDate = (date: string) => {
   });
 };
 
-const getDaysRemaining = (dueDate: string) => {
-  if (!dueDate) return 'N/A';
-  const due = new Date(dueDate);
+const getDaysRemaining = (reservation: any) => {
+  if (reservation?.status === 'returned') return 'Book Returned';
+  if (reservation?.status === 'rejected') return 'Request Rejected';
+  if (!reservation?.due_date) return 'N/A';
+  const due = new Date(reservation.due_date);
   const now = new Date();
   const diffTime = due.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -193,14 +195,16 @@ const getDaysRemaining = (dueDate: string) => {
   return `${diffDays} days remaining`;
 };
 
-const getDaysRemainingColor = (dueDate: string) => {
-  if (!dueDate) return 'text-slate-400';
-  const due = new Date(dueDate);
+const getDaysRemainingColor = (reservation: any) => {
+  if (reservation?.status === 'returned') return 'text-slate-400';
+  if (reservation?.status === 'rejected') return 'text-slate-400';
+  if (!reservation?.due_date) return 'text-slate-400';
+  const due = new Date(reservation.due_date);
   const now = new Date();
   const diffTime = due.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  if (diffDays < 0) return 'text-red-650';
+  if (diffDays < 0 || reservation?.status === 'overdue') return 'text-red-650';
   if (diffDays <= 2) return 'text-orange-655';
   return 'text-green-655';
 };

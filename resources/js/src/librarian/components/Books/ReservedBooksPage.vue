@@ -95,8 +95,14 @@
               <!-- Date Logs -->
               <td class="px-6 py-4 whitespace-nowrap text-xs font-semibold">
                 <div class="text-slate-500">Reserved: <span class="text-slate-700 font-bold">{{ formatDate(reservation.created_at) }}</span></div>
-                <div class="mt-1" :class="getDueDateColor(reservation.due_date)">
-                  Due Date: <span class="font-bold">{{ formatDate(reservation.due_date) }}</span>
+                <div class="mt-1 flex items-center gap-1.5" :class="getDueDateColor(reservation)">
+                  <span>Due Date: <span class="font-bold">{{ formatDate(reservation.due_date) }}</span></span>
+                  <span
+                    v-if="isOverdueReservation(reservation)"
+                    class="px-2 py-0.5 text-[9px] font-extrabold bg-rose-100 text-rose-700 border border-rose-200 rounded-md uppercase tracking-wider inline-flex items-center gap-1"
+                  >
+                    <AlertTriangle class="w-2.5 h-2.5" /> Overdue
+                  </span>
                 </div>
               </td>
               <!-- Status Badge -->
@@ -112,31 +118,44 @@
               </td>
               <!-- Actions -->
               <td class="px-6 py-4 whitespace-nowrap text-right text-xs font-bold">
-                <div v-if="reservation.status === 'pending'" class="flex justify-end gap-2">
+                <div class="flex items-center justify-end gap-2">
+                  <template v-if="reservation.status === 'pending'">
+                    <button
+                      @click="approveReservation(reservation)"
+                      :disabled="processing === reservation.id"
+                      class="px-2.5 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      @click="rejectReservation(reservation)"
+                      :disabled="processing === reservation.id"
+                      class="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  </template>
                   <button
-                    @click="approveReservation(reservation)"
+                    v-else-if="reservation.status === 'pending_return'"
+                    @click="approveReturn(reservation)"
                     :disabled="processing === reservation.id"
-                    class="px-2.5 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors cursor-pointer disabled:opacity-50"
+                    class="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    Approve
+                    {{ processing === reservation.id ? 'Processing...' : 'Approve Return' }}
                   </button>
+
+                  <!-- Send Return Reminder Notification -->
                   <button
-                    @click="rejectReservation(reservation)"
+                    v-if="reservation.status !== 'returned' && reservation.status !== 'rejected'"
+                    @click="sendNotification(reservation)"
                     :disabled="processing === reservation.id"
-                    class="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer disabled:opacity-50"
+                    class="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50"
+                    title="Send Return Reminder Notification to Student"
                   >
-                    Reject
+                    <Bell class="w-3.5 h-3.5" />
+                    <span>Notify Student</span>
                   </button>
                 </div>
-                <button
-                  v-else-if="reservation.status === 'pending_return'"
-                  @click="approveReturn(reservation)"
-                  :disabled="processing === reservation.id"
-                  class="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  {{ processing === reservation.id ? 'Processing...' : 'Approve Return' }}
-                </button>
-                <span v-else class="text-slate-400 font-normal">-</span>
               </td>
             </tr>
           </tbody>
@@ -151,7 +170,9 @@ import { ref, computed, onMounted } from 'vue';
 import { 
   Search, 
   RefreshCw, 
-  Book as BookIcon
+  Book as BookIcon,
+  Bell,
+  AlertTriangle
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 import { useSwal } from '@/shared/composables/useSwal';
@@ -237,6 +258,25 @@ const approveReturn = async (reservation: any) => {
   }
 };
 
+const sendNotification = async (reservation: any) => {
+  if (!await showConfirm(
+    'Send Return Reminder',
+    `Send a return reminder notification to ${reservation.user?.name} for "${reservation.book?.title}"?`,
+    'Yes, Send Reminder'
+  )) return;
+
+  processing.value = reservation.id;
+  try {
+    await librarianAPI.notifyStudent(reservation.id);
+    showSuccess('Notification Sent', `Return reminder has been sent to ${reservation.user?.name}.`);
+  } catch (error: any) {
+    console.error('Error sending notification:', error);
+    showError('Failed to Send', error.response?.data?.message || 'Failed to send return reminder.');
+  } finally {
+    processing.value = null;
+  }
+};
+
 const formatDate = (date: string) => {
   if (!date) return 'N/A';
   return new Date(date).toLocaleDateString('en-US', {
@@ -246,12 +286,22 @@ const formatDate = (date: string) => {
   });
 };
 
-const getDueDateColor = (dueDate: string) => {
-  if (!dueDate) return 'text-slate-400';
-  const due = new Date(dueDate);
+const getDueDateColor = (reservation: any) => {
+  if (!reservation?.due_date) return 'text-slate-400';
+  if (reservation.status === 'returned') return 'text-slate-600';
+  const due = new Date(reservation.due_date);
   const now = new Date();
-  if (due < now) return 'text-red-600 font-bold';
-  return 'text-slate-400';
+  if (due < now || reservation.status === 'overdue') return 'text-rose-600 font-bold';
+  return 'text-slate-500';
+};
+
+const isOverdueReservation = (reservation: any) => {
+  if (reservation.status === 'returned') return false;
+  if (reservation.status === 'overdue') return true;
+  if (!reservation?.due_date) return false;
+  const due = new Date(reservation.due_date);
+  const now = new Date();
+  return due < now;
 };
 
 const getStatusColor = (status: string) => {

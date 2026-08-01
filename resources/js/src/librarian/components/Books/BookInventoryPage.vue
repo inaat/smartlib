@@ -185,17 +185,22 @@
 
     <!-- Add / Edit Book Modal Dialog -->
     <div v-if="isAddModalOpen" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in" @click="isAddModalOpen = false"></div>
-      <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-100 text-left animate-in duration-200">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" @click="isAddModalOpen = false"></div>
+      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-100 text-left animate-in duration-200">
         
-        <!-- Header -->
-        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/20">
-          <div>
-            <h3 class="text-base font-bold text-slate-700 tracking-tight leading-none mb-1.5">{{ isEditing ? 'Edit Book Details' : 'Add New Book' }}</h3>
-            <p class="text-[10px] text-slate-400 font-semibold">Provide the inventory parameters for this publication.</p>
+        <!-- Modal Header (Sleek Green Gradient) -->
+        <div class="px-6 py-5 bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 text-white flex items-center justify-between text-left">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <BookOpen class="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white tracking-wide">{{ isEditing ? 'Edit Book Details' : 'Add New Book' }}</h3>
+              <p class="text-[11px] text-emerald-100/80 font-medium">Provide the inventory parameters for this publication.</p>
+            </div>
           </div>
-          <button @click="isAddModalOpen = false" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-150 transition-colors cursor-pointer">
-            <X class="w-4 h-4" />
+          <button @click="isAddModalOpen = false" class="p-2 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-white/80 hover:text-white">
+            <X class="w-5 h-5" />
           </button>
         </div>
 
@@ -250,7 +255,20 @@
                   <option value="Finance">Finance</option>
                   <option value="Management">Management</option>
                   <option value="Economics">Economics</option>
+                  <option value="Other">Other</option>
                 </select>
+
+                <!-- Custom Category Input if Other selected -->
+                <div v-if="newBook.category === 'Other'" class="mt-2.5">
+                  <label class="block text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-1.5">Enter Category Name *</label>
+                  <input 
+                    v-model="customCategory" 
+                    type="text" 
+                    required 
+                    placeholder="e.g. Computer Science, General Knowledge"
+                    class="w-full px-4 py-2.5 bg-white border border-emerald-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
+                  />
+                </div>
               </div>
             </div>
 
@@ -362,7 +380,8 @@ import {
   RefreshCw,
   Edit2,
   Trash2,
-  X
+  X,
+  BookOpen
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 import { useSwal } from '@/shared/composables/useSwal';
@@ -375,6 +394,7 @@ const submitting = ref(false);
 const isAddModalOpen = ref(false);
 const isEditing = ref(false);
 const editingBookId = ref<number | null>(null);
+const customCategory = ref('');
 const searchQuery = ref('');
 const filterType = ref('all');
 const filterCategory = ref('all');
@@ -405,10 +425,11 @@ const submitBook = async () => {
   submitting.value = true;
   try {
     const formData = new FormData();
+    const finalCategory = newBook.value.category === 'Other' ? customCategory.value.trim() : newBook.value.category;
     formData.append('title', newBook.value.title);
     formData.append('author', newBook.value.author);
     formData.append('isbn', newBook.value.isbn);
-    formData.append('category', newBook.value.category);
+    formData.append('category', finalCategory);
     formData.append('type', newBook.value.type);
     formData.append('description', newBook.value.description);
     formData.append('status', newBook.value.status);
@@ -455,6 +476,7 @@ const submitBook = async () => {
 const resetForm = () => {
   isEditing.value = false;
   editingBookId.value = null;
+  customCategory.value = '';
   newBook.value = {
     title: '',
     author: '',
@@ -473,11 +495,16 @@ const resetForm = () => {
 const handleEdit = (book: any) => {
   isEditing.value = true;
   editingBookId.value = book.id;
+  
+  const standardCategories = ['Accounting', 'Audit', 'Taxation', 'Law', 'Finance', 'Management', 'Economics'];
+  const isStandard = standardCategories.includes(book.category);
+  customCategory.value = isStandard ? '' : (book.category || '');
+
   newBook.value = {
     title: book.title,
     author: book.author,
     isbn: book.isbn,
-    category: book.category,
+    category: isStandard ? book.category : 'Other',
     type: book.type,
     description: book.description,
     location: book.location || '',

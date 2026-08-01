@@ -358,7 +358,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 import { 
   Monitor, 
   Zap, 
@@ -445,7 +445,7 @@ const seatStats = computed(() => {
   };
 });
 
-const fetchData = async () => {
+const fetchData = async (isSilent = false) => {
   if (!selectedLibraryId.value) {
     seats.value = [];
     floors.value = [];
@@ -453,7 +453,7 @@ const fetchData = async () => {
     tables.value = [];
     return;
   }
-  loading.value = true;
+  if (!isSilent) loading.value = true;
   try {
     const params: any = { library_id: selectedLibraryId.value };
     if (searchQuery.value) params.search = searchQuery.value;
@@ -477,7 +477,7 @@ const fetchData = async () => {
   } catch (error) {
     console.error('Error fetching data:', error);
   } finally {
-    loading.value = false;
+    if (!isSilent) loading.value = false;
   }
 };
 
@@ -849,7 +849,18 @@ const printActiveSectionQRs = () => {
   printWindow.document.close();
 };
 
+let pollSuperAdminSeatsTimer: any = null;
+
 onMounted(() => {
   fetchData();
+  pollSuperAdminSeatsTimer = setInterval(() => {
+    if (!isLayoutMode.value && !showCreateModal.value && !selectedSeat.value) {
+      fetchData(true);
+    }
+  }, 5000);
+});
+
+onUnmounted(() => {
+  if (pollSuperAdminSeatsTimer) clearInterval(pollSuperAdminSeatsTimer);
 });
 </script>

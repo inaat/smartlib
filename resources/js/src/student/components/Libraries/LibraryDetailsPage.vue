@@ -166,16 +166,50 @@
             <p class="text-xs text-blue-800 leading-relaxed font-semibold">{{ userReview.comment }}</p>
           </div>
 
+          <!-- Other Reviews Header & Sort Sub-Tabs -->
+          <div v-if="reviews.length > 0" class="flex items-center justify-between pt-2 pb-1 text-left">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Student Reviews ({{ reviews.length }})</h4>
+            <div class="flex items-center space-x-1 p-0.5 bg-slate-100/80 rounded-xl text-[11px] font-semibold">
+              <button 
+                @click="reviewSortMode = 'newest'; visibleReviewCount = 3"
+                :class="[
+                  'px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold',
+                  reviewSortMode === 'newest' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                ]"
+              >
+                Newest
+              </button>
+              <button 
+                @click="reviewSortMode = 'popular'; visibleReviewCount = 3"
+                :class="[
+                  'px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold',
+                  reviewSortMode === 'popular' ? 'bg-white text-emerald-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                ]"
+              >
+                Popular
+              </button>
+              <button 
+                @click="reviewSortMode = 'lowest'; visibleReviewCount = 3"
+                :class="[
+                  'px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold',
+                  reviewSortMode === 'lowest' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                ]"
+              >
+                Lowest
+              </button>
+            </div>
+          </div>
+
           <!-- Other Reviews -->
           <div class="space-y-4">
             <div v-if="loadingReviews" class="flex justify-center py-6">
               <RefreshCw class="w-5 h-5 text-blue-600 animate-spin" />
             </div>
-            <div v-else-if="reviews.length > 0" class="divide-y divide-slate-100">
+            <div v-else-if="otherReviewsSorted.length > 0" class="divide-y divide-slate-100">
               <div 
-                v-for="review in reviews.filter(r => r.user_id !== user?.id)" 
+                v-for="review in displayedOtherReviews" 
                 :key="review.id"
-                class="py-4.5 first:pt-0 last:pb-0"
+                class="py-4.5 first:pt-0 last:pb-0 text-left"
               >
                 <div class="flex items-start space-x-3">
                   <img 
@@ -197,6 +231,17 @@
                     <p class="text-xs text-slate-500 leading-relaxed">{{ review.comment }}</p>
                   </div>
                 </div>
+              </div>
+
+              <!-- View More Reviews Button -->
+              <div v-if="hasMoreOtherReviews" class="pt-4 text-center">
+                <button 
+                  @click="visibleReviewCount += 3"
+                  class="px-5 py-2 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 font-bold text-xs rounded-xl border border-slate-200 hover:border-emerald-200 transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>View More Reviews ({{ otherReviewsSorted.length - visibleReviewCount }} remaining)</span>
+                  <ChevronDown class="w-4 h-4" />
+                </button>
               </div>
             </div>
             <div v-else-if="!userReview" class="text-center py-10 bg-slate-50/50 rounded-xl border border-dashed border-slate-200/80">
@@ -291,7 +336,7 @@ import {
   MapPin, Clock, Users, CheckCircle, Wifi, Coffee, 
   Printer, BookOpen, Zap, Wind, Lock, Camera, 
   AlertCircle, Phone, Mail, ChevronRight, Star,
-  RefreshCw, Trash2
+  RefreshCw, Trash2, ChevronDown
 } from 'lucide-vue-next';
 import { useAuth } from '@/shared/composables/useAuth';
 import { useSwal } from '@/shared/composables/useSwal';
@@ -307,13 +352,40 @@ const loading = ref(true);
 const reviews = ref<any[]>([]);
 const loadingReviews = ref(false);
 const submittingReview = ref(false);
-const newReview = ref({
-  rating: 0,
-  comment: ''
-});
+const newReview = ref({ rating: 0, comment: '' });
+const reviewSortMode = ref<'newest' | 'popular' | 'lowest'>('newest');
+const visibleReviewCount = ref(3);
 
 const userReview = computed(() => {
   return reviews.value.find(r => r.user_id === user.value?.id);
+});
+
+const otherReviewsSorted = computed(() => {
+  let list = [...reviews.value.filter(r => r.user_id !== user.value?.id)];
+
+  if (reviewSortMode.value === 'popular') {
+    list.sort((a, b) => {
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  } else if (reviewSortMode.value === 'lowest') {
+    list.sort((a, b) => {
+      if (a.rating !== b.rating) return a.rating - b.rating;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  } else {
+    list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  return list;
+});
+
+const displayedOtherReviews = computed(() => {
+  return otherReviewsSorted.value.slice(0, visibleReviewCount.value);
+});
+
+const hasMoreOtherReviews = computed(() => {
+  return visibleReviewCount.value < otherReviewsSorted.value.length;
 });
 
 const libraryCapacity = computed(() => {

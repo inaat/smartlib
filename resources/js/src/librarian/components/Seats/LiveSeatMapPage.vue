@@ -615,8 +615,8 @@ let textInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
   fetchData();
-  // Auto-refresh seat data every 15 seconds
-  refreshInterval = setInterval(() => fetchData(true), 15000);
+  // Auto-refresh seat data silently every 5 seconds
+  refreshInterval = setInterval(() => fetchData(true), 5000);
   // Update "last updated" text every 5 seconds
   textInterval = setInterval(updateLastUpdatedText, 5000);
 });

@@ -193,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { 
   Users, 
@@ -284,9 +284,9 @@ const getProgressBarClass = (lib: any) => {
   return 'bg-purple-600';
 };
 
-const fetchDashboardData = async () => {
+const fetchDashboardData = async (isSilent = false) => {
   try {
-    loading.value = true;
+    if (!isSilent) loading.value = true;
     const [data, libs] = await Promise.all([
       superadminAPI.getDashboard({ range: 'today' }),
       superadminAPI.getLibraries()
@@ -298,7 +298,7 @@ const fetchDashboardData = async () => {
   } catch (error) {
     console.error('Failed to fetch dashboard data:', error);
   } finally {
-    loading.value = false;
+    if (!isSilent) loading.value = false;
   }
 };
 
@@ -332,8 +332,17 @@ const handleAction = (action: any) => {
   }
 };
 
+let pollSuperAdminTimer: any = null;
+
 onMounted(() => {
   fetchDashboardData();
+  pollSuperAdminTimer = setInterval(() => {
+    fetchDashboardData(true);
+  }, 5000);
+});
+
+onUnmounted(() => {
+  if (pollSuperAdminTimer) clearInterval(pollSuperAdminTimer);
 });
 </script>
 

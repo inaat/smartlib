@@ -118,7 +118,7 @@
               >
                 <span v-if="submitting" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                 <ShieldAlert v-else class="w-4 h-4" />
-                <span>{{ submitting ? 'Submitting Request...' : 'Request Override from Librarian' }}</span>
+                <span>{{ submitting ? 'Submitting Request...' : 'Request Override' }}</span>
               </button>
             </div>
 
@@ -554,7 +554,8 @@ const maxDate = computed(() => {
 
 const userOverrideRequests = ref<any[]>([]);
 
-const fetchSeats = async () => {
+const fetchSeats = async (isSilent = false) => {
+  if (!isSilent) loading.value = true;
   try {
     const id = parseInt(route.params.libraryId as string);
     const response = await studentAPI.getSeats(id);
@@ -574,7 +575,7 @@ const fetchSeats = async () => {
   } catch (error) {
     console.error('Failed to fetch seats:', error);
   } finally {
-    loading.value = false;
+    if (!isSilent) loading.value = false;
   }
 };
 
@@ -887,15 +888,21 @@ const goToBookings = () => {
   router.push('/student/my-bookings');
 };
 
+let seatsPollTimer: any = null;
+
 onMounted(() => {
   fetchSeats();
   timer = setInterval(() => {
     updateLiveTime();
   }, 1000);
+  seatsPollTimer = setInterval(() => {
+    fetchSeats(true);
+  }, 5000);
 });
 
 onUnmounted(() => {
   if (timer) clearInterval(timer);
+  if (seatsPollTimer) clearInterval(seatsPollTimer);
 });
 </script>
 

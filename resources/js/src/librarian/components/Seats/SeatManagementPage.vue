@@ -43,7 +43,7 @@
 
         <!-- Refresh Button -->
         <button
-          @click="fetchData"
+          @click="fetchData()"
           :disabled="loading"
           class="p-2.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-2xl transition-all border border-slate-200 cursor-pointer shadow-sm active:scale-98"
           title="Refresh Data"
@@ -452,7 +452,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
   RefreshCw, Plus, Armchair, Trash2, ChevronDown
 } from 'lucide-vue-next';
@@ -678,8 +678,8 @@ watch(
 );
 
 // Fetch Data
-const fetchData = async () => {
-  loading.value = true;
+const fetchData = async (isSilent = false) => {
+  if (!isSilent) loading.value = true;
   try {
     const [seatsData, floorsData, sectionsData, tablesData, libraryInfo] = await Promise.all([
       librarianAPI.getSeats(),
@@ -699,10 +699,12 @@ const fetchData = async () => {
       localStorage.setItem('smartlib_global_table_capacity', libraryInfo.table_capacity.toString());
     }
   } catch (error) {
-    console.error('Failed to load seats manager data:', error);
-    showError('Error', 'Failed to load visual layout designer data');
+    if (!isSilent) {
+      console.error('Failed to load seats manager data:', error);
+      showError('Error', 'Failed to load visual layout designer data');
+    }
   } finally {
-    loading.value = false;
+    if (!isSilent) loading.value = false;
   }
 };
 
@@ -1338,5 +1340,18 @@ defineExpose({
   printActiveSectionQRs
 });
 
-onMounted(fetchData);
+let autoPollTimer: any = null;
+
+onMounted(() => {
+  fetchData();
+  autoPollTimer = setInterval(() => {
+    if (!isLayoutMode.value && !showSeatModal.value && !showTableModal.value && !showCabinModal.value && !selectedSeat.value) {
+      fetchData(true);
+    }
+  }, 5000);
+});
+
+onUnmounted(() => {
+  if (autoPollTimer) clearInterval(autoPollTimer);
+});
 </script>

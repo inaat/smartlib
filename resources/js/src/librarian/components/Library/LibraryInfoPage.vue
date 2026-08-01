@@ -473,23 +473,55 @@
             </div>
           </div>
 
-          <!-- Search and Filter controls -->
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="relative flex-1 w-full">
-              <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                v-model="reviewSearch"
-                type="text"
-                placeholder="Search reviews by student name, CRN, or comment..."
-                class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
-              />
+          <!-- Search, Sort & Filter controls -->
+          <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 text-left">
+            <!-- Sort Pills -->
+            <div class="flex items-center space-x-1.5 p-1 bg-slate-100/90 rounded-xl text-xs font-semibold">
+              <button 
+                @click="reviewSortMode = 'newest'; visibleReviewCount = 3"
+                :class="[
+                  'px-3.5 py-1.5 rounded-lg transition-all cursor-pointer font-bold',
+                  reviewSortMode === 'newest' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                ]"
+              >
+                Newest Reviews
+              </button>
+              <button 
+                @click="reviewSortMode = 'popular'; visibleReviewCount = 3"
+                :class="[
+                  'px-3.5 py-1.5 rounded-lg transition-all cursor-pointer font-bold',
+                  reviewSortMode === 'popular' ? 'bg-white text-emerald-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                ]"
+              >
+                Popular Reviews
+              </button>
+              <button 
+                @click="reviewSortMode = 'lowest'; visibleReviewCount = 3"
+                :class="[
+                  'px-3.5 py-1.5 rounded-lg transition-all cursor-pointer font-bold',
+                  reviewSortMode === 'lowest' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                ]"
+              >
+                Lowest Rated
+              </button>
             </div>
-            <div class="flex items-center space-x-3 w-full sm:w-auto">
+
+            <!-- Search and Rating Dropdown -->
+            <div class="flex items-center space-x-2.5 flex-1 max-w-md">
+              <div class="relative flex-1">
+                <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  v-model="reviewSearch"
+                  type="text"
+                  placeholder="Search student reviews..."
+                  class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+                />
+              </div>
               <select
                 v-model="reviewRatingFilter"
                 class="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
               >
-                <option value="all">All Ratings</option>
+                <option value="all">All Stars</option>
                 <option value="5">5 Stars</option>
                 <option value="4">4 Stars</option>
                 <option value="3">3 Stars</option>
@@ -519,7 +551,7 @@
 
           <div v-else class="space-y-4">
             <div
-              v-for="review in filteredReviewsList"
+              v-for="review in displayedReviewsList"
               :key="review.id"
               class="p-5 rounded-2xl border border-slate-100 hover:border-emerald-100/80 bg-white shadow-sm transition-all text-left space-y-3"
             >
@@ -561,6 +593,17 @@
               <p class="text-xs text-slate-600 font-normal leading-relaxed pl-1">
                 {{ review.comment || 'No written comment provided.' }}
               </p>
+            </div>
+
+            <!-- View More Reviews Button -->
+            <div v-if="hasMoreReviews" class="pt-4 text-center">
+              <button 
+                @click="visibleReviewCount += 3"
+                class="px-6 py-2.5 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 font-bold text-xs rounded-xl border border-slate-200 hover:border-emerald-200 transition-all cursor-pointer inline-flex items-center gap-2 shadow-sm"
+              >
+                <span>View More Reviews ({{ filteredReviewsList.length - visibleReviewCount }} remaining)</span>
+                <ChevronDown class="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -723,7 +766,8 @@ import {
   Navigation,
   Star,
   MessageSquare,
-  Search
+  Search,
+  ChevronDown
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 
@@ -1172,6 +1216,8 @@ const reviewsData = ref({
 });
 const reviewSearch = ref('');
 const reviewRatingFilter = ref<string | number>('all');
+const reviewSortMode = ref<'newest' | 'popular' | 'lowest'>('newest');
+const visibleReviewCount = ref(3);
 
 const getStarPercent = (star: number) => {
   if (!reviewsData.value.total_reviews) return 0;
@@ -1197,7 +1243,7 @@ const fetchReviews = async () => {
 };
 
 const filteredReviewsList = computed(() => {
-  let list = reviewsData.value.reviews || [];
+  let list = [...(reviewsData.value.reviews || [])];
 
   if (reviewRatingFilter.value !== 'all') {
     const targetRating = Number(reviewRatingFilter.value);
@@ -1214,7 +1260,29 @@ const filteredReviewsList = computed(() => {
     });
   }
 
+  if (reviewSortMode.value === 'popular') {
+    list.sort((a, b) => {
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  } else if (reviewSortMode.value === 'lowest') {
+    list.sort((a, b) => {
+      if (a.rating !== b.rating) return a.rating - b.rating;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  } else {
+    list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
   return list;
+});
+
+const displayedReviewsList = computed(() => {
+  return filteredReviewsList.value.slice(0, visibleReviewCount.value);
+});
+
+const hasMoreReviews = computed(() => {
+  return visibleReviewCount.value < filteredReviewsList.value.length;
 });
 
 watch(activeTab, (newTab) => {

@@ -123,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { Search, X } from 'lucide-vue-next';
 import { superadminAPI } from '../../services/superadminApi';
 import LibrarySelector from '../Shared/LibrarySelector.vue';
@@ -214,8 +214,18 @@ const formatDateTime = (dateTime: string) => {
   });
 };
 
+let pollBookingsTimer: any = null;
+
 onMounted(() => {
   fetchBookings();
   fetchStats();
+  pollBookingsTimer = setInterval(() => {
+    fetchBookings(pagination.value.current_page || 1);
+    fetchStats();
+  }, 5000);
+});
+
+onUnmounted(() => {
+  if (pollBookingsTimer) clearInterval(pollBookingsTimer);
 });
 </script>

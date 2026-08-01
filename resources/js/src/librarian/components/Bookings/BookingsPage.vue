@@ -471,6 +471,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import {
   Search,
   MapPin,
@@ -489,6 +490,7 @@ import { format } from 'date-fns';
 import { useSwal } from '@/shared/composables/useSwal';
 
 const { showError, showSuccess, showConfirm } = useSwal();
+const route = useRoute();
 
 interface BookingStats {
   [key: string]: number;
@@ -712,8 +714,13 @@ watch(activeSubView, (newVal) => {
 });
 
 onMounted(() => {
-  fetchBookings();
-  fetchStats();
+  if (route.query.tab === 'override_requests') {
+    activeSubView.value = 'override_requests';
+    fetchOverrideRequests();
+  } else {
+    fetchBookings();
+    fetchStats();
+  }
 });
 </script>
 

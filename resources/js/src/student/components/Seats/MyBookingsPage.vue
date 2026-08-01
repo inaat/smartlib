@@ -428,15 +428,21 @@ const handleExtend = (booking: any) => {
   extendModal.value = { show: true, booking };
 };
 
+let pollBookingsTimer: any = null;
+
 onMounted(async () => {
   await loadBookings();
   timer = setInterval(() => {
     now.value = new Date();
   }, 1000);
+  pollBookingsTimer = setInterval(() => {
+    loadBookings();
+  }, 5000);
 });
 
 onUnmounted(() => {
   if (timer) clearInterval(timer);
+  if (pollBookingsTimer) clearInterval(pollBookingsTimer);
 });
 </script>
 

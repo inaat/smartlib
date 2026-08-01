@@ -96,11 +96,21 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto">
-      <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 my-8 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-bold text-gray-900">{{ isEditing ? 'Edit Book' : 'Add New Book' }}</h3>
-          <button @click="closeModal" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+    <div v-if="showModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4" @click.self="closeModal">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-auto overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+        
+        <!-- Modal Header (Sleek Green Gradient) -->
+        <div class="px-6 py-5 bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 text-white flex items-center justify-between text-left">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <BookOpen class="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white tracking-wide">{{ isEditing ? 'Edit Book Details' : 'Add New Book' }}</h3>
+              <p class="text-[11px] text-emerald-100/80 font-medium">Provide the inventory parameters for this publication.</p>
+            </div>
+          </div>
+          <button @click="closeModal" class="p-2 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-white/80 hover:text-white">
             <X class="w-5 h-5" />
           </button>
         </div>
@@ -123,8 +133,23 @@
               <input v-model="form.isbn" type="text" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <input v-model="form.category" type="text" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Science, Fiction" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+              <select v-model="form.category" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                <option value="" disabled>Select Category</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Audit">Audit</option>
+                <option value="Taxation">Taxation</option>
+                <option value="Law">Law</option>
+                <option value="Finance">Finance</option>
+                <option value="Management">Management</option>
+                <option value="Economics">Economics</option>
+                <option value="Other">Other</option>
+              </select>
+
+              <div v-if="form.category === 'Other'" class="mt-2">
+                <label class="block text-xs font-bold text-emerald-700 mb-1">Enter Category Name *</label>
+                <input v-model="customCategory" type="text" required class="w-full px-4 py-2 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="e.g. Science, Fiction, General" />
+              </div>
             </div>
           </div>
 
@@ -193,7 +218,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import { Search, Book as BookIcon, X } from 'lucide-vue-next';
+import { Search, Book as BookIcon, BookOpen, X } from 'lucide-vue-next';
 import { superadminAPI } from '../../services/superadminApi';
 import LibrarySelector from '../Shared/LibrarySelector.vue';
 
@@ -204,6 +229,7 @@ const libraries = ref<any[]>([]);
 const showModal = ref(false);
 const isEditing = ref(false);
 const loading = ref(false);
+const customCategory = ref('');
 
 const form = ref({
   id: null as number | null,
@@ -265,6 +291,7 @@ const handlePdfUpload = (event: Event) => {
 
 const openCreateModal = () => {
   isEditing.value = false;
+  customCategory.value = '';
   form.value = {
     id: null,
     title: '',
@@ -285,13 +312,17 @@ const openCreateModal = () => {
 
 const editBook = (book: any) => {
   isEditing.value = true;
+  const standardCategories = ['Accounting', 'Audit', 'Taxation', 'Law', 'Finance', 'Management', 'Economics'];
+  const isStandard = standardCategories.includes(book.category);
+  customCategory.value = isStandard ? '' : (book.category || '');
+
   form.value = {
     id: book.id,
     title: book.title,
     author: book.author,
     isbn: book.isbn,
     description: book.description,
-    category: book.category,
+    category: isStandard ? book.category : 'Other',
     type: book.type,
     library_id: book.library_id,
     location: book.location,
@@ -314,11 +345,12 @@ const saveBook = async () => {
   loading.value = true;
   try {
     const formData = new FormData();
+    const finalCategory = form.value.category === 'Other' ? customCategory.value.trim() : form.value.category;
     formData.append('title', form.value.title);
     formData.append('author', form.value.author);
     formData.append('isbn', form.value.isbn);
     formData.append('description', form.value.description);
-    formData.append('category', form.value.category);
+    formData.append('category', finalCategory);
     formData.append('type', form.value.type);
     formData.append('library_id', form.value.library_id ? form.value.library_id.toString() : '');
     formData.append('location', form.value.location || '');

@@ -22,6 +22,15 @@ class DashboardController extends Controller
             return redirect()->back()->with('error', 'No library assigned to you');
         }
 
+        $todayStr = \Carbon\Carbon::today()->toDateString();
+        $pendingOverrides = \App\Models\OverrideRequest::whereDate('created_at', $todayStr)
+            ->where('status', 'pending')
+            ->whereHas('seat.floor', function($q) use ($library) {
+                $q->where('library_id', $library->id);
+            })->count();
+
+        $overstayCount = $library->seats()->whereIn('status', ['overstay', 'serious_overstay'])->count();
+
         $stats = [
             'total_seats' => $library->seats()->count(),
             'available_seats' => $library->seats()->where('status', 'available')->count(),
@@ -32,6 +41,8 @@ class DashboardController extends Controller
                 ->where('status', 'booked')
                 ->where('booking_time', '<', now()->subMinutes(30))
                 ->count(),
+            'overstay_count' => $overstayCount,
+            'pending_overrides' => $pendingOverrides,
             'total_books' => $library->books()->count(),
             'digital_books' => $library->books()->where('type', 'digital')->count(),
             'total_events' => $library->events()->count(),

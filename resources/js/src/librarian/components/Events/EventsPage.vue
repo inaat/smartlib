@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 space-y-6">
+  <div class="p-6 space-y-6 font-outfit">
     <!-- Header Controls -->
     <div class="flex justify-end items-center mb-6">
       <div class="flex items-center space-x-3">

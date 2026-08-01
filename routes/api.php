@@ -334,6 +334,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/books/reservations/{id}/approve-return', [\App\Http\Controllers\Librarian\BookReservationController::class, 'approveReturn'])->name('books.reservations.approve-return');
         Route::post('/books/reservations/{id}/approve', [\App\Http\Controllers\Librarian\BookReservationController::class, 'approveReservation'])->name('books.reservations.approve');
         Route::post('/books/reservations/{id}/reject', [\App\Http\Controllers\Librarian\BookReservationController::class, 'rejectReservation'])->name('books.reservations.reject');
+        Route::post('/books/reservations/{id}/notify', [\App\Http\Controllers\Librarian\BookReservationController::class, 'notifyStudent'])->name('books.reservations.notify');
         
         // Book details and actions
         Route::get('/books/{book}', [LibrarianBook::class, 'show'])->name('books.show');

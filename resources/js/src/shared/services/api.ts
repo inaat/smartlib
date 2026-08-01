@@ -612,6 +612,11 @@ export const librarianAPI = {
     return response.data;
   },
 
+  async notifyStudent(reservationId: number) {
+    const response = await api.post(`/librarian/books/reservations/${reservationId}/notify`);
+    return response.data;
+  },
+
   async getAnalytics(params?: any) {
     const response = await api.get('/librarian/analytics', { params });
     return response.data;
