@@ -992,7 +992,7 @@ const buildQRPrintHTML = (title: string, subtitle: string, sectionBlocks: any[])
         const qrUrl = seat.qr_code_url || `/storage/qrcodes/seats/seat-${seat.id}.svg`;
         const displaySeatName = seat.seat_type === 'private_room' 
           ? `CABIN ${seat.cabin_number || seat.seat_number}` 
-          : seat.seat_number;
+          : `SEAT ${seat.seat_number}`;
 
         // Academic Level Determination
         const subObj = seat.seat_subsection || seat.subsection || null;
@@ -1024,7 +1024,7 @@ const buildQRPrintHTML = (title: string, subtitle: string, sectionBlocks: any[])
               <div class="seat-badge">${displaySeatName}</div>
               <div class="meta-info">${sec.name} &bull; ${sec.floorName || ''}</div>
             </div>
-            <div class="scan-footer">Scan to Check-In / Check-Out</div>
+            <div class="scan-footer">Scan to Check-In</div>
           </div>
         `;
       });
