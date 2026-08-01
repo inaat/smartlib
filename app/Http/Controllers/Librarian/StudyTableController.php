@@ -79,12 +79,15 @@ class StudyTableController extends Controller
                 $seatNumber = "{$label}-{$i}-" . uniqid();
             }
 
-            // Generate QR content
-            $qrContent = base64_encode(json_encode([
+            // Generate unique QR content
+            $qrData = [
                 'type' => 'seat',
                 'seat_number' => $seatNumber,
                 'library_id' => $libraryId,
-            ]));
+                'table_id' => $table->id,
+                'uid' => uniqid(),
+            ];
+            $qrContent = base64_encode(json_encode($qrData));
 
             Seat::create([
                 'floor_id' => $validated['floor_id'],
@@ -143,11 +146,14 @@ class StudyTableController extends Controller
                 for ($i = $currentCount + 1; $i <= $newCapacity; $i++) {
                     $seatNumber = "{$table->label}-{$i}";
                     
-                    $qrContent = base64_encode(json_encode([
+                    $qrData = [
                         'type' => 'seat',
                         'seat_number' => $seatNumber,
                         'library_id' => $table->library_id,
-                    ]));
+                        'table_id' => $table->id,
+                        'uid' => uniqid(),
+                    ];
+                    $qrContent = base64_encode(json_encode($qrData));
 
                     Seat::create([
                         'floor_id' => $table->floor_id,
@@ -171,13 +177,29 @@ class StudyTableController extends Controller
             }
         }
 
-        // If label changes, update seat numbers if they match pattern
+        // If label changes, update seat numbers & unique QR codes
         if (isset($validated['label'])) {
             $seats = $table->seats()->get();
             foreach ($seats as $index => $seat) {
                 $num = $index + 1;
+                $newSeatNumber = "{$validated['label']}-{$num}";
+                $qrData = [
+                    'type' => 'seat',
+                    'seat_id' => $seat->id,
+                    'seat_number' => $newSeatNumber,
+                    'library_id' => $table->library_id,
+                    'table_id' => $table->id,
+                ];
+                $qrContent = base64_encode(json_encode($qrData));
+                if (Seat::where('qr_code', $qrContent)->where('id', '!=', $seat->id)->exists()) {
+                    $qrData['uid'] = uniqid();
+                    $qrContent = base64_encode(json_encode($qrData));
+                }
+
                 $seat->update([
-                    'seat_number' => "{$validated['label']}-{$num}"
+                    'seat_number' => $newSeatNumber,
+                    'qr_code' => $qrContent,
+                    'qr_generated_at' => now(),
                 ]);
             }
         }

@@ -40,6 +40,8 @@ class User extends Authenticatable
         'last_checkin_date',
         'last_streak_date',
         'loyalty_points',
+        'weekly_goal_hours',
+        'monthly_goal_hours',
     ];
 
     /**

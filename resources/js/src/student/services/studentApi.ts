@@ -257,6 +257,16 @@ export const studentAPI = {
     }
   },
 
+  async getSubscriptionHistory(): Promise<{ orders: any[]; subscriptions: any[] }> {
+    try {
+      const response = await api.get('/student/subscriptions/history');
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
   async subscribe(planId: number): Promise<any> {
     try {
       const response = await api.post('/student/subscriptions', { plan_id: planId });

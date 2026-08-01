@@ -11,7 +11,7 @@ class LibraryController extends Controller
 {
     public function index()
     {
-        $query = Library::withCount('seats');
+        $query = Library::withCount(['seats', 'reviews']);
         
         // Filter for SuperAdmins
         if (auth()->user()->role === 'super_admin') {
@@ -30,6 +30,8 @@ class LibraryController extends Controller
                 $library->totalSeats = $totalSeats;
                 $library->availableSeats = $availableSeats;
                 $library->currentOccupancy = $occupiedSeats;
+                $library->averageRating = $library->average_rating;
+                $library->reviewsCount = $library->reviews_count ?? 0;
 
                 return $library;
             });

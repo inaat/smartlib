@@ -46,7 +46,7 @@
               </div>
               <div class="text-left leading-none">
                 <p class="text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Capacity</p>
-                <p class="font-bold text-slate-800 text-sm leading-none">{{ library.capacity }} Seats</p>
+                <p class="font-bold text-slate-800 text-sm leading-none">{{ libraryCapacity }} Seats</p>
               </div>
             </div>
             <div class="flex items-center space-x-3">
@@ -55,7 +55,7 @@
               </div>
               <div class="text-left leading-none">
                 <p class="text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Available</p>
-                <p class="font-bold text-slate-800 text-sm leading-none">{{ library.availableSeats }} Seats</p>
+                <p class="font-bold text-slate-800 text-sm leading-none">{{ library.availableSeats || 0 }} Seats</p>
               </div>
             </div>
             <div class="flex items-center space-x-3">
@@ -217,12 +217,12 @@
           <div class="space-y-2 mb-6">
             <div class="flex justify-between text-xs font-medium leading-none">
               <span class="text-slate-400 uppercase tracking-wide">Available Seats</span>
-              <span class="text-green-600">{{ library.availableSeats }} / {{ library.capacity }}</span>
+              <span class="text-green-600">{{ library.availableSeats || 0 }} / {{ libraryCapacity }}</span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
               <div 
                 class="bg-blue-600 h-full rounded-full transition-all duration-500" 
-                :style="{ width: (library.availableSeats / library.totalSeats * 100) + '%' }"
+                :style="{ width: availableSeatsPercent + '%' }"
               ></div>
             </div>
           </div>
@@ -239,9 +239,16 @@
               <Phone class="w-4 h-4 mr-2.5 text-blue-500 flex-shrink-0" />
               <span>{{ library.contact_info?.phone || 'Not available' }}</span>
             </div>
-            <div class="flex items-center text-xs text-slate-655 font-semibold leading-none">
+            <div class="flex items-center text-xs text-slate-600 font-semibold leading-none">
               <Mail class="w-4 h-4 mr-2.5 text-blue-500 flex-shrink-0" />
               <span class="truncate">{{ library.contact_info?.email || 'Not available' }}</span>
+            </div>
+            <div v-if="library.wifi_password" class="flex items-center text-xs font-semibold leading-none text-emerald-700 bg-emerald-50/80 p-3 rounded-xl border border-emerald-100/80">
+              <Wifi class="w-4.5 h-4.5 mr-2.5 text-emerald-600 flex-shrink-0" />
+              <div class="flex flex-col text-left">
+                <span class="text-[9px] uppercase tracking-wider text-emerald-600/80 font-bold">WiFi Password</span>
+                <span class="font-mono text-xs font-bold text-emerald-900 mt-1 select-all">{{ library.wifi_password }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -309,6 +316,18 @@ const userReview = computed(() => {
   return reviews.value.find(r => r.user_id === user.value?.id);
 });
 
+const libraryCapacity = computed(() => {
+  if (!library.value) return 0;
+  return (library.value.capacity && library.value.capacity > 0)
+    ? library.value.capacity
+    : (library.value.totalSeats || 0);
+});
+
+const availableSeatsPercent = computed(() => {
+  if (!library.value || !libraryCapacity.value) return 0;
+  return Math.min(100, Math.round(((library.value.availableSeats || 0) / libraryCapacity.value) * 100));
+});
+
 const fetchReviews = async () => {
   loadingReviews.value = true;
   try {
@@ -372,6 +391,30 @@ const fetchLibrary = async () => {
   }
 };
 
+const parseTimeToMinutes = (timeStr: string) => {
+  if (!timeStr) return null;
+  const str = timeStr.trim();
+  
+  const match12 = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (match12) {
+    let hours = parseInt(match12[1]);
+    const minutes = parseInt(match12[2]);
+    const ampm = match12[3].toUpperCase();
+    if (ampm === 'PM' && hours < 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  }
+
+  const match24 = str.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    const hours = parseInt(match24[1]);
+    const minutes = parseInt(match24[2]);
+    return hours * 60 + minutes;
+  }
+
+  return null;
+};
+
 const isOpen = computed(() => {
   if (!library.value?.operating_days) return false;
   const now = new Date();
@@ -380,15 +423,20 @@ const isOpen = computed(() => {
   const todayHours = library.value.operating_days.find((d: any) => d.day === todayName);
   
   if (!todayHours || !todayHours.isOpen) return false;
-  
-  const currentTime = now.getHours() * 60 + now.getMinutes();
-  const [openH, openM] = todayHours.openTime.split(':').map(Number);
-  const [closeH, closeM] = todayHours.closeTime.split(':').map(Number);
-  
-  const openMinutes = openH * 60 + openM;
-  const closeMinutes = closeH * 60 + closeM;
-  
-  return currentTime >= openMinutes && currentTime <= closeMinutes;
+  if (!todayHours.openTime || !todayHours.closeTime) return false;
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const openMinutes = parseTimeToMinutes(todayHours.openTime);
+  const closeMinutes = parseTimeToMinutes(todayHours.closeTime);
+
+  if (openMinutes === null || closeMinutes === null) return false;
+
+  if (openMinutes <= closeMinutes) {
+    return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+  } else {
+    // Over midnight case
+    return currentMinutes >= openMinutes || currentMinutes < closeMinutes;
+  }
 });
 
 const isToday = (dayName: string) => {

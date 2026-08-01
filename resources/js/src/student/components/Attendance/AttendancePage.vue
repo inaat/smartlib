@@ -147,12 +147,12 @@
         </div>
       </div>
 
-      <!-- Attendance History Table -->
+      <!-- Attendance History Table Layout (Original Design with 6-Item Pagination) -->
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/30">
           <div class="text-left">
             <h2 class="text-base font-bold text-slate-800">Attendance Logs</h2>
-            <p class="text-xs text-slate-400 mt-0.5">A detailed record of your library visits</p>
+            <p class="text-xs text-slate-400 mt-0.5">A detailed record of your library visits (6 items per page)</p>
           </div>
           <button @click="fetchAttendance" class="p-2.5 hover:bg-slate-50 rounded-xl transition-all text-slate-500 hover:text-blue-600 border border-slate-200/50 shadow-sm active:scale-98">
             <RefreshCw :class="['w-4 h-4', loading ? 'animate-spin' : '']" />
@@ -189,7 +189,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-              <tr v-for="log in attendance" :key="log.id" class="hover:bg-slate-50/30 transition-colors group">
+              <tr v-for="log in paginatedAttendance" :key="log.id" class="hover:bg-slate-50/30 transition-colors group">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center space-x-3">
                     <div class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-300">
@@ -234,8 +234,38 @@
             </tbody>
           </table>
 
-          <div class="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
-            <div>Showing {{ attendance.length }} records</div>
+          <!-- 6-Item Pagination Bar -->
+          <div class="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+            <div>Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, attendance.length) }} of {{ attendance.length }} entries</div>
+            <div class="flex items-center space-x-1.5">
+              <button 
+                @click="currentPage--" 
+                :disabled="currentPage === 1"
+                class="px-3 py-1.5 border border-slate-200 bg-white rounded-xl text-slate-600 font-bold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-xs cursor-pointer shadow-2xs"
+              >
+                Previous
+              </button>
+              <button 
+                v-for="page in totalPages" 
+                :key="page"
+                @click="currentPage = page"
+                :class="[
+                  'w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs',
+                  currentPage === page 
+                    ? 'bg-blue-600 text-white shadow-sm' 
+                    : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                ]"
+              >
+                {{ page }}
+              </button>
+              <button 
+                @click="currentPage++" 
+                :disabled="currentPage === totalPages"
+                class="px-3 py-1.5 border border-slate-200 bg-white rounded-xl text-slate-600 font-bold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-xs cursor-pointer shadow-2xs"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -253,10 +283,24 @@ import {
 import { studentAPI } from '@/shared/services/api';
 import { format, parseISO, isToday as dateFnsIsToday } from 'date-fns';
 
-const loading        = ref(true);
-const calendarLoading = ref(false);
-const attendance     = ref<any[]>([]);
-const stats          = ref<any>({});
+const loading         = ref(true);
+const calendarLoading  = ref(false);
+const attendance      = ref<any[]>([]);
+const stats           = ref<any>({});
+
+// ── Pagination State (6 items per page) ─────────────────────────────────────
+const currentPage = ref(1);
+const pageSize    = 6;
+
+const totalPages = computed(() => {
+  if (attendance.value.length === 0) return 1;
+  return Math.ceil(attendance.value.length / pageSize);
+});
+
+const paginatedAttendance = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return attendance.value.slice(start, start + pageSize);
+});
 
 // ── Calendar ────────────────────────────────────────────────────────────────
 const calViewYear  = ref(new Date().getFullYear());
@@ -299,7 +343,8 @@ const fetchAttendance = async () => {
   loading.value = true;
   try {
     const response = await studentAPI.getAttendance();
-    attendance.value = response.data;
+    attendance.value = response.data || [];
+    currentPage.value = 1;
     const statsResponse = await studentAPI.getAttendanceStats();
     stats.value = statsResponse;
   } catch (error) {

@@ -241,19 +241,20 @@ class BookingController extends Controller
     public function getOverrideRequests(Request $request)
     {
         $user = Auth::user();
-        $library = $user->library;
 
         if ($user->role === 'super_admin') {
             $myLibraryIds = \App\Models\Library::where('created_by', $user->id)->pluck('id');
             $query = \App\Models\OverrideRequest::whereIn('library_id', $myLibraryIds);
         } else {
-            if (!$library) {
-                return response()->json(['message' => 'No library assigned to this librarian'], 404);
+            $libraryId = $request->library_id ?? ($user->library ? $user->library->id : $user->library_id);
+            if ($libraryId) {
+                $query = \App\Models\OverrideRequest::where('library_id', $libraryId);
+            } else {
+                $query = \App\Models\OverrideRequest::query();
             }
-            $query = \App\Models\OverrideRequest::where('library_id', $library->id);
         }
 
-        $requests = $query->with(['user', 'seat.floor', 'seat.seatSection'])->latest()->get();
+        $requests = $query->with(['user', 'seat.floor', 'seat.seatSection', 'seat.seatSubsection'])->latest()->get();
 
         return response()->json($requests);
     }
@@ -268,7 +269,7 @@ class BookingController extends Controller
             $override->user_id,
             'system',
             'Override Request Approved!',
-            "Your request to use seat {$override->seat->seat_number} has been approved. You can now book the seat.",
+            "Your request to use seat {$override->seat->seat_number} has been approved for TODAY! You can now book the seat for today.",
             $override
         );
 

@@ -20,7 +20,7 @@
         <select 
           v-model="statusFilter"
           class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          @change="fetchData"
+          @change="fetchData(1)"
         >
           <option value="all">All Status</option>
           <template v-if="activeTab === 'orders'">

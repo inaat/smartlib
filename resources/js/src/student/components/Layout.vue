@@ -12,7 +12,7 @@
     />
     
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
       <!-- Top Bar -->
       <StudentTopbar @menu-click="sidebarOpen = true" />
       

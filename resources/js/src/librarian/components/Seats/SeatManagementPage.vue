@@ -1,140 +1,57 @@
 <template>
   <div class="p-6 space-y-6 font-outfit">
     <!-- Top Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between bg-white p-4 rounded-3xl shadow-sm border border-slate-100 gap-4 text-left">
+    <div class="flex flex-col md:flex-row md:items-center justify-between bg-white p-5 rounded-3xl shadow-sm border border-slate-100 gap-4 text-left">
       <div class="flex items-center space-x-3">
-        <h1 class="text-xl font-bold text-slate-800 uppercase tracking-tight">Seat Layout Manager</h1>
-        <span 
-          :class="[
-            'text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border transition-all',
-            isLayoutMode 
-              ? 'bg-amber-50 border-amber-200 text-amber-700' 
-              : 'bg-slate-50 border-slate-200 text-slate-500'
-          ]"
-        >
-          {{ isLayoutMode ? 'Designer Mode' : 'View Mode' }}
-        </span>
+        <div class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+          <Armchair class="w-5 h-5" />
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-800 tracking-tight">Seat Layout Manager</h1>
+          <p class="text-xs text-slate-400 font-medium">Manage and arrange library seating layout</p>
+        </div>
       </div>
 
-      <div class="flex items-center flex-wrap gap-3">
-        <!-- Mode Toggle Button -->
+      <div class="flex items-center space-x-3">
+        <!-- Table Size Dropdown Selector (Clean Dropdown - No TABLE LAYOUT CONFIG text!) -->
+        <div v-if="activeLayoutMode === 'tables'" class="relative">
+          <select 
+            v-model="globalTableCapacity" 
+            @change="onTableCapacityChange"
+            class="appearance-none bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 py-2.5 pl-4 pr-9 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
+          >
+            <option :value="2">2 Seats per Table</option>
+            <option :value="4">4 Seats per Table</option>
+            <option :value="6">6 Seats per Table</option>
+            <option :value="8">8 Seats per Table</option>
+            <option :value="10">10 Seats per Table</option>
+            <option :value="12">12 Seats per Table</option>
+            <option :value="14">14 Seats per Table</option>
+            <option :value="16">16 Seats per Table</option>
+          </select>
+          <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        </div>
+
+        <!-- Redesigned Add Seat Button -->
         <button
-          @click="toggleLayoutMode"
-          :class="[
-            'px-5 py-2.5 rounded-xl transition-all flex items-center space-x-2 border text-xs font-bold uppercase tracking-wider cursor-pointer shadow-sm active:scale-98',
-            isLayoutMode 
-              ? 'bg-emerald-700 text-white border-emerald-700 shadow-emerald-500/10 hover:bg-emerald-800' 
-              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-          ]"
+          @click="openAddSeatModal"
+          class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl transition-all duration-300 flex items-center space-x-2 text-xs font-bold uppercase tracking-wider cursor-pointer shadow-md shadow-blue-500/20 active:scale-98"
         >
-          <Move class="w-4 h-4" />
-          <span>{{ isLayoutMode ? 'Exit Designer' : 'Visual Designer' }}</span>
+          <Plus class="w-4.5 h-4.5" />
+          <span>Add Seat</span>
         </button>
 
+        <!-- Refresh Button -->
         <button
           @click="fetchData"
           :disabled="loading"
-          class="p-2.5 bg-slate-50 text-slate-600 hover:bg-slate-105 rounded-xl transition-all border border-slate-200 cursor-pointer shadow-sm"
+          class="p-2.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-2xl transition-all border border-slate-200 cursor-pointer shadow-sm active:scale-98"
           title="Refresh Data"
         >
           <RefreshCw :class="['w-4 h-4', loading ? 'animate-spin' : '']" />
         </button>
-
-        <button
-          @click="printActiveSectionQRs"
-          class="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl transition-all border border-slate-200 flex items-center space-x-2 text-xs font-bold uppercase tracking-wider cursor-pointer shadow-sm"
-        >
-          <Printer class="w-4 h-4 text-slate-500" />
-          <span>Print Section QRs</span>
-        </button>
       </div>
     </div>
-
-    <!-- Layout Mode Designer Toolbar -->
-    <transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="transform -translate-y-4 opacity-0"
-      enter-to-class="transform translate-y-0 opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="transform translate-y-0 opacity-100"
-      leave-to-class="transform -translate-y-4 opacity-0"
-    >
-      <div 
-        v-if="isLayoutMode" 
-        class="bg-slate-900 text-white p-4 rounded-3xl shadow-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4 text-left"
-      >
-        <div class="flex items-center flex-wrap gap-2.5">
-          <!-- Add Individual Seat -->
-          <button 
-            v-if="activeLayoutMode === 'individual'"
-            @click="openAddSeatModal"
-            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer border border-slate-700/50"
-          >
-            <Plus class="w-4 h-4 text-emerald-400" />
-            <span>+ Seat</span>
-          </button>
-
-          <!-- Add Study Table -->
-          <button 
-            v-if="activeLayoutMode === 'tables'"
-            @click="openAddTableModal"
-            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer border border-slate-700/50"
-          >
-            <Plus class="w-4 h-4 text-amber-400" />
-            <span>+ Table</span>
-          </button>
-
-          <!-- Add Study Cabin -->
-          <button 
-            v-if="activeLayoutMode === 'cabins'"
-            @click="openAddCabinModal"
-            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer border border-slate-700/50"
-          >
-            <Plus class="w-4 h-4 text-cyan-400" />
-            <span>+ Cabin</span>
-          </button>
-
-          <div class="w-px h-6 bg-slate-700 mx-1"></div>
-
-          <!-- Snapping Grid toggle -->
-          <button 
-            @click="gridSnap = !gridSnap"
-            :class="[
-              'p-2 rounded-xl transition-all cursor-pointer border',
-              gridSnap ? 'bg-emerald-700/20 text-emerald-400 border-emerald-600/30' : 'bg-slate-800 text-slate-400 border-transparent'
-            ]"
-            title="Toggle Snapping Grid"
-          >
-            <Grid class="w-4 h-4" />
-          </button>
-
-          <!-- Auto Seat Numbering -->
-          <button 
-            @click="triggerAutoNumbering"
-            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer border border-slate-700/50"
-            title="Automatically number seats in selected section sequentially"
-          >
-            <Wand2 class="w-4 h-4 text-purple-400" />
-            <span>Auto Number</span>
-          </button>
-
-          <!-- Auto Arrange Layout -->
-          <button 
-            @click="triggerAutoArrange"
-            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer border border-slate-700/50"
-            title="Automatically arrange components in a clean, straight-line grid in ascending order"
-          >
-            <Move class="w-4 h-4 text-emerald-450" />
-            <span>Auto Arrange</span>
-          </button>
-        </div>
-
-        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-          <Info class="w-4 h-4 text-emerald-400" />
-          <span>Drag nodes freely on the canvas. Snapping is {{ gridSnap ? 'Active' : 'Inactive' }}</span>
-        </div>
-      </div>
-    </transition>
 
     <!-- Stats Bar -->
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -175,6 +92,8 @@
           :draggable="isLayoutMode"
           :seat-clickable="true"
           :layout-mode="activeLayoutMode"
+          :tables-per-row="3"
+          :table-capacity="globalTableCapacity"
           :grid-snap="gridSnap"
           @seat-click="handleSeatClick"
           @table-click="handleTableClick"
@@ -238,24 +157,23 @@
               </select>
             </div>
 
-            <!-- Seat Type -->
-            <div>
-              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Seat Type</label>
+            <!-- Subsection Selector -->
+            <div v-if="selectedSectionForSelectedSeat?.subsections?.length > 0">
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Subsection</label>
               <select 
-                v-model="selectedSeat.seat_type"
+                v-model="selectedSeat.subsection_id"
                 class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer"
               >
-                <option value="regular">Regular Chair</option>
-                <option value="premium">Premium Ergonomic</option>
-                <option value="group">Group Study</option>
-                <option value="silent">Silent Zone</option>
-                <option value="private_room">Private Cabin</option>
+                <option :value="null">No Subsection</option>
+                <option v-for="sub in selectedSectionForSelectedSeat.subsections" :key="sub.id" :value="sub.id">
+                  {{ sub.name }}
+                </option>
               </select>
             </div>
 
             <!-- Cabin Specific details -->
             <div 
-              v-if="selectedSeat.seat_type === 'private_room'" 
+              v-if="selectedSeat.cabin_number || selectedSeat.seat_type === 'private_room'" 
               class="p-4 bg-cyan-50/20 border border-cyan-150 rounded-2xl space-y-3"
             >
               <span class="text-[10px] font-bold uppercase text-cyan-600 tracking-wider block">Cabin Features</span>
@@ -425,15 +343,6 @@
           </div>
 
           <div>
-            <label class="block text-[10px] font-bold uppercase text-slate-450 mb-1">Seat Type</label>
-            <select v-model="seatForm.seat_type" class="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none cursor-pointer">
-              <option value="regular">Regular Seat</option>
-              <option value="premium">Premium ergonomic</option>
-              <option value="silent">Silent Zone Seat</option>
-            </select>
-          </div>
-
-          <div>
             <label class="block text-[10px] font-bold uppercase text-slate-455 mb-1">Target Floor</label>
             <select v-model="seatForm.floor_id" required class="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none cursor-pointer">
               <option v-for="floor in floors" :key="floor.id" :value="floor.id">{{ floor.name }}</option>
@@ -445,6 +354,14 @@
             <select v-model="seatForm.section_id" class="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none cursor-pointer">
               <option :value="null">No Section / Shared Zone</option>
               <option v-for="sec in sections.filter(s => s.floor_id === seatForm.floor_id)" :key="sec.id" :value="sec.id">{{ sec.name }}</option>
+            </select>
+          </div>
+
+          <div v-if="selectedSectionForSeat?.subsections?.length > 0">
+            <label class="block text-[10px] font-bold uppercase text-slate-455 mb-1">Target Subsection</label>
+            <select v-model="seatForm.subsection_id" class="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none cursor-pointer">
+              <option :value="null">No Subsection</option>
+              <option v-for="sub in selectedSectionForSeat.subsections" :key="sub.id" :value="sub.id">{{ sub.name }}</option>
             </select>
           </div>
 
@@ -537,19 +454,49 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import {
-  Building2, RefreshCw, Printer, Plus, Grid, Wand2, Info, Armchair, Trash2, Move
+  RefreshCw, Plus, Armchair, Trash2, ChevronDown
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 import SeatLayoutRenderer from '@/shared/components/SeatLayout/SeatLayoutRenderer.vue';
 import { useSwal } from '@/shared/composables/useSwal';
+import { useAuth } from '@/shared/composables/useAuth';
 import { Seat, StudyTable } from '@/shared/types';
 
 const { toast, showSuccess, showError, showConfirm } = useSwal();
+const { user } = useAuth();
 
 // State
 const loading = ref(false);
-const isLayoutMode = ref(false);
+const isLayoutMode = ref(true);
 const gridSnap = ref(true);
+const globalTableCapacity = ref<number>(4);
+
+onMounted(() => {
+  try {
+    const saved = localStorage.getItem('smartlib_global_table_capacity');
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if ([2, 4, 6, 8, 10, 12, 14, 16].includes(parsed)) {
+        globalTableCapacity.value = parsed;
+      }
+    }
+  } catch (e) {}
+});
+
+const onTableCapacityChange = async () => {
+  try {
+    localStorage.setItem('smartlib_global_table_capacity', globalTableCapacity.value.toString());
+    window.dispatchEvent(new Event('smartlib_table_capacity_changed'));
+    window.dispatchEvent(new Event('storage'));
+    
+    // Save to backend DB so it syncs across all devices/sessions
+    await librarianAPI.updateLibraryInfo({ table_capacity: globalTableCapacity.value });
+    toast('Table capacity updated and synced to server', 'success');
+  } catch (e) {
+    console.error('Failed to sync table capacity to backend:', e);
+    toast('Capacity saved locally, but failed to sync to server', 'warning');
+  }
+};
 
 const seats = ref<Seat[]>([]);
 const floors = ref<any[]>([]);
@@ -566,15 +513,33 @@ const showSeatModal = ref(false);
 const showTableModal = ref(false);
 const showCabinModal = ref(false);
 
-const seatForm = ref({ seat_number: '', seat_type: 'regular', floor_id: null as number | null, section_id: null as number | null });
+const seatForm = ref({ seat_number: '', seat_type: 'regular', floor_id: null as number | null, section_id: null as number | null, subsection_id: null as number | null });
 const tableForm = ref({ label: '', capacity: 4, floor_id: null as number | null, section_id: null as number | null });
 const cabinForm = ref({ cabin_number: '', floor_id: null as number | null, section_id: null as number | null });
+
+const selectedSectionForSeat = computed(() => {
+  if (!seatForm.value.section_id) return null;
+  return sections.value.find(s => s.id === seatForm.value.section_id) || null;
+});
+
+const selectedSectionForSelectedSeat = computed(() => {
+  if (!selectedSeat.value?.section_id) return null;
+  return sections.value.find(s => s.id === selectedSeat.value!.section_id) || null;
+});
 
 const activeFloorId = computed(() => layoutRenderer.value?.activeFloorId || null);
 const activeSectionId = computed(() => layoutRenderer.value?.activeSectionId || null);
 
-// Library dynamic seat layout mode
-const activeLayoutMode = ref('individual');
+// Library dynamic seat layout mode synced across librarian and student panels
+const activeLayoutMode = ref(localStorage.getItem('smartlib_active_layout_mode') || 'tables');
+
+watch(activeLayoutMode, (newVal) => {
+  if (newVal) {
+    try {
+      localStorage.setItem('smartlib_active_layout_mode', newVal);
+    } catch (e) {}
+  }
+}, { immediate: true });
 
 // Cabin Features reactivity wrapper
 const cabinFeatures = computed({
@@ -603,14 +568,26 @@ const seatStats = computed(() => {
 });
 
 // Auto-assign suggestions for new layouts
-const suggestNextSeatNumber = (floorId: number | null, sectionId: number | null) => {
+const suggestNextSeatNumber = (floorId: number | null, sectionId: number | null, subsectionId: number | null = null) => {
   if (!floorId) return '';
   const section = sections.value.find(s => s.id === sectionId);
-  const sectionName = section ? section.name : 'Seat';
-  const sectionSeats = seats.value.filter(s => s.floor_id === floorId && s.section_id === sectionId);
+  let prefix = section ? section.name : 'Seat';
+
+  if (subsectionId && section?.subsections) {
+    const sub = section.subsections.find((s: any) => s.id === subsectionId);
+    if (sub) {
+      prefix = sub.code ? sub.code : sub.name;
+    }
+  }
+
+  const matchingSeats = seats.value.filter(s => 
+    s.floor_id === floorId && 
+    s.section_id === sectionId && 
+    (subsectionId ? s.subsection_id === subsectionId : true)
+  );
 
   let maxSuffix = 0;
-  sectionSeats.forEach(s => {
+  matchingSeats.forEach(s => {
     if (s.table_id) return;
     const parts = s.seat_number.split('-');
     const lastPart = parts[parts.length - 1];
@@ -619,7 +596,7 @@ const suggestNextSeatNumber = (floorId: number | null, sectionId: number | null)
       maxSuffix = num;
     }
   });
-  return `${sectionName}-${maxSuffix + 1}`;
+  return `${prefix}-${maxSuffix + 1}`;
 };
 
 const suggestNextTableLabel = (floorId: number | null, sectionId: number | null) => {
@@ -672,12 +649,12 @@ const suggestNextCabinNumber = (floorId: number | null, sectionId: number | null
   return `${maxSuffix + 1}`;
 };
 
-// Form watchers to auto-update suggested names on change of floor/section inside modals
+// Form watchers to auto-update suggested names on change of floor/section/subsection inside modals
 watch(
-  () => [seatForm.value.floor_id, seatForm.value.section_id],
-  ([newFloor, newSection]) => {
-    if (showSeatModal.value) {
-      seatForm.value.seat_number = suggestNextSeatNumber(newFloor as number | null, newSection as number | null);
+  () => [seatForm.value.floor_id, seatForm.value.section_id, seatForm.value.subsection_id],
+  ([newFloor, newSection, newSub]) => {
+    if (showSeatModal.value && newFloor) {
+      seatForm.value.seat_number = suggestNextSeatNumber(newFloor as number, newSection as number, newSub as number);
     }
   }
 );
@@ -717,6 +694,10 @@ const fetchData = async () => {
     sections.value = sectionsData;
     tables.value = tablesData;
     activeLayoutMode.value = libraryInfo.seat_layout_mode || 'individual';
+    if (libraryInfo.table_capacity) {
+      globalTableCapacity.value = libraryInfo.table_capacity;
+      localStorage.setItem('smartlib_global_table_capacity', libraryInfo.table_capacity.toString());
+    }
   } catch (error) {
     console.error('Failed to load seats manager data:', error);
     showError('Error', 'Failed to load visual layout designer data');
@@ -802,7 +783,8 @@ const openAddSeatModal = () => {
     seat_number: '',
     seat_type: 'regular',
     floor_id: activeFloorId.value,
-    section_id: activeSectionId.value
+    section_id: activeSectionId.value,
+    subsection_id: null
   };
   seatForm.value.seat_number = suggestNextSeatNumber(activeFloorId.value, activeSectionId.value);
   showSeatModal.value = true;
@@ -1135,7 +1117,7 @@ const triggerAutoArrange = async () => {
     const cabinsToArrange = seats.value.filter(s => {
       return s.floor_id === activeFloorId.value && 
              s.section_id === activeSectionId.value &&
-             (s.seat_type === 'private_room' || s.cabin_number !== null);
+             !s.table_id;
     });
 
     if (cabinsToArrange.length === 0) {
@@ -1151,11 +1133,11 @@ const triggerAutoArrange = async () => {
 
     try {
       const sorted = [...cabinsToArrange].sort((a, b) => naturalCompare(a.cabin_number || a.seat_number, b.cabin_number || b.seat_number));
-      const cabinsPerRow = 5;
-      const colSpacing = 145;
-      const rowSpacing = 190;
-      const startX = 50;
-      const startY = 60;
+      const cabinsPerRow = 10;
+      const colSpacing = 68;
+      const rowSpacing = 94;
+      const startX = 35;
+      const startY = 45;
 
       const seatsPayload = sorted.map((cabin, index) => {
         const row = Math.floor(index / cabinsPerRow);
@@ -1179,6 +1161,7 @@ const triggerAutoArrange = async () => {
 };
 
 // Print QRs
+// Print QRs
 const printActiveSectionQRs = () => {
   const section = activeSectionId.value 
     ? sections.value.find(s => s.id === activeSectionId.value)
@@ -1188,7 +1171,7 @@ const printActiveSectionQRs = () => {
 
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
-    toast('Error', 'Popup blocked! Please allow popups to print.', 'error');
+    showError('Error', 'Popup blocked! Please allow popups to print.');
     return;
   }
 
@@ -1199,6 +1182,19 @@ const printActiveSectionQRs = () => {
     return floorOk && sectionOk;
   });
 
+  const libraryName = user.value?.library?.name || 'SmartLib Library';
+
+  // Group seats by section & subsection
+  const subGroups: Record<string, any[]> = {};
+  sectionSeats.forEach(seat => {
+    const subObj = seat.seat_subsection || seat.subsection || null;
+    const subName = subObj?.name || subObj?.code || null;
+    const secName = seat.seat_section?.name || section.name || 'General';
+    const key = subName ? `${subName} Subsection (${secName})` : `${secName} (General Seats)`;
+    if (!subGroups[key]) subGroups[key] = [];
+    subGroups[key].push(seat);
+  });
+
   let html = `
     <html>
       <head>
@@ -1207,16 +1203,55 @@ const printActiveSectionQRs = () => {
         <style>
           body { font-family: 'Outfit', sans-serif; margin: 0; padding: 40px 20px; background-color: #f8fafc; }
           .no-print { text-align: right; max-width: 1200px; margin: 0 auto 20px auto; }
-          .no-print button { padding: 10px 20px; background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-          .header { text-align: center; margin-bottom: 40px; }
-          .header h1 { font-size: 28px; font-weight: 900; color: #0f172a; margin: 0; }
-          .qr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto; }
-          .qr-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; }
-          .seat-badge { font-size: 20px; font-weight: 900; color: #0f172a; margin: 16px 0 0 0; }
+          .no-print button { padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+          .page-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
+          .page-header h1 { font-size: 26px; font-weight: 900; color: #0f172a; margin: 0; }
+          .page-header p { font-size: 13px; color: #64748b; margin: 6px 0 0 0; font-weight: 600; }
+
+          .sub-block { margin-bottom: 35px; page-break-inside: avoid; }
+          .sub-title { font-size: 13px; font-weight: 800; color: #0369a1; margin-bottom: 14px; background: #e0f2fe; padding: 6px 14px; border-radius: 8px; display: inline-block; border: 1px solid #bae6fd; text-transform: uppercase; letter-spacing: 0.05em; }
+
+          .qr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; max-width: 1100px; margin: 0 auto 20px auto; }
+          .qr-card { 
+            background: white; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 20px; 
+            padding: 24px 20px 20px 20px; 
+            text-align: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+            page-break-inside: avoid; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: space-between; 
+            min-height: 430px; 
+            width: 100%; 
+            max-width: 310px; 
+            margin: 0 auto; 
+            box-sizing: border-box; 
+          }
+
+          .card-top { width: 100%; border-bottom: 1.5px dashed #cbd5e1; padding-bottom: 12px; margin-bottom: 14px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+          .top-library-name { font-size: 15px; font-weight: 900; color: #059669; text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
+
+          .academic-badge { display: inline-block; padding: 4px 12px; font-size: 11px; font-weight: 800; border-radius: 9999px; letter-spacing: 0.08em; text-transform: uppercase; }
+          .badge-prc { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+          .badge-caf { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+          .badge-final { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+          .badge-all { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+          .qr-wrapper { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 14px; padding: 14px; display: inline-block; }
+          .qr-image { width: 150px; height: 150px; object-fit: contain; display: block; }
+
+          .seat-badge { font-size: 22px; font-weight: 900; color: #0f172a; margin: 12px 0 0 0; letter-spacing: -0.025em; text-transform: uppercase; }
+          .meta-info { font-size: 11px; font-weight: 700; color: #64748b; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.05em; }
+          .scan-footer { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.08em; margin-top: 14px; border-top: 1px solid #f1f5f9; padding-top: 8px; width: 100%; }
+
           @media print {
             .no-print { display: none; }
             body { background: white; padding: 0; }
-            .qr-card { border: 1px solid #cbd5e1; }
+            .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+            .qr-card { box-shadow: none; border: 2px solid #94a3b8; }
           }
         </style>
       </head>
@@ -1224,28 +1259,68 @@ const printActiveSectionQRs = () => {
         <div class="no-print">
           <button onclick="window.print()">Print QR Codes</button>
         </div>
-        <div class="header">
+        <div class="page-header">
           <h1>Seat QR Codes</h1>
-          <p>Section: ${section.name}</p>
+          <p>${libraryName} • Section: ${section.name}</p>
         </div>
-        <div class="qr-grid">
   `;
 
-  sectionSeats.forEach((seat: any) => {
-    const seatSectionName = seat.seat_section?.name || section.name;
-    const qrUrl = seat.qr_code_url || `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}`;
+  Object.keys(subGroups).forEach(subKey => {
+    const seatsGroup = subGroups[subKey];
     html += `
-      <div class="qr-card">
-        <div class="brand-name">SMARTLIB SYSTEM</div>
-        <img src="${qrUrl}" style="width: 150px; height: 150px; margin-top: 15px;" />
-        <div class="seat-badge">${seat.seat_type === 'private_room' ? 'CABIN ' + (seat.cabin_number || seat.seat_number) : 'SEAT ' + seat.seat_number}</div>
-        <div class="meta-info">${seatSectionName}</div>
+      <div class="sub-block">
+        <div class="sub-title">${subKey} (${seatsGroup.length} Seats)</div>
+        <div class="qr-grid">
+    `;
+
+    seatsGroup.forEach((seat: any) => {
+      const qrUrl = seat.qr_code_url || `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(seat.qr_code || seat.seat_number)}`;
+      const seatSectionName = seat.seat_section?.name || section.name;
+      const displaySeatName = seat.seat_type === 'private_room'
+        ? `CABIN ${seat.cabin_number || seat.seat_number}`
+        : seat.seat_number;
+
+      // Academic Level Determination
+      const rawLevel = String(seat.academic_level || seat.seat_subsection?.academic_level || seat.seat_section?.academic_level || 'all').toUpperCase();
+      let levelClass = 'badge-all';
+      let levelLabel = 'ALL LEVELS';
+
+      if (rawLevel.includes('PRC')) {
+        levelClass = 'badge-prc';
+        levelLabel = 'PRC';
+      } else if (rawLevel.includes('CAF')) {
+        levelClass = 'badge-caf';
+        levelLabel = 'CAF';
+      } else if (rawLevel.includes('FINAL')) {
+        levelClass = 'badge-final';
+        levelLabel = 'FINAL';
+      }
+
+      html += `
+        <div class="qr-card">
+          <div class="card-top">
+            <div class="top-library-name">${libraryName}</div>
+            <div class="academic-badge ${levelClass}">${levelLabel}</div>
+          </div>
+          <div class="qr-wrapper">
+            <img src="${qrUrl}" class="qr-image" />
+          </div>
+          <div>
+            <div class="seat-badge">${displaySeatName}</div>
+            <div class="meta-info">${seatSectionName} &bull; ${seat.floor?.name || ''}</div>
+          </div>
+          <div class="scan-footer">Scan to Check-In</div>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
       </div>
     `;
   });
 
   html += `
-        </div>
       </body>
     </html>
   `;
@@ -1253,6 +1328,15 @@ const printActiveSectionQRs = () => {
   printWindow.document.write(html);
   printWindow.document.close();
 };
+
+defineExpose({
+  toggleLayoutMode,
+  openAddTableModal,
+  openAddCabinModal,
+  triggerAutoNumbering,
+  triggerAutoArrange,
+  printActiveSectionQRs
+});
 
 onMounted(fetchData);
 </script>

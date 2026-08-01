@@ -2,73 +2,124 @@
   <div 
     @click="$emit('click')"
     :class="[
-      'relative w-32 h-36 rounded-2.5xl border transition-all duration-300 flex flex-col p-2.5 select-none cursor-pointer',
+      'relative w-[68px] h-[88px] flex flex-col items-center justify-between cursor-pointer select-none transition-all duration-200 group',
       highlighted 
-        ? 'border-emerald-600 bg-emerald-50/40 shadow-lg shadow-emerald-500/10 scale-102 ring-4 ring-emerald-500/10' 
-        : 'border-slate-200 bg-white hover:border-slate-350 hover:shadow-md hover:-translate-y-0.5'
+        ? 'scale-105 z-20' 
+        : 'hover:scale-105'
     ]"
   >
-    <!-- Premium Glowing Status LED Bar at the top of the cabin -->
-    <div 
-      class="absolute top-0 inset-x-6 h-1.5 rounded-b-full transition-colors duration-300"
-      :style="{ backgroundColor: statusColor.hex, boxShadow: '0 2px 8px ' + statusColor.hex }"
-    ></div>
-
-    <!-- Cabin Title / Number -->
-    <div class="flex items-center justify-between mt-1">
-      <div>
-        <span class="text-[10.5px] font-bold uppercase text-slate-800 tracking-tight leading-none block">
-          Cabin {{ number }}
-        </span>
-        <span class="text-[7.5px] font-bold uppercase tracking-wider block mt-1 transition-colors duration-300" :style="{ color: statusColor.hex }">
-          {{ statusLabel }}
-        </span>
-      </div>
-      <!-- Small Status LED Dot -->
-      <span class="w-2 h-2 rounded-full border border-white" :style="{ backgroundColor: statusColor.hex }"></span>
+    <!-- Status LED Top Dot (Turns Blue when Selected) -->
+    <div class="absolute top-0 right-0 flex items-center gap-1 z-10">
+      <span 
+        class="w-1.5 h-1.5 rounded-full border border-white shadow-xs transition-colors duration-200" 
+        :style="{ 
+          backgroundColor: highlighted ? '#2563eb' : statusTheme.hex, 
+          boxShadow: highlighted ? '0 0 6px #2563eb' : ('0 0 6px ' + statusTheme.hex) 
+        }"
+      ></span>
     </div>
 
-    <!-- Mini Architectural Room Blueprint/Illustration -->
-    <div class="flex-1 my-2 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
-      <!-- Desk Blueprint -->
-      <div class="w-16 h-2.5 bg-slate-200 border border-slate-300 rounded-sm absolute top-2"></div>
-      <!-- Mini Chair blueprint -->
-      <div class="w-7 h-7 absolute bottom-2 flex items-center justify-center opacity-70">
-        <svg viewBox="0 0 100 100" class="w-full h-full text-slate-400" xmlns="http://www.w3.org/2000/svg">
-          <rect x="25" y="25" width="50" height="40" rx="8" fill="currentColor" />
-          <rect x="35" y="65" width="30" height="10" rx="3" fill="currentColor" />
-        </svg>
-      </div>
-      <!-- Glass wall aesthetic lines -->
-      <div class="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cyan-400/20 via-transparent to-cyan-400/20"></div>
+    <!-- Front Elevation View Study Cabin Graphic (Card-less Pure SVG) -->
+    <div class="w-full h-[72px] relative flex items-center justify-center">
+      <svg viewBox="0 0 100 110" class="w-full h-full drop-shadow-xs transition-all" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Wall Slats Back Wall Pattern -->
+          <pattern :id="'frontSlats-' + componentId" width="8" height="20" patternUnits="userSpaceOnUse">
+            <line x1="4" y1="0" x2="4" y2="20" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3,2" />
+          </pattern>
+
+          <!-- Warm Light Glow Projection in Front View -->
+          <radialGradient :id="'frontLightGlow-' + componentId" cx="50%" cy="15%" r="70%">
+            <stop offset="0%" :stop-color="highlighted ? '#3b82f6' : statusTheme.hex" stop-opacity="0.35" />
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+          </radialGradient>
+
+          <!-- Desk Surface Gradient -->
+          <linearGradient :id="'frontDeskGrad-' + componentId" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#e2e8f0" />
+          </linearGradient>
+
+          <!-- Left & Right Partition Wall Front Elevation Gradients -->
+          <linearGradient :id="'leftSideWall-' + componentId" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#94a3b8" />
+            <stop offset="100%" stop-color="#cbd5e1" />
+          </linearGradient>
+
+          <linearGradient :id="'rightSideWall-' + componentId" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#cbd5e1" />
+            <stop offset="100%" stop-color="#94a3b8" />
+          </linearGradient>
+        </defs>
+
+        <!-- Ground Floor Shadow -->
+        <ellipse cx="50" cy="102" rx="46" ry="4" fill="#0f172a" opacity="0.08" />
+
+        <!-- 1. Left Vertical Partition Wall (Turns Blue when Selected) -->
+        <rect 
+          x="2" y="4" width="6" height="96" rx="1" 
+          :fill="highlighted ? '#3b82f6' : ('url(#leftSideWall-' + componentId + ')') " 
+          :stroke="highlighted ? '#1d4ed8' : '#64748b'" 
+          :stroke-width="highlighted ? 1.5 : 0.8" 
+        />
+
+        <!-- 2. Right Vertical Partition Wall (Turns Blue when Selected) -->
+        <rect 
+          x="92" y="4" width="6" height="96" rx="1" 
+          :fill="highlighted ? '#3b82f6' : ('url(#rightSideWall-' + componentId + ')') " 
+          :stroke="highlighted ? '#1d4ed8' : '#64748b'" 
+          :stroke-width="highlighted ? 1.5 : 0.8" 
+        />
+
+        <!-- 3. Back Panel Wall between partitions -->
+        <rect x="8" y="4" width="84" height="96" fill="#faf8f6" :stroke="highlighted ? '#93c5fd' : '#cbd5e1'" stroke-width="0.6" />
+        <rect x="8" y="4" width="84" height="96" :fill="'url(#frontSlats-' + componentId + ')'" opacity="0.35" />
+
+        <!-- Light Glow Beam Projection -->
+        <rect x="8" y="4" width="84" height="54" :fill="'url(#frontLightGlow-' + componentId + ')'" />
+
+        <!-- Overhead LED Light Strip / Lamp Bar -->
+        <rect x="25" y="8" width="50" height="4" rx="2" fill="#334155" />
+        <rect x="28" y="9" width="44" height="2" rx="1" :fill="highlighted ? '#2563eb' : statusTheme.hex" />
+
+        <!-- Overhead Shelf -->
+        <rect x="8" y="20" width="84" height="4" fill="#cbd5e1" stroke="#94a3b8" stroke-width="0.8" />
+
+        <!-- 4. Study Desk Top Surface -->
+        <rect x="6" y="50" width="88" height="6" rx="1" :fill="'url(#frontDeskGrad-' + componentId + ')'" stroke="#64748b" stroke-width="1" />
+        <line x1="6" y1="56" x2="94" y2="56" stroke="#475569" stroke-width="1.2" />
+
+        <!-- Laptop / Notebook on Desk -->
+        <rect x="40" y="41" width="20" height="9" rx="1" fill="#ffffff" stroke="#94a3b8" stroke-width="0.8" />
+        <line x1="38" y1="50" x2="62" y2="50" stroke="#64748b" stroke-width="1" />
+
+        <!-- Power Socket Plate on Back Wall -->
+        <rect x="14" y="41" width="12" height="6" rx="1" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.8" />
+        <circle cx="18" cy="44" r="0.8" fill="#475569" />
+        <circle cx="22" cy="44" r="0.8" :fill="highlighted ? '#2563eb' : statusTheme.hex" />
+
+        <!-- 5. Simple Study Chair (Front Elevation View - Under Desk, No Curved Handles) -->
+        <g>
+          <!-- Chair Legs -->
+          <line x1="34" y1="78" x2="34" y2="98" stroke="#475569" stroke-width="2" stroke-linecap="round" />
+          <line x1="66" y1="78" x2="66" y2="98" stroke="#475569" stroke-width="2" stroke-linecap="round" />
+          
+          <!-- Chair Seat Cushion -->
+          <rect x="26" y="74" width="48" height="6" rx="2" :fill="statusTheme.chairBg" stroke="#475569" stroke-width="1.2" />
+          
+          <!-- Chair Backrest -->
+          <rect x="30" y="59" width="40" height="15" rx="3" :fill="highlighted ? '#2563eb' : statusTheme.hex" stroke="#334155" stroke-width="1.2" />
+          <!-- Backrest Support Posts -->
+          <line x1="38" y1="74" x2="38" y2="78" stroke="#475569" stroke-width="1.5" />
+          <line x1="62" y1="74" x2="62" y2="78" stroke="#475569" stroke-width="1.5" />
+        </g>
+      </svg>
     </div>
 
-    <!-- Cabin Amenities/Features -->
-    <div class="flex items-center justify-between border-t border-slate-100 pt-2">
-      <div class="flex items-center gap-1">
-        <Zap 
-          v-if="features?.power_outlet !== false && socketCount > 0" 
-          class="w-3 h-3 text-slate-400" 
-          title="Power Outlet" 
-        />
-        <Monitor 
-          v-if="features?.computer" 
-          class="w-3 h-3 text-slate-400" 
-          title="Computer Available" 
-        />
-        <Wind 
-          v-if="features?.ac" 
-          class="w-3 h-3 text-slate-400" 
-          title="Air Conditioned" 
-        />
-        <Wifi 
-          v-if="features?.wifi !== false" 
-          class="w-3 h-3 text-slate-400" 
-          title="High Speed WiFi" 
-        />
-      </div>
-      <span class="text-[7.5px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-        Private
+    <!-- Cabin Code Label Tag -->
+    <div class="text-center w-full">
+      <span :class="['block text-[9.5px] font-medium tracking-tight leading-none mb-0.5 truncate', highlighted ? 'text-blue-600 font-extrabold' : 'text-slate-700']">
+        {{ number }}
       </span>
     </div>
   </div>
@@ -76,23 +127,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Zap, Monitor, Wind, Wifi } from 'lucide-vue-next';
 
 const props = withDefaults(defineProps<{
   number: string;
   status: string;
-  features?: {
-    power_outlet?: boolean;
-    computer?: boolean;
-    ac?: boolean;
-    wifi?: boolean;
-    [key: string]: any;
-  };
-  socketCount?: number;
   highlighted?: boolean;
 }>(), {
-  features: () => ({ power_outlet: true, computer: false, ac: true, wifi: true }),
-  socketCount: 1,
   highlighted: false
 });
 
@@ -100,43 +140,26 @@ defineEmits<{
   (e: 'click'): void;
 }>();
 
-const statusLabel = computed(() => {
-  switch (props.status) {
-    case 'available': return 'Available';
-    case 'occupied': return 'Occupied';
-    case 'free_soon': return 'Free Soon';
-    case 'reserved': return 'Reserved';
-    case 'maintenance': return 'Maintenance';
-    case 'overstay': return 'Overstay';
-    case 'serious_overstay': return 'Serious Overstay';
-    default: return 'Available';
-  }
-});
+const componentId = Math.random().toString(36).substring(2, 9);
 
-const statusColor = computed(() => {
+const statusTheme = computed(() => {
   switch (props.status) {
     case 'available':
-      return { hex: '#22C55E' };
+      return { hex: '#22c55e', chairBg: '#f0fdf4', label: 'Available' };
     case 'occupied':
-      return { hex: '#EF4444' };
+      return { hex: '#ef4444', chairBg: '#fef2f2', label: 'Occupied' };
     case 'free_soon':
-      return { hex: '#EAB308' };
+      return { hex: '#eab308', chairBg: '#fefce8', label: 'Free Soon' };
     case 'reserved':
-      return { hex: '#3B82F6' };
+      return { hex: '#3b82f6', chairBg: '#eff6ff', label: 'Reserved' };
     case 'maintenance':
-      return { hex: '#6B7280' };
+      return { hex: '#64748b', chairBg: '#f1f5f9', label: 'Maintenance' };
     case 'overstay':
-      return { hex: '#F97316' };
+      return { hex: '#f97316', chairBg: '#fff7ed', label: 'Overstay' };
     case 'serious_overstay':
-      return { hex: '#A855F7' };
+      return { hex: '#a855f7', chairBg: '#faf5ff', label: 'Serious Overstay' };
     default:
-      return { hex: '#6B7280' };
+      return { hex: '#22c55e', chairBg: '#f0fdf4', label: 'Available' };
   }
 });
 </script>
-
-<style scoped>
-.scale-102 {
-  transform: scale(1.02);
-}
-</style>

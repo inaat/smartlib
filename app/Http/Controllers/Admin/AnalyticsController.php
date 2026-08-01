@@ -116,12 +116,71 @@ class AnalyticsController extends Controller
             ->take(10)
             ->get();
 
+        // Gender & Level wise analytics for SuperAdmin
+        $bookingsForStats = (clone $bookingQuery)->where('created_at', '>=', $dateFilter)->with(['user', 'seat.seatSubsection', 'seat.seatSection'])->get();
+
+        $genderStats = [
+            'male' => 0,
+            'female' => 0,
+            'mixed' => 0,
+            'total' => 0,
+        ];
+
+        $levelStats = [
+            'PRC' => 0,
+            'CAF' => 0,
+            'Final' => 0,
+            'all' => 0,
+            'total' => 0,
+        ];
+
+        foreach ($bookingsForStats as $booking) {
+            // Gender
+            $uGender = strtolower($booking->user->gender ?? '');
+            if (in_array($uGender, ['male', 'boys', 'boy', 'men'])) {
+                $genderStats['male']++;
+            } elseif (in_array($uGender, ['female', 'girls', 'girl', 'women'])) {
+                $genderStats['female']++;
+            } else {
+                $subGender = strtolower($booking->seat->seatSubsection->gender ?? '');
+                $secGender = strtolower($booking->seat->seatSection->gender ?? '');
+                if (in_array($subGender, ['male', 'boys']) || in_array($secGender, ['male', 'boys'])) {
+                    $genderStats['male']++;
+                } elseif (in_array($subGender, ['female', 'girls']) || in_array($secGender, ['female', 'girls'])) {
+                    $genderStats['female']++;
+                } else {
+                    $genderStats['mixed']++;
+                }
+            }
+            $genderStats['total']++;
+
+            // Academic Level
+            $subLevel = $booking->seat->seatSubsection->academic_level ?? '';
+            $secLevel = $booking->seat->seatSection->academic_level ?? '';
+            $userLevel = $booking->user->academic_level ?? '';
+
+            $lvl = !empty($subLevel) && $subLevel !== 'all' ? $subLevel : (!empty($secLevel) && $secLevel !== 'all' ? $secLevel : (!empty($userLevel) && $userLevel !== 'all' ? $userLevel : 'all'));
+
+            if (strcasecmp($lvl, 'PRC') === 0) {
+                $levelStats['PRC']++;
+            } elseif (strcasecmp($lvl, 'CAF') === 0) {
+                $levelStats['CAF']++;
+            } elseif (strcasecmp($lvl, 'Final') === 0) {
+                $levelStats['Final']++;
+            } else {
+                $levelStats['all']++;
+            }
+            $levelStats['total']++;
+        }
+
         if (request()->expectsJson()) {
             return response()->json([
                 'analytics' => $analytics,
                 'monthlyBookings' => $monthlyBookings,
                 'topLibraries' => $topLibraries,
-                'recentBookings' => $recentBookings
+                'recentBookings' => $recentBookings,
+                'genderStats' => $genderStats,
+                'levelStats' => $levelStats
             ]);
         }
 

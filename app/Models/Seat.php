@@ -12,6 +12,7 @@ class Seat extends Model
     protected $fillable = [
         'floor_id',
         'section_id',
+        'subsection_id',
         'table_id',
         'cabin_number',
         'cabin_features',
@@ -34,6 +35,7 @@ class Seat extends Model
     protected $casts = [
         'floor_id' => 'integer',
         'section_id' => 'integer',
+        'subsection_id' => 'integer',
         'table_id' => 'integer',
         'cabin_features' => 'array',
         'has_computer' => 'boolean',
@@ -64,9 +66,19 @@ class Seat extends Model
         );
     }
 
+    public function section()
+    {
+        return $this->belongsTo(SeatSection::class, 'section_id');
+    }
+
     public function seatSection()
     {
         return $this->belongsTo(SeatSection::class, 'section_id');
+    }
+
+    public function seatSubsection()
+    {
+        return $this->belongsTo(SeatSubsection::class, 'subsection_id');
     }
 
     public function studyTable()
@@ -77,6 +89,16 @@ class Seat extends Model
     public function bookings()
     {
         return $this->hasMany(SeatBooking::class);
+    }
+
+    public function activeBooking()
+    {
+        return $this->hasOne(SeatBooking::class)->whereIn('status', ['booked', 'checked_in']);
+    }
+
+    public function activeBookings()
+    {
+        return $this->hasMany(SeatBooking::class)->whereIn('status', ['booked', 'checked_in']);
     }
 
     protected static function booted()
@@ -95,6 +117,15 @@ class Seat extends Model
                     }
                 }
             }
+            if ($seat->isDirty('subsection_id')) {
+                $oldSubId = $seat->getOriginal('subsection_id');
+                if ($oldSubId) {
+                    $oldSub = SeatSubsection::find($oldSubId);
+                    if ($oldSub) {
+                        $oldSub->update(['total_seats' => $oldSub->seats()->count()]);
+                    }
+                }
+            }
             $seat->updateSectionTotalSeats();
         });
 
@@ -105,10 +136,10 @@ class Seat extends Model
 
     public function updateSectionTotalSeats()
     {
-        if ($this->section_id) {
-            $section = $this->seatSection;
-            if ($section) {
-                $section->update(['total_seats' => $section->seats()->count()]);
+        if ($this->subsection_id) {
+            $sub = $this->seatSubsection;
+            if ($sub) {
+                $sub->update(['total_seats' => $sub->seats()->count()]);
             }
         }
     }

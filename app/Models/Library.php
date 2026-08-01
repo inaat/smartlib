@@ -23,6 +23,7 @@ class Library extends Model
         'parking_available',                    
         'is_active',
         'seat_layout_mode',
+        'table_capacity',
         'created_by',
     ];
 
@@ -30,6 +31,7 @@ class Library extends Model
         'contact_info' => 'array',
         'special_features' => 'array',
         'capacity' => 'integer',
+        'table_capacity' => 'integer',
         'parking_available' => 'boolean',
         'is_active' => 'boolean',
         'latitude' => 'float',

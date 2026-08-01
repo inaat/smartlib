@@ -216,7 +216,7 @@
         </div>
 
         <div class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select v-model="selectedSeat.status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
@@ -224,14 +224,6 @@
                 <option value="maintenance">Maintenance</option>
                 <option value="reserved">Reserved</option>
                 <option value="occupied">Occupied</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-              <select v-model="selectedSeat.seat_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                <option value="open">Open</option>
-                <option value="cubicle">Cubicle</option>
-                <option value="private_room">Private Room</option>
               </select>
             </div>
           </div>
@@ -318,24 +310,14 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-              <select v-model="form.seat_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                <option value="open">Open</option>
-                <option value="cubicle">Cubicle</option>
-                <option value="private_room">Private Room</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select v-model="form.status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                <option value="available">Available</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="reserved">Reserved</option>
-                <option value="occupied">Occupied</option>
-              </select>
-            </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select v-model="form.status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+              <option value="available">Available</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="reserved">Reserved</option>
+              <option value="occupied">Occupied</option>
+            </select>
           </div>
 
           <div class="space-y-3">
@@ -791,7 +773,6 @@ const printQRCode = (seat: any) => {
         <div class="container">
           <img src="${seat.qr_code_url}" onload="window.print(); window.close();" />
           <h1>Seat ${seat.seat_number}</h1>
-          <p>${seat.seat_type.toUpperCase()} SEAT</p>
           <p class="library">${seat.floor?.name} - ${seat.seat_section?.name || ''}</p>
         </div>
       </body>

@@ -2,14 +2,15 @@
   <!-- Sidebar -->
   <aside
     :class="[
-      'fixed inset-y-0 left-0 z-50 flex flex-col bg-emerald-700 border-r border-emerald-800/40 shadow-2xl transition-all duration-300 ease-in-out overflow-x-hidden',
+      'fixed inset-y-0 left-0 z-50 flex flex-col bg-emerald-700 border-r border-emerald-800/40 shadow-2xl transition-all duration-300 ease-in-out overflow-x-hidden overscroll-contain',
       // Mobile: always full width sidebar, translate in/out
       'w-72',
-      // Desktop overrides: sticky and width depends on collapsed state
+      // Desktop overrides: sticky h-screen locks height to viewport
       isCollapsed ? 'lg:w-20 lg:shadow-none lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden' : 'lg:w-64 lg:shadow-none lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden',
       // Translate: hidden on mobile unless open, always visible on desktop
       isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
     ]"
+    style="overscroll-behavior: contain;"
   >
     <!-- Branding Header -->
     <!-- Desktop: click to toggle collapse | Mobile: shows brand only -->
@@ -52,9 +53,9 @@
     <nav
       @scroll="closeAllDropdowns"
       :class="[
-        'flex-1 px-2.5 py-5 space-y-5 transition-all duration-300 overflow-y-auto overflow-x-hidden'
+        'flex-1 px-2.5 py-5 space-y-5 transition-all duration-300 overflow-y-auto overflow-x-hidden overscroll-contain'
       ]"
-      style="scrollbar-width: none; -ms-overflow-style: none;"
+      style="scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: contain;"
     >
       <!-- Main Menu Section -->
       <div>
@@ -306,27 +307,98 @@
       </div>
     </nav>
 
-    <!-- Footer Area (Sign Out Button Only) -->
-    <div class="p-4 border-t border-white/10 bg-transparent flex-shrink-0 flex flex-col justify-end">
-      <button
-        @click="handleLogout"
-        @mouseenter="handleMouseEnter($event, 'Sign Out')"
-        @mouseleave="handleMouseLeave"
-        :class="[
-          'flex items-center transition-all duration-205 group cursor-pointer w-full text-left',
-          showCollapsed
-            ? 'justify-center w-12 h-12 mx-auto rounded-xl text-red-200 hover:bg-red-950/30'
-            : 'px-4 py-3 mx-3 text-white hover:bg-white/10 font-semibold text-sm rounded-xl'
-        ]"
-      >
-        <LogOut
+    <!-- Footer Area (User Profile Card) -->
+    <div class="p-4 border-t border-white/10 bg-transparent z-10 flex flex-col justify-end flex-shrink-0 min-h-0">
+      
+      <!-- User Profile Card -->
+      <div class="relative">
+        <div 
+          @mouseenter="handleMouseEnter($event, 'User Profile & Menu')"
+          @mouseleave="handleMouseLeave"
           :class="[
-            'w-5 h-5 transition-colors',
-            showCollapsed ? 'text-red-200' : 'text-white/90 group-hover:text-white mr-3'
+            'flex items-center justify-between rounded-2xl hover:bg-white/10 transition-colors relative cursor-pointer group',
+            showCollapsed ? 'p-1 justify-center' : 'p-2'
           ]"
-        />
-        <span v-if="!showCollapsed" class="tracking-wide animate-fade-in">Sign Out</span>
-      </button>
+          @click="toggleProfileDropdown"
+        >
+          <!-- Profile Avatar -->
+          <div class="w-9 h-9 rounded-full bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-xs flex-shrink-0 overflow-hidden">
+            <img 
+              v-if="user?.profile_picture" 
+              :src="getProfilePictureUrl(user.profile_picture)" 
+              alt="Profile" 
+              class="w-full h-full object-cover"
+            />
+            <span v-else>{{ userInitials }}</span>
+          </div>
+
+          <!-- Profile Details (Expanded Only) -->
+          <div v-if="!showCollapsed" class="flex-1 ml-3 min-w-0 text-left">
+            <span class="text-xs font-bold text-white truncate block">{{ user?.name }}</span>
+            <span class="text-[10px] text-emerald-200 truncate block mt-0.5">{{ user?.email }}</span>
+          </div>
+
+          <!-- Profile More Options button (Expanded Only) -->
+          <div v-if="!showCollapsed" class="p-1 hover:bg-white/10 rounded-lg transition-colors">
+            <MoreVertical class="w-4 h-4 text-white/80 hover:text-white" />
+          </div>
+        </div>
+
+        <!-- Profile Dropdown Menu (Expanded / Mobile state) -->
+        <div
+          v-if="showProfileDropdown && !showCollapsed"
+          class="absolute bottom-14 left-0 right-0 bg-emerald-800 border border-emerald-600/60 rounded-2xl shadow-xl p-1.5 z-[100] flex flex-col space-y-0.5 animate-fade-in text-left"
+        >
+          <router-link
+            to="/librarian/profile"
+            @click="showProfileDropdown = false"
+            class="flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 rounded-xl transition-colors"
+          >
+            <User class="w-4 h-4 text-white/80" />
+            <span>My Profile</span>
+          </router-link>
+          <button
+            @click="handleLogout"
+            class="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-bold text-red-200 hover:bg-red-950/40 rounded-xl transition-colors text-left cursor-pointer"
+          >
+            <LogOut class="w-4 h-4" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+
+        <!-- Profile Floating Menu (desktop collapsed only) -->
+        <Teleport to="body">
+          <div
+            v-if="showProfileDropdown && showCollapsed"
+            class="fixed z-[9999] animate-fade-in w-48 bg-emerald-800 border border-emerald-600/60 rounded-2xl shadow-xl p-1.5 flex flex-col space-y-0.5 text-left"
+            :style="{
+              bottom: `${profileDropdownBottom}px`,
+              left: '80px'
+            }"
+            @click.stop
+          >
+            <div class="px-3 py-1.5 text-[10px] font-bold text-white/60 uppercase tracking-widest border-b border-white/10 mb-1">
+              {{ user?.name }}
+            </div>
+            <router-link
+              to="/librarian/profile"
+              @click="showProfileDropdown = false"
+              class="flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 rounded-xl transition-colors"
+            >
+              <User class="w-4 h-4 text-white/80" />
+              <span>My Profile</span>
+            </router-link>
+            <button
+              @click="handleLogout"
+              class="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-bold text-red-200 hover:bg-red-950/40 rounded-xl transition-colors text-left cursor-pointer"
+            >
+              <LogOut class="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </Teleport>
+      </div>
+
     </div>
   </aside>
 
@@ -369,7 +441,10 @@ import {
   LayoutGrid,
   LifeBuoy,
   Layers,
-  LogOut
+  LogOut,
+  MoreVertical,
+  User,
+  MapPin
 } from 'lucide-vue-next';
 
 import { useSwal } from '@/shared/composables/useSwal';
@@ -382,7 +457,7 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'toggle-collapse']);
 
 const route = useRoute();
-const { logout: authLogout } = useAuth();
+const { logout: authLogout, user } = useAuth();
 const { showConfirm } = useSwal();
 
 // Track if we are on desktop (lg breakpoint = 1024px)
@@ -391,6 +466,38 @@ const handleResize = () => { isDesktop.value = window.innerWidth >= 1024; };
 
 // showCollapsed is true only on desktop when sidebar is in collapsed state
 const showCollapsed = computed(() => props.isCollapsed && isDesktop.value);
+
+// Profile Dropdown state
+const showProfileDropdown = ref(false);
+const profileDropdownBottom = ref(0);
+
+const userInitials = computed(() => {
+  if (!user.value?.name) return 'LB';
+  const parts = user.value.name.split(' ');
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return parts[0][0].toUpperCase();
+});
+
+const getProfilePictureUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `/storage/${path}`;
+};
+
+const toggleProfileDropdown = (event: Event) => {
+  event.stopPropagation();
+  if (showCollapsed.value) {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    profileDropdownBottom.value = window.innerHeight - rect.bottom;
+    if (!showProfileDropdown.value) {
+      showGlobalTooltip.value = false;
+    }
+  }
+  showProfileDropdown.value = !showProfileDropdown.value;
+};
 
 const showSpaceManagementPopover = ref(false);
 
@@ -403,6 +510,7 @@ const spaceManagementPopoverTop = ref(0);
 const handleMouseEnter = (event: MouseEvent, label: string) => {
   if (!showCollapsed.value) return;
   if (label === 'Space Management' && showSpaceManagementPopover.value) return;
+  if (label === 'User Profile & Menu' && showProfileDropdown.value) return;
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
   activeTooltipText.value = label;
@@ -415,6 +523,7 @@ const handleMouseLeave = () => {
 };
 
 const handleLogout = async () => {
+  showProfileDropdown.value = false;
   if (await showConfirm('Sign Out', 'Are you sure you want to sign out?', 'Yes, Sign Out')) {
     await authLogout();
   }
@@ -445,7 +554,7 @@ const handleSpaceManagementToggle = (event: Event) => {
 };
 
 const isSpaceManagementActive = computed(() => {
-  return ['/librarian/floors', '/librarian/sections', '/librarian/seats'].some(path => route.path.includes(path));
+  return ['/librarian/floors', '/librarian/sections', '/librarian/seats'].some(path => route.path.includes(path)) && !route.path.includes('/librarian/live-map');
 });
 
 // Watch to sync dropdown expand with active state on initial load or route change
@@ -460,12 +569,14 @@ watch(showCollapsed, (collapsed) => {
   if (collapsed) {
     spaceManagementOpen.value = false;
     showSpaceManagementPopover.value = false;
+    showProfileDropdown.value = false;
   }
 });
 
 // Close all menus when clicking outside
 const closeAllDropdowns = () => {
   showSpaceManagementPopover.value = false;
+  showProfileDropdown.value = false;
   handleMouseLeave();
 };
 
@@ -481,6 +592,7 @@ onUnmounted(() => {
 
 const mainNavItems = [
   { path: '/librarian/dashboard', label: 'Dashboard', icon: Home, exact: true },
+  { path: '/librarian/live-map', label: 'Live Seat Map', icon: MapPin },
   { path: '/librarian/bookings', label: 'Seat Bookings', icon: Armchair },
   { path: '/librarian/reservations', label: 'Reserved Books', icon: BookOpen },
   { path: '/librarian/library', label: 'Library Info', icon: Building2 },
@@ -542,7 +654,6 @@ nav::-webkit-scrollbar {
 /* Prevent native browser drag-and-drop preview and text highlight selection inside sidebar */
 aside, aside * {
   -webkit-user-drag: none !important;
-  user-drag: none !important;
   user-select: none !important;
   -webkit-user-select: none !important;
   -ms-user-select: none !important;

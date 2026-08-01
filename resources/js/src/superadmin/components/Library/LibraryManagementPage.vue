@@ -89,12 +89,19 @@
         <!-- Card Body -->
         <div class="p-5 flex-1 flex flex-col justify-between">
           <div class="space-y-3">
-            <div class="text-left">
-              <h3 class="text-sm font-bold text-slate-700">{{ library.name }}</h3>
-              <p class="text-[10px] text-slate-505 font-medium flex items-center mt-1">
-                <MapPin class="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" />
-                {{ library.address }}
-              </p>
+            <div class="flex items-start justify-between text-left">
+              <div>
+                <h3 class="text-sm font-bold text-slate-700">{{ library.name }}</h3>
+                <p class="text-[10px] text-slate-505 font-medium flex items-center mt-1">
+                  <MapPin class="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" />
+                  {{ library.address }}
+                </p>
+              </div>
+              <div class="flex items-center space-x-1 px-2 py-0.5 bg-amber-50 border border-amber-100 rounded-lg text-amber-700 text-xs font-bold flex-shrink-0">
+                <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span>{{ library.averageRating || library.average_rating || '0.0' }}</span>
+                <span class="text-[10px] text-amber-600/70 font-medium">({{ library.reviewsCount || library.reviews_count || 0 }})</span>
+              </div>
             </div>
 
             <p class="text-xs text-slate-500 line-clamp-2 mt-2 leading-relaxed text-left">
@@ -316,7 +323,8 @@ import {
   Edit2, 
   Trash2,
   ChevronRight,
-  Search
+  Search,
+  Star
 } from 'lucide-vue-next';
 import { adminAPI } from '@/shared/services/api';
 import { useSwal } from '@/shared/composables/useSwal';

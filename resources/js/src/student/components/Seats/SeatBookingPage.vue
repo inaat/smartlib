@@ -16,25 +16,8 @@
         <h1 class="text-xl font-bold text-slate-800 leading-none">Select Your Seat</h1>
       </div>
 
-      <!-- Stats bar -->
-      <div class="flex flex-wrap items-center gap-2 bg-slate-50 border border-slate-100 p-1.5 rounded-xl">
-        <div class="flex items-center px-3 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-          <div class="w-2.5 h-2.5 rounded-full bg-[#29B072] mr-2"></div>
-          <span>Available</span>
-        </div>
-        <div class="flex items-center px-3 py-1 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-          <div class="w-2.5 h-2.5 rounded-full bg-[#FF9D43] mr-2"></div>
-          <span>Occupied</span>
-        </div>
-        <div class="flex items-center px-3 py-1 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-          <div class="w-2.5 h-2.5 rounded-full bg-[#617DFF] mr-2"></div>
-          <span>Reserved</span>
-        </div>
-        <div class="flex items-center px-3 py-1 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-          <div class="w-2.5 h-2.5 rounded-full bg-blue-600 mr-2"></div>
-          <span>Selected</span>
-        </div>
-      </div>
+      <!-- Premium Seat Status Legend -->
+      <SeatStatusLegend />
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -48,7 +31,10 @@
           :selected-seat="selectedSeat"
           :seat-clickable="true"
           :draggable="false"
-          :layout-mode="library?.seat_layout_mode"
+          :layout-mode="effectiveLayoutMode"
+          :tables-per-row="4"
+          :table-capacity="globalTableCapacity"
+          :show-legend="false"
           @seat-click="handleSeatClick"
         />
       </div>
@@ -65,26 +51,78 @@
                 <span class="font-bold text-blue-900 text-sm">Seat {{ selectedSeat.seat_number }}</span>
               </div>
               <p class="text-[10px] text-blue-600/90 font-semibold uppercase tracking-wide leading-none">
-                {{ getFloorName(selectedSeat.floor_id) }} • {{ getSectionName(selectedSeat.section_id) }}
-              </p>
-              <p class="text-[10px] text-blue-500 font-medium mt-1.5 uppercase tracking-wide capitalize leading-none">{{ selectedSeat.seat_type }} Seat</p>
-            </div>
-
-            <!-- Gender mismatch warning -->
-            <div v-if="isGenderMismatch(selectedSeat)" class="p-3 bg-red-50/60 rounded-xl border border-red-100/50 flex items-start space-x-2">
-              <UserX class="w-4.5 h-4.5 text-red-500 flex-shrink-0" />
-              <p class="text-[11px] text-red-600 font-medium leading-normal">This section is restricted to another gender.</p>
-            </div>
-
-            <!-- Academic Level mismatch warning -->
-            <div v-if="isLevelMismatch(selectedSeat)" class="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start space-x-2">
-              <AlertCircle class="w-4.5 h-4.5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <p class="text-[11px] text-amber-800 font-medium leading-normal">
-                This seat is reserved for {{ getSectionLevelName(selectedSeat.section_id) }} students.
+                {{ getSeatLocationSummary(selectedSeat) }}
               </p>
             </div>
 
-            <template v-else>
+            <!-- Approved Override Banner -->
+            <div v-if="getSeatOverrideStatus(selectedSeat.id) === 'approved'" class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center space-x-2">
+              <CheckCircle class="w-4.5 h-4.5 text-emerald-600 flex-shrink-0" />
+              <p class="text-[11px] text-emerald-900 font-bold leading-tight m-0">
+                Override Request Approved! You can now reserve this seat for today.
+              </p>
+            </div>
+
+            <!-- Gender mismatch warning (Strict restriction - No override allowed) -->
+            <div v-if="isGenderMismatch(selectedSeat)" class="p-3.5 bg-red-50 rounded-xl border border-red-100 flex items-start space-x-2.5">
+              <UserX class="w-4.5 h-4.5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p class="text-xs text-red-700 font-bold leading-tight">Gender Restriction</p>
+                <p class="text-[11px] text-red-600 font-medium leading-normal mt-0.5 m-0">This section is restricted to another gender.
+                  
+                </p>
+              </div>
+            </div>
+
+            <!-- Academic Level mismatch warning (Only shown if gender matches!) -->
+            <div v-else-if="isLevelMismatch(selectedSeat)" class="p-4 rounded-2xl border space-y-3"
+              :class="[
+                getSeatOverrideStatus(selectedSeat.id) === 'pending' ? 'bg-amber-50/90 border-amber-200/60' :
+                getSeatOverrideStatus(selectedSeat.id) === 'rejected' ? 'bg-rose-50/90 border-rose-200/60' :
+                'bg-amber-50/90 border-amber-200/60'
+              ]"
+            >
+              <div class="flex items-start space-x-2">
+                <AlertCircle class="w-4.5 h-4.5 flex-shrink-0 mt-0.5"
+                  :class="[
+                    getSeatOverrideStatus(selectedSeat.id) === 'rejected' ? 'text-rose-600' : 'text-amber-600'
+                  ]"
+                />
+                <div>
+                  <p class="text-xs font-medium leading-normal m-0"
+                    :class="[
+                      getSeatOverrideStatus(selectedSeat.id) === 'rejected' ? 'text-rose-900' : 'text-amber-900'
+                    ]"
+                  >
+                    This seat is restricted to <span class="font-bold uppercase" :class="[getSeatOverrideStatus(selectedSeat.id) === 'rejected' ? 'text-rose-800' : 'text-amber-800']">{{ getSectionLevelName(selectedSeat) }}</span> students.
+                  </p>
+
+                  <p v-if="getSeatOverrideStatus(selectedSeat.id) === 'pending'" class="text-[11px] font-bold text-amber-700 mt-1 m-0">
+                    ⏳ Request Pending: Your request is currently under librarian review.
+                  </p>
+                  <p v-else-if="getSeatOverrideStatus(selectedSeat.id) === 'rejected'" class="text-[11px] font-bold text-rose-700 mt-1 m-0">
+                    ❌ Request Rejected: The librarian rejected your override request for this seat.
+                  </p>
+                  <p v-else-if="userOverrideRequests.length > 0" class="text-[11px] font-bold text-amber-800 mt-1 m-0">
+                     You have already submitted an override request ({{ userOverrideRequests[0]?.seat?.seat_number || userOverrideRequests[0]?.seat_id }}).
+                  </p>
+                </div>
+              </div>
+
+              <!-- Button for New Request ONLY when user has NOT submitted ANY request today -->
+              <button 
+                v-if="userOverrideRequests.length === 0"
+                @click="sendOverrideRequest"
+                :disabled="submitting"
+                class="w-full py-2.5 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-600/10 flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50 active:scale-98"
+              >
+                <span v-if="submitting" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <ShieldAlert v-else class="w-4 h-4" />
+                <span>{{ submitting ? 'Submitting Request...' : 'Request Override from Librarian' }}</span>
+              </button>
+            </div>
+
+            <template v-else-if="!isGenderMismatch(selectedSeat)">
               <div class="space-y-4">
                 <div>
                   <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Duration</label>
@@ -96,9 +134,9 @@
                 </div>
 
                 <!-- Closing time notice / closed error -->
-                <div v-if="showClosingTimeNotice" class="p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-start space-x-2">
-                  <AlertCircle class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <p class="text-[10px] text-amber-800 font-medium leading-normal m-0">
+                <div v-if="showClosingTimeNotice" class="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-start space-x-2">
+                  <AlertCircle class="w-4 h-4 text-slate-600 flex-shrink-0 mt-0.5" />
+                  <p class="text-[10px] text-slate-800 font-medium leading-normal m-0">
                     You can book this seat for a maximum of {{ formatHours(maxAvailableHours) }} because the library closes at {{ formatTimeOnly(libraryClosingTime) }}.
                   </p>
                 </div>
@@ -112,20 +150,33 @@
 
                 <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Date</label>
+                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                      <span>Date</span>
+                    </label>
                     <input
                       type="date"
                       v-model="selectedDate"
                       :min="minDate"
                       :max="maxDate"
+                      @change="onDateChange"
                       class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                     />
                   </div>
                   <div>
-                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Start Time</label>
+                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                      <span>Start Time</span>
+                      <span v-if="!isManualTime && selectedDate === minDate" class="text-[8.5px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-tight flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Live
+                      </span>
+                      <button v-else-if="isManualTime && selectedDate === minDate" @click="resetToCurrentTime" type="button" class="text-[8.5px] font-bold text-blue-600 hover:underline uppercase tracking-tight">
+                        Use Now
+                      </button>
+                    </label>
                     <input
                       type="time"
                       v-model="selectedTime"
+                      @change="onTimeInputChange"
                       class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                     />
                   </div>
@@ -224,27 +275,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuth } from '@/shared/composables/useAuth';
 import { studentAPI } from '@/shared/services/api';
 import {
   ChevronRight, Armchair, Clock, Zap,
-  CheckCircle, UserX, AlertCircle
+  CheckCircle, UserX, AlertCircle, ShieldAlert
 } from 'lucide-vue-next';
 import SeatLayoutRenderer from '@/shared/components/SeatLayout/SeatLayoutRenderer.vue';
+import SeatStatusLegend from '@/shared/components/SeatLayout/SeatStatusLegend.vue';
 import { useSwal } from '@/shared/composables/useSwal';
 import { useGeolocation } from '@/shared/composables/useGeolocation';
 
 const route = useRoute();
 const router = useRouter();
 
-const { showError, showSuccess } = useSwal();
+const { showError, showSuccess, showConfirm } = useSwal();
 const { latitude, longitude } = useGeolocation();
 
 const loading = ref(true);
 const submitting = ref(false);
-const showSuccessModal = ref(false);
 
 const library = ref<any>(null);
 const floors = ref<any[]>([]);
@@ -252,10 +303,52 @@ const sections = ref<any[]>([]);
 const seats = ref<any[]>([]);
 const tables = ref<any[]>([]);
 
+const globalTableCapacity = ref<number>(4);
+
+const loadGlobalTableCapacity = () => {
+  try {
+    if (library.value?.table_capacity) {
+      globalTableCapacity.value = library.value.table_capacity;
+      return;
+    }
+    const saved = localStorage.getItem('smartlib_global_table_capacity') || localStorage.getItem('smartlib_table_capacity');
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if ([2, 4, 6, 8, 10, 12, 14, 16].includes(parsed)) {
+        globalTableCapacity.value = parsed;
+      }
+    }
+  } catch (e) {}
+};
+
+watch(() => library.value, (newLib) => {
+  if (newLib?.table_capacity) {
+    globalTableCapacity.value = newLib.table_capacity;
+    try {
+      localStorage.setItem('smartlib_global_table_capacity', newLib.table_capacity.toString());
+    } catch (e) {}
+  }
+}, { deep: true, immediate: true });
+
+onMounted(() => {
+  loadGlobalTableCapacity();
+  window.addEventListener('storage', loadGlobalTableCapacity);
+  window.addEventListener('smartlib_table_capacity_changed', loadGlobalTableCapacity);
+});
+
+const effectiveLayoutMode = computed(() => {
+  return localStorage.getItem('smartlib_active_layout_mode') || library.value?.seat_layout_mode || 'tables';
+});
+const showSuccessModal = ref(false);
+
 const selectedSeat = ref<any | null>(null);
 const bookingDuration = ref(2);
 
 const { user, isTrialActive } = useAuth();
+
+const now = ref(new Date());
+let timer: any = null;
+const isManualTime = ref(false);
 
 const toLocalDateStr = (d: Date) => {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -269,6 +362,64 @@ const toLocalTimeStr = (d: Date) => {
 
 const selectedDate = ref(toLocalDateStr(new Date()));
 const selectedTime = ref(toLocalTimeStr(new Date()));
+
+const updateLiveTime = () => {
+  now.value = new Date();
+  const todayStr = toLocalDateStr(now.value);
+  const currentTimeStr = toLocalTimeStr(now.value);
+
+  if (selectedDate.value === todayStr) {
+    if (!isManualTime.value || selectedTime.value < currentTimeStr) {
+      isManualTime.value = false;
+      selectedTime.value = currentTimeStr;
+    }
+  } else if (selectedDate.value < todayStr) {
+    selectedDate.value = todayStr;
+    selectedTime.value = currentTimeStr;
+    isManualTime.value = false;
+  }
+};
+
+const resetToCurrentTime = () => {
+  isManualTime.value = false;
+  selectedDate.value = toLocalDateStr(new Date());
+  selectedTime.value = toLocalTimeStr(new Date());
+  updateLiveTime();
+};
+
+const onDateChange = () => {
+  const todayStr = toLocalDateStr(new Date());
+  if (selectedDate.value < todayStr) {
+    selectedDate.value = todayStr;
+  }
+  if (selectedDate.value === todayStr) {
+    const currentTimeStr = toLocalTimeStr(new Date());
+    if (selectedTime.value <= currentTimeStr) {
+      isManualTime.value = false;
+      selectedTime.value = currentTimeStr;
+    } else {
+      isManualTime.value = true;
+    }
+  } else {
+    isManualTime.value = true;
+  }
+};
+
+const onTimeInputChange = () => {
+  const todayStr = toLocalDateStr(new Date());
+  const currentTimeStr = toLocalTimeStr(new Date());
+
+  if (selectedDate.value === todayStr) {
+    if (selectedTime.value <= currentTimeStr) {
+      isManualTime.value = false;
+      selectedTime.value = currentTimeStr;
+    } else {
+      isManualTime.value = true;
+    }
+  } else {
+    isManualTime.value = true;
+  }
+};
 
 const libraryClosingTime = computed(() => {
   if (!library.value?.operating_days) return null;
@@ -401,6 +552,8 @@ const maxDate = computed(() => {
   return toLocalDateStr(max);
 });
 
+const userOverrideRequests = ref<any[]>([]);
+
 const fetchSeats = async () => {
   try {
     const id = parseInt(route.params.libraryId as string);
@@ -411,6 +564,13 @@ const fetchSeats = async () => {
     sections.value = response.sections;
     seats.value = response.seats;
     tables.value = response.tables || [];
+
+    try {
+      const overrides = await studentAPI.getStudentOverrideRequests();
+      userOverrideRequests.value = overrides || [];
+    } catch (oErr) {
+      console.error('Error fetching student override requests:', oErr);
+    }
   } catch (error) {
     console.error('Failed to fetch seats:', error);
   } finally {
@@ -418,28 +578,124 @@ const fetchSeats = async () => {
   }
 };
 
-const getFloorName = (id: number) => floors.value.find(f => f.id === id)?.name || '';
+const getSeatOverrideStatus = (seatId: number) => {
+  const req = userOverrideRequests.value.find((r: any) => r.seat_id === seatId);
+  return req ? req.status : null; // 'pending' | 'approved' | 'rejected' | null
+};
+
+const getFloorName = (seatOrId: any) => {
+  if (!seatOrId) return floors.value[0]?.name || '1st Floor';
+  const floorId = typeof seatOrId === 'object' ? seatOrId.floor_id : seatOrId;
+  if (floorId) {
+    const found = floors.value.find(f => f.id === floorId);
+    if (found) return found.name;
+  }
+  if (typeof seatOrId === 'object' && seatOrId.section_id) {
+    const sec = sections.value.find(s => s.id === seatOrId.section_id);
+    if (sec && sec.floor_id) {
+      const found = floors.value.find(f => f.id === sec.floor_id);
+      if (found) return found.name;
+    }
+  }
+  return floors.value[0]?.name || '1st Floor';
+};
 const getSectionName = (id: number) => sections.value.find(s => s.id === id)?.name || '';
+const getSubsectionName = (seat: any) => {
+  if (!seat?.subsection_id) return '';
+  const section = sections.value.find(s => s.id === seat.section_id);
+  const sub = section?.subsections?.find((s: any) => s.id === seat.subsection_id);
+  return sub ? sub.name : '';
+};
 
 const isGenderMismatch = (seat: any) => {
   const section = sections.value.find(s => s.id === seat.section_id);
-  if (!section || !section.gender || section.gender === 'mixed') return false;
+  if (!section) return false;
+
+  const sub = section.subsections?.find((s: any) => s.id === seat.subsection_id);
+
+  let secGender = (sub?.gender && sub.gender !== 'mixed')
+    ? String(sub.gender).toLowerCase().trim()
+    : (section.gender && section.gender !== 'mixed')
+      ? String(section.gender).toLowerCase().trim()
+      : 'mixed';
+
+  const combinedName = `${section.name || ''} ${sub?.name || ''}`.toLowerCase();
+  if (combinedName.includes('girls') || combinedName.includes('girl') || combinedName.includes('female') || combinedName.includes('women')) {
+    secGender = 'female';
+  } else if (combinedName.includes('boys') || combinedName.includes('boy') || combinedName.includes('male') || combinedName.includes('men')) {
+    secGender = 'male';
+  }
+
+  if (secGender === 'mixed' || secGender === 'all') return false;
+
   const studentUser = user.value as any;
-  if (!studentUser || !studentUser.gender) return true;
-  return studentUser.gender !== section.gender;
+  const rawGender = studentUser?.gender || 'male';
+  const userGender = String(rawGender).toLowerCase().trim();
+
+  const isMaleSection = ['male', 'boys', 'boy', 'men'].includes(secGender);
+  const isFemaleSection = ['female', 'girls', 'girl', 'women'].includes(secGender);
+
+  const isMaleUser = ['male', 'boys', 'boy', 'men'].includes(userGender);
+  const isFemaleUser = ['female', 'girls', 'girl', 'women'].includes(userGender);
+
+  if (isMaleSection && !isMaleUser) return true;
+  if (isFemaleSection && !isFemaleUser) return true;
+
+  return false;
 };
 
 const isLevelMismatch = (seat: any) => {
+  if (!seat) return false;
+
+  // If student has an approved override request for this seat for today, unlock it!
+  if (getSeatOverrideStatus(seat.id) === 'approved') {
+    return false;
+  }
+
   const section = sections.value.find(s => s.id === seat.section_id);
-  if (!section || !section.academic_level || section.academic_level === 'all') return false;
+  const sub = section?.subsections?.find((s: any) => s.id === seat.subsection_id);
+  
+  const requiredLevel = (sub?.academic_level && sub.academic_level !== 'all')
+    ? sub.academic_level
+    : (section?.academic_level !== 'all' ? section?.academic_level : null);
+
+  if (!requiredLevel) return false;
   const studentUser = user.value as any;
   if (!studentUser || !studentUser.ca_level) return true;
-  return studentUser.ca_level !== section.academic_level;
+  return studentUser.ca_level !== requiredLevel;
 };
 
-const getSectionLevelName = (sectionId: number) => {
-  const section = sections.value.find(s => s.id === sectionId);
+const getSectionLevelName = (seat: any) => {
+  if (!seat) return 'All Levels';
+  const section = sections.value.find(s => s.id === seat.section_id);
+  const sub = section?.subsections?.find((s: any) => s.id === seat.subsection_id);
+  if (sub?.academic_level && sub.academic_level !== 'all') return sub.academic_level;
   return section?.academic_level || 'All Levels';
+};
+
+const getSeatLocationSummary = (seat: any) => {
+  if (!seat) return '';
+  const floorName = getFloorName(seat);
+  const secName = getSectionName(seat.section_id);
+  const subName = getSubsectionName(seat);
+  const levelName = getSectionLevelName(seat);
+
+  const parts = [floorName, secName];
+
+  if (subName) {
+    parts.push(subName);
+  }
+
+  if (levelName && levelName.toLowerCase() !== 'all levels') {
+    const isLevelInSub = subName && subName.toLowerCase().includes(levelName.toLowerCase());
+    const isLevelInSec = secName && secName.toLowerCase().includes(levelName.toLowerCase());
+    
+    if (!isLevelInSub && !isLevelInSec) {
+      parts.push(levelName);
+    }
+  }
+
+  return parts.filter(Boolean).join(' • ');
 };
 
 const handleSeatClick = (seat: any) => {
@@ -453,7 +709,37 @@ const handleSeatClick = (seat: any) => {
 const confirmBooking = async () => {
   if (!selectedSeat.value) return;
 
-  const startTime = new Date(`${selectedDate.value}T${selectedTime.value}`);
+  const confirmNow = new Date();
+  const todayStr = toLocalDateStr(confirmNow);
+  const currentTimeStr = toLocalTimeStr(confirmNow);
+
+  let startTime: Date;
+
+  if (selectedDate.value === todayStr) {
+    const chosenTime = new Date(`${selectedDate.value}T${selectedTime.value}`);
+    if (!isManualTime.value || chosenTime.getTime() <= confirmNow.getTime() + 60000) {
+      startTime = confirmNow;
+      selectedTime.value = currentTimeStr;
+      isManualTime.value = false;
+    } else {
+      startTime = chosenTime;
+    }
+  } else if (selectedDate.value < todayStr) {
+    selectedDate.value = todayStr;
+    selectedTime.value = currentTimeStr;
+    isManualTime.value = false;
+    startTime = confirmNow;
+  } else {
+    startTime = new Date(`${selectedDate.value}T${selectedTime.value}`);
+  }
+
+  if (startTime.getTime() < confirmNow.getTime() - 60000) {
+    startTime = confirmNow;
+    selectedDate.value = todayStr;
+    selectedTime.value = currentTimeStr;
+    isManualTime.value = false;
+  }
+
   const endTime = new Date(startTime.getTime() + bookingDuration.value * 60 * 60 * 1000);
 
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -479,9 +765,15 @@ const confirmBooking = async () => {
     closeDate.setDate(closeDate.getDate() + 1);
   }
 
-  if (startTime < openDate || endTime > closeDate) {
+  if (startTime < openDate || startTime >= closeDate) {
     showError('Outside Operation Hours', `This library is only open from ${operatingHour.openTime} to ${operatingHour.closeTime} on ${dayName}s.`);
     return;
+  }
+
+  // If endTime exceeds library closing time, adjust actualEndTime to closeDate
+  let actualEndTime = endTime;
+  if (actualEndTime > closeDate) {
+    actualEndTime = closeDate;
   }
 
   submitting.value = true;
@@ -495,7 +787,7 @@ const confirmBooking = async () => {
       seat_id: selectedSeat.value.id,
       library_id: library.value.id,
       booking_time: formatLocalDatetime(startTime),
-      scheduled_end_time: formatLocalDatetime(endTime),
+      scheduled_end_time: formatLocalDatetime(actualEndTime),
       latitude: latitude.value,
       longitude: longitude.value,
     });
@@ -576,11 +868,35 @@ const joinQueue = async () => {
   }
 };
 
+const sendOverrideRequest = async () => {
+  if (!selectedSeat.value) return;
+  submitting.value = true;
+  try {
+    await studentAPI.requestOverride(selectedSeat.value.id);
+    showSuccess('Override Request Sent!', 'Your request has been submitted to the librarian for approval.');
+    const overrides = await studentAPI.getStudentOverrideRequests();
+    userOverrideRequests.value = overrides || [];
+  } catch (reqErr: any) {
+    showError('Request Failed', reqErr.response?.data?.message || 'Failed to submit override request.');
+  } finally {
+    submitting.value = false;
+  }
+};
+
 const goToBookings = () => {
   router.push('/student/my-bookings');
 };
 
-onMounted(fetchSeats);
+onMounted(() => {
+  fetchSeats();
+  timer = setInterval(() => {
+    updateLiveTime();
+  }, 1000);
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
+});
 </script>
 
 <style scoped>

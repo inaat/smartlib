@@ -19,7 +19,7 @@ class SeatSectionController extends Controller
         }
 
         $sections = $query->withCount('seats')
-            ->with(['seats', 'floor'])
+            ->with(['seats.seatSubsection', 'floor', 'subsections'])
             ->get()
             ->map(function ($section) {
                 $section->available_seats = $section->seats()->where('status', 'available')->count();
@@ -91,16 +91,18 @@ class SeatSectionController extends Controller
                 continue;
             }
 
-            $qrContent = base64_encode(json_encode([
+            $qrData = [
                 'type' => 'seat',
                 'seat_number' => $seatNumber,
                 'library_id' => $libraryId,
-            ]));
+                'section_id' => $section->id,
+                'uid' => uniqid(),
+            ];
+            $qrContent = base64_encode(json_encode($qrData));
 
-            // Also skip if QR code already exists
             if (Seat::where('qr_code', $qrContent)->exists()) {
-                $counter++;
-                continue;
+                $qrData['uid'] = uniqid() . '_' . rand(1000, 9999);
+                $qrContent = base64_encode(json_encode($qrData));
             }
 
             $seat = Seat::create([
@@ -187,16 +189,18 @@ class SeatSectionController extends Controller
                         continue;
                     }
 
-                    $qrContent = base64_encode(json_encode([
+                    $qrData = [
                         'type' => 'seat',
                         'seat_number' => $seatNumber,
                         'library_id' => $libraryId,
-                    ]));
+                        'section_id' => $section->id,
+                        'uid' => uniqid(),
+                    ];
+                    $qrContent = base64_encode(json_encode($qrData));
 
-                    // Also skip if QR code already exists
                     if (Seat::where('qr_code', $qrContent)->exists()) {
-                        $counter++;
-                        continue;
+                        $qrData['uid'] = uniqid() . '_' . rand(1000, 9999);
+                        $qrContent = base64_encode(json_encode($qrData));
                     }
 
                     $seat = Seat::create([

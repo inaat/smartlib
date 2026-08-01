@@ -63,4 +63,26 @@ class SubscriptionController extends Controller
             'order' => $order->load('plan')
         ]);
     }
+
+    public function history(Request $request)
+    {
+        $user = $request->user();
+
+        // Get orders / subscription buy requests
+        $orders = \App\Models\Order::with('plan')
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Get subscription history (active & past subscriptions)
+        $subscriptions = UserSubscription::with('subscriptionPlan')
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'orders' => $orders,
+            'subscriptions' => $subscriptions,
+        ]);
+    }
 }

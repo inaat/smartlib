@@ -122,13 +122,18 @@ class SupportTicketController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        // Closed complaints cannot receive new messages
+        if ($supportTicket->status === 'closed') {
+            return response()->json(['message' => 'This complaint is completely closed and cannot receive new messages.'], 422);
+        }
+
         $message = SupportMessage::create([
             'support_ticket_id' => $supportTicket->id,
             'user_id' => $user->id,
             'message' => $request->message,
         ]);
 
-        // If librarian or admin responds, maybe mark as in-progress
+        // If librarian or admin responds, mark as in-progress if currently open
         if ($user->role !== 'student' && $supportTicket->status === 'open') {
             $supportTicket->update(['status' => 'in_progress']);
         }
@@ -159,6 +164,11 @@ class SupportTicketController extends Controller
 
         if ($user->role === 'super_admin' && $supportTicket->ticket_type !== 'system') {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Once closed, complaints cannot be reopened
+        if ($supportTicket->status === 'closed' && $request->status !== 'closed') {
+            return response()->json(['message' => 'This complaint is permanently closed and cannot be reopened.'], 422);
         }
 
         $supportTicket->update(['status' => $request->status]);

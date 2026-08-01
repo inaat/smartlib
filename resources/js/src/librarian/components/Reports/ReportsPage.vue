@@ -209,6 +209,104 @@
         </div>
       </div>
 
+      <!-- Advanced Attendance Audit Filters -->
+      <div v-if="filters.category === 'attendance'" class="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 space-y-4">
+        <span class="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Advanced Attendance Audit Filter Parameters</span>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Student (Name / CRN)</label>
+            <input
+              v-model="filters.studentSearch"
+              type="text"
+              placeholder="Search student..."
+              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Attendance Status</label>
+            <select
+              v-model="filters.attendanceStatus"
+              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none cursor-pointer"
+            >
+              <option value="all">All Session States</option>
+              <option value="present">Currently Present</option>
+              <option value="left">Already Left</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Mark Type</label>
+            <select
+              v-model="filters.markType"
+              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none cursor-pointer"
+            >
+              <option value="all">All Mark Types</option>
+              <option value="system">System (Auto Check-In)</option>
+              <option value="manual">Manual (By Librarian)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced Book Inventory Filters -->
+      <div v-if="filters.category === 'books'" class="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 space-y-4">
+        <span class="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Advanced Book Inventory Filter Parameters</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Book Search (Title / Author / ISBN)</label>
+            <input
+              v-model="filters.bookSearch"
+              type="text"
+              placeholder="Search title, author, ISBN..."
+              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Book Category</label>
+            <select
+              v-model="filters.bookCategory"
+              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none cursor-pointer"
+            >
+              <option value="all">All Categories</option>
+              <option value="Fiction">Fiction</option>
+              <option value="Science">Science</option>
+              <option value="Technology">Technology</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="History">History</option>
+              <option value="Biography">Biography</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Format Type</label>
+            <select
+              v-model="filters.bookType"
+              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none cursor-pointer"
+            >
+              <option value="all">All Formats</option>
+              <option value="physical">Physical Book</option>
+              <option value="digital">Digital E-Book</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Availability Status</label>
+            <select
+              v-model="filters.bookAvailability"
+              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none cursor-pointer"
+            >
+              <option value="all">All Statuses</option>
+              <option value="available">Available</option>
+              <option value="borrowed">Borrowed</option>
+              <option value="reserved">Reserved</option>
+              <option value="maintenance">Maintenance</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <!-- Advanced Complaints Filters -->
       <div v-if="filters.category === 'complaints'" class="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 space-y-4">
         <span class="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Advanced Support Ticket / Complaints Filter Parameters</span>
@@ -331,58 +429,6 @@
               <option value="ongoing">Ongoing</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Advanced Attendance Audit Filters -->
-      <div v-if="filters.category === 'attendance'" class="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 space-y-4">
-        <span class="text-[10px] font-black text-emerald-800 uppercase tracking-widest block">Advanced Attendance Audit Filter Parameters</span>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Student (Name / CRN)</label>
-            <input
-              v-model="filters.attendanceStudentSearch"
-              type="text"
-              placeholder="Search student..."
-              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none"
-            />
-          </div>
-
-          <div>
-            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Seat Number</label>
-            <input
-              v-model="filters.attendanceSeatNumber"
-              type="text"
-              placeholder="e.g. S-101"
-              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none"
-            />
-          </div>
-
-          <div>
-            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Attendance Status</label>
-            <select
-              v-model="filters.attendanceStatus"
-              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none cursor-pointer"
-            >
-              <option value="all">All Statuses</option>
-              <option value="present">Present (Active Session)</option>
-              <option value="left">Checked Out (Left)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Session Duration</label>
-            <select
-              v-model="filters.attendanceDurationFilter"
-              class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none cursor-pointer"
-            >
-              <option value="all">All Durations</option>
-              <option value="under_30m">&lt; 30 Minutes</option>
-              <option value="30m_1h">30 Mins – 1 Hour</option>
-              <option value="1h_3h">1 Hour – 3 Hours</option>
-              <option value="over_3h">&gt; 3 Hours</option>
             </select>
           </div>
         </div>
@@ -579,6 +625,66 @@
                   </tr>
                 </template>
 
+                <!-- Attendance Template -->
+                <template v-else-if="filters.category === 'attendance'">
+                  <tr
+                    v-for="(row, idx) in paginatedItems"
+                    :key="idx"
+                    class="hover:bg-slate-50/60 transition-colors"
+                  >
+                    <!-- Student Information -->
+                    <td class="py-3 px-4 font-bold text-slate-800 whitespace-nowrap">
+                      <div>{{ row.studentName }}</div>
+                      <div class="text-[10px] text-slate-400 font-semibold mt-0.5">CRN: {{ row.crn }}</div>
+                    </td>
+
+                    <!-- Seat & Location -->
+                    <td class="py-3 px-4 font-bold text-emerald-800 whitespace-nowrap">
+                      <div>{{ row.seatNumber !== '—' ? 'Seat ' + row.seatNumber : 'General Access' }}</div>
+                      <div class="text-[10px] text-slate-400 font-semibold mt-0.5">{{ row.floorName }}</div>
+                    </td>
+
+                    <!-- Date -->
+                    <td class="py-3 px-4 font-semibold text-slate-655 whitespace-nowrap">
+                      {{ row.date }}
+                    </td>
+
+                    <!-- Check-In / Check-Out -->
+                    <td class="py-3 px-4 text-slate-500 whitespace-nowrap">
+                      <div class="text-[10px] space-y-0.5 font-semibold">
+                        <div class="text-emerald-700 font-bold">In: {{ row.checkInTime }}</div>
+                        <div v-if="row.checkOutTime !== '—'" class="text-rose-600 font-bold">Out: {{ row.checkOutTime }}</div>
+                        <div v-else class="text-emerald-600 font-bold flex items-center gap-1">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          <span>Present Now</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- Duration -->
+                    <td class="py-3 px-4 font-semibold text-slate-700 whitespace-nowrap">
+                      <div class="text-[10px] font-bold" :class="row.totalMinutes > 0 ? 'text-slate-800' : 'text-slate-400'">
+                        {{ row.formattedDuration }}
+                      </div>
+                    </td>
+
+                    <!-- Mark Type -->
+                    <td class="py-3 px-4 whitespace-nowrap">
+                      <span :class="[
+                        'text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border',
+                        row.isManual ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-blue-50 border-blue-200 text-blue-700'
+                      ]">
+                        {{ row.markType }}
+                      </span>
+                    </td>
+
+                    <!-- Status -->
+                    <td class="py-3 px-4 whitespace-nowrap">
+                      <span v-html="statusBadgeHtml(row.calculatedStatus)"></span>
+                    </td>
+                  </tr>
+                </template>
+
                 <!-- Complaints Template -->
                 <template v-else-if="filters.category === 'complaints'">
                   <tr
@@ -605,33 +711,6 @@
                     </td>
                     <td class="py-3 px-4 whitespace-nowrap">
                       <span v-html="statusBadgeHtml(row.status)"></span>
-                    </td>
-                  </tr>
-                </template>
-
-                <!-- Attendance Audit Template -->
-                <template v-else-if="filters.category === 'attendance'">
-                  <tr
-                    v-for="(row, idx) in paginatedItems"
-                    :key="idx"
-                    class="hover:bg-slate-50/60 transition-colors"
-                  >
-                    <td class="py-3 px-4 font-extrabold text-slate-800 whitespace-nowrap">{{ row.attendanceId }}</td>
-                    <td class="py-3 px-4 font-bold text-slate-800 whitespace-nowrap">
-                      <div>{{ row.studentName }}</div>
-                      <div class="text-[10px] text-slate-400 font-semibold mt-0.5">CRN: {{ row.crn }}</div>
-                    </td>
-                    <td class="py-3 px-4 font-bold text-emerald-800 whitespace-nowrap">Seat {{ row.seatNumber }}</td>
-                    <td class="py-3 px-4 font-semibold text-slate-655 whitespace-nowrap">{{ row.date }}</td>
-                    <td class="py-3 px-4 font-semibold text-slate-500 whitespace-nowrap">{{ row.checkInTime }}</td>
-                    <td class="py-3 px-4 font-semibold whitespace-nowrap">
-                      <span :class="row.rawStatus === 'present' ? 'text-emerald-600 font-bold' : 'text-slate-600'">{{ row.checkOutTime }}</span>
-                    </td>
-                    <td class="py-3 px-4 font-bold text-slate-700 whitespace-nowrap">
-                      <span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 text-xs font-semibold">{{ row.durationStr }}</span>
-                    </td>
-                    <td class="py-3 px-4 whitespace-nowrap">
-                      <span v-html="statusBadgeHtml(row.calculatedStatus)"></span>
                     </td>
                   </tr>
                 </template>
@@ -680,6 +759,52 @@
                   </tr>
                 </template>
 
+                <!-- Book Inventory Template -->
+                <template v-else-if="filters.category === 'books'">
+                  <tr
+                    v-for="(row, idx) in paginatedItems"
+                    :key="idx"
+                    class="hover:bg-slate-50/60 transition-colors"
+                  >
+                    <!-- Book Details -->
+                    <td class="py-3 px-4 font-bold text-slate-800 whitespace-nowrap">
+                      <div class="max-w-[220px] truncate" :title="row.title">{{ row.title }}</div>
+                      <div class="text-[10px] text-slate-400 font-semibold mt-0.5">ISBN: {{ row.isbn }} &bull; {{ row.bookId }}</div>
+                    </td>
+
+                    <!-- Author & Publisher -->
+                    <td class="py-3 px-4 font-semibold text-slate-700 whitespace-nowrap">
+                      <div>{{ row.author }}</div>
+                      <div class="text-[10px] text-slate-400 font-medium mt-0.5">{{ row.publisher }} <span v-if="row.pubYear !== '—'">({{ row.pubYear }})</span></div>
+                    </td>
+
+                    <!-- Category & Type -->
+                    <td class="py-3 px-4 text-slate-655 whitespace-nowrap">
+                      <div class="font-bold text-slate-750">{{ row.category }}</div>
+                      <div class="text-[10px] text-slate-400 font-semibold mt-0.5">{{ row.type }}</div>
+                    </td>
+
+                    <!-- Shelf Location -->
+                    <td class="py-3 px-4 font-semibold text-slate-600 whitespace-nowrap">
+                      <div class="text-xs">{{ row.location }}</div>
+                    </td>
+
+                    <!-- Stock & Copies -->
+                    <td class="py-3 px-4 text-slate-500 whitespace-nowrap">
+                      <div class="text-[10px] space-y-0.5 font-bold">
+                        <div>Total: {{ row.copiesTotal }} copies</div>
+                        <div class="text-emerald-700">Avail: {{ row.copiesAvailable }} copies</div>
+                        <div v-if="row.copiesBorrowed > 0" class="text-blue-600">Borrowed: {{ row.copiesBorrowed }}</div>
+                      </div>
+                    </td>
+
+                    <!-- Availability -->
+                    <td class="py-3 px-4 whitespace-nowrap">
+                      <span v-html="statusBadgeHtml(row.calculatedStatus)"></span>
+                    </td>
+                  </tr>
+                </template>
+
                 <!-- Generic Fallback Template -->
                 <template v-else>
                   <tr
@@ -688,7 +813,7 @@
                     class="hover:bg-slate-50/60 transition-colors"
                   >
                     <td v-for="(val, colIdx) in Object.values(row).slice(1)" :key="colIdx" class="py-3 px-4 font-semibold text-slate-655 whitespace-nowrap">
-                      <span v-if="colIdx === Object.keys(row).length - 2 && isStatusField(val)" v-html="statusBadgeHtml(val)"></span>
+                      <span v-if="colIdx === Object.keys(row).length - 2 && isStatusField(val as string)" v-html="statusBadgeHtml(val as string)"></span>
                       <span v-else>{{ val }}</span>
                     </td>
                   </tr>
@@ -707,7 +832,6 @@
             <div class="text-left flex items-center gap-4">
               <div>Total Records: <span class="text-slate-800">{{ processedItems.length }}</span></div>
               <div v-if="filters.category === 'bookings'">Total Hours Used: <span class="text-emerald-700">{{ totalHoursUsed }} Hours</span></div>
-              <div v-if="filters.category === 'attendance'">Total Time Attended: <span class="text-emerald-700">{{ totalAttendanceHours }}</span></div>
             </div>
             
             <div v-if="totalPages > 1" class="flex items-center gap-1.5">
@@ -1002,10 +1126,10 @@ import { librarianAPI, supportAPI } from '@/shared/services/api';
 import { useAuth } from '@/shared/composables/useAuth';
 import { useSwal } from '@/shared/composables/useSwal';
 import {
-  Zap, FileText, Sheet, Clock, LayoutGrid,
+  FileText, Sheet, Clock,
   CalendarClock, History, Download, Trash2,
   Pause, Play, RefreshCw, X, CheckCircle,
-  Users, Calendar, Armchair, AlertTriangle, BookMarked, Printer
+  Calendar, BookMarked, Printer
 } from 'lucide-vue-next';
 
 const { showSuccess, showError } = useSwal();
@@ -1043,18 +1167,18 @@ const filters = reactive({
   eventPricing: 'all',
   eventCapacityStatus: 'all',
   eventStatus: 'all',
-  // Attendance Audit advanced parameters
-  attendanceStudentSearch: '',
-  attendanceSeatNumber: '',
+  // Attendance advanced parameters
   attendanceStatus: 'all',
-  attendanceDurationFilter: 'all',
+  markType: 'all',
+  // Book Inventory advanced parameters
+  bookType: 'all',
+  bookAvailability: 'all',
 });
 
 const reportCategories = [
   { label: 'Seat Bookings Log', type: 'bookings' },
   { label: 'Book Reservation Report', type: 'book_reservations' },
   { label: 'Attendance Audit', type: 'attendance' },
-  { label: 'Section Utilization', type: 'seat_utilization' },
   { label: 'Support & Complaints', type: 'complaints' },
   { label: 'Book Inventory', type: 'books' },
   { label: 'Campus Events', type: 'events' },
@@ -1192,7 +1316,6 @@ const generateOnScreenReport = async () => {
         const start = new Date(b.booking_time);
         const endPlanned = new Date(b.scheduled_end_time);
         const endExtended = b.extended_until ? new Date(b.extended_until) : null;
-        const endActual = endExtended || endPlanned;
         
         // Mins
         const origMins = Math.floor((endPlanned.getTime() - start.getTime()) / (60 * 1000));
@@ -1330,34 +1453,26 @@ const generateOnScreenReport = async () => {
         const res = await librarianAPI.getAttendance(params);
         const list = res.data || res || [];
         items = list.map((a: any) => {
-          const checkIn = a.check_in_time ? new Date(a.check_in_time) : null;
-          const checkOut = a.check_out_time ? new Date(a.check_out_time) : null;
-          
-          let durationMins = 0;
-          if (checkIn && checkOut) {
-            durationMins = Math.max(0, Math.floor((checkOut.getTime() - checkIn.getTime()) / (60 * 1000)));
-          } else if (checkIn) {
-            durationMins = Math.max(0, Math.floor((new Date().getTime() - checkIn.getTime()) / (60 * 1000)));
-          }
-
-          const dateStr = a.date 
-            ? new Date(a.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) 
-            : (checkIn ? checkIn.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
-
+          const checkInStr = a.check_in_time ? (a.check_in_time.includes(':') && !a.check_in_time.includes('T') ? fmtTimeStr(a.check_in_time) : fmtTime12(a.check_in_time)) : '—';
+          const checkOutStr = a.check_out_time ? (a.check_out_time.includes(':') && !a.check_out_time.includes('T') ? fmtTimeStr(a.check_out_time) : fmtTime12(a.check_out_time)) : '—';
+          const isPresent = !a.check_out_time;
+          const mins = a.total_minutes || 0;
           return {
-            id: `ATT-${a.id}`,
+            id: `A-${a.id}`,
             attendanceId: `A-${a.id}`,
             studentName: a.user?.name || '—',
             crn: a.user?.crn || '—',
-            seatNumber: a.seat_number || a.seat_booking?.seat?.seat_number || a.seat?.seat_number || '—',
-            date: dateStr,
-            checkInTime: checkIn ? checkIn.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—',
-            checkOutTime: checkOut ? checkOut.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'Active Session',
-            durationMins,
-            durationStr: fmtDuration(durationMins),
-            calculatedStatus: a.check_out_time ? 'Left' : 'Present',
-            rawStatus: a.check_out_time ? 'left' : 'present',
-            hasCheckOut: !!a.check_out_time
+            seatNumber: a.seat_booking?.seat?.seat_number || a.seat_number || a.seat?.seat_number || '—',
+            floorName: a.seat_booking?.seat?.floor?.name || a.seat?.floor?.name || 'Main Hall',
+            date: a.date ? fmtDate(a.date) : '—',
+            checkInTime: checkInStr,
+            checkOutTime: checkOutStr,
+            totalMinutes: mins,
+            formattedDuration: isPresent ? 'Present Now' : fmtDuration(mins),
+            isManual: !!a.marked_manually,
+            markType: a.marked_manually ? 'Manual' : 'System',
+            calculatedStatus: isPresent ? 'Present' : 'Left',
+            rawStatus: isPresent ? 'present' : 'left',
           };
         });
       } else if (filters.category === 'seat_utilization') {
@@ -1449,14 +1564,30 @@ const generateOnScreenReport = async () => {
       } else if (filters.category === 'books') {
         const res = await librarianAPI.getBooks();
         const list = Array.isArray(res) ? res : [];
-        items = list.map((b: any) => ({
-          col1: `BK-${b.id}`,
-          col2: b.title || '—',
-          col3: b.author || '—',
-          col4: b.isbn || '—',
-          col5: b.type || 'Physical',
-          calculatedStatus: b.availability || 'available'
-        }));
+        items = list.map((b: any) => {
+          const totalCopies = b.copies_total || 1;
+          const availCopies = b.copies_available !== null && b.copies_available !== undefined ? b.copies_available : (b.availability === 'available' ? 1 : 0);
+          const borrowedCopies = Math.max(0, totalCopies - availCopies);
+          const availStatus = b.availability || (availCopies > 0 ? 'available' : 'borrowed');
+          return {
+            id: `BK-${b.id}`,
+            bookId: `BK-${b.id}`,
+            title: b.title || '—',
+            author: b.author || '—',
+            isbn: b.isbn || '—',
+            category: b.category || 'General',
+            type: b.type ? (b.type.charAt(0).toUpperCase() + b.type.slice(1)) : 'Physical',
+            publisher: b.publisher || '—',
+            pubYear: b.publication_year || '—',
+            copiesTotal: totalCopies,
+            copiesAvailable: availCopies,
+            copiesBorrowed: borrowedCopies,
+            location: b.location || 'Main Shelf',
+            availability: availStatus,
+            calculatedStatus: availStatus.toLowerCase(),
+            rawStatus: availStatus.toLowerCase()
+          };
+        });
       } else if (filters.category === 'events') {
         const res = await librarianAPI.getEvents();
         const list = Array.isArray(res) ? res : [];
@@ -1552,37 +1683,32 @@ const processedItems = computed(() => {
   if (!generatedReport.value) return [];
   const list = generatedReport.value.items;
   
-  if (filters.category === 'attendance') {
+  if (filters.category === 'books') {
     return list.filter((item: any) => {
-      // 1. Student Search (Name or CRN)
-      if (filters.attendanceStudentSearch) {
-        const q = filters.attendanceStudentSearch.toLowerCase();
-        const matchName = item.studentName.toLowerCase().includes(q);
-        const matchCrn = item.crn.toLowerCase().includes(q);
-        if (!matchName && !matchCrn) return false;
+      // 1. Text Search (Title, Author, ISBN)
+      if (filters.bookSearch) {
+        const q = filters.bookSearch.toLowerCase();
+        const matchTitle = item.title.toLowerCase().includes(q);
+        const matchAuthor = item.author.toLowerCase().includes(q);
+        const matchIsbn = item.isbn.toLowerCase().includes(q);
+        if (!matchTitle && !matchAuthor && !matchIsbn) return false;
       }
-      // 2. Seat Number
-      if (filters.attendanceSeatNumber) {
-        if (!item.seatNumber.toLowerCase().includes(filters.attendanceSeatNumber.toLowerCase())) {
-          return false;
-        }
+      // 2. Category
+      if (filters.bookCategory !== 'all') {
+        if (item.category.toLowerCase() !== filters.bookCategory.toLowerCase()) return false;
       }
-      // 3. Attendance Status
-      if (filters.attendanceStatus !== 'all') {
-        if (item.rawStatus !== filters.attendanceStatus) return false;
+      // 3. Format Type
+      if (filters.bookType !== 'all') {
+        if (item.type.toLowerCase() !== filters.bookType.toLowerCase()) return false;
       }
-      // 4. Session Duration Filter
-      if (filters.attendanceDurationFilter !== 'all') {
-        const mins = item.durationMins;
-        if (filters.attendanceDurationFilter === 'under_30m' && mins >= 30) return false;
-        if (filters.attendanceDurationFilter === '30m_1h' && (mins < 30 || mins > 60)) return false;
-        if (filters.attendanceDurationFilter === '1h_3h' && (mins <= 60 || mins > 180)) return false;
-        if (filters.attendanceDurationFilter === 'over_3h' && mins <= 180) return false;
+      // 4. Availability Status
+      if (filters.bookAvailability !== 'all') {
+        if (item.rawStatus !== filters.bookAvailability.toLowerCase()) return false;
       }
       return true;
     });
   }
-
+  
   if (filters.category === 'book_reservations') {
     return list.filter((item: any) => {
       // 1. Student search
@@ -1743,12 +1869,6 @@ const totalHoursUsed = computed(() => {
   return (totalMins / 60).toFixed(1);
 });
 
-const totalAttendanceHours = computed(() => {
-  if (filters.category !== 'attendance') return '0m';
-  const totalMins = processedItems.value.reduce((acc: number, item: any) => acc + (item.durationMins || 0), 0);
-  return fmtDuration(totalMins);
-});
-
 const summaryStats = computed(() => {
   if (!generatedReport.value) return [];
   
@@ -1809,20 +1929,22 @@ const summaryStats = computed(() => {
     ];
   }
 
-  if (filters.category === 'attendance') {
+  if (filters.category === 'books') {
     const list = processedItems.value;
-    const total = list.length;
-    const present = list.filter((a: any) => a.rawStatus === 'present').length;
-    const left = list.filter((a: any) => a.rawStatus === 'left').length;
-    const totalMins = list.reduce((sum: number, a: any) => sum + (a.durationMins || 0), 0);
-    const avgMins = total > 0 ? Math.round(totalMins / total) : 0;
+    const totalTitles = list.length;
+    const totalCopies = list.reduce((sum: number, b: any) => sum + (b.copiesTotal || 1), 0);
+    const availCopies = list.reduce((sum: number, b: any) => sum + (b.copiesAvailable || 0), 0);
+    const borrowedCopies = list.reduce((sum: number, b: any) => sum + (b.copiesBorrowed || 0), 0);
+    const digitalCount = list.filter((b: any) => b.type.toLowerCase() === 'digital').length;
+    const maintenanceCount = list.filter((b: any) => b.rawStatus === 'maintenance').length;
 
     return [
-      { label: 'Total Logs', value: total },
-      { label: 'Currently Present', value: present },
-      { label: 'Checked Out', value: left },
-      { label: 'Total Attended', value: fmtDuration(totalMins) },
-      { label: 'Avg Session Duration', value: fmtDuration(avgMins) }
+      { label: 'Total Titles', value: totalTitles },
+      { label: 'Total Copies', value: totalCopies },
+      { label: 'Available Copies', value: availCopies },
+      { label: 'Borrowed Copies', value: borrowedCopies },
+      { label: 'Digital E-Books', value: digitalCount },
+      { label: 'In Maintenance', value: maintenanceCount }
     ];
   }
 
@@ -1868,13 +1990,10 @@ const tableHeaders = computed(() => {
     return ['Student Information', 'Complaint Details', 'Resolution Details', 'Status'];
   }
   if (filters.category === 'attendance') {
-    return ['Attendance ID', 'Student Information', 'Seat Number', 'Date', 'Check-In Time', 'Check-Out Time', 'Session Duration', 'Status'];
-  }
-  if (filters.category === 'seat_utilization') {
-    return ['Floor Location', 'Seat Number', 'Amenities', 'Status'];
+    return ['Student Information', 'Seat & Location', 'Date', 'Check-In / Check-Out', 'Duration', 'Mark Type', 'Status'];
   }
   if (filters.category === 'books') {
-    return ['Book ID', 'Title', 'Author', 'ISBN / Code', 'Format Type', 'Availability'];
+    return ['Book Details', 'Author & Publisher', 'Category & Type', 'Shelf Location', 'Stock & Copies', 'Availability'];
   }
   if (filters.category === 'events') {
     return ['Event Information', 'Event Type', 'Date & Time', 'Venue', 'Participants', 'Capacity & Revenue', 'Status'];
@@ -1883,7 +2002,7 @@ const tableHeaders = computed(() => {
 });
 
 // ---------- Status Formatter ----------
-const isStatusField = (val: string) => {
+const isStatusField = (val: any) => {
   const statuses = [
     'booked', 'checked_in', 'checked_out', 'cancelled', 'available', 'occupied', 
     'maintenance', 'open', 'resolved', 'in_progress', 'left', 'present', 
@@ -1896,7 +2015,7 @@ const isStatusField = (val: string) => {
   return typeof val === 'string' && statuses.includes(val.toLowerCase());
 };
 
-const statusBadgeHtml = (status: string) => {
+const statusBadgeHtml = (status: any) => {
   const colors: Record<string, string> = {
     'checked out on time': '#059669', // Green
     'early check-out': '#6366f1',    // Indigo Blue
@@ -2077,16 +2196,45 @@ const buildPremiumHTML = (report: any) => {
     } else if (report.type === 'attendance') {
       return `
         <tr>
-          <td><strong>${row.attendanceId}</strong></td>
           <td>
             <strong>${row.studentName}</strong><br/>
             <span style="color:#64748b;font-size:8px;">CRN: ${row.crn}</span>
           </td>
-          <td><strong>Seat ${row.seatNumber}</strong></td>
+          <td>
+            <strong>${row.seatNumber !== '—' ? 'Seat ' + row.seatNumber : 'General Access'}</strong><br/>
+            <span style="color:#64748b;font-size:8px;">${row.floorName}</span>
+          </td>
           <td>${row.date}</td>
-          <td>${row.checkInTime}</td>
-          <td>${row.checkOutTime}</td>
-          <td><strong>${row.durationStr}</strong></td>
+          <td>
+            <span style="color:#059669;font-weight:bold;">In: ${row.checkInTime}</span><br/>
+            ${row.checkOutTime !== '—' ? `<span style="color:#dc2626;font-weight:bold;">Out: ${row.checkOutTime}</span>` : '<span style="color:#059669;font-weight:bold;">Present Now</span>'}
+          </td>
+          <td><strong>${row.formattedDuration}</strong></td>
+          <td><span style="font-size:8px;font-weight:bold;padding:2px 6px;border-radius:4px;${row.isManual ? 'background:#fef3c7;color:#b45309;' : 'background:#dbeafe;color:#1d4ed8;'}">${row.markType}</span></td>
+          <td>${statusBadgeHtml(row.calculatedStatus)}</td>
+        </tr>
+      `;
+    } else if (report.type === 'books') {
+      return `
+        <tr>
+          <td>
+            <strong>${row.title}</strong><br/>
+            <span style="color:#64748b;font-size:8px;">ISBN: ${row.isbn} | ${row.bookId}</span>
+          </td>
+          <td>
+            <strong>${row.author}</strong><br/>
+            <span style="color:#64748b;font-size:8px;">${row.publisher} ${row.pubYear !== '—' ? `(${row.pubYear})` : ''}</span>
+          </td>
+          <td>
+            <strong>${row.category}</strong><br/>
+            <span style="color:#64748b;font-size:8px;">${row.type}</span>
+          </td>
+          <td>${row.location}</td>
+          <td>
+            Total: ${row.copiesTotal}<br/>
+            <span style="color:#059669;font-weight:bold;">Avail: ${row.copiesAvailable}</span><br/>
+            ${row.copiesBorrowed > 0 ? `<span style="color:#2563eb;">Borrowed: ${row.copiesBorrowed}</span>` : ''}
+          </td>
           <td>${statusBadgeHtml(row.calculatedStatus)}</td>
         </tr>
       `;
@@ -2230,7 +2378,11 @@ const buildPremiumCSV = (report: any) => {
     });
   } else if (report.type === 'attendance') {
     processedItems.value.forEach((row: any) => {
-      csv += `"${row.attendanceId}","${row.studentName} (CRN: ${row.crn})","Seat ${row.seatNumber}","${row.date}","${row.checkInTime}","${row.checkOutTime}","${row.durationStr}","${row.calculatedStatus}"\n`;
+      csv += `"${row.studentName} (CRN: ${row.crn})","${row.seatNumber !== '—' ? 'Seat ' + row.seatNumber : 'General Access'} (${row.floorName})","${row.date}","In:${row.checkInTime} Out:${row.checkOutTime}","${row.formattedDuration}","${row.markType}","${row.calculatedStatus}"\n`;
+    });
+  } else if (report.type === 'books') {
+    processedItems.value.forEach((row: any) => {
+      csv += `"${row.title.replace(/"/g, '""')} (ISBN: ${row.isbn})","${row.author.replace(/"/g, '""')} (${row.publisher})","${row.category} - ${row.type}","${row.location}","Total:${row.copiesTotal} Avail:${row.copiesAvailable} Borrowed:${row.copiesBorrowed}","${row.calculatedStatus}"\n`;
     });
   } else {
     processedItems.value.forEach((row: any) => {
@@ -2330,6 +2482,20 @@ const fmtTime12 = (d: any) => {
   if (!d) return '—';
   const dt = new Date(d);
   return isNaN(dt.getTime()) ? String(d) : dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+};
+
+const fmtTimeStr = (time: string) => {
+  if (!time) return '—';
+  if (time.includes('T')) return fmtTime12(time);
+  try {
+    const [hours, minutes] = time.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours, 10));
+    date.setMinutes(parseInt(minutes, 10));
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  } catch {
+    return time;
+  }
 };
 
 onMounted(() => {

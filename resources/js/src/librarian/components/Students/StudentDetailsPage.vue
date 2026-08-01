@@ -157,7 +157,7 @@
                     ]"
                   >
                     <div>
-                      <h4 class="font-bold text-slate-800 text-xs">Seat {{ booking.seat?.seat_number || 'N/A' }} ({{ booking.seat?.floor?.name || 'Floor N/A' }})</h4>
+                      <h4 class="font-bold text-slate-800 text-xs">Seat {{ booking.seat?.seat_number || 'N/A' }} ({{ booking.seat?.floor?.name || booking.seat?.section?.floor?.name || '1st Floor' }})</h4>
                       <p class="text-[10px] text-slate-400 font-semibold mt-0.5 uppercase">
                         {{ formatDate(booking.booking_time) }} • {{ formatTime(booking.booking_time) }} - {{ formatTime(booking.scheduled_end_time) }}
                       </p>
@@ -482,9 +482,6 @@ import {
   Edit2, 
   RefreshCw,
   Search,
-  Users,
-  Square,
-  BookOpen as BookIcon,
   Ban as BanIcon,
   UserCheck,
   Trash2,

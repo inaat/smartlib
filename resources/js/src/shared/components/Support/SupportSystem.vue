@@ -226,7 +226,8 @@
                 v-if="userRole !== 'student'"
                 @change="handleStatusChange($event)"
                 :value="selectedTicket.status"
-                class="text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-4 focus:ring-slate-100/50 cursor-pointer transition-all"
+                :disabled="selectedTicket.status === 'closed'"
+                class="text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-4 focus:ring-slate-100/50 cursor-pointer transition-all disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 <option value="open">Open</option>
                 <option value="in_progress">In Progress</option>
@@ -235,13 +236,18 @@
               </select>
               
               <button 
-                v-else-if="['open', 'in_progress'].includes(selectedTicket.status)"
+                v-else-if="['open', 'in_progress', 'resolved'].includes(selectedTicket.status)"
                 @click="handleCloseTicket"
                 class="text-[10px] px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/50 rounded-xl transition-all font-bold uppercase tracking-wider cursor-pointer"
               >
                 Close Ticket
               </button>
               
+              <span v-if="selectedTicket.status === 'closed'" class="px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                <Lock class="w-3 h-3 text-slate-400" />
+                Locked
+              </span>
+
               <button 
                 @click="fetchTicketDetails(selectedTicket.id)"
                 class="p-2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
@@ -290,7 +296,13 @@
           </div>
 
           <!-- Chat Input Editor Window -->
-          <div class="p-4 bg-white border-t border-slate-100">
+          <div v-if="selectedTicket.status === 'closed'" class="p-4 bg-slate-100/80 border-t border-slate-200 text-center">
+            <p class="text-xs font-bold text-slate-500 flex items-center justify-center gap-1.5">
+              <Lock class="w-4 h-4 text-slate-400" />
+              This complaint is completely closed and locked. No further messages can be sent.
+            </p>
+          </div>
+          <div v-else class="p-4 bg-white border-t border-slate-100">
             <div class="flex items-end space-x-2">
               <div class="flex-1 relative">
                 <textarea 
@@ -450,7 +462,8 @@ import {
   Ticket,
   Clock,
   CheckCircle2,
-  Building2
+  Building2,
+  Lock
 } from 'lucide-vue-next';
 import { supportAPI, studentAPI } from '@/shared/services/api';
 import { useAuth } from '@/shared/composables/useAuth';
@@ -549,6 +562,11 @@ const fetchTicketDetails = async (id: number) => {
 const handleSendMessage = async () => {
   if (!newMessage.value.trim() || !selectedTicket.value || sending.value) return;
 
+  if (selectedTicket.value.status === 'closed') {
+    toast('Closed Complaint', 'This complaint is closed and cannot receive new messages.', 'warning');
+    return;
+  }
+
   try {
     sending.value = true;
     const message = await supportAPI.sendMessage(
@@ -565,8 +583,9 @@ const handleSendMessage = async () => {
     
     newMessage.value = '';
     scrollToBottom();
-  } catch (error) {
-    toast('Error', 'Could not send message', 'error');
+  } catch (error: any) {
+    const msg = error.response?.data?.message || 'Could not send message';
+    toast('Error', msg, 'error');
   } finally {
     sending.value = false;
   }
@@ -605,6 +624,13 @@ const handleCreateTicket = async () => {
 const handleStatusChange = async (event: any) => {
   if (!selectedTicket.value) return;
   const newStatus = event.target.value;
+
+  if (selectedTicket.value.status === 'closed' && newStatus !== 'closed') {
+    toast('Closed Complaint', 'This complaint is permanently closed and cannot be reopened.', 'warning');
+    event.target.value = 'closed';
+    return;
+  }
+
   try {
     await supportAPI.updateStatus(userRole.value, selectedTicket.value.id, newStatus);
     selectedTicket.value.status = newStatus;
@@ -612,8 +638,9 @@ const handleStatusChange = async (event: any) => {
     const index = tickets.value.findIndex(t => t.id === selectedTicket.value!.id);
     if (index !== -1) tickets.value[index].status = newStatus;
     toast('Status Updated', `Ticket is now ${newStatus}`, 'success');
-  } catch (error) {
-    toast('Error', 'Could not update status', 'error');
+  } catch (error: any) {
+    const msg = error.response?.data?.message || 'Could not update status';
+    toast('Error', msg, 'error');
   }
 };
 
@@ -624,9 +651,10 @@ const handleCloseTicket = async () => {
     selectedTicket.value.status = 'closed';
     const index = tickets.value.findIndex(t => t.id === selectedTicket.value!.id);
     if (index !== -1) tickets.value[index].status = 'closed';
-    toast('Success', 'Ticket closed successfully', 'success');
-  } catch (error) {
-    toast('Error', 'Could not close ticket', 'error');
+    toast('Success', 'Complaint closed successfully', 'success');
+  } catch (error: any) {
+    const msg = error.response?.data?.message || 'Could not close complaint';
+    toast('Error', msg, 'error');
   }
 };
 

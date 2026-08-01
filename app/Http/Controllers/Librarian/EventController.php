@@ -14,22 +14,22 @@ class EventController extends Controller
     {
         // Check if API request
         if (request()->expectsJson() || request()->is('api/*')) {
-            // For API, return all events (admins see all, librarians see their library's events)
             $user = Auth::user();
+            $query = Event::with('registrations.user', 'library')->withCount('registrations');
+
             if ($user->role === 'super_admin') {
                 $myLibraryIds = Library::where('created_by', $user->id)->pluck('id');
-                $events = Event::with('registrations.user', 'library')->withCount('registrations')->whereIn('library_id', $myLibraryIds)->latest()->get();
-            } elseif (in_array($user->role, ['admin', 'owner'])) {
-                $events = Event::with('registrations.user', 'library')->withCount('registrations')->latest()->get();
+                $query->whereIn('library_id', $myLibraryIds);
             } elseif ($user->library_id) {
-                $events = Event::with('registrations.user', 'library')->withCount('registrations')->where('library_id', $user->library_id)->latest()->get();
-            } else {
-                $events = Event::with('registrations.user', 'library')->withCount('registrations')->latest()->get();
+                $query->where('library_id', $user->library_id);
             }
+
+            if (request()->filled('library_id')) {
+                $query->where('library_id', request()->library_id);
+            }
+
+            $events = $query->latest()->get();
             
-            // Map to include registered_count as a direct property if needed, 
-            // though withCount adds registrations_count automatically.
-            // Let's ensure the frontend gets what it expects.
             $events->each(function($event) {
                 $event->registered_count = $event->registrations_count;
             });

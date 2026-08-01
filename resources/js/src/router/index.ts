@@ -159,6 +159,11 @@ const router = createRouter({
                     component: () => import('@/librarian/components/Seats/SeatManagementPage.vue')
                 },
                 {
+                    path: 'live-map',
+                    name: 'librarian-live-map',
+                    component: () => import('@/librarian/components/Seats/LiveSeatMapPage.vue')
+                },
+                {
                     path: 'floors',
                     name: 'librarian-floors',
                     component: () => import('@/librarian/components/Floors/FloorManagementPage.vue')

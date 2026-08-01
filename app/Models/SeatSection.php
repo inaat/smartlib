@@ -18,12 +18,20 @@ class SeatSection extends Model
         'academic_level',
         'total_seats',
         'description',
+        'has_subsections',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'has_subsections' => 'boolean',
     ];
+
+    // Relationship to Subsections
+    public function subsections(): HasMany
+    {
+        return $this->hasMany(SeatSubsection::class, 'section_id');
+    }
 
     // Relationship to Library
     public function library(): BelongsTo

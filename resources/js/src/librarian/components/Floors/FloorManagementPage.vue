@@ -89,109 +89,138 @@
       </div>
     </div>
 
-    <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" @click.self="closeModal">
-      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden border border-gray-200 animate-in fade-in zoom-in duration-200">
-        <div class="p-6 border-b border-slate-150 flex items-center justify-between text-left">
-          <h3 class="text-base font-bold text-slate-800">{{ isEditing ? 'Edit Floor Settings' : 'Add New Floor' }}</h3>
-          <button @click="closeModal" class="p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer text-slate-400">
-            <X class="w-4 h-4" />
+    <!-- Create/Edit Modal (REDESIGNED GREEN HEADER) -->
+    <div v-if="showModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4" @click.self="closeModal">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-auto overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+        
+        <!-- Modal Header (Sleek Green Gradient) -->
+        <div class="px-6 py-5 bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 text-white flex items-center justify-between text-left">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <Building2 class="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white tracking-wide">{{ isEditing ? 'Edit Floor Settings' : 'Add New Floor' }}</h3>
+              <p class="text-[11px] text-emerald-100/80 font-medium">Configure floor level, seating capacity, and zone type</p>
+            </div>
+          </div>
+          <button @click="closeModal" class="p-2 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-white/80 hover:text-white">
+            <X class="w-5 h-5" />
           </button>
         </div>
 
-        <form @submit.prevent="saveFloor" class="p-6 space-y-4 text-left">
+        <!-- Modal Form Body -->
+        <form @submit.prevent="saveFloor" class="p-6 overflow-y-auto space-y-4 text-left flex-1">
           <div>
-            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Floor Name</label>
+            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+              <Building2 class="w-3.5 h-3.5 text-emerald-600" />
+              Floor Name
+            </label>
             <input
               v-model="form.name"
               type="text"
               required
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
-              placeholder="e.g. First Floor"
+              class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs text-slate-700 font-semibold bg-slate-50/50 placeholder:font-normal"
+              placeholder="e.g. Ground Floor / First Floor"
             />
           </div>
           
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Level Number</label>
+              <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                <Layers class="w-3.5 h-3.5 text-emerald-600" />
+                Level Number
+              </label>
               <input
                 v-model.number="form.level"
                 type="number"
                 required
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
+                class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs text-slate-700 font-semibold bg-slate-50/50"
                 placeholder="e.g. 1"
               />
             </div>
             <div>
-              <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Capacity</label>
+              <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                <Armchair class="w-3.5 h-3.5 text-emerald-600" />
+                Capacity (Seats)
+              </label>
               <input
                 v-model.number="form.capacity"
                 type="number"
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
+                class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs text-slate-700 font-bold bg-slate-50/50"
                 placeholder="e.g. 50"
               />
             </div>
           </div>
 
           <div>
-            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Floor Type</label>
+            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+              <Compass class="w-3.5 h-3.5 text-emerald-600" />
+              Floor Zone Type
+            </label>
             <select
               v-model="form.type"
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
+              class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs text-slate-700 font-semibold bg-slate-50/50 cursor-pointer"
             >
-              <option value="mixed">Mixed</option>
+              <option value="mixed">Mixed Zone</option>
               <option value="quiet_zone">Quiet Zone</option>
               <option value="discussion_area">Discussion Area</option>
-              <option value="girls_only">Girls Only</option>
-              <option value="boys_only">Boys Only</option>
+              <option value="girls_only">Girls Only Zone</option>
+              <option value="boys_only">Boys Only Zone</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Description</label>
+            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Description (Optional)</label>
             <textarea
               v-model="form.description"
-              rows="3"
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50 resize-none"
-              placeholder="Optional description details..."
+              rows="2"
+              class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs text-slate-700 font-medium bg-slate-50/50 resize-none placeholder:font-normal"
+              placeholder="e.g. Main entrance floor with silent reading section"
             ></textarea>
           </div>
 
           <div>
-            <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Map Image Layout</label>
+            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+              <Upload class="w-3.5 h-3.5 text-emerald-600" />
+              Map Layout Image (Optional)
+            </label>
             <input
               type="file"
               @change="handleFileUpload"
               accept="image/*"
-              class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+              class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
             />
             <p v-if="form.map_image_url" class="mt-1.5 text-[10px] text-slate-400 font-bold truncate">Current: {{ form.map_image_url.split('/').pop() }}</p>
           </div>
 
-          <div class="flex items-center space-x-2 pt-1">
-            <input
-              v-model="form.is_active"
-              type="checkbox"
-              id="is_active"
-              class="rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-            />
-            <label for="is_active" class="text-xs font-bold text-slate-500 cursor-pointer select-none">Mark Active</label>
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+            <label class="flex items-center space-x-2.5 cursor-pointer select-none">
+              <input
+                v-model="form.is_active"
+                type="checkbox"
+                id="is_active"
+                class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              />
+              <span class="text-xs font-bold text-slate-700">Mark Floor Active</span>
+            </label>
           </div>
 
-          <div class="flex items-center space-x-3 pt-4 border-t border-slate-100">
-            <button
-              type="submit"
-              :disabled="loading"
-              class="flex-1 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold cursor-pointer"
-            >
-              {{ loading ? 'Saving...' : (isEditing ? 'Update Floor' : 'Create Floor') }}
-            </button>
+          <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
             <button
               type="button"
               @click="closeModal"
-              class="px-4 py-2 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition-all text-xs cursor-pointer"
+              class="px-5 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition-all text-xs cursor-pointer"
             >
               Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="loading"
+              class="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold shadow-md shadow-emerald-700/10 cursor-pointer flex items-center space-x-2"
+            >
+              <RefreshCw v-if="loading" class="w-3.5 h-3.5 animate-spin" />
+              <span>{{ loading ? 'Saving...' : (isEditing ? 'Update Floor' : 'Create Floor') }}</span>
             </button>
           </div>
         </form>
@@ -209,15 +238,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { useAuth } from '@/shared/composables/useAuth';
+import { ref, onMounted } from 'vue';
 import { librarianAPI } from '@/shared/services/api';
 import SectionManagementModal from './SectionManagementModal.vue';
-import { Plus, X, Building2 } from 'lucide-vue-next';
+import { Plus, X, Building2, Layers, Armchair, Compass, Upload, RefreshCw } from 'lucide-vue-next';
 import { useSwal } from '@/shared/composables/useSwal';
 
 const { showConfirm, showSuccess, showError } = useSwal();
-const { user } = useAuth();
 const floors = ref<Floor[]>([]);
 const showModal = ref(false);
 const showSectionsModal = ref(false);

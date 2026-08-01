@@ -160,6 +160,11 @@ export const studentAPI = {
     return response.data;
   },
 
+  async getStudentOverrideRequests() {
+    const response = await api.get('/student/bookings/override-requests');
+    return response.data;
+  },
+
   async cancelBooking(bookingId: number) {
     const response = await api.post(`/student/bookings/${bookingId}/cancel`);
     return response.data;
@@ -258,6 +263,11 @@ export const studentAPI = {
   },
   async getAnalytics() {
     const response = await api.get('/student/analytics');
+    return response.data;
+  },
+
+  async updateStudyGoals(data: { weekly_goal_hours: number; monthly_goal_hours: number }) {
+    const response = await api.post('/student/study-goals', data);
     return response.data;
   },
 
@@ -459,8 +469,28 @@ export const adminAPI = {
     return response.data;
   },
 
+  async resetSettings() {
+    const response = await api.post('/admin/settings/reset');
+    return response.data;
+  },
+
   async getAllBookingStats() {
     const response = await api.get('/admin/bookings/stats');
+    return response.data;
+  },
+
+  async getReviews(params?: any) {
+    const response = await api.get('/admin/reviews', { params });
+    return response.data;
+  },
+
+  async getLibraryReviews(libraryId: number) {
+    const response = await api.get(`/admin/libraries/${libraryId}/reviews`);
+    return response.data;
+  },
+
+  async deleteReview(reviewId: number) {
+    const response = await api.delete(`/admin/reviews/${reviewId}`);
     return response.data;
   },
 };
@@ -631,6 +661,36 @@ export const librarianAPI = {
     return response.data;
   },
 
+  async getSubsections(sectionId: number) {
+    const response = await api.get(`/librarian/sections/${sectionId}/subsections`);
+    return response.data;
+  },
+
+  async createSubsection(sectionId: number, data: any) {
+    const response = await api.post(`/librarian/sections/${sectionId}/subsections`, data);
+    return response.data;
+  },
+
+  async updateSubsection(sectionId: number, id: number, data: any) {
+    const response = await api.put(`/librarian/sections/${sectionId}/subsections/${id}`, data);
+    return response.data;
+  },
+
+  async deleteSubsection(sectionId: number, id: number) {
+    const response = await api.delete(`/librarian/sections/${sectionId}/subsections/${id}`);
+    return response.data;
+  },
+
+  async toggleSubsectionActive(sectionId: number, id: number) {
+    const response = await api.post(`/librarian/sections/${sectionId}/subsections/${id}/toggle-active`);
+    return response.data;
+  },
+
+  async syncSubsectionSeats(sectionId: number, id: number) {
+    const response = await api.post(`/librarian/sections/${sectionId}/subsections/${id}/sync-seats`);
+    return response.data;
+  },
+
   async getOverrideRequests() {
     const response = await api.get('/librarian/override-requests');
     return response.data;
@@ -727,6 +787,11 @@ export const librarianAPI = {
   },
   async getAttendanceCalendar(params: { year: number, month: number, user_id?: number }) {
     const response = await api.get('/librarian/attendance/calendar', { params });
+    return response.data;
+  },
+
+  async getReviews() {
+    const response = await api.get('/librarian/reviews');
     return response.data;
   },
 };

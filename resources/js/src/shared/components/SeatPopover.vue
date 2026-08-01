@@ -31,7 +31,7 @@
           </div>
         </div>
 
-        <!-- Amenities & Seat Type -->
+        <!-- Amenities -->
         <div class="flex items-center justify-between pt-2 border-t border-slate-100/60">
           <div class="flex items-center gap-2">
             <Monitor 
@@ -44,7 +44,6 @@
               :class="['w-3.5 h-3.5 transition-colors', seat.socket_count > 0 ? 'text-amber-500' : 'text-slate-300']" 
             />
           </div>
-          <span class="text-[8px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded lowercase">{{ seat.seat_type }}</span>
         </div>
       </div>
     </div>

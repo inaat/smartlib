@@ -59,4 +59,16 @@ class SystemSettingController extends Controller
         $setting = SystemSetting::create($request->all());
         return response()->json($setting, 201);
     }
+
+    public function resetDefaults()
+    {
+        $seeder = new \Database\Seeders\SystemSettingSeeder();
+        $seeder->run();
+
+        $settings = SystemSetting::all()->groupBy('group');
+        return response()->json([
+            'message' => 'System settings reset to defaults successfully',
+            'settings' => $settings
+        ]);
+    }
 }

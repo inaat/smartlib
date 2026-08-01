@@ -219,6 +219,118 @@
         </div>
       </div>
 
+      <!-- Gender & Academic Level Booking Analytics Charts Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left mb-6">
+        
+        <!-- Gender-wise Booking Donut Chart -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between min-h-[320px]">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+                <Users class="w-4 h-4 text-blue-600" />
+                <span>Gender-Wise Bookings</span>
+              </h2>
+              <span class="text-xs text-slate-400 font-semibold">{{ timeRangeDescription }}</span>
+            </div>
+            <p class="text-[10px] text-slate-400 font-semibold mb-6">Distribution of seat bookings by student & section gender.</p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-around space-y-6 sm:space-y-0 sm:space-x-4 py-4">
+            <!-- SVG Donut Chart -->
+            <div class="relative w-36 h-36 flex items-center justify-center">
+              <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  fill="transparent"
+                  stroke="#f8fafc"
+                  stroke-width="12"
+                />
+                <circle
+                  v-for="(seg, idx) in genderDonutSegments"
+                  :key="idx"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  fill="transparent"
+                  :stroke="seg.color"
+                  stroke-width="12"
+                  :stroke-dasharray="seg.strokeDasharray"
+                  :stroke-dashoffset="seg.strokeDashoffset"
+                  stroke-linecap="round"
+                  class="transition-all duration-500"
+                />
+              </svg>
+              <div class="absolute flex flex-col items-center justify-center">
+                <span class="text-3xl font-black text-slate-800 tracking-tight">{{ genderTotal }}</span>
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-extrabold mt-0.5">Bookings</span>
+              </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="space-y-3.5 text-left w-full sm:w-auto">
+              <!-- Male -->
+              <div class="flex items-center justify-between sm:justify-start sm:space-x-8">
+                <div class="flex items-center space-x-2.5">
+                  <span class="w-3 h-3 rounded-full bg-blue-600 ring-4 ring-blue-50"></span>
+                  <span class="text-xs font-bold text-slate-600">Boys / Male</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs font-extrabold text-slate-800 mr-1.5">{{ genderStats.male }}</span>
+                  <span class="text-[10px] text-slate-400 font-bold">({{ genderTotal ? Math.round((genderStats.male / genderTotal) * 100) : 0 }}%)</span>
+                </div>
+              </div>
+
+              <!-- Female -->
+              <div class="flex items-center justify-between sm:justify-start sm:space-x-8">
+                <div class="flex items-center space-x-2.5">
+                  <span class="w-3 h-3 rounded-full bg-pink-500 ring-4 ring-pink-50"></span>
+                  <span class="text-xs font-bold text-slate-600">Girls / Female</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs font-extrabold text-slate-800 mr-1.5">{{ genderStats.female }}</span>
+                  <span class="text-[10px] text-slate-400 font-bold">({{ genderTotal ? Math.round((genderStats.female / genderTotal) * 100) : 0 }}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Academic Level-wise Booking Chart -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between min-h-[320px]">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+                <GraduationCap class="w-4 h-4 text-emerald-600" />
+                <span>Level-Wise Bookings</span>
+              </h2>
+              <span class="text-xs text-slate-400 font-semibold">{{ timeRangeDescription }}</span>
+            </div>
+            <p class="text-[10px] text-slate-400 font-semibold mb-6">Breakdown of bookings by academic level (PRC, CAF, Final Year).</p>
+          </div>
+
+          <div class="space-y-4 flex-1 flex flex-col justify-center">
+            <div
+              v-for="lvl in levelBars"
+              :key="lvl.name"
+              class="flex items-center space-x-3"
+            >
+              <span class="text-[11px] font-bold text-slate-600 w-24 uppercase tracking-wider truncate">{{ lvl.name }}</span>
+              <div class="flex-1 bg-slate-50 rounded-xl h-6 overflow-hidden border border-slate-100 relative">
+                <div
+                  :class="['h-full bg-gradient-to-r transition-all duration-500', lvl.color]"
+                  :style="{ width: lvl.percentage + '%' }"
+                ></div>
+                <span class="absolute inset-y-0 right-3 flex items-center text-[10px] font-extrabold text-slate-700">
+                  {{ lvl.count }} Bookings ({{ lvl.percentage }}%)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Book Analytics Charts Section -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left mb-6">
         <!-- Books Status Donut Chart -->
@@ -386,11 +498,6 @@
                   <p class="text-[10px] text-slate-400 font-semibold mt-0.5">{{ student.hours || 0 }} Hours Logged</p>
                 </div>
               </div>
-              
-              <div class="flex items-center space-x-1.5 px-3 py-1 bg-white border border-slate-100 rounded-lg text-amber-600">
-                <Award class="w-3.5 h-3.5" />
-                <span class="text-[10px] font-bold">{{ student.points || 0 }} pts</span>
-              </div>
             </div>
           </div>
         </div>
@@ -453,7 +560,8 @@ import {
   RefreshCw,
   Award,
   MapPin,
-  FileBarChart
+  FileBarChart,
+  GraduationCap
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/librarian/services/librarianApi';
 
@@ -483,6 +591,65 @@ const bookingTrends = ref<any[]>([]);
 const peakHours = ref<any[]>([]);
 const topStudents = ref<any[]>([]);
 const popularSeats = ref<any[]>([]);
+
+const genderStats = ref({
+  male: 0,
+  female: 0,
+  mixed: 0,
+  total: 0
+});
+
+const levelStats = ref({
+  PRC: 0,
+  CAF: 0,
+  Final: 0,
+  all: 0,
+  total: 0
+});
+
+const genderTotal = computed(() => (genderStats.value.male + genderStats.value.female));
+
+const genderDonutSegments = computed(() => {
+  const total = genderTotal.value;
+  if (total === 0) return [];
+  const segments = [];
+  let accumulated = 0;
+
+  if (genderStats.value.male > 0) {
+    const len = (genderStats.value.male / total) * 314.159;
+    const offset = (accumulated / total) * 314.159;
+    segments.push({
+      color: '#2563eb',
+      strokeDasharray: `${len} 314.159`,
+      strokeDashoffset: -offset
+    });
+    accumulated += genderStats.value.male;
+  }
+
+  if (genderStats.value.female > 0) {
+    const len = (genderStats.value.female / total) * 314.159;
+    const offset = (accumulated / total) * 314.159;
+    segments.push({
+      color: '#ec4899',
+      strokeDasharray: `${len} 314.159`,
+      strokeDashoffset: -offset
+    });
+    accumulated += genderStats.value.female;
+  }
+
+  return segments;
+});
+
+const levelTotal = computed(() => (levelStats.value.PRC + levelStats.value.CAF + levelStats.value.Final));
+
+const levelBars = computed(() => {
+  const total = levelTotal.value || 1;
+  return [
+    { name: 'PRC Level', count: levelStats.value.PRC, percentage: Math.round((levelStats.value.PRC / total) * 100), color: 'from-indigo-600 to-indigo-400' },
+    { name: 'CAF Level', count: levelStats.value.CAF, percentage: Math.round((levelStats.value.CAF / total) * 100), color: 'from-amber-500 to-amber-400' },
+    { name: 'Final Level', count: levelStats.value.Final, percentage: Math.round((levelStats.value.Final / total) * 100), color: 'from-emerald-600 to-emerald-400' }
+  ];
+});
 
 const bookStats = ref({
   issued: 0,
@@ -517,7 +684,6 @@ const donutSegments = computed(() => {
   const segments = [];
   let accumulated = 0;
 
-  // 1. Issued (Blue)
   if (bookStats.value.issued > 0) {
     const len = (bookStats.value.issued / total) * 314.159;
     const offset = (accumulated / total) * 314.159;
@@ -529,7 +695,6 @@ const donutSegments = computed(() => {
     accumulated += bookStats.value.issued;
   }
 
-  // 2. Returned (Orange)
   if (bookStats.value.returned > 0) {
     const len = (bookStats.value.returned / total) * 314.159;
     const offset = (accumulated / total) * 314.159;
@@ -541,7 +706,6 @@ const donutSegments = computed(() => {
     accumulated += bookStats.value.returned;
   }
 
-  // 3. Pending (Green)
   if (bookStats.value.pending > 0) {
     const len = (bookStats.value.pending / total) * 314.159;
     const offset = (accumulated / total) * 314.159;
@@ -581,6 +745,10 @@ const fetchAnalytics = async () => {
 
     // Map popular seats
     popularSeats.value = data.popularSeats;
+
+    // Map gender and level stats
+    genderStats.value = data.genderStats || { male: 0, female: 0, mixed: 0, total: 0 };
+    levelStats.value = data.levelStats || { PRC: 0, CAF: 0, Final: 0, all: 0, total: 0 };
 
     // Map book stats
     bookStats.value = data.bookStats || { issued: 0, returned: 0, pending: 0, total: 0 };

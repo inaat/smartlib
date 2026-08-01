@@ -78,6 +78,21 @@ class BookingController extends Controller
         return response()->json($bookings);
     }
 
+    public function show(Request $request, $id)
+    {
+        SeatBooking::cancelExpiredBookings();
+        $booking = SeatBooking::with([
+            'seat.floor.library',
+            'seat.seatSection',
+            'seat.seatSubsection',
+            'user'
+        ])
+        ->where('user_id', $request->user()->id)
+        ->findOrFail($id);
+
+        return response()->json($booking);
+    }
+
     public function store(Request $request)
     {
         SeatBooking::cancelExpiredBookings();
@@ -127,42 +142,73 @@ class BookingController extends Controller
         $section = $seat->seatSection;
 
         // Check gender restriction if section has one
-        if ($section && $section->gender && $section->gender !== 'mixed') {
-            if (!$user->gender || $user->gender !== $section->gender) {
-                return response()->json([
-                    'message' => "This section is restricted to {$section->gender} students only. Please ensure your profile gender is set correctly."
-                ], 400);
+        if ($section) {
+            $secGender = $section->gender ? strtolower(trim($section->gender)) : 'mixed';
+            $secName = strtolower($section->name ?? '');
+            if (str_contains($secName, 'girls') || str_contains($secName, 'girl') || str_contains($secName, 'female') || str_contains($secName, 'women')) {
+                $secGender = 'female';
+            } elseif (str_contains($secName, 'boys') || str_contains($secName, 'boy') || str_contains($secName, 'male') || str_contains($secName, 'men')) {
+                $secGender = 'male';
+            }
+
+            if ($secGender !== 'mixed' && $secGender !== 'all') {
+                $userGender = $user->gender ? strtolower(trim($user->gender)) : 'male';
+                $isMaleSec = in_array($secGender, ['male', 'boys', 'boy', 'men']);
+                $isFemaleSec = in_array($secGender, ['female', 'girls', 'girl', 'women']);
+
+                $isMaleUser = in_array($userGender, ['male', 'boys', 'boy', 'men']);
+                $isFemaleUser = in_array($userGender, ['female', 'girls', 'girl', 'women']);
+
+                if (($isMaleSec && !$isMaleUser) || ($isFemaleSec && !$isFemaleUser)) {
+                    return response()->json([
+                        'message' => "This section is restricted to {$secGender} students only. Please ensure your profile gender is set correctly."
+                    ], 400);
+                }
             }
         }
 
-        // Check academic level restriction if section has one
-        if ($section && $section->academic_level && $section->academic_level !== 'all') {
-            if ($user->ca_level !== $section->academic_level) {
-                // Check if they have an approved override request for this seat
-                $hasApprovedOverride = \App\Models\OverrideRequest::where('user_id', $user->id)
-                    ->where('seat_id', $seat->id)
-                    ->where('status', 'approved')
-                    ->exists();
+        // Check academic level restriction if subsection or section has one
+        $seat->loadMissing(['seatSubsection', 'seatSection']);
+        $requiredLevel = null;
+        if ($seat->seatSubsection && $seat->seatSubsection->academic_level && $seat->seatSubsection->academic_level !== 'all') {
+            $requiredLevel = $seat->seatSubsection->academic_level;
+        } elseif ($section && $section->academic_level && $section->academic_level !== 'all') {
+            $requiredLevel = $section->academic_level;
+        }
 
-                if (!$hasApprovedOverride) {
-                    $userLevel = $user->ca_level;
-                    $availableSeatsOfUserLevel = Seat::whereHas('seatSection', function ($q) use ($libraryId, $userLevel) {
-                        $q->where('library_id', $libraryId)
-                          ->where('academic_level', $userLevel);
+        if ($requiredLevel && $user->ca_level !== $requiredLevel) {
+            // Check if they have an approved override request for this seat THAT IS VALID TODAY ONLY
+            $todayStr = \Carbon\Carbon::today()->toDateString();
+            $hasApprovedOverride = \App\Models\OverrideRequest::where('user_id', $user->id)
+                ->where('seat_id', $seat->id)
+                ->where('status', 'approved')
+                ->whereDate('updated_at', $todayStr)
+                ->exists();
+
+            if (!$hasApprovedOverride) {
+                $userLevel = $user->ca_level;
+                $availableSeatsOfUserLevel = Seat::whereHas('floor', function ($fQ) use ($libraryId) {
+                        $fQ->where('library_id', $libraryId);
                     })
                     ->where('status', 'available')
-                    ->count();
+                    ->where(function ($q) use ($userLevel) {
+                        $q->whereHas('seatSubsection', function ($subQ) use ($userLevel) {
+                            $subQ->where('academic_level', $userLevel);
+                        })->orWhere(function ($secQ) use ($userLevel) {
+                            $secQ->whereDoesntHave('seatSubsection')
+                                ->whereHas('seatSection', function ($sQ) use ($userLevel) {
+                                    $sQ->where('academic_level', $userLevel);
+                                });
+                        });
+                    })->count();
 
-                    $allOccupied = ($availableSeatsOfUserLevel === 0);
-
-                    return response()->json([
-                        'message' => "This seat is restricted to {$section->academic_level} students.",
-                        'restricted' => true,
-                        'can_request_override' => $allOccupied,
-                        'user_level' => $userLevel,
-                        'seat_level' => $section->academic_level
-                    ], 403);
-                }
+                return response()->json([
+                    'message' => "This seat is restricted to {$requiredLevel} level students.",
+                    'restricted' => true,
+                    'can_request_override' => true,
+                    'user_level' => $userLevel,
+                    'seat_level' => $requiredLevel
+                ], 403);
             }
         }
 
@@ -293,6 +339,20 @@ class BookingController extends Controller
         // Check if library is open on that day and within opening hours
         $bookingTime = Carbon::parse($request->booking_time);
         $endTime = Carbon::parse($request->scheduled_end_time);
+
+        // Safeguard: If booking is for today and start time is in the past (e.g., immediate booking submitted with page delay or latency)
+        if ($bookingTime->isToday() && $bookingTime->isPast()) {
+            $durationSeconds = max(1800, $bookingTime->diffInSeconds($endTime));
+            // Reset booking_time to exact current server moment
+            $bookingTime = Carbon::now();
+            $endTime = (clone $bookingTime)->addSeconds($durationSeconds);
+
+            $request->merge([
+                'booking_time' => $bookingTime->toDateTimeString(),
+                'scheduled_end_time' => $endTime->toDateTimeString(),
+            ]);
+        }
+
         $dayOfWeek = $bookingTime->format('l'); // e.g., 'Monday', 'Tuesday'
         
         $operatingHour = \App\Models\LibraryOperatingHour::where('library_id', $seat->floor->library_id)
@@ -303,14 +363,50 @@ class BookingController extends Controller
             return response()->json(['message' => "The library is closed on {$dayOfWeek}s."], 400);
         }
 
-        $openAt = Carbon::createFromFormat('H:i:s', $operatingHour->open_time, $bookingTime->timezone);
-        $closeAt = Carbon::createFromFormat('H:i:s', $operatingHour->close_time, $bookingTime->timezone);
+        $openTimeStr = strlen($operatingHour->open_time) === 5 ? $operatingHour->open_time . ':00' : $operatingHour->open_time;
+        $closeTimeStr = strlen($operatingHour->close_time) === 5 ? $operatingHour->close_time . ':00' : $operatingHour->close_time;
+
+        $openAt = Carbon::createFromFormat('H:i:s', $openTimeStr, $bookingTime->timezone);
+        $closeAt = Carbon::createFromFormat('H:i:s', $closeTimeStr, $bookingTime->timezone);
         
         // We set the date to match the booking date for comparison
         $openAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day);
         $closeAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day);
 
-        if ($bookingTime->lt($openAt) || $endTime->gt($closeAt)) {
+        // If closing time is less than or equal to opening time, it crosses midnight into the next day
+        if ($closeAt->lte($openAt)) {
+            $closeAt->addDay();
+        }
+
+        // Handle case where booking is early morning for an overnight shift that started yesterday
+        if ($bookingTime->lt($openAt)) {
+            $yesterday = (clone $bookingTime)->subDay()->format('l');
+            $yesterdayOperating = \App\Models\LibraryOperatingHour::where('library_id', $seat->floor->library_id)
+                ->where('day_of_week', $yesterday)
+                ->first();
+
+            if ($yesterdayOperating && $yesterdayOperating->is_open) {
+                $yOpenStr = strlen($yesterdayOperating->open_time) === 5 ? $yesterdayOperating->open_time . ':00' : $yesterdayOperating->open_time;
+                $yCloseStr = strlen($yesterdayOperating->close_time) === 5 ? $yesterdayOperating->close_time . ':00' : $yesterdayOperating->close_time;
+
+                $yOpenAt = Carbon::createFromFormat('H:i:s', $yOpenStr, $bookingTime->timezone);
+                $yCloseAt = Carbon::createFromFormat('H:i:s', $yCloseStr, $bookingTime->timezone);
+
+                $yOpenAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day)->subDay();
+                $yCloseAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day);
+                if ($yCloseAt->lte($yOpenAt)) {
+                    $yCloseAt->addDay();
+                }
+
+                if ($bookingTime->gte($yOpenAt) && $bookingTime->lt($yCloseAt)) {
+                    $openAt = $yOpenAt;
+                    $closeAt = $yCloseAt;
+                }
+            }
+        }
+
+        // Verify booking start time is within library operating hours
+        if ($bookingTime->lt($openAt) || $bookingTime->gte($closeAt)) {
             $formattedOpen = $openAt->format('H:i');
             $formattedClose = $closeAt->format('H:i');
             return response()->json([
@@ -318,12 +414,17 @@ class BookingController extends Controller
             ], 400);
         }
 
+        // If scheduled end time exceeds library closing time, cap end time to closing time
+        if ($endTime->gt($closeAt)) {
+            $endTime = clone $closeAt;
+        }
+
         $booking = SeatBooking::create([
             'user_id' => $user->id,
             'seat_id' => $seat->id,
             'library_id' => $seat->floor->library_id,
-            'booking_time' => $request->booking_time,
-            'scheduled_end_time' => $request->scheduled_end_time,
+            'booking_time' => $bookingTime->toDateTimeString(),
+            'scheduled_end_time' => $endTime->toDateTimeString(),
             'status' => 'booked',
         ]);
 
@@ -717,40 +818,56 @@ class BookingController extends Controller
 
         $section = $seat->seatSection;
         // Check gender restriction
-        if ($section && $section->gender && $section->gender !== 'mixed') {
-            if (!$user->gender || $user->gender !== $section->gender) {
-                return response()->json([
-                    'message' => "This section is restricted to {$section->gender} students only."
-                ], 400);
+        if ($section) {
+            $secGender = $section->gender ? strtolower(trim($section->gender)) : 'mixed';
+            $secName = strtolower($section->name ?? '');
+            if (str_contains($secName, 'girls') || str_contains($secName, 'girl') || str_contains($secName, 'female') || str_contains($secName, 'women')) {
+                $secGender = 'female';
+            } elseif (str_contains($secName, 'boys') || str_contains($secName, 'boy') || str_contains($secName, 'male') || str_contains($secName, 'men')) {
+                $secGender = 'male';
+            }
+
+            if ($secGender !== 'mixed' && $secGender !== 'all') {
+                $userGender = $user->gender ? strtolower(trim($user->gender)) : 'male';
+                $isMaleSec = in_array($secGender, ['male', 'boys', 'boy', 'men']);
+                $isFemaleSec = in_array($secGender, ['female', 'girls', 'girl', 'women']);
+
+                $isMaleUser = in_array($userGender, ['male', 'boys', 'boy', 'men']);
+                $isFemaleUser = in_array($userGender, ['female', 'girls', 'girl', 'women']);
+
+                if (($isMaleSec && !$isMaleUser) || ($isFemaleSec && !$isFemaleUser)) {
+                    return response()->json([
+                        'message' => "This section is restricted to {$secGender} students only."
+                    ], 400);
+                }
             }
         }
 
-        // Check academic level restriction if section has one
-        if ($section && $section->academic_level && $section->academic_level !== 'all') {
-            if ($user->ca_level !== $section->academic_level) {
-                $hasApprovedOverride = \App\Models\OverrideRequest::where('user_id', $user->id)
-                    ->where('seat_id', $seat->id)
-                    ->where('status', 'approved')
-                    ->exists();
+        // Check academic level restriction if subsection or section has one
+        $seat->loadMissing(['seatSubsection', 'seatSection']);
+        $requiredLevel = null;
+        if ($seat->seatSubsection && $seat->seatSubsection->academic_level && $seat->seatSubsection->academic_level !== 'all') {
+            $requiredLevel = $seat->seatSubsection->academic_level;
+        } elseif ($section && $section->academic_level && $section->academic_level !== 'all') {
+            $requiredLevel = $section->academic_level;
+        }
 
-                if (!$hasApprovedOverride) {
-                    $availableSeatsOfUserLevel = Seat::whereHas('seatSection', function ($q) use ($seat, $user) {
-                        $q->where('library_id', $seat->floor->library_id ?? $seat->library_id)
-                          ->where('academic_level', $user->ca_level);
-                    })
-                    ->where('status', 'available')
-                    ->count();
+        if ($requiredLevel && $user->ca_level !== $requiredLevel) {
+            $todayStr = \Carbon\Carbon::today()->toDateString();
+            $hasApprovedOverride = \App\Models\OverrideRequest::where('user_id', $user->id)
+                ->where('seat_id', $seat->id)
+                ->where('status', 'approved')
+                ->whereDate('updated_at', $todayStr)
+                ->exists();
 
-                    $allOccupied = ($availableSeatsOfUserLevel === 0);
-
-                    return response()->json([
-                        'message' => "This seat is restricted to {$section->academic_level} students.",
-                        'restricted' => true,
-                        'can_request_override' => $allOccupied,
-                        'user_level' => $user->ca_level,
-                        'seat_level' => $section->academic_level
-                    ], 403);
-                }
+            if (!$hasApprovedOverride) {
+                return response()->json([
+                    'message' => "This seat is restricted to {$requiredLevel} level students.",
+                    'restricted' => true,
+                    'can_request_override' => true,
+                    'user_level' => $user->ca_level,
+                    'seat_level' => $requiredLevel
+                ], 403);
             }
         }
 
@@ -801,34 +918,64 @@ class BookingController extends Controller
         ]);
 
         $user = $request->user();
-        $seat = Seat::with(['floor.library', 'seatSection'])->findOrFail($request->seat_id);
-        $libraryId = $seat->floor->library_id ?? $seat->library_id;
+        $seat = Seat::with(['floor.library', 'seatSection', 'seatSubsection'])->findOrFail($request->seat_id);
+        $libraryId = $seat->floor ? $seat->floor->library_id : ($seat->seatSection ? $seat->seatSection->library_id : ($seat->library_id ?? $request->library_id));
+        $todayStr = \Carbon\Carbon::today()->toDateString();
 
-        // Check if there is already a pending or approved override request for this seat and user
-        $existing = \App\Models\OverrideRequest::where('user_id', $user->id)
-            ->where('seat_id', $seat->id)
-            ->whereIn('status', ['pending', 'approved'])
-            ->first();
-
-        if ($existing) {
-            return response()->json([
-                'message' => "You already have a {$existing->status} override request for this seat."
-            ], 400);
+        // Enforce strict gender restriction: Override requests cannot bypass gender rules!
+        $section = $seat->seatSection;
+        $sub = $seat->seatSubsection;
+        $secGender = null;
+        if ($sub && $sub->gender && $sub->gender !== 'mixed') {
+            $secGender = strtolower(trim($sub->gender));
+        } elseif ($section && $section->gender && $section->gender !== 'mixed') {
+            $secGender = strtolower(trim($section->gender));
         }
 
-        // Validate that all seats of their own level are indeed occupied/reserved
-        $userLevel = $user->ca_level;
-        $availableSeatsOfUserLevel = Seat::whereHas('seatSection', function ($q) use ($libraryId, $userLevel) {
-            $q->where('library_id', $libraryId)
-              ->where('academic_level', $userLevel);
-        })
-        ->where('status', 'available')
-        ->count();
+        $secName = strtolower(($section->name ?? '') . ' ' . ($sub->name ?? ''));
+        if (str_contains($secName, 'girls') || str_contains($secName, 'girl') || str_contains($secName, 'female') || str_contains($secName, 'women')) {
+            $secGender = 'female';
+        } elseif (str_contains($secName, 'boys') || str_contains($secName, 'boy') || str_contains($secName, 'male') || str_contains($secName, 'men')) {
+            $secGender = 'male';
+        }
 
-        if ($availableSeatsOfUserLevel > 0) {
-            return response()->json([
-                'message' => "You cannot request an override. There are still available seats assigned to your level ({$userLevel})."
-            ], 400);
+        if ($secGender && !in_array($secGender, ['mixed', 'all'])) {
+            $userGender = strtolower(trim($user->gender ?? 'male'));
+            $isMaleSec = in_array($secGender, ['male', 'boys', 'boy', 'men']);
+            $isFemaleSec = in_array($secGender, ['female', 'girls', 'girl', 'women']);
+
+            $isMaleUser = in_array($userGender, ['male', 'boys', 'boy', 'men']);
+            $isFemaleUser = in_array($userGender, ['female', 'girls', 'girl', 'women']);
+
+            if (($isMaleSec && !$isMaleUser) || ($isFemaleSec && !$isFemaleUser)) {
+                return response()->json([
+                    'message' => "Gender restriction cannot be overridden. You can only request overrides within your allowed gender section."
+                ], 400);
+            }
+        }
+
+        // Check if user has ALREADY submitted ANY override request TODAY (Only 1 request allowed per student per day across ALL seats!)
+        $existingAny = \App\Models\OverrideRequest::where('user_id', $user->id)
+            ->whereDate('created_at', $todayStr)
+            ->with('seat')
+            ->first();
+
+        if ($existingAny) {
+            $seatNum = $existingAny->seat ? "Seat #{$existingAny->seat->seat_number}" : "another seat";
+            if ($existingAny->seat_id === $seat->id) {
+                if ($existingAny->status === 'rejected') {
+                    return response()->json([
+                        'message' => "Your override request for this seat was rejected by the librarian today. You cannot send another request today."
+                    ], 400);
+                }
+                return response()->json([
+                    'message' => "You already have a {$existingAny->status} override request for this seat today."
+                ], 400);
+            } else {
+                return response()->json([
+                    'message' => "You have already submitted an override request today for {$seatNum}. You can only submit 1 override request per day."
+                ], 400);
+            }
         }
 
         // Create the override request
@@ -840,7 +987,15 @@ class BookingController extends Controller
         ]);
 
         // Notify librarians
-        $librarians = \App\Models\User::role('librarian')->where('library_id', $libraryId)->get();
+        $librarians = \App\Models\User::role('librarian')
+            ->where(function($q) use ($libraryId) {
+                $q->where('library_id', $libraryId)
+                  ->orWhereHas('libraries', function($lq) use ($libraryId) {
+                      $lq->where('libraries.id', $libraryId);
+                  })
+                  ->orWhereNull('library_id');
+            })->get();
+
         foreach ($librarians as $lib) {
             \App\Models\Notification::send(
                 $lib->id,
@@ -856,5 +1011,18 @@ class BookingController extends Controller
             'message' => 'Override request submitted successfully. Please wait for librarian approval.',
             'request' => $overrideRequest
         ], 201);
+    }
+
+    public function getStudentOverrideRequests(Request $request)
+    {
+        $user = $request->user();
+        $todayStr = \Carbon\Carbon::today()->toDateString();
+
+        $requests = \App\Models\OverrideRequest::where('user_id', $user->id)
+            ->whereDate('updated_at', $todayStr)
+            ->with(['seat.floor', 'seat.seatSection', 'seat.seatSubsection'])
+            ->get();
+
+        return response()->json($requests);
     }
 }

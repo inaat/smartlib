@@ -142,6 +142,28 @@ function refreshLocation() {
   );
 }
 
+// Check permission status if available in browser
+if (typeof window !== 'undefined' && navigator.permissions && navigator.permissions.query) {
+  navigator.permissions.query({ name: 'geolocation' }).then((status) => {
+    if (status.state === 'granted') {
+      requestLocation();
+    } else if (status.state === 'denied') {
+      locationGranted.value = false;
+      locationError.value = 'Location access is denied. Please turn on location in your device and browser settings.';
+    }
+    status.onchange = () => {
+      if (status.state === 'granted') {
+        requestLocation();
+      } else if (status.state === 'denied') {
+        locationGranted.value = false;
+        locationError.value = 'Location access is denied. Please turn on location in your device and browser settings.';
+      }
+    };
+  }).catch(() => {
+    // navigator.permissions not supported
+  });
+}
+
 export function useGeolocation() {
   return {
     latitude: readonly(latitude),

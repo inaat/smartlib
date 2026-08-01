@@ -5,8 +5,8 @@
       'fixed inset-y-0 left-0 z-50 flex flex-col bg-purple-700 border-r border-white/10 shadow-2xl transition-all duration-300 ease-in-out',
       // Mobile: always full width sidebar, translate in/out
       'w-72',
-      // Desktop overrides: sticky and width depends on collapsed state
-      isCollapsed ? 'lg:w-20 lg:shadow-none lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden' : 'lg:w-64 lg:shadow-none lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden',
+      // Desktop overrides: relative h-full and width depends on collapsed state
+      isCollapsed ? 'lg:w-20 lg:shadow-none lg:relative lg:top-0 lg:h-full lg:flex-shrink-0 lg:overflow-hidden' : 'lg:w-64 lg:shadow-none lg:relative lg:top-0 lg:h-full lg:flex-shrink-0 lg:overflow-hidden',
       // Translate: hidden on mobile unless open, always visible on desktop
       isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
     ]"

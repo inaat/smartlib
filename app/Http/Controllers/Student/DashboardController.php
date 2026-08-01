@@ -150,6 +150,29 @@ class DashboardController extends Controller
         $avgSessionDuration = $totalSessions > 0 ? round($totalMinutes / $totalSessions / 60, 1) : 0;
         $focusScore = min(100, round(($totalSessions * 5) + ($studyStreak * 10)));
 
+        // User Custom Study Goals
+        $weeklyGoal = (int) ($user->weekly_goal_hours ?? 20);
+        $monthlyGoal = (int) ($user->monthly_goal_hours ?? 80);
+
+        // Calculate current week hours (from start of current week)
+        $startOfWeek = now()->startOfWeek();
+        $currentWeekMinutes = SeatBooking::where('user_id', $user->id)
+            ->where('status', 'checked_out')
+            ->where('check_out_time', '>=', $startOfWeek)
+            ->sum('total_minutes');
+        $weeklyHours = round($currentWeekMinutes / 60, 1);
+
+        // Calculate current month hours (from start of current month)
+        $startOfMonth = now()->startOfMonth();
+        $currentMonthMinutes = SeatBooking::where('user_id', $user->id)
+            ->where('status', 'checked_out')
+            ->where('check_out_time', '>=', $startOfMonth)
+            ->sum('total_minutes');
+        $monthlyHours = round($currentMonthMinutes / 60, 1);
+
+        $weeklyProgress = $weeklyGoal > 0 ? min(100, round(($weeklyHours / $weeklyGoal) * 100)) : 0;
+        $monthlyProgress = $monthlyGoal > 0 ? min(100, round(($monthlyHours / $monthlyGoal) * 100)) : 0;
+
         return response()->json([
             'stats' => $stats,
             'active_booking' => $activeBooking,
@@ -162,14 +185,38 @@ class DashboardController extends Controller
             'analytics' => [
                 'study_streak' => $studyStreak,
                 'hours_today' => round($totalHoursToday, 1),
-                'weekly_hours' => round($totalMinutes / 60, 1),
+                'weekly_hours' => $weeklyHours,
+                'weekly_goal' => $weeklyGoal,
+                'weekly_progress' => $weeklyProgress,
+                'monthly_hours' => $monthlyHours,
+                'monthly_goal' => $monthlyGoal,
+                'monthly_progress' => $monthlyProgress,
                 'weekly_study_data' => $weeklyStudyData,
                 'monthly_study_data' => $monthlyStudyData,
                 'avg_session_duration' => $avgSessionDuration,
                 'total_sessions' => $totalSessions,
                 'focus_score' => $focusScore,
-                'weekly_progress' => min(100, round(($totalMinutes / 60) / 20 * 100)), // 20 hours weekly goal
             ]
+        ]);
+    }
+
+    public function updateGoals(Request $request)
+    {
+        $validated = $request->validate([
+            'weekly_goal_hours' => 'required|integer|min:1|max:168',
+            'monthly_goal_hours' => 'required|integer|min:1|max:720',
+        ]);
+
+        $user = $request->user();
+        $user->update([
+            'weekly_goal_hours' => $validated['weekly_goal_hours'],
+            'monthly_goal_hours' => $validated['monthly_goal_hours'],
+        ]);
+
+        return response()->json([
+            'message' => 'Study goals updated successfully',
+            'weekly_goal_hours' => $user->weekly_goal_hours,
+            'monthly_goal_hours' => $user->monthly_goal_hours,
         ]);
     }
 }

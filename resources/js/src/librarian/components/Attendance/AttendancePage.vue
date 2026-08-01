@@ -28,8 +28,8 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
       
       <!-- Total Attendance today -->
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/80 flex items-center justify-between">
-        <div class="text-left">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/80 flex items-center justify-between text-left">
+        <div>
           <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">Total Entries Today</p>
           <h3 class="text-2xl font-bold text-slate-800 mt-2.5 leading-none">{{ stats.total_today }}</h3>
         </div>
@@ -39,8 +39,8 @@
       </div>
 
       <!-- Currently inside the library -->
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/80 flex items-center justify-between">
-        <div class="text-left">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/80 flex items-center justify-between text-left">
+        <div>
           <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">Currently Present</p>
           <h3 class="text-2xl font-bold text-green-600 mt-2.5 leading-none">{{ stats.currently_present }}</h3>
         </div>
@@ -50,8 +50,8 @@
       </div>
 
       <!-- Average duration inside -->
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/80 flex items-center justify-between">
-        <div class="text-left">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/80 flex items-center justify-between text-left">
+        <div>
           <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">Avg. Session Duration</p>
           <h3 class="text-2xl font-bold text-emerald-600 mt-2.5 leading-none">{{ formatDuration(stats.avg_minutes) }}</h3>
         </div>
@@ -90,8 +90,8 @@
       </div>
     </div>
 
-    <!-- Records Table Container -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100/80 overflow-hidden">
+    <!-- Records Table Container (Original Design with 6-Item Pagination) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100/80 overflow-hidden text-left">
       
       <div v-if="loading" class="p-16 flex flex-col items-center justify-center">
         <RefreshCw class="w-7 h-7 text-emerald-600 animate-spin mb-3" />
@@ -173,9 +173,9 @@
         </table>
       </div>
 
-      <!-- Pagination Block -->
+      <!-- Pagination Block (6 items per page) -->
       <div v-if="pagination.total > 0" class="bg-slate-50/50 px-6 py-4 border-t border-slate-100">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
             Showing <span class="text-slate-700 font-bold">{{ pagination.from }}</span> to <span class="text-slate-700 font-bold">{{ pagination.to }}</span> of <span class="text-slate-700 font-bold">{{ pagination.total }}</span> entries
           </div>
@@ -218,12 +218,12 @@
       <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-100 text-left animate-in duration-200">
         
         <!-- Header -->
-        <div class="p-6 border-b border-slate-55 flex justify-between items-center bg-slate-50/20">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/20">
           <div>
             <h3 class="text-base font-bold text-slate-700 tracking-tight leading-none mb-1.5">Mark Attendance</h3>
             <p class="text-[10px] text-slate-400 font-semibold">Enter card details to log inside-library scans.</p>
           </div>
-          <button @click="showMarkModal = false" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-150 transition-colors cursor-pointer">
+          <button @click="showMarkModal = false" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
             <X class="w-4 h-4" />
           </button>
         </div>
@@ -246,7 +246,7 @@
               @click="markForm.type = 'check_in'; handleMarkAttendance()"
               :disabled="marking"
               class="flex flex-col items-center justify-center p-4 border rounded-xl hover:border-emerald-600 hover:bg-emerald-50/50 group cursor-pointer transition-all"
-              :class="markForm.type === 'check_in' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-150'"
+              :class="markForm.type === 'check_in' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-200'"
             >
               <UserCheck class="w-6 h-6 mb-2 text-slate-400 group-hover:text-emerald-600" />
               <span class="text-xs font-bold text-slate-600 group-hover:text-emerald-600">Check In</span>
@@ -255,10 +255,10 @@
               @click="markForm.type = 'check_out'; handleMarkAttendance()"
               :disabled="marking"
               class="flex flex-col items-center justify-center p-4 border rounded-xl hover:border-red-600 hover:bg-red-50/50 group cursor-pointer transition-all"
-              :class="markForm.type === 'check_out' ? 'border-red-600 bg-red-50' : 'border-slate-150'"
+              :class="markForm.type === 'check_out' ? 'border-red-600 bg-red-50' : 'border-slate-200'"
             >
-              <LogOut class="w-6 h-6 mb-2 text-slate-400 group-hover:text-blue-600" />
-              <span class="text-xs font-bold text-slate-600 group-hover:text-blue-600">Check Out</span>
+              <LogOut class="w-6 h-6 mb-2 text-slate-400 group-hover:text-rose-600" />
+              <span class="text-xs font-bold text-slate-600 group-hover:text-rose-600">Check Out</span>
             </button>
           </div>
         </div>
@@ -277,7 +277,8 @@ import {
   Calendar as CalendarIcon,
   UserPlus,
   X,
-  LogOut
+  LogOut,
+  RefreshCw
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 import { format } from 'date-fns';
@@ -320,6 +321,7 @@ const fetchAttendance = async (page = 1) => {
   try {
     const response = await librarianAPI.getAttendance({
       page,
+      per_page: 6,
       date: selectedDate.value,
       search: searchQuery.value,
       status: statusFilter.value === 'all' ? null : statusFilter.value
@@ -374,7 +376,7 @@ const handleMarkAttendance = async () => {
     showSuccess('Success', `Student ${markForm.value.type === 'check_in' ? 'checked in' : 'checked out'} successfully`);
     markForm.value.crn = '';
     showMarkModal.value = false;
-    fetchAttendance();
+    fetchAttendance(1);
   } catch (error: any) {
     showError('Error', error.response?.data?.message || 'Failed to mark attendance');
   } finally {
@@ -420,7 +422,7 @@ const getProfilePictureUrl = (path: string) => {
 };
 
 onMounted(() => {
-  fetchAttendance();
+  fetchAttendance(1);
 });
 </script>
 

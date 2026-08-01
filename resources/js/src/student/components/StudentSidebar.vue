@@ -2,14 +2,15 @@
   <!-- Sidebar -->
   <aside
     :class="[
-      'fixed inset-y-0 left-0 z-50 flex flex-col bg-blue-600 border-r border-white/10 shadow-2xl transition-all duration-300 ease-in-out',
+      'fixed inset-y-0 left-0 z-50 flex flex-col bg-blue-600 border-r border-white/10 shadow-2xl transition-all duration-300 ease-in-out overflow-x-hidden overscroll-contain',
       // Mobile: always full width sidebar, translate in/out
       'w-72',
-      // Desktop overrides: sticky and width depends on collapsed state
+      // Desktop overrides: sticky h-screen locks height to exact viewport
       isCollapsed ? 'lg:w-20 lg:shadow-none lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden' : 'lg:w-64 lg:shadow-none lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden',
       // Translate: hidden on mobile unless open, always visible on desktop
       isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
     ]"
+    style="overscroll-behavior: contain;"
   >
     <!-- Branding Header -->
     <!-- Desktop: click to toggle collapse | Mobile: shows brand only -->
@@ -62,9 +63,9 @@
     <nav
       @scroll="closeAllDropdowns"
       :class="[
-        'flex-1 px-2.5 py-5 space-y-5 transition-all duration-300 overflow-y-auto'
+        'flex-1 px-2.5 py-5 space-y-5 transition-all duration-300 overflow-y-auto overflow-x-hidden overscroll-contain'
       ]"
-      style="scrollbar-width: none; -ms-overflow-style: none;"
+      style="scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: contain;"
     >
       <!-- Main Menu Section -->
       <div>

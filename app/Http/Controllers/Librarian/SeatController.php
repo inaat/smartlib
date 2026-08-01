@@ -27,7 +27,11 @@ class SeatController extends Controller
         $libraryId = $user->library_id;
         if ($request->has('library_id')) $libraryId = $request->library_id;
         
-        $sections = \App\Models\SeatSection::where('library_id', $libraryId)->get();
+        $sections = \App\Models\SeatSection::where('library_id', $libraryId)
+            ->with(['subsections' => function($q) {
+                $q->withCount('seats')->with('seats');
+            }])
+            ->get();
         return response()->json($sections);
     }
 
@@ -37,7 +41,7 @@ class SeatController extends Controller
         // Check if API request
         if ($request->expectsJson() || $request->is('api/*')) {
             $user = Auth::user();
-            $query = Seat::with(['floor', 'seatSection']);
+            $query = Seat::with(['floor', 'seatSection', 'seatSubsection']);
 
             if ($user->library_id && !in_array($user->role, ['super_admin', 'admin', 'owner'])) {
                 $query->whereHas('floor', function($q) use ($user) {
@@ -51,6 +55,10 @@ class SeatController extends Controller
 
             if ($request->has('section_id')) {
                 $query->where('section_id', $request->section_id);
+            }
+
+            if ($request->has('subsection_id')) {
+                $query->where('subsection_id', $request->subsection_id);
             }
 
             if ($request->has('search')) {
@@ -97,15 +105,22 @@ class SeatController extends Controller
                         }
                     }
 
+                    $overstayMins = ($currentBooking->check_in_time && $endTime && $now->gt($endTime)) ? (int)$now->diffInMinutes($endTime, true) : 0;
+
                     $bookingData = [
                         'id' => $currentBooking->id,
                         'user_name' => $currentBooking->user->name ?? 'Unknown',
                         'user_email' => $currentBooking->user->email ?? '',
+                        'user_crn' => $currentBooking->user->crn ?? null,
+                        'user_phone' => $currentBooking->user->phone ?? null,
+                        'booking_status' => $currentBooking->status,
+                        'start_time' => $currentBooking->scheduled_start_time ?? $currentBooking->check_in_time ?? $currentBooking->created_at,
                         'check_in_time' => $currentBooking->check_in_time,
                         'scheduled_end_time' => $currentBooking->scheduled_end_time,
                         'extended_until' => $currentBooking->extended_until,
                         'end_time' => $endTime,
-                        'minutes_left' => $endTime ? $now->diffInMinutes($endTime, false) : null,
+                        'minutes_left' => $endTime ? (int)round($now->diffInMinutes($endTime, false)) : null,
+                        'overstay_minutes' => $overstayMins,
                     ];
                 }
 
@@ -121,12 +136,18 @@ class SeatController extends Controller
                     'is_maintenance' => $seat->is_maintenance || $seat->status === 'maintenance',
                     'is_active' => $seat->is_active,
                     'section_id' => $seat->section_id,
+                    'subsection_id' => $seat->subsection_id,
                     'table_id' => $seat->table_id,
                     'cabin_number' => $seat->cabin_number,
                     'cabin_features' => $seat->cabin_features,
                     'floor_id' => $seat->floor->id ?? null,
                     'floor' => $seat->floor,
                     'seat_section' => $seat->seatSection,
+                    'seat_subsection' => $seat->seatSubsection ? [
+                        'id' => $seat->seatSubsection->id,
+                        'name' => $seat->seatSubsection->name,
+                        'code' => $seat->seatSubsection->code,
+                    ] : null,
                     'has_computer' => $seat->has_computer,
                     'near_window' => $seat->near_window,
                     'socket_count' => $seat->socket_count,
@@ -170,6 +191,7 @@ class SeatController extends Controller
             'status' => 'nullable|in:available,reserved,maintenance,occupied',
             'floor_id' => 'required|integer|exists:floors,id',
             'section_id' => 'nullable|integer|exists:seat_sections,id',
+            'subsection_id' => 'nullable|integer|exists:seat_subsections,id',
             'table_id' => 'nullable|integer|exists:study_tables,id',
             'cabin_number' => 'nullable|string',
             'cabin_features' => 'nullable|array',
@@ -214,12 +236,36 @@ class SeatController extends Controller
             return back()->withErrors(['floor_id' => "The total seats on this floor cannot exceed the floor capacity of {$floor->capacity} seats."]);
         }
 
-        // Generate QR code
-        $qrContent = base64_encode(json_encode([
+        // Check subsection capacity
+        if (!empty($validated['subsection_id'])) {
+            $subsection = \App\Models\SeatSubsection::find($validated['subsection_id']);
+            if ($subsection && $subsection->total_seats > 0) {
+                $currentSeatsInSub = Seat::where('subsection_id', $subsection->id)->count();
+                if (($currentSeatsInSub + 1) > $subsection->total_seats) {
+                    if ($request->expectsJson() || $request->is('api/*')) {
+                        return response()->json([
+                            'message' => "Cannot add seat to subsection '{$subsection->name}'. Subsection limit of {$subsection->total_seats} seats reached."
+                        ], 422);
+                    }
+                    return back()->withErrors(['subsection_id' => "Subsection limit of {$subsection->total_seats} seats reached."]);
+                }
+            }
+        }
+
+        // Generate QR code with unique payload
+        $qrData = [
             'type' => 'seat',
             'seat_number' => $validated['seat_number'],
             'library_id' => $library->id,
-        ]));
+            'section_id' => $validated['section_id'] ?? null,
+            'floor_id' => $validated['floor_id'] ?? null,
+            'uid' => uniqid(),
+        ];
+        $qrContent = base64_encode(json_encode($qrData));
+        if (Seat::where('qr_code', $qrContent)->exists()) {
+            $qrData['uid'] = uniqid() . '_' . rand(1000, 9999);
+            $qrContent = base64_encode(json_encode($qrData));
+        }
 
         $validated['qr_code'] = $qrContent;
         $validated['qr_generated_at'] = now();
@@ -277,6 +323,7 @@ class SeatController extends Controller
             'status' => 'sometimes|in:available,reserved,maintenance,occupied',
             'floor_id' => 'nullable|integer|exists:floors,id',
             'section_id' => 'nullable|integer|exists:seat_sections,id',
+            'subsection_id' => 'nullable|integer|exists:seat_subsections,id',
             'table_id' => 'nullable|integer|exists:study_tables,id',
             'cabin_number' => 'nullable|string',
             'cabin_features' => 'nullable|array',
@@ -295,12 +342,21 @@ class SeatController extends Controller
 
         // Regenerate QR code if seat number changes
         if (isset($validated['seat_number']) && $validated['seat_number'] !== $seat->seat_number) {
-            $library = $seat->floor->library;
-            $qrContent = base64_encode(json_encode([
+            $library = $seat->floor->library ?? $seat->section->library ?? null;
+            $libraryId = $library->id ?? Auth::user()->library_id;
+            $qrData = [
                 'type' => 'seat',
+                'seat_id' => $seat->id,
                 'seat_number' => $validated['seat_number'],
-                'library_id' => $library->id,
-            ]));
+                'library_id' => $libraryId,
+                'section_id' => $validated['section_id'] ?? $seat->section_id,
+            ];
+            $qrContent = base64_encode(json_encode($qrData));
+            if (Seat::where('qr_code', $qrContent)->where('id', '!=', $seat->id)->exists()) {
+                $qrData['uid'] = uniqid();
+                $qrContent = base64_encode(json_encode($qrData));
+            }
+
             $validated['qr_code'] = $qrContent;
             $validated['qr_generated_at'] = now();
             

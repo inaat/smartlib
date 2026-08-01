@@ -95,7 +95,7 @@
              
               <button
                 @click="handleLogout"
-                class="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-bold text-red-655 hover:bg-red-50 rounded-xl transition-colors text-left cursor-pointer"
+                class="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left cursor-pointer"
               >
                 <LogOut class="w-4 h-4" />
                 <span>Sign Out</span>
@@ -151,6 +151,7 @@ const pageTitle = computed(() => {
   if (path.includes('/librarian/reports')) return 'Reports';
   if (path.includes('/librarian/floors')) return 'Floor Management';
   if (path.includes('/librarian/sections')) return 'Section Management';
+  if (path.includes('/librarian/live-map')) return 'Live Seat Map';
   if (path.includes('/librarian/seats')) return 'Seat Management';
   if (path.includes('/librarian/profile')) return 'My Profile';
   return (route.meta?.title as string) || 'Dashboard';
@@ -172,6 +173,7 @@ const pageSubtitle = computed(() => {
   if (path.includes('/librarian/reports')) return 'Generate and export system activity and utilization reports';
   if (path.includes('/librarian/floors')) return 'Configure and manage library floors';
   if (path.includes('/librarian/sections')) return 'Configure and manage sections within library floors';
+  if (path.includes('/librarian/live-map')) return 'Real-time seat occupancy and status monitoring';
   if (path.includes('/librarian/seats')) return 'Configure, edit, and assign seats in library sections';
   if (path.includes('/librarian/profile')) return 'Manage your personal credentials and preferences';
   return '';

@@ -22,7 +22,7 @@
             <div class="w-20 h-20 rounded-xl overflow-hidden bg-white/10 border border-white/20 flex-shrink-0 shadow-lg">
               <img
                 v-if="photoPreview || libraryData.photo_url"
-                :src="photoPreview || libraryData.photo_url"
+                :src="photoPreview || libraryData.photo_url || undefined"
                 class="w-full h-full object-cover"
                 alt="Library"
               />
@@ -112,7 +112,7 @@
                 <div class="w-14 h-14 rounded-xl border border-gray-200 bg-slate-50 overflow-hidden flex items-center justify-center flex-shrink-0">
                   <img
                     v-if="photoPreview || libraryData.photo_url"
-                    :src="photoPreview || libraryData.photo_url"
+                    :src="photoPreview || libraryData.photo_url || undefined"
                     class="w-full h-full object-cover"
                     alt="Library preview"
                   />
@@ -166,6 +166,23 @@
                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
                 placeholder="https://"
               />
+            </div>
+
+            <!-- WiFi Password (Optional) -->
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider flex items-center justify-between">
+                <span>WiFi Password</span>
+                <span class="text-[9px] text-slate-400 font-normal lowercase">(optional)</span>
+              </label>
+              <div class="relative">
+                <input
+                  v-model="libraryData.wifi_password"
+                  type="text"
+                  class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-sm text-slate-700 font-medium bg-slate-50/50"
+                  placeholder="e.g. SmartLib@2026"
+                />
+                <Wifi class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
 
             <!-- Coordinates Group -->
@@ -411,6 +428,142 @@
           </div>
         </div>
 
+        <!-- Student Reviews & Ratings Tab -->
+        <div v-if="activeTab === 'reviews'" class="p-6 space-y-6">
+
+          <!-- Rating Overview Header -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/70 p-6 rounded-2xl border border-slate-100">
+            <!-- Left: Score Box -->
+            <div class="flex flex-col items-center justify-center p-5 bg-white rounded-xl shadow-sm border border-slate-100 text-center">
+              <span class="text-4xl font-extrabold text-slate-800 tracking-tight">{{ reviewsData.average_rating || '0.0' }}</span>
+              <!-- Star icons -->
+              <div class="flex items-center space-x-1 my-2">
+                <Star
+                  v-for="star in 5"
+                  :key="star"
+                  :class="[
+                    'w-5 h-5',
+                    star <= Math.round(reviewsData.average_rating)
+                      ? 'fill-amber-400 text-amber-400'
+                      : 'fill-slate-100 text-slate-200'
+                  ]"
+                />
+              </div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Based on {{ reviewsData.total_reviews }} student {{ reviewsData.total_reviews === 1 ? 'review' : 'reviews' }}
+              </p>
+            </div>
+
+            <!-- Right: Rating Breakdown Bars (Spans 2 columns) -->
+            <div class="md:col-span-2 space-y-2.5 flex flex-col justify-center">
+              <div v-for="star in [5, 4, 3, 2, 1]" :key="star" class="flex items-center space-x-3 text-xs">
+                <span class="w-12 font-bold text-slate-600 flex items-center justify-end">
+                  {{ star }} <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-400 ml-1 inline" />
+                </span>
+                <div class="flex-1 h-2.5 bg-slate-200/80 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    :style="{ width: getStarPercent(star) + '%' }"
+                  ></div>
+                </div>
+                <span class="w-10 text-right font-semibold text-slate-400">
+                  {{ reviewsData.rating_breakdown[star] || 0 }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search and Filter controls -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="relative flex-1 w-full">
+              <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                v-model="reviewSearch"
+                type="text"
+                placeholder="Search reviews by student name, CRN, or comment..."
+                class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
+              />
+            </div>
+            <div class="flex items-center space-x-3 w-full sm:w-auto">
+              <select
+                v-model="reviewRatingFilter"
+                class="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+              >
+                <option value="all">All Ratings</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
+              <button
+                @click="fetchReviews"
+                :disabled="reviewsLoading"
+                class="p-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors cursor-pointer"
+                title="Refresh Reviews"
+              >
+                <RefreshCw :class="['w-4 h-4', reviewsLoading ? 'animate-spin' : '']" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Reviews List -->
+          <div v-if="reviewsLoading" class="flex justify-center py-12">
+            <RefreshCw class="w-8 h-8 text-emerald-600 animate-spin" />
+          </div>
+
+          <div v-else-if="filteredReviewsList.length === 0" class="text-center py-12 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+            <MessageSquare class="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">No student reviews match your selection.</p>
+          </div>
+
+          <div v-else class="space-y-4">
+            <div
+              v-for="review in filteredReviewsList"
+              :key="review.id"
+              class="p-5 rounded-2xl border border-slate-100 hover:border-emerald-100/80 bg-white shadow-sm transition-all text-left space-y-3"
+            >
+              <div class="flex items-start justify-between">
+                <!-- User Info -->
+                <div class="flex items-center space-x-3.5">
+                  <div class="w-10 h-10 rounded-full overflow-hidden bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm flex-shrink-0">
+                    <img v-if="review.user?.profile_picture" :src="`/storage/${review.user.profile_picture}`" class="w-full h-full object-cover" />
+                    <span v-else>{{ review.user?.name ? review.user.name.charAt(0).toUpperCase() : 'S' }}</span>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-bold text-slate-800 leading-snug">{{ review.user?.name || 'Anonymous Student' }}</h4>
+                    <div class="flex items-center space-x-2 text-[10px] font-semibold text-slate-400 mt-0.5">
+                      <span v-if="review.user?.crn" class="uppercase">CRN: {{ review.user.crn }}</span>
+                      <span v-if="review.user?.ca_level">• {{ review.user.ca_level }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Rating & Date -->
+                <div class="text-right">
+                  <div class="flex items-center space-x-0.5 justify-end">
+                    <Star
+                      v-for="s in 5"
+                      :key="s"
+                      :class="[
+                        'w-4 h-4',
+                        s <= review.rating ? 'fill-amber-400 text-amber-400' : 'fill-slate-100 text-slate-200'
+                      ]"
+                    />
+                  </div>
+                  <span class="text-[10px] font-medium text-slate-400 mt-1 block">
+                    {{ new Date(review.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Comment Body -->
+              <p class="text-xs text-slate-600 font-normal leading-relaxed pl-1">
+                {{ review.comment || 'No written comment provided.' }}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </template>
     <!-- Map Picker Modal -->
@@ -431,14 +584,67 @@
         <div class="p-6 space-y-4 flex-grow flex flex-col min-h-0">
           <p class="text-xs text-slate-500 font-medium">Click on the map or drag the marker to pin your library's exact coordinates.</p>
           
-          <!-- Search input -->
-          <div>
-            <input
-              id="picker-search-input"
-              type="text"
-              placeholder="Search location or address (e.g. Lahore, Pakistan)..."
-              class="w-full px-4 py-2.5 border border-gray-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs text-slate-705 font-medium bg-slate-50/50 outline-none"
-            />
+          <!-- Search input & Search Button with Live Dropdown -->
+          <div class="relative">
+            <div class="flex items-center gap-2">
+              <div class="relative flex-1">
+                <input
+                  id="picker-search-input"
+                  v-model="mapSearchQuery"
+                  @input="onSearchInput"
+                  @focus="showSearchDropdown = searchResults.length > 0"
+                  @blur="closeSearchDropdown"
+                  @keydown.enter.prevent="executeSearchLocation"
+                  type="text"
+                  placeholder="Type city, area, or address (e.g. Lahore, Pakistan)..."
+                  class="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs text-slate-700 font-semibold bg-slate-50/50"
+                  autocomplete="off"
+                />
+                <Search class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              </div>
+              <button
+                type="button"
+                @click="executeSearchLocation"
+                :disabled="mapSearchLoading"
+                class="px-4.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center space-x-1.5 shrink-0 disabled:opacity-50"
+              >
+                <RefreshCw v-if="mapSearchLoading" class="w-3.5 h-3.5 animate-spin" />
+                <Search v-else class="w-3.5 h-3.5" />
+                <span>Search</span>
+              </button>
+            </div>
+
+            <!-- Live Location Dropdown Menu -->
+            <div
+              v-if="showSearchDropdown && searchResults.length > 0"
+              class="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden max-h-60 overflow-y-auto text-left"
+            >
+              <div
+                v-for="(result, index) in searchResults"
+                :key="index"
+                @mousedown.prevent="selectLocationResult(result)"
+                class="p-3 hover:bg-emerald-50/80 border-b border-slate-50 last:border-none cursor-pointer transition-colors flex items-start space-x-3"
+              >
+                <MapPin class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div class="min-w-0 flex-1">
+                  <div class="text-xs font-bold text-slate-800 truncate">
+                    {{ result.display_name.split(',')[0] }}
+                  </div>
+                  <div class="text-[10px] text-slate-400 font-medium truncate mt-0.5">
+                    {{ result.display_name }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Loading indicator for live search -->
+            <div
+              v-if="isSearchingDropdown"
+              class="absolute left-0 right-0 top-full mt-1.5 bg-white p-3 rounded-2xl shadow-md border border-slate-100 z-50 text-center text-xs font-semibold text-slate-400 flex items-center justify-center space-x-2"
+            >
+              <RefreshCw class="w-3.5 h-3.5 animate-spin text-emerald-600" />
+              <span>Searching matching locations...</span>
+            </div>
           </div>
 
           <!-- Map Canvas -->
@@ -491,9 +697,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue';
-import { useAuth } from '@/shared/composables/useAuth';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import {
   Building2,
   MapPin,
@@ -516,15 +720,15 @@ import {
   FileText,
   Settings,
   X,
-  Navigation
+  Navigation,
+  Star,
+  MessageSquare,
+  Search
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 
 import { useSwal } from '@/shared/composables/useSwal';
 const { showSuccess, showError, showWarning } = useSwal();
-
-const { user } = useAuth();
-const router = useRouter();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -539,6 +743,7 @@ const libraryData = ref({
   latitude: null as number | null,
   longitude: null as number | null,
   seat_layout_mode: 'layout',
+  wifi_password: '',
   photo: null as string | null,
   photo_url: null as string | null
 });
@@ -600,10 +805,11 @@ const tabs = [
   { value: 'hours', label: 'Hours', icon: Clock },
   { value: 'facilities', label: 'Facilities', icon: CheckSquare },
   { value: 'rules', label: 'Rules', icon: FileText },
-  { value: 'settings', label: 'Settings', icon: Settings }
+  { value: 'settings', label: 'Settings', icon: Settings },
+  { value: 'reviews', label: 'Reviews & Ratings', icon: Star }
 ];
 
-const settingsConfig = [
+const settingsConfig: { key: 'allowBookings' | 'requireApproval' | 'allowExtensions' | 'sendReminders'; label: string; description: string }[] = [
   { key: 'allowBookings', label: 'Allow Bookings', description: 'Enable students to book seats' },
   { key: 'requireApproval', label: 'Require Approval', description: 'Bookings need librarian approval' },
   { key: 'allowExtensions', label: 'Allow Extensions', description: 'Students can extend their bookings' },
@@ -618,26 +824,126 @@ const occupancyRate = computed(() => {
 const showMapModal = ref(false);
 const tempLatitude = ref<number | null>(null);
 const tempLongitude = ref<number | null>(null);
+const mapSearchQuery = ref('');
+const mapSearchLoading = ref(false);
+const searchResults = ref<Array<{ display_name: string; lat: string; lon: string }>>([]);
+const showSearchDropdown = ref(false);
+const isSearchingDropdown = ref(false);
+let searchDebounceTimer: any = null;
 
 let pickerMap: any = null;
 let pickerMarker: any = null;
-declare const google: any;
+declare const L: any;
 
-const loadGoogleMapsScript = (): Promise<void> => {
+const onSearchInput = () => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  const query = mapSearchQuery.value.trim();
+
+  if (query.length < 2) {
+    searchResults.value = [];
+    showSearchDropdown.value = false;
+    isSearchingDropdown.value = false;
+    return;
+  }
+
+  isSearchingDropdown.value = true;
+  searchDebounceTimer = setTimeout(async () => {
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6`);
+      const data = await response.json();
+      searchResults.value = data || [];
+      showSearchDropdown.value = searchResults.value.length > 0;
+    } catch (err) {
+      console.error('Error fetching location suggestions:', err);
+    } finally {
+      isSearchingDropdown.value = false;
+    }
+  }, 300);
+};
+
+const selectLocationResult = (result: { display_name: string; lat: string; lon: string }) => {
+  mapSearchQuery.value = result.display_name;
+  showSearchDropdown.value = false;
+  searchResults.value = [];
+
+  const lat = parseFloat(result.lat);
+  const lng = parseFloat(result.lon);
+  tempLatitude.value = lat;
+  tempLongitude.value = lng;
+
+  if (pickerMap && pickerMarker) {
+    pickerMap.setView([lat, lng], 16);
+    pickerMarker.setLatLng([lat, lng]);
+  }
+};
+
+const closeSearchDropdown = () => {
+  setTimeout(() => {
+    showSearchDropdown.value = false;
+  }, 200);
+};
+
+const loadLeafletScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if (typeof google !== 'undefined' && google.maps) { resolve(); return; }
+    if (typeof L !== 'undefined') { resolve(); return; }
+    
+    // Load Leaflet CSS if not present
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+
+    // Load Leaflet JS
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&libraries=places`;
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
     script.async = true;
-    script.defer = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Google Maps'));
+    script.onerror = () => reject(new Error('Failed to load Leaflet map engine'));
     document.head.appendChild(script);
   });
 };
 
+const executeSearchLocation = async () => {
+  const query = mapSearchQuery.value.trim();
+  if (!query) {
+    showWarning('Search Empty', 'Please enter a city or location to search.');
+    return;
+  }
+
+  mapSearchLoading.value = true;
+
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+    const data = await response.json();
+
+    if (data && data.length > 0) {
+      const lat = parseFloat(data[0].lat);
+      const lng = parseFloat(data[0].lon);
+      tempLatitude.value = lat;
+      tempLongitude.value = lng;
+
+      if (pickerMap && pickerMarker) {
+        pickerMap.setView([lat, lng], 16);
+        pickerMarker.setLatLng([lat, lng]);
+      }
+      showSuccess('Location Found', `Map centered on: ${data[0].display_name.split(',')[0]}`);
+    } else {
+      showWarning('Not Found', `Could not find location for "${query}". Try adding city or country name.`);
+    }
+  } catch (err) {
+    console.error('Geocoding error:', err);
+    showError('Search Error', 'Failed to search location.');
+  } finally {
+    mapSearchLoading.value = false;
+  }
+};
+
 const openMapModal = async () => {
   showMapModal.value = true;
+  mapSearchQuery.value = '';
   tempLatitude.value = libraryData.value.latitude || 31.5204;
   tempLongitude.value = libraryData.value.longitude || 74.3587;
   await nextTick();
@@ -651,84 +957,55 @@ const openMapModal = async () => {
 
 const closeMapModal = () => {
   showMapModal.value = false;
-  pickerMap = null;
+  if (pickerMap) {
+    pickerMap.remove();
+    pickerMap = null;
+  }
   pickerMarker = null;
 };
 
 const initializePickerMap = async () => {
   try {
-    await loadGoogleMapsScript();
+    await loadLeafletScript();
   } catch (error) {
-    showError('Map Error', 'Could not load Google Maps.');
+    showError('Map Error', 'Could not load interactive map script.');
     return;
   }
   
-  const defaultPos = { lat: tempLatitude.value || 31.5204, lng: tempLongitude.value || 74.3587 };
-  
-  pickerMap = new google.maps.Map(document.getElementById('picker-map') as HTMLElement, {
-    center: defaultPos,
-    zoom: 15,
-    mapTypeControl: false,
-    streetViewControl: false,
-    fullscreenControl: false,
-  });
+  const mapContainer = document.getElementById('picker-map');
+  if (!mapContainer) return;
 
-  pickerMarker = new google.maps.Marker({
-    position: defaultPos,
-    map: pickerMap,
-    draggable: true,
-    title: 'Drag to adjust library location',
-    animation: google.maps.Animation.DROP
-  });
+  const initialLat = tempLatitude.value || 31.5204;
+  const initialLng = tempLongitude.value || 74.3587;
 
-  // Setup Autocomplete
-  const input = document.getElementById('picker-search-input') as HTMLInputElement;
-  if (input) {
-    // Clear input first
-    input.value = '';
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-      fields: ['geometry', 'name', 'formatted_address']
-    });
-
-    autocomplete.bindTo('bounds', pickerMap);
-
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-      if (!place.geometry || !place.geometry.location) {
-        showWarning('Location Not Found', 'No details available for: ' + place.name);
-        return;
-      }
-
-      if (place.geometry.viewport) {
-        pickerMap.fitBounds(place.geometry.viewport);
-      } else {
-        pickerMap.setCenter(place.geometry.location);
-        pickerMap.setZoom(17);
-      }
-
-      pickerMarker.setPosition(place.geometry.location);
-      tempLatitude.value = place.geometry.location.lat();
-      tempLongitude.value = place.geometry.location.lng();
-    });
+  if (pickerMap) {
+    pickerMap.remove();
+    pickerMap = null;
   }
 
-  // Update coordinates when marker is dragged
-  pickerMarker.addListener('dragend', () => {
-    const pos = pickerMarker.getPosition();
-    if (pos) {
-      tempLatitude.value = pos.lat();
-      tempLongitude.value = pos.lng();
-    }
+  pickerMap = L.map('picker-map').setView([initialLat, initialLng], 15);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(pickerMap);
+
+  pickerMarker = L.marker([initialLat, initialLng], {
+    draggable: true
+  }).addTo(pickerMap);
+
+  pickerMarker.on('dragend', (event: any) => {
+    const position = event.target.getLatLng();
+    tempLatitude.value = position.lat;
+    tempLongitude.value = position.lng;
   });
 
-  // Update marker position on map click
-  pickerMap.addListener('click', (event: any) => {
-    const latLng = event.latLng;
-    if (latLng) {
-      pickerMarker.setPosition(latLng);
-      tempLatitude.value = latLng.lat();
-      tempLongitude.value = latLng.lng();
-    }
+  pickerMap.on('click', (event: any) => {
+    const lat = event.latlng.lat;
+    const lng = event.latlng.lng;
+    pickerMarker.setLatLng([lat, lng]);
+    tempLatitude.value = lat;
+    tempLongitude.value = lng;
   });
 };
 
@@ -743,11 +1020,9 @@ const detectLocationForMap = () => {
       const lng = position.coords.longitude;
       tempLatitude.value = lat;
       tempLongitude.value = lng;
-      if (typeof google !== 'undefined' && google.maps && pickerMap && pickerMarker) {
-        const newPos = new google.maps.LatLng(lat, lng);
-        pickerMap.setCenter(newPos);
-        pickerMap.setZoom(16);
-        pickerMarker.setPosition(newPos);
+      if (pickerMap && pickerMarker) {
+        pickerMap.setView([lat, lng], 16);
+        pickerMarker.setLatLng([lat, lng]);
       }
       showSuccess('Detected', 'Precise coordinates auto-detected successfully!');
     },
@@ -802,6 +1077,7 @@ const fetchLibraryInfo = async () => {
         latitude: data.latitude,
         longitude: data.longitude,
         seat_layout_mode: data.seat_layout_mode || 'layout',
+        wifi_password: data.wifi_password || '',
         photo: data.photo,
         photo_url: data.photo_url
     };
@@ -855,6 +1131,7 @@ const saveChanges = async () => {
     if (libraryData.value.latitude) formData.append('latitude', libraryData.value.latitude.toString());
     if (libraryData.value.longitude) formData.append('longitude', libraryData.value.longitude.toString());
     formData.append('seat_layout_mode', libraryData.value.seat_layout_mode);
+    formData.append('wifi_password', libraryData.value.wifi_password || '');
     formData.append('contact_info', JSON.stringify(contactInfo.value));
     formData.append('operating_days', JSON.stringify(operatingDays.value));
     formData.append('facilities', JSON.stringify(facilitiesList.value.filter(f => f.available).map(f => f.name)));
@@ -886,7 +1163,70 @@ const saveChanges = async () => {
   }
 };
 
-onMounted(fetchLibraryInfo);
+const reviewsLoading = ref(false);
+const reviewsData = ref({
+  average_rating: 0,
+  total_reviews: 0,
+  rating_breakdown: { '5': 0, '4': 0, '3': 0, '2': 0, '1': 0 } as Record<string | number, number>,
+  reviews: [] as any[]
+});
+const reviewSearch = ref('');
+const reviewRatingFilter = ref<string | number>('all');
+
+const getStarPercent = (star: number) => {
+  if (!reviewsData.value.total_reviews) return 0;
+  const count = reviewsData.value.rating_breakdown[star] || 0;
+  return Math.round((count / reviewsData.value.total_reviews) * 100);
+};
+
+const fetchReviews = async () => {
+  try {
+    reviewsLoading.value = true;
+    const res = await librarianAPI.getReviews();
+    reviewsData.value = {
+      average_rating: res.average_rating || 0,
+      total_reviews: res.total_reviews || 0,
+      rating_breakdown: res.rating_breakdown || { '5': 0, '4': 0, '3': 0, '2': 0, '1': 0 },
+      reviews: res.reviews || []
+    };
+  } catch (err) {
+    console.error('Failed to fetch library reviews:', err);
+  } finally {
+    reviewsLoading.value = false;
+  }
+};
+
+const filteredReviewsList = computed(() => {
+  let list = reviewsData.value.reviews || [];
+
+  if (reviewRatingFilter.value !== 'all') {
+    const targetRating = Number(reviewRatingFilter.value);
+    list = list.filter(r => Number(r.rating) === targetRating);
+  }
+
+  if (reviewSearch.value) {
+    const q = reviewSearch.value.toLowerCase();
+    list = list.filter(r => {
+      const name = r.user?.name?.toLowerCase() || '';
+      const crn = r.user?.crn?.toLowerCase() || '';
+      const comment = r.comment?.toLowerCase() || '';
+      return name.includes(q) || crn.includes(q) || comment.includes(q);
+    });
+  }
+
+  return list;
+});
+
+watch(activeTab, (newTab) => {
+  if (newTab === 'reviews') {
+    fetchReviews();
+  }
+});
+
+onMounted(() => {
+  fetchLibraryInfo();
+  fetchReviews();
+});
 </script>
 
 <style scoped>

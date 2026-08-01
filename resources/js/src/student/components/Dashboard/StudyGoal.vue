@@ -1,17 +1,63 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-hidden relative group">
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-hidden relative group font-outfit">
     <!-- Background glow decoration -->
     <div class="absolute -right-16 -top-16 w-36 h-36 bg-blue-50 rounded-full blur-2xl group-hover:bg-blue-100/50 transition-colors duration-500"></div>
     
     <div class="relative z-10 flex flex-col space-y-5">
-      <!-- Title -->
+      <!-- Title & Header controls -->
       <div class="flex items-center justify-between">
-        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
-          <Target class="w-4 h-4 mr-2 text-blue-600" />
-          Weekly Target Progress
-        </h2>
-        <span class="text-xs bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded-full border border-blue-100">
-          Goal: 20 hrs
+        <div class="flex items-center space-x-2">
+          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
+            <Target class="w-4 h-4 mr-2 text-blue-600" />
+            Target Progress
+          </h2>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <!-- Mode Switcher (Weekly / Monthly) -->
+          <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+            <button
+              @click="activeGoalTab = 'weekly'"
+              :class="[
+                'px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer',
+                activeGoalTab === 'weekly'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              ]"
+            >
+              Weekly
+            </button>
+            <button
+              @click="activeGoalTab = 'monthly'"
+              :class="[
+                'px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer',
+                activeGoalTab === 'monthly'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              ]"
+            >
+              Monthly
+            </button>
+          </div>
+
+          <!-- Edit Goal Button -->
+          <button
+            @click="openGoalModal"
+            class="p-1.5 bg-blue-50 border border-blue-100 hover:bg-blue-100/70 rounded-xl text-blue-700 transition-colors cursor-pointer"
+            title="Set Target Goals"
+          >
+            <Settings2 class="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Goal Pill Badge -->
+      <div class="flex items-center justify-between bg-blue-50/60 border border-blue-100 px-3 py-1.5 rounded-xl">
+        <span class="text-xs font-semibold text-blue-900">
+          {{ activeGoalTab === 'weekly' ? 'Weekly Goal' : 'Monthly Goal' }}
+        </span>
+        <span class="text-xs font-extrabold text-blue-700">
+          Goal: {{ activeGoalTab === 'weekly' ? weeklyGoal : monthlyGoal }} hrs
         </span>
       </div>
 
@@ -52,7 +98,7 @@
           </svg>
           <!-- Center Text -->
           <div class="absolute flex flex-col items-center justify-center">
-            <span class="text-lg font-black text-slate-800">{{ progress }}%</span>
+            <span class="text-lg font-black text-slate-800">{{ currentProgress }}%</span>
             <span class="text-[9px] text-slate-400 font-bold uppercase">Done</span>
           </div>
         </div>
@@ -62,13 +108,15 @@
           <!-- Total Hours -->
           <div>
             <div class="flex justify-between items-baseline mb-1">
-              <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Total Studied</span>
-              <span class="text-sm font-black text-slate-700">{{ formattedWeeklyHours }}h</span>
+              <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                {{ activeGoalTab === 'weekly' ? 'Studied This Week' : 'Studied This Month' }}
+              </span>
+              <span class="text-sm font-black text-slate-700">{{ currentHours }}h</span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
               <div 
                 class="bg-blue-600 h-full rounded-full transition-all duration-1000"
-                :style="{ width: `${progress ?? 0}%` }"
+                :style="{ width: `${currentProgress}%` }"
               ></div>
             </div>
           </div>
@@ -112,36 +160,214 @@
         </div>
       </div>
     </div>
+
+    <!-- Set Study Goals Modal -->
+    <Teleport to="body">
+      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in font-outfit">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 p-6 space-y-6 text-left">
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div class="flex items-center space-x-2.5">
+              <div class="p-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                <Target class="w-5 h-5" />
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-800 leading-tight">Set Study Target Goals</h3>
+                <p class="text-[11px] font-semibold text-slate-400">Customize your study targets in hours</p>
+              </div>
+            </div>
+            <button @click="showModal = false" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+
+          <!-- Goal Inputs Form -->
+          <div class="space-y-5">
+            <!-- Weekly Goal Field -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Weekly Target Goal (Hours)
+                </label>
+                <span v-if="![10, 15, 20, 30, 40].includes(tempWeeklyGoal)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                  Custom: {{ tempWeeklyGoal }}h
+                </span>
+              </div>
+              <input
+                v-model.number="tempWeeklyGoal"
+                type="number"
+                min="1"
+                max="168"
+                placeholder="Enter any custom hours (e.g. 25)"
+                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+              />
+              <p class="text-[10px] font-medium text-slate-400 mt-1">Type any custom goal hours or click a quick preset below:</p>
+              <!-- Presets -->
+              <div class="flex items-center space-x-2 mt-2 flex-wrap gap-y-1">
+                <span class="text-[10px] font-semibold text-slate-400">Presets:</span>
+                <button
+                  v-for="preset in [10, 15, 20, 30, 40]"
+                  :key="preset"
+                  type="button"
+                  @click="tempWeeklyGoal = preset"
+                  :class="[
+                    'px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer',
+                    tempWeeklyGoal === preset ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  ]"
+                >
+                  {{ preset }}h
+                </button>
+              </div>
+            </div>
+
+            <!-- Monthly Goal Field -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Monthly Target Goal (Hours)
+                </label>
+                <span v-if="![40, 60, 80, 100, 120].includes(tempMonthlyGoal)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                  Custom: {{ tempMonthlyGoal }}h
+                </span>
+              </div>
+              <input
+                v-model.number="tempMonthlyGoal"
+                type="number"
+                min="1"
+                max="720"
+                placeholder="Enter any custom hours (e.g. 90)"
+                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+              />
+              <p class="text-[10px] font-medium text-slate-400 mt-1">Type any custom goal hours or click a quick preset below:</p>
+              <!-- Presets -->
+              <div class="flex items-center space-x-2 mt-2 flex-wrap gap-y-1">
+                <span class="text-[10px] font-semibold text-slate-400">Presets:</span>
+                <button
+                  v-for="preset in [40, 60, 80, 100, 120]"
+                  :key="preset"
+                  type="button"
+                  @click="tempMonthlyGoal = preset"
+                  :class="[
+                    'px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer',
+                    tempMonthlyGoal === preset ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  ]"
+                >
+                  {{ preset }}h
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              @click="showModal = false"
+              class="px-4 py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              @click="saveGoals"
+              :disabled="saving"
+              class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer flex items-center space-x-1.5 disabled:opacity-50"
+            >
+              <RefreshCw v-if="saving" class="w-3.5 h-3.5 animate-spin" />
+              <span>{{ saving ? 'Saving...' : 'Save Target Goals' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Target, Clock, TrendingUp, Flame } from 'lucide-vue-next';
+import { ref, computed } from 'vue';
+import { Target, Clock, TrendingUp, Flame, Settings2, X, RefreshCw } from 'lucide-vue-next';
+import { studentAPI } from '@/shared/services/api';
+import { useSwal } from '@/shared/composables/useSwal';
+
+const { showSuccess, showError } = useSwal();
 
 const props = withDefaults(defineProps<{
   streak?: number;
-  progress?: number; // percentage
   weeklyHours?: number;
+  weeklyGoal?: number;
+  weeklyProgress?: number;
+  monthlyHours?: number;
+  monthlyGoal?: number;
+  monthlyProgress?: number;
   hoursToday?: number;
 }>(), {
   streak: 0,
-  progress: 0,
   weeklyHours: 0,
+  weeklyGoal: 20,
+  weeklyProgress: 0,
+  monthlyHours: 0,
+  monthlyGoal: 80,
+  monthlyProgress: 0,
   hoursToday: 0
+});
+
+const emit = defineEmits(['goals-updated']);
+
+const activeGoalTab = ref<'weekly' | 'monthly'>('weekly');
+const showModal = ref(false);
+const saving = ref(false);
+
+const tempWeeklyGoal = ref(20);
+const tempMonthlyGoal = ref(80);
+
+const openGoalModal = () => {
+  tempWeeklyGoal.value = props.weeklyGoal || 20;
+  tempMonthlyGoal.value = props.monthlyGoal || 80;
+  showModal.value = true;
+};
+
+const saveGoals = async () => {
+  if (tempWeeklyGoal.value < 1 || tempMonthlyGoal.value < 1) {
+    showError('Invalid Goal', 'Please enter a goal of at least 1 hour.');
+    return;
+  }
+
+  try {
+    saving.value = true;
+    await studentAPI.updateStudyGoals({
+      weekly_goal_hours: tempWeeklyGoal.value,
+      monthly_goal_hours: tempMonthlyGoal.value
+    });
+    showSuccess('Goals Saved!', 'Your weekly and monthly study targets have been updated.');
+    showModal.value = false;
+    emit('goals-updated');
+  } catch (err: any) {
+    console.error('Failed to update study goals:', err);
+    showError('Update Failed', err.response?.data?.message || 'Failed to update study goals');
+  } finally {
+    saving.value = false;
+  }
+};
+
+const currentProgress = computed(() => {
+  if (activeGoalTab.value === 'weekly') {
+    return props.weeklyProgress ?? 0;
+  }
+  return props.monthlyProgress ?? 0;
+});
+
+const currentHours = computed(() => {
+  if (activeGoalTab.value === 'weekly') {
+    return (props.weeklyHours ?? 0).toFixed(1);
+  }
+  return (props.monthlyHours ?? 0).toFixed(1);
 });
 
 // SVG circular math
 const dashOffset = computed(() => {
-  const percent = Math.min(100, Math.max(0, props.progress ?? 0));
+  const percent = Math.min(100, Math.max(0, currentProgress.value));
   const circumference = 251.2; // 2 * Math.PI * 40
   return circumference - (percent / 100) * circumference;
-});
-
-// Formatted hours
-const formattedWeeklyHours = computed(() => {
-  const hrs = props.weeklyHours ?? 0;
-  return hrs.toFixed(1);
 });
 
 const formattedHoursToday = computed(() => {
@@ -150,12 +376,25 @@ const formattedHoursToday = computed(() => {
 });
 
 const formattedRemainingHours = computed(() => {
-  const hrs = props.weeklyHours ?? 0;
-  return Math.max(0, 20 - hrs).toFixed(1);
+  if (activeGoalTab.value === 'weekly') {
+    const goal = props.weeklyGoal ?? 20;
+    const done = props.weeklyHours ?? 0;
+    return Math.max(0, goal - done).toFixed(1);
+  } else {
+    const goal = props.monthlyGoal ?? 80;
+    const done = props.monthlyHours ?? 0;
+    return Math.max(0, goal - done).toFixed(1);
+  }
 });
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
 @keyframes pulseSlow {
   0%, 100% {
     transform: scale(1);
@@ -168,5 +407,20 @@ const formattedRemainingHours = computed(() => {
 }
 .animate-pulse-slow {
   animation: pulseSlow 2s infinite ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 </style>

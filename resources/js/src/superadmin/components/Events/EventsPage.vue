@@ -20,9 +20,25 @@
     <div v-if="loading && events.length === 0" class="flex justify-center py-12">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
     </div>
-    <div v-else-if="events.length === 0" class="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
-      <Calendar class="w-12 h-12 text-slate-300 mx-auto mb-4 animate-pulse" />
-      <p class="text-xs font-bold text-slate-455 uppercase tracking-widest">No events found. Create your first event to get started.</p>
+    <div v-else-if="events.length === 0" class="text-center py-12 px-4 bg-white rounded-2xl border border-dashed border-slate-200 flex flex-col items-center">
+      <div class="w-16 h-16 rounded-full bg-purple-50 flex items-center justify-center mb-4">
+        <Calendar class="w-8 h-8 text-purple-600 animate-pulse" />
+      </div>
+      <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1">
+        {{ selectedLibrary ? `No Events for ${selectedLibrary.name}` : 'No Events Found' }}
+      </h3>
+      <p class="text-xs text-slate-500 font-medium max-w-sm mb-6">
+        {{ selectedLibrary 
+          ? `No events have been created for ${selectedLibrary.name} yet.` 
+          : 'No events created across any library yet. Create your first event to get started.' }}
+      </p>
+      <button
+        @click="openCreateModal"
+        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors flex items-center space-x-2 text-xs font-bold shadow-sm cursor-pointer"
+      >
+        <Plus class="w-4 h-4" />
+        <span>{{ selectedLibrary ? `Create Event for ${selectedLibrary.name}` : 'Create Event' }}</span>
+      </button>
     </div>
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div 
@@ -276,7 +292,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { Calendar, Clock, Users, X, MapPin, Building2, Plus } from 'lucide-vue-next';
 import { superadminAPI } from '../../services/superadminApi';
 import LibrarySelector from '../Shared/LibrarySelector.vue';
@@ -287,6 +303,11 @@ const libraries = ref<any[]>([]);
 const showModal = ref(false);
 const isEditing = ref(false);
 const loading = ref(false);
+
+const selectedLibrary = computed(() => {
+  if (!selectedLibraryId.value) return null;
+  return libraries.value.find((l: any) => Number(l.id) === Number(selectedLibraryId.value)) || null;
+});
 
 const form = ref({
   id: null as number | null,

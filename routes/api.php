@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('student')->middleware(['role:student'])->name('api.student.')->group(function () {
         // Dashboard
         Route::get('/dashboard', [StudentDashboard::class, 'index'])->name('dashboard');
+        Route::post('/study-goals', [StudentDashboard::class, 'updateGoals'])->name('study-goals.update');
 
         // Libraries
         Route::get('/libraries', [StudentLibrary::class, 'index'])->name('libraries.index');
@@ -75,17 +76,20 @@ Route::middleware('auth:sanctum')->group(function () {
         // Bookings
         Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
         Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+        Route::get('/bookings/override-requests', [BookingController::class, 'getStudentOverrideRequests'])->name('bookings.override-requests.index');
+        Route::post('/bookings/override-requests', [BookingController::class, 'requestOverride'])->name('bookings.override-requests.store');
+        Route::post('/bookings/join-queue', [BookingController::class, 'joinQueue'])->name('bookings.join-queue');
+
         Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
         Route::put('/bookings/{booking}', [BookingController::class, 'update'])->name('bookings.update');
         Route::delete('/bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
         Route::post('/bookings/{booking}/checkin', [BookingController::class, 'checkIn'])->name('bookings.checkin');
         Route::post('/bookings/{booking}/checkout', [BookingController::class, 'checkOut'])->name('bookings.checkout');
         Route::post('/bookings/{booking}/extend', [BookingController::class, 'extend'])->name('bookings.extend');
-        Route::post('/bookings/join-queue', [BookingController::class, 'joinQueue'])->name('bookings.join-queue');
-        Route::post('/bookings/override-requests', [BookingController::class, 'requestOverride'])->name('bookings.override-requests.store');
+        Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+
         Route::get('/my-queue', [BookingController::class, 'myQueue'])->name('bookings.my-queue');
         Route::delete('/my-queue/{id}', [BookingController::class, 'leaveQueue'])->name('bookings.leave-queue');
-        Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
 
         // Books
         Route::get('/books', [StudentBook::class, 'index'])->name('books.index');
@@ -109,6 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Subscriptions
         Route::get('/subscription-plans', [\App\Http\Controllers\Student\SubscriptionController::class, 'index'])->name('subscription-plans.index');
+        Route::get('/subscriptions/history', [\App\Http\Controllers\Student\SubscriptionController::class, 'history'])->name('subscriptions.history');
         Route::post('/subscriptions', [\App\Http\Controllers\Student\SubscriptionController::class, 'store'])->name('subscriptions.store');
         Route::post('/subscriptions/{subscription}/cancel', [\App\Http\Controllers\Student\SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
 
@@ -231,12 +236,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'index'])->name('settings.index');
         Route::put('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'update'])->name('settings.update');
         Route::post('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'store'])->name('settings.store');
+        Route::post('/settings/reset', [\App\Http\Controllers\Admin\SystemSettingController::class, 'resetDefaults'])->name('settings.reset');
 
         // Support Tickets
         Route::get('/support-tickets', [\App\Http\Controllers\SupportTicketController::class, 'index'])->name('support-tickets.index');
         Route::get('/support-tickets/{supportTicket}', [\App\Http\Controllers\SupportTicketController::class, 'show'])->name('support-tickets.show');
         Route::post('/support-tickets/{supportTicket}/messages', [\App\Http\Controllers\SupportTicketController::class, 'sendMessage'])->name('support-tickets.messages.store');
         Route::put('/support-tickets/{supportTicket}/status', [\App\Http\Controllers\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
+
+        // Reviews
+        Route::get('/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('reviews.index');
+        Route::get('/libraries/{library}/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'libraryReviews'])->name('libraries.reviews.index');
+        Route::delete('/reviews/{review}', [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
     });
 
     // Owner Routes
@@ -288,6 +299,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sections', [LibrarianSection::class, 'store'])->name('sections.store');
         Route::put('/sections/{section}', [LibrarianSection::class, 'update'])->name('sections.update');
         Route::delete('/sections/{section}', [LibrarianSection::class, 'destroy'])->name('sections.destroy');
+
+        // Seat Subsections
+        Route::get('/sections/{sectionId}/subsections', [\App\Http\Controllers\Librarian\SeatSubsectionController::class, 'index'])->name('sections.subsections.index');
+        Route::post('/sections/{sectionId}/subsections', [\App\Http\Controllers\Librarian\SeatSubsectionController::class, 'store'])->name('sections.subsections.store');
+        Route::put('/sections/{sectionId}/subsections/{id}', [\App\Http\Controllers\Librarian\SeatSubsectionController::class, 'update'])->name('sections.subsections.update');
+        Route::delete('/sections/{sectionId}/subsections/{id}', [\App\Http\Controllers\Librarian\SeatSubsectionController::class, 'destroy'])->name('sections.subsections.destroy');
+        Route::post('/sections/{sectionId}/subsections/{id}/toggle-active', [\App\Http\Controllers\Librarian\SeatSubsectionController::class, 'toggleActive'])->name('sections.subsections.toggle-active');
+        Route::post('/sections/{sectionId}/subsections/{id}/sync-seats', [\App\Http\Controllers\Librarian\SeatSubsectionController::class, 'syncSeatNumbers'])->name('sections.subsections.sync-seats');
 
         // Seats
         Route::get('/active-floors', [SeatController::class, 'activeFloors'])->name('floors.active');
@@ -367,5 +386,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/support-tickets/{supportTicket}', [\App\Http\Controllers\SupportTicketController::class, 'show'])->name('support-tickets.show');
         Route::post('/support-tickets/{supportTicket}/messages', [\App\Http\Controllers\SupportTicketController::class, 'sendMessage'])->name('support-tickets.messages.store');
         Route::put('/support-tickets/{supportTicket}/status', [\App\Http\Controllers\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
+
+        // Reviews
+        Route::get('/reviews', [\App\Http\Controllers\Librarian\ReviewController::class, 'index'])->name('reviews.index');
     });
 });

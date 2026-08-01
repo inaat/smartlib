@@ -232,9 +232,14 @@
         <!-- Study Target Progress & Streak -->
         <StudyGoal 
           :streak="studyStreak"
-          :progress="weeklyProgress"
           :weekly-hours="totalWeeklyHours"
+          :weekly-goal="weeklyGoal"
+          :weekly-progress="weeklyProgress"
+          :monthly-hours="totalMonthlyHours"
+          :monthly-goal="monthlyGoal"
+          :monthly-progress="monthlyProgress"
           :hours-today="hoursToday"
+          @goals-updated="loadDashboardData"
         />
       </div>
     </div>
@@ -320,8 +325,12 @@ const loading = ref(true);
 const studyStreak = ref(0);
 const hoursToday = ref(0);
 const weeklyProgress = ref(0);
-const userRank = ref(0);
+const weeklyGoal = ref(20);
 const totalWeeklyHours = ref(0);
+const monthlyProgress = ref(0);
+const monthlyGoal = ref(80);
+const totalMonthlyHours = ref(0);
+const userRank = ref(0);
 const avgSessionDuration = ref(0);
 const totalSessions = ref(0);
 const focusScore = ref(0);
@@ -349,7 +358,11 @@ const loadDashboardData = async () => {
       studyStreak.value = data.analytics.study_streak || 0;
       hoursToday.value = data.analytics.hours_today || 0;
       weeklyProgress.value = data.analytics.weekly_progress || 0;
+      weeklyGoal.value = data.analytics.weekly_goal || 20;
       totalWeeklyHours.value = data.analytics.weekly_hours || 0;
+      monthlyProgress.value = data.analytics.monthly_progress || 0;
+      monthlyGoal.value = data.analytics.monthly_goal || 80;
+      totalMonthlyHours.value = data.analytics.monthly_hours || 0;
       avgSessionDuration.value = data.analytics.avg_session_duration || 0;
       totalSessions.value = data.analytics.total_sessions || 0;
       focusScore.value = data.analytics.focus_score || 0;

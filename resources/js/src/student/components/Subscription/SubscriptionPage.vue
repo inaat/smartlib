@@ -85,23 +85,21 @@
       <!-- Choose Your Plan Header -->
       <div class="text-left mt-10 mb-8">
         <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-outfit">Choose Your Plan</h2>
-      </div>
-
-      <!-- All Plans Grid -->
+        <!-- All Plans Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch mb-12">
         <div 
           v-for="plan in plans" 
           :key="plan.id"
           :class="[
             plan.name.toLowerCase().includes('premium') || plan.name.toLowerCase().includes('pro')
-              ? 'bg-white border-2 border-blue-650 rounded-3xl p-8 shadow-xl shadow-blue-500/5 flex flex-col justify-between text-left relative transform lg:-translate-y-2'
-              : 'bg-white border border-slate-200 rounded-3xl p-8 shadow-sm hover:border-slate-400 hover:shadow-md transition-all duration-300 flex flex-col justify-between text-left'
+              ? 'bg-white border-2 border-blue-600 rounded-3xl p-7 shadow-xl shadow-blue-500/10 flex flex-col justify-between text-left relative transform lg:-translate-y-2'
+              : 'bg-white border border-slate-200/90 rounded-3xl p-7 shadow-sm hover:border-blue-300 hover:shadow-md transition-all duration-300 flex flex-col justify-between text-left'
           ]"
         >
           <!-- Badge overlay -->
           <div 
             v-if="plan.name.toLowerCase().includes('premium') || plan.name.toLowerCase().includes('pro')" 
-            class="absolute -top-3.5 right-6 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-blue-700"
+            class="absolute -top-3.5 right-6 bg-blue-600 text-white text-[9.5px] font-extrabold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md shadow-blue-500/20 border border-blue-400"
           >
             Popular Choice
           </div>
@@ -110,23 +108,22 @@
           <div class="flex-grow flex flex-col">
             <!-- Header Section (Plan title, Price, bookings) -->
             <div>
-              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">{{ plan.name.includes('Monthly') ? 'Monthly Membership' : 'Membership Tier' }}</span>
-              <h3 class="text-xl font-extrabold text-slate-800">{{ plan.name }}</h3>
-              <p v-if="plan.description" class="text-xs text-slate-500 mt-1 font-semibold leading-relaxed">
+              <h3 class="text-xl font-extrabold text-slate-800 tracking-tight">{{ plan.name }}</h3>
+              <p v-if="plan.description" class="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
                 {{ plan.description }}
               </p>
               
               <div class="price-box my-6 flex flex-col items-start justify-center">
                 <div class="flex items-center gap-2 mb-1" v-if="plan.features?.discount_type && plan.features?.discount_type !== 'none'">
                   <span class="text-xs text-slate-400 line-through">PKR {{ formatPrice(plan.features?.original_price) }}</span>
-                  <span class="text-[9px] font-black uppercase bg-green-50 border border-green-200 text-green-600 px-2 py-0.5 rounded">
+                  <span class="text-[9px] font-black uppercase bg-emerald-50 border border-emerald-200 text-emerald-600 px-2 py-0.5 rounded">
                     {{ plan.features?.discount_type === 'percentage' ? `${plan.features?.discount_value}% OFF` : `PKR ${plan.features?.discount_value} OFF` }}
                   </span>
                 </div>
-                <div class="flex items-baseline">
-                  <span class="text-3xl font-black text-slate-900">PKR {{ formatPrice(plan.price) }}</span>
-                  <span class="text-xs font-semibold text-slate-550 ml-1.5">
-                    / {{ plan.price == 0 ? 'forever' : formatDuration(plan.duration_days) }}
+                <div class="flex items-baseline flex-wrap gap-1">
+                  <span class="text-3xl font-black text-slate-900 tracking-tight">PKR {{ formatPrice(plan.price) }}</span>
+                  <span class="text-xs font-semibold text-slate-500 ml-1 whitespace-nowrap">
+                    / {{ formatDuration(plan.duration_days) }}
                   </span>
                 </div>
               </div>
@@ -134,50 +131,50 @@
 
             <!-- Features List -->
             <ul class="w-full space-y-3.5 text-left border-t border-slate-100/80 pt-6">
-              <li class="flex items-center space-x-2.5 text-xs text-slate-650 font-semibold">
-                <Check class="h-4 w-4 text-blue-650 flex-shrink-0" />
+              <li class="flex items-center space-x-2.5 text-xs text-slate-600 font-medium">
+                <Check class="h-4 w-4 text-blue-600 flex-shrink-0" />
                 <span>
                   {{ plan.daily_seat_bookings_limit === -1 || !plan.daily_seat_bookings_limit ? 'Unlimited Daily Seat Bookings' : `${plan.daily_seat_bookings_limit} Daily Seat Bookings` }}
                 </span>
               </li>
-              <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
-                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+              <li class="flex items-center space-x-2.5 text-xs text-slate-600 font-medium">
+                <Check class="h-4 w-4 text-blue-600 flex-shrink-0" />
                 <span>
                   {{ plan.monthly_seat_bookings_limit === -1 || !plan.monthly_seat_bookings_limit ? 'Unlimited Monthly Seat Bookings' : `${plan.monthly_seat_bookings_limit} Monthly Seat Bookings` }}
                 </span>
               </li>
-              <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
-                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+              <li class="flex items-center space-x-2.5 text-xs text-slate-600 font-medium">
+                <Check class="h-4 w-4 text-blue-600 flex-shrink-0" />
                 <span>
                   {{ plan.libraries_access_limit === -1 || !plan.libraries_access_limit ? 'Unlimited Libraries Access' : `${plan.libraries_access_limit} Libraries Access` }}
                 </span>
               </li>
-              <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
-                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+              <li class="flex items-center space-x-2.5 text-xs text-slate-600 font-medium">
+                <Check class="h-4 w-4 text-blue-600 flex-shrink-0" />
                 <span>
                   {{ plan.books_access_limit === -1 || !plan.books_access_limit ? 'Unlimited Books Access' : `${plan.books_access_limit} Books Access` }}
                 </span>
               </li>
-              <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
-                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+              <li class="flex items-center space-x-2.5 text-xs text-slate-600 font-medium">
+                <Check class="h-4 w-4 text-blue-600 flex-shrink-0" />
                 <span>
                   {{ plan.events_joining_limit === -1 || !plan.events_joining_limit ? 'Unlimited Events Joining' : `${plan.events_joining_limit} Events Joining` }}
                 </span>
               </li>
-              <li class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
-                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+              <li class="flex items-center space-x-2.5 text-xs text-slate-600 font-medium">
+                <Check class="h-4 w-4 text-blue-600 flex-shrink-0" />
                 <span>
                   <span v-if="plan.advance_booking_days === -1">Unlimited Advance Booking</span>
                   <span v-else-if="plan.advance_booking_days === 0">Same Day Booking Only</span>
                   <span v-else>{{ plan.advance_booking_days }} Days Advance Booking</span>
                 </span>
               </li>
-              <li v-if="plan.digital_books_access" class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
-                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+              <li v-if="plan.digital_books_access" class="flex items-center space-x-2.5 text-xs text-slate-600 font-medium">
+                <Check class="h-4 w-4 text-blue-600 flex-shrink-0" />
                 <span>Digital Books Access</span>
               </li>
-              <li v-if="plan.priority_booking" class="flex items-center space-x-2.5 text-xs text-slate-655 font-semibold">
-                <Check class="h-4 w-4 text-blue-655 flex-shrink-0" />
+              <li v-if="plan.priority_booking" class="flex items-center space-x-2.5 text-xs text-slate-600 font-medium">
+                <Check class="h-4 w-4 text-blue-600 flex-shrink-0" />
                 <span>Priority Seat Booking</span>
               </li>
             </ul>
@@ -200,7 +197,7 @@
               @click="subscribe(plan)"
               :disabled="subscribingPlanId !== null || !!user?.pending_order"
               :class="[
-                'w-full py-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 border shadow-sm duration-200',
+                'w-full py-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 border shadow-sm duration-200 cursor-pointer',
                 user?.pending_order?.plan_id === plan.id
                   ? 'bg-amber-50 text-amber-700 border-amber-300 cursor-not-allowed shadow-none'
                   : (!!user?.pending_order
@@ -224,6 +221,271 @@
             </button>
           </div>
         </div>
+      </div>      </div>
+
+      <!-- Billing & Subscription History -->
+      <div class="mt-16 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm text-left font-outfit">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-5">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center text-blue-600 flex-shrink-0">
+              <Receipt class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-800 tracking-tight leading-snug">Billing & Subscription History</h3>
+              <p class="text-xs text-slate-400 font-medium mt-0.5">Track your subscription purchase requests, payment receipts, and membership history.</p>
+            </div>
+          </div>
+
+          <!-- History Tabs -->
+          <div class="flex items-center bg-slate-100 p-1 rounded-xl w-fit">
+            <button
+              @click="activeHistoryTab = 'orders'"
+              :class="[
+                'px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center space-x-1.5',
+                activeHistoryTab === 'orders' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'
+              ]"
+            >
+              <CreditCard class="w-3.5 h-3.5" />
+              <span>Orders & Receipts</span>
+              <span v-if="orders.length > 0" class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-bold">
+                {{ orders.length }}
+              </span>
+            </button>
+            <button
+              @click="activeHistoryTab = 'subscriptions'"
+              :class="[
+                'px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center space-x-1.5',
+                activeHistoryTab === 'subscriptions' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'
+              ]"
+            >
+              <Calendar class="w-3.5 h-3.5" />
+              <span>Membership Cycles</span>
+              <span v-if="subscriptionsHistory.length > 0" class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-bold">
+                {{ subscriptionsHistory.length }}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- History Loading -->
+        <div v-if="historyLoading" class="py-12 text-center flex flex-col items-center justify-center space-y-3">
+          <Loader2 class="w-6 h-6 animate-spin text-blue-600" />
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider animate-pulse">Loading history...</p>
+        </div>
+
+        <!-- Orders & Receipts Tab -->
+        <template v-else-if="activeHistoryTab === 'orders'">
+          <div v-if="orders.length === 0" class="py-12 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-8">
+            <CreditCard class="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <h4 class="text-sm font-semibold text-slate-700 mb-1">No Orders Found</h4>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">You have not purchased any subscription plans yet.</p>
+          </div>
+
+          <div v-else>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[640px]">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <th class="py-3 px-4">Plan Name</th>
+                    <th class="py-3 px-4">Date & Time</th>
+                    <th class="py-3 px-4">Amount</th>
+                    <th class="py-3 px-4">Payment Method</th>
+                    <th class="py-3 px-4">Transaction / Ref</th>
+                    <th class="py-3 px-4 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-700">
+                  <tr v-for="order in paginatedOrders" :key="order.id" class="hover:bg-slate-50/50 transition-colors">
+                    <td class="py-3.5 px-4 font-bold text-slate-800">
+                      {{ order.plan?.name || order.notes || 'Subscription Request' }}
+                    </td>
+                    <td class="py-3.5 px-4 font-medium text-slate-500">
+                      {{ formatDateTime(order.created_at) }}
+                    </td>
+                    <td class="py-3.5 px-4 font-bold text-slate-900">
+                      PKR {{ formatPrice(order.amount) }}
+                    </td>
+                    <td class="py-3.5 px-4 font-medium text-slate-600 capitalize">
+                      {{ order.payment_method === 'manual' ? 'Manual / Offline' : order.payment_method }}
+                    </td>
+                    <td class="py-3.5 px-4 font-mono text-[11px] text-slate-400">
+                      {{ order.transaction_id || '#' + order.id }}
+                    </td>
+                    <td class="py-3.5 px-4 text-right">
+                      <span
+                        :class="[
+                          'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1',
+                          order.status === 'completed' || order.status === 'approved'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : order.status === 'pending'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        ]"
+                      >
+                        <span
+                          :class="[
+                            'w-1.5 h-1.5 rounded-full',
+                            order.status === 'completed' || order.status === 'approved'
+                              ? 'bg-emerald-500'
+                              : order.status === 'pending'
+                              ? 'bg-amber-500 animate-pulse'
+                              : 'bg-rose-500'
+                          ]"
+                        ></span>
+                        {{ order.status === 'completed' || order.status === 'approved' ? 'Approved' : (order.status === 'pending' ? 'Pending' : 'Rejected') }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Orders Pagination Bar -->
+            <div v-if="orders.length > itemsPerPage" class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 mt-4 border-t border-slate-100 text-xs">
+              <div class="text-slate-400 font-medium text-[11px]">
+                Showing <span class="font-bold text-slate-700">{{ (ordersPage - 1) * itemsPerPage + 1 }}</span> to <span class="font-bold text-slate-700">{{ Math.min(ordersPage * itemsPerPage, orders.length) }}</span> of <span class="font-bold text-slate-700">{{ orders.length }}</span> orders
+              </div>
+              <div class="flex items-center space-x-1.5">
+                <button
+                  @click="ordersPage > 1 ? ordersPage-- : null"
+                  :disabled="ordersPage === 1"
+                  class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center space-x-1"
+                >
+                  <ChevronLeft class="w-3.5 h-3.5" />
+                  <span>Prev</span>
+                </button>
+
+                <button
+                  v-for="p in totalOrdersPages"
+                  :key="p"
+                  @click="ordersPage = p"
+                  :class="[
+                    'w-8 h-8 rounded-lg text-xs font-bold transition-all border',
+                    ordersPage === p
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  ]"
+                >
+                  {{ p }}
+                </button>
+
+                <button
+                  @click="ordersPage < totalOrdersPages ? ordersPage++ : null"
+                  :disabled="ordersPage === totalOrdersPages"
+                  class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center space-x-1"
+                >
+                  <span>Next</span>
+                  <ChevronRight class="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Membership Cycles Tab -->
+        <template v-else-if="activeHistoryTab === 'subscriptions'">
+          <div v-if="subscriptionsHistory.length === 0" class="py-12 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-8">
+            <Calendar class="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <h4 class="text-sm font-semibold text-slate-700 mb-1">No Membership Cycles</h4>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">No subscription history records found.</p>
+          </div>
+
+          <div v-else>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[640px]">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <th class="py-3 px-4">Plan Name</th>
+                    <th class="py-3 px-4">Start Date</th>
+                    <th class="py-3 px-4">Expiry Date</th>
+                    <th class="py-3 px-4">Amount Paid</th>
+                    <th class="py-3 px-4 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-700">
+                  <tr v-for="sub in paginatedSubscriptions" :key="sub.id" class="hover:bg-slate-50/50 transition-colors">
+                    <td class="py-3.5 px-4 font-bold text-slate-800">
+                      {{ sub.subscription_plan?.name || 'Membership Plan' }}
+                    </td>
+                    <td class="py-3.5 px-4 font-medium text-slate-500">
+                      {{ formatDate(sub.started_at) }}
+                    </td>
+                    <td class="py-3.5 px-4 font-medium text-slate-500">
+                      {{ formatDate(sub.expires_at) }}
+                    </td>
+                    <td class="py-3.5 px-4 font-bold text-slate-900">
+                      PKR {{ formatPrice(sub.amount_paid) }}
+                    </td>
+                    <td class="py-3.5 px-4 text-right">
+                      <span
+                        :class="[
+                          'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1',
+                          sub.status === 'active' && new Date(sub.expires_at) >= new Date()
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : sub.status === 'cancelled'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                        ]"
+                      >
+                        <span
+                          :class="[
+                            'w-1.5 h-1.5 rounded-full',
+                            sub.status === 'active' && new Date(sub.expires_at) >= new Date()
+                              ? 'bg-emerald-500 animate-pulse'
+                              : sub.status === 'cancelled'
+                              ? 'bg-rose-500'
+                              : 'bg-slate-400'
+                          ]"
+                        ></span>
+                        {{ sub.status === 'active' && new Date(sub.expires_at) >= new Date() ? 'Active' : (sub.status === 'cancelled' ? 'Cancelled' : 'Expired') }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Subscriptions Pagination Bar -->
+            <div v-if="subscriptionsHistory.length > itemsPerPage" class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 mt-4 border-t border-slate-100 text-xs">
+              <div class="text-slate-400 font-medium text-[11px]">
+                Showing <span class="font-bold text-slate-700">{{ (subscriptionsPage - 1) * itemsPerPage + 1 }}</span> to <span class="font-bold text-slate-700">{{ Math.min(subscriptionsPage * itemsPerPage, subscriptionsHistory.length) }}</span> of <span class="font-bold text-slate-700">{{ subscriptionsHistory.length }}</span> records
+              </div>
+              <div class="flex items-center space-x-1.5">
+                <button
+                  @click="subscriptionsPage > 1 ? subscriptionsPage-- : null"
+                  :disabled="subscriptionsPage === 1"
+                  class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center space-x-1"
+                >
+                  <ChevronLeft class="w-3.5 h-3.5" />
+                  <span>Prev</span>
+                </button>
+
+                <button
+                  v-for="p in totalSubscriptionsPages"
+                  :key="p"
+                  @click="subscriptionsPage = p"
+                  :class="[
+                    'w-8 h-8 rounded-lg text-xs font-bold transition-all border',
+                    subscriptionsPage === p
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  ]"
+                >
+                  {{ p }}
+                </button>
+
+                <button
+                  @click="subscriptionsPage < totalSubscriptionsPages ? subscriptionsPage++ : null"
+                  :disabled="subscriptionsPage === totalSubscriptionsPages"
+                  class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center space-x-1"
+                >
+                  <span>Next</span>
+                  <ChevronRight class="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </template>
   </div>
@@ -243,7 +505,10 @@ import {
   Clock, 
   RefreshCw, 
   Zap,
-  Check
+  Check,
+  Receipt,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-vue-next';
 
 const { user, checkAuth, isPlanExpired } = useAuth();
@@ -252,6 +517,27 @@ const router = useRouter();
 const plans = ref<any[]>([]);
 const isLoading = ref(true);
 const subscribingPlanId = ref<number | null>(null);
+
+const historyLoading = ref(false);
+const orders = ref<any[]>([]);
+const subscriptionsHistory = ref<any[]>([]);
+const activeHistoryTab = ref<'orders' | 'subscriptions'>('orders');
+
+const itemsPerPage = 10;
+const ordersPage = ref(1);
+const subscriptionsPage = ref(1);
+
+const totalOrdersPages = computed(() => Math.ceil(orders.value.length / itemsPerPage) || 1);
+const paginatedOrders = computed(() => {
+  const start = (ordersPage.value - 1) * itemsPerPage;
+  return orders.value.slice(start, start + itemsPerPage);
+});
+
+const totalSubscriptionsPages = computed(() => Math.ceil(subscriptionsHistory.value.length / itemsPerPage) || 1);
+const paginatedSubscriptions = computed(() => {
+  const start = (subscriptionsPage.value - 1) * itemsPerPage;
+  return subscriptionsHistory.value.slice(start, start + itemsPerPage);
+});
 
 const hasActiveSubscription = computed(() => {
   return !!user.value?.active_subscription;
@@ -268,12 +554,12 @@ const formatPrice = (price: any) => {
 };
 
 const formatDuration = (days: number) => {
-  if (!days) return '';
-  if (days === 30) return '/per month';
-  if (days === 90) return '/3 months';
-  if (days === 180) return '/6 months';
-  if (days === 365) return '/12 months';
-  return `/ ${days} days`;
+  if (!days) return 'forever';
+  if (days === 30) return 'month';
+  if (days === 90) return '3 months';
+  if (days === 180) return '6 months';
+  if (days === 365) return 'year';
+  return `${days} days`;
 };
 
 const getPlanBtnClass = (planName: string) => {
@@ -309,6 +595,17 @@ const formatDate = (dateString: string) => {
   });
 };
 
+const formatDateTime = (dateStr: string) => {
+  if (!dateStr) return 'N/A';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 const calculateRemainingDays = (expiryDate: string) => {
   if (!expiryDate) return 0;
   const diff = new Date(expiryDate).getTime() - new Date().getTime();
@@ -327,6 +624,19 @@ const fetchPlans = async () => {
   }
 };
 
+const fetchHistory = async () => {
+  try {
+    historyLoading.value = true;
+    const res = await studentAPI.getSubscriptionHistory();
+    orders.value = res.orders || [];
+    subscriptionsHistory.value = res.subscriptions || [];
+  } catch (err) {
+    console.error('Failed to load subscription history:', err);
+  } finally {
+    historyLoading.value = false;
+  }
+};
+
 import { useSwal } from '@/shared/composables/useSwal';
 const { showConfirm, showSuccess, showError } = useSwal();
 
@@ -339,6 +649,7 @@ const subscribe = async (plan: any) => {
     subscribingPlanId.value = plan.id;
     const response = await studentAPI.subscribe(plan.id);
     await checkAuth(); // Refresh user to get updated subscription status
+    await fetchHistory(); // Refresh billing history
     showSuccess('Request Sent!', response.message || 'Subscription request submitted successfully!');
   } catch (error: any) {
     console.error('Subscription error:', error);
@@ -350,6 +661,7 @@ const subscribe = async (plan: any) => {
 
 onMounted(() => {
   fetchPlans();
+  fetchHistory();
 });
 </script>
 

@@ -23,7 +23,7 @@ class LibraryController extends Controller
         $libraries = Library::where('is_active', true)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
-            ->with(['facilities'])
+            ->with(['facilities', 'operatingHours'])
             ->select('libraries.*')
             ->selectRaw("
                 ( 6371 * acos( LEAST(1.0, GREATEST(-1.0, 
@@ -46,7 +46,24 @@ class LibraryController extends Controller
             ->orderBy('distance_km')
             ->get();
 
-        $data = $libraries->map(function ($library) {
+        $daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+        $data = $libraries->map(function ($library) use ($daysOrder) {
+            $hoursMap = collect($library->operatingHours)->keyBy('day_of_week');
+            $formattedHours = collect($daysOrder)->map(function ($day) use ($hoursMap) {
+                $hour = $hoursMap->get($day);
+                return [
+                    'day' => $day,
+                    'isOpen' => $hour ? (bool)$hour->is_open : false,
+                    'openTime' => $hour && $hour->open_time ? substr($hour->open_time, 0, 5) : '',
+                    'closeTime' => $hour && $hour->close_time ? substr($hour->close_time, 0, 5) : '',
+                ];
+            });
+
+            $effectiveCapacity = ($library->capacity && $library->capacity > 0) 
+                ? $library->capacity 
+                : ($library->totalSeats ?? 0);
+
             return [
                 'id'              => $library->id,
                 'name'            => $library->name,
@@ -60,11 +77,14 @@ class LibraryController extends Controller
                 'distance_km'     => round($library->distance_km, 2),
                 'average_rating'  => $library->average_rating,
                 'openingHours'    => $library->opening_hours,
-                'totalSeats'      => $library->totalSeats ?? 0,
+                'capacity'        => $effectiveCapacity,
+                'totalSeats'      => $effectiveCapacity,
                 'availableSeats'  => $library->availableSeats ?? 0,
                 'currentOccupancy' => $library->currentOccupancy ?? 0,
                 'facilities'      => $library->facilities->pluck('name')->toArray(),
+                'operating_days'  => $formattedHours,
                 'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+                'table_capacity'   => $library->table_capacity ?? 4,
             ];
         });
 
@@ -74,7 +94,7 @@ class LibraryController extends Controller
     public function index(Request $request)
     {
         \App\Models\SeatBooking::cancelExpiredBookings();
-        $libraries = Library::with(['facilities'])
+        $libraries = Library::with(['facilities', 'operatingHours'])
             ->withCount([
                 'seats as totalSeats',
                 'seats as availableSeats' => function ($query) {
@@ -86,7 +106,24 @@ class LibraryController extends Controller
             ])
             ->get();
 
-        $data = $libraries->map(function ($library) {
+        $daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+        $data = $libraries->map(function ($library) use ($daysOrder) {
+            $hoursMap = collect($library->operatingHours)->keyBy('day_of_week');
+            $formattedHours = collect($daysOrder)->map(function ($day) use ($hoursMap) {
+                $hour = $hoursMap->get($day);
+                return [
+                    'day' => $day,
+                    'isOpen' => $hour ? (bool)$hour->is_open : false,
+                    'openTime' => $hour && $hour->open_time ? substr($hour->open_time, 0, 5) : '',
+                    'closeTime' => $hour && $hour->close_time ? substr($hour->close_time, 0, 5) : '',
+                ];
+            });
+
+            $effectiveCapacity = ($library->capacity && $library->capacity > 0) 
+                ? $library->capacity 
+                : ($library->totalSeats ?? 0);
+
             return [
                 'id' => $library->id,
                 'name' => $library->name,
@@ -98,16 +135,18 @@ class LibraryController extends Controller
                 'longitude' => $library->longitude,
                 'contact_info' => $library->contact_info,
                 'special_features' => $library->special_features,
-                'capacity' => $library->capacity,
+                'capacity' => $effectiveCapacity,
                 'openingHours' => $library->opening_hours,
                 'wifi_password' => $library->wifi_password,
                 'parking_available' => $library->parking_available,
                 'is_active' => $library->is_active,
-                'totalSeats' => $library->totalSeats ?? 0,
+                'totalSeats' => $effectiveCapacity,
                 'availableSeats' => $library->availableSeats ?? 0,
                 'currentOccupancy' => $library->currentOccupancy ?? 0,
                 'facilities' => $library->facilities->pluck('name')->toArray(),
+                'operating_days' => $formattedHours,
                 'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+                'table_capacity' => $library->table_capacity ?? 4,
                 'average_rating' => $library->average_rating,
             ];
         });
@@ -143,6 +182,10 @@ class LibraryController extends Controller
             ];
         });
 
+        $effectiveCapacity = ($library->capacity && $library->capacity > 0) 
+            ? $library->capacity 
+            : ($library->totalSeats ?? 0);
+
         $data = [
             'id' => $library->id,
             'name' => $library->name,
@@ -154,12 +197,12 @@ class LibraryController extends Controller
             'longitude' => $library->longitude,
             'contact_info' => $library->contact_info,
             'special_features' => $library->special_features,
-            'capacity' => $library->capacity,
+            'capacity' => $effectiveCapacity,
             'openingHours' => $library->opening_hours,
             'wifi_password' => $library->wifi_password,
             'parking_available' => $library->parking_available,
             'is_active' => $library->is_active,
-            'totalSeats' => $library->totalSeats ?? 0,
+            'totalSeats' => $effectiveCapacity,
             'availableSeats' => $library->availableSeats ?? 0,
             'currentOccupancy' => $library->currentOccupancy ?? 0,
             'facilities' => $library->facilities->pluck('name')->toArray(),
@@ -171,6 +214,7 @@ class LibraryController extends Controller
                 ];
             }),
             'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+            'table_capacity' => $library->table_capacity ?? 4,
             'average_rating' => $library->average_rating,
         ];
 
@@ -180,13 +224,14 @@ class LibraryController extends Controller
     public function seats($id)
     {
         \App\Models\SeatBooking::cancelExpiredBookings();
-        $library = Library::with(['floors', 'seatSections', 'operatingHours'])->findOrFail($id);
+        $library = Library::with(['floors', 'seatSections.subsections', 'operatingHours'])->findOrFail($id);
         
         $seats = $library->seats()
             ->select([
                 'seats.id', 
                 'seats.floor_id', 
                 'seats.section_id', 
+                'seats.subsection_id',
                 'seats.table_id', 
                 'seats.cabin_number', 
                 'seats.cabin_features', 
@@ -243,6 +288,7 @@ class LibraryController extends Controller
                 'id' => $library->id,
                 'name' => $library->name,
                 'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+                'table_capacity' => $library->table_capacity ?? 4,
                 'operating_days' => $formattedHours,
             ],
             'floors' => $library->floors,

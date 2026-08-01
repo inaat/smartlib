@@ -1,4 +1,4 @@
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { authAPI, studentAPI } from '@/shared/services/api';
 
 interface User {
@@ -6,6 +6,7 @@ interface User {
     name: string;
     email: string;
     phone?: string;
+    gender?: 'male' | 'female' | string;
     crn?: string;
     role: 'owner' | 'super_admin' | 'librarian' | 'student';
     ca_level?: 'PRC' | 'CAF' | 'Final';
@@ -15,7 +16,13 @@ interface User {
     trial_ends_at?: string;
     isApproved: boolean;
     user_type: string;
+    status?: 'pending' | 'approved' | 'rejected' | string;
     library_id?: number;
+    library?: {
+        id: number;
+        name: string;
+        [key: string]: any;
+    };
     active_subscription?: any;
     loyalty_points?: number;
     loyalty_transactions?: any[];

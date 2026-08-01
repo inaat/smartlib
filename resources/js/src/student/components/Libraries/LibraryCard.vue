@@ -141,39 +141,76 @@ const getFacilityIcon = (facility: string) => {
   }
 };
 
+const parseTimeToMinutes = (timeStr: string) => {
+  if (!timeStr) return null;
+  const str = timeStr.trim();
+  
+  // 1. Check 12-hour format with AM/PM (e.g. 09:00 AM, 11:00 PM)
+  const match12 = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (match12) {
+    let hours = parseInt(match12[1]);
+    const minutes = parseInt(match12[2]);
+    const ampm = match12[3].toUpperCase();
+    if (ampm === 'PM' && hours < 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  }
+
+  // 2. Check 24-hour format (e.g. 09:00, 23:00)
+  const match24 = str.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    const hours = parseInt(match24[1]);
+    const minutes = parseInt(match24[2]);
+    return hours * 60 + minutes;
+  }
+
+  return null;
+};
+
 const isOpen = computed(() => {
-  if (!props.library.openingHours) return false;
+  const now = new Date();
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayName = days[now.getDay()];
+
+  // 1. Check operating_days array if present
+  if (props.library?.operating_days && Array.isArray(props.library.operating_days)) {
+    const todaySchedule = props.library.operating_days.find((d: any) => d.day === todayName);
+    if (todaySchedule) {
+      if (!todaySchedule.isOpen) return false;
+      if (todaySchedule.openTime && todaySchedule.closeTime) {
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const openMin = parseTimeToMinutes(todaySchedule.openTime);
+        const closeMin = parseTimeToMinutes(todaySchedule.closeTime);
+
+        if (openMin !== null && closeMin !== null) {
+          if (openMin <= closeMin) {
+            return currentMinutes >= openMin && currentMinutes < closeMin;
+          } else {
+            // Over midnight case
+            return currentMinutes >= openMin || currentMinutes < closeMin;
+          }
+        }
+      }
+    }
+  }
+
+  // 2. Fallback to openingHours text string
+  if (!props.library?.openingHours) return true;
   
   try {
     const parts = props.library.openingHours.split('-');
     if (parts.length !== 2) return true;
     
-    const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    
-    const parseTime = (timeStr: string) => {
-      const match = timeStr.trim().match(/^(\d+):(\d+)\s*(AM|PM)$/i);
-      if (!match) return null;
-      let hours = parseInt(match[1]);
-      const minutes = parseInt(match[2]);
-      const ampm = match[3].toUpperCase();
-      
-      if (ampm === 'PM' && hours < 12) hours += 12;
-      if (ampm === 'AM' && hours === 12) hours = 0;
-      
-      return hours * 60 + minutes;
-    };
-    
-    const startMinutes = parseTime(parts[0]);
-    const endMinutes = parseTime(parts[1]);
+    const startMinutes = parseTimeToMinutes(parts[0]);
+    const endMinutes = parseTimeToMinutes(parts[1]);
     
     if (startMinutes === null || endMinutes === null) return true;
     
     if (startMinutes <= endMinutes) {
-      return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+      return currentMinutes >= startMinutes && currentMinutes < endMinutes;
     } else {
-      // Over midnight case
-      return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
+      return currentMinutes >= startMinutes || currentMinutes < endMinutes;
     }
   } catch (e) {
     return true;

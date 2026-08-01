@@ -289,20 +289,28 @@
                     {{ req.user?.ca_level || 'N/A' }}
                   </span>
                 </td>
-                <!-- Target Seat -->
+                <!-- Target Seat & Section / Subsection Details -->
                 <td class="px-6 py-4 whitespace-nowrap text-left">
-                  <div class="flex items-center space-x-2 text-xs font-semibold text-slate-600">
-                    <MapPin class="w-4 h-4 text-slate-400 flex-shrink-0" />
-                    <span class="font-semibold text-slate-800">Seat {{ req.seat?.seat_number }}</span>
-                    <span class="text-[10px] text-slate-400 font-semibold bg-slate-50 px-2 py-0.5 border border-gray-200 rounded-md">
-                      {{ req.seat?.floor?.name }}
-                    </span>
+                  <div class="space-y-1">
+                    <div class="flex items-center space-x-2 text-xs font-semibold text-slate-800">
+                      <MapPin class="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                      <span class="font-bold text-slate-800">Seat {{ req.seat?.seat_number }}</span>
+                      <span class="text-[10px] text-slate-500 font-semibold bg-slate-100 px-2 py-0.5 border border-slate-200 rounded-md">
+                        {{ req.seat?.floor?.name }}
+                      </span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 font-medium pl-6">
+                      <span class="font-semibold text-slate-700">{{ req.seat?.seat_section?.name || 'Section N/A' }}</span>
+                      <span v-if="req.seat?.seat_subsection?.name" class="text-slate-400 font-normal">
+                        • {{ req.seat?.seat_subsection?.name }}
+                      </span>
+                    </div>
                   </div>
                 </td>
-                <!-- Restricted Seat Section Academic Level -->
+                <!-- Restricted Seat Academic Level -->
                 <td class="px-6 py-4 whitespace-nowrap text-left">
                   <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-50 border border-purple-100 text-purple-700">
-                    {{ req.seat?.seat_section?.academic_level || 'N/A' }}
+                    {{ req.seat?.seat_subsection?.academic_level && req.seat?.seat_subsection?.academic_level !== 'all' ? req.seat.seat_subsection.academic_level : (req.seat?.seat_section?.academic_level || 'All Levels') }}
                   </span>
                 </td>
                 <!-- Requested date -->
@@ -466,7 +474,6 @@ import { ref, onMounted, watch } from 'vue';
 import {
   Search,
   MapPin,
-  CheckCircle,
   UserCheck,
   LogOut,
   Eye,
@@ -536,14 +543,6 @@ const pagination = ref({
   to: 0
 });
 
-const filterTabs = [
-  { label: 'All Bookings', value: 'all' },
-  { label: 'Active', value: 'active' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Completed', value: 'completed' },
-  { label: 'Cancelled', value: 'cancelled' }
-];
-
 const fetchBookings = async (page = 1) => {
   loading.value = true;
   try {
@@ -573,11 +572,6 @@ const fetchStats = async () => {
   } catch (error) {
     console.error('Error fetching booking stats:', error);
   }
-};
-
-const setFilter = (filter: string) => {
-  activeFilter.value = filter;
-  fetchBookings(1);
 };
 
 let searchTimeout: any = null;
@@ -638,9 +632,11 @@ const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'MMM dd, yyyy');
 };
 
-const formatTime = (dateString: string) => {
+const formatTime = (dateString?: string) => {
   if (!dateString) return 'N/A';
-  return format(new Date(dateString), 'hh:mm a');
+  const d = new Date(dateString);
+  if (isNaN(d.getTime())) return 'N/A';
+  return format(d, 'hh:mm a');
 };
 
 const formatStatus = (status: string) => {

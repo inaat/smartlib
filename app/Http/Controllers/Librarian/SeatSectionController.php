@@ -21,7 +21,9 @@ class SeatSectionController extends Controller
         }
 
         $sections = $query->withCount('seats')
-            ->with(['seats', 'floor'])
+            ->with(['seats.seatSubsection', 'floor', 'subsections' => function($q) {
+                $q->withCount('seats')->with('seats');
+            }])
             ->get()
             ->map(function ($section) {
                 $section->available_seats = $section->seats()->where('status', 'available')->count();
@@ -50,6 +52,7 @@ class SeatSectionController extends Controller
             'academic_level' => 'nullable|string|in:PRC,CAF,Final,all',
             'total_seats' => 'required|integer|min:1',
             'description' => 'nullable|string',
+            'has_subsections' => 'nullable|boolean',
             'floor_id' => 'required|exists:floors,id',
         ]);
 
@@ -71,6 +74,7 @@ class SeatSectionController extends Controller
             'academic_level' => $validated['academic_level'] ?? 'all',
             'total_seats' => $validated['total_seats'],
             'description' => $validated['description'] ?? null,
+            'has_subsections' => $validated['has_subsections'] ?? false,
             'floor_id' => $validated['floor_id'] ?? null,
         ]);
 
@@ -91,16 +95,18 @@ class SeatSectionController extends Controller
                 continue;
             }
 
-            $qrContent = base64_encode(json_encode([
+            $qrData = [
                 'type' => 'seat',
                 'seat_number' => $seatNumber,
                 'library_id' => $libraryId,
-            ]));
+                'section_id' => $section->id,
+                'uid' => uniqid(),
+            ];
+            $qrContent = base64_encode(json_encode($qrData));
 
-            // Also skip if QR code already exists
             if (Seat::where('qr_code', $qrContent)->exists()) {
-                $counter++;
-                continue;
+                $qrData['uid'] = uniqid() . '_' . rand(1000, 9999);
+                $qrContent = base64_encode(json_encode($qrData));
             }
 
             $seat = Seat::create([
@@ -140,6 +146,7 @@ class SeatSectionController extends Controller
             'gender' => 'sometimes|string|in:male,female,mixed',
             'academic_level' => 'sometimes|string|in:PRC,CAF,Final,all',
             'description' => 'nullable|string',
+            'has_subsections' => 'sometimes|boolean',
             'is_active' => 'sometimes|boolean',
             'floor_id' => 'nullable|exists:floors,id',
             'total_seats' => 'sometimes|integer|min:1',
@@ -160,7 +167,17 @@ class SeatSectionController extends Controller
             ], 422);
         }
 
-        $oldSeatsCount = $section->total_seats;
+        // Check subsection allocation floor
+        $allocatedSeats = $section->subsections()->sum('total_seats');
+        if ($allocatedSeats > 0 && $newSeatsCount < $allocatedSeats) {
+            $unallocated = max(0, $section->total_seats - $allocatedSeats);
+            return response()->json([
+                'message' => "Cannot reduce section capacity to {$newSeatsCount} seats. Subsections currently have {$allocatedSeats} seats allocated. You have {$unallocated} unallocated seats available to reduce (minimum allowed section capacity is {$allocatedSeats} seats)."
+            ], 422);
+        }
+
+        // Count only individual (non-table) seats as the baseline for create/prune logic
+        $oldSeatsCount = $section->seats()->whereNull('table_id')->count();
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($section, $validated, $newSeatsCount, $oldSeatsCount, $libraryId) {
             $section->update($validated);
@@ -184,16 +201,18 @@ class SeatSectionController extends Controller
                         continue;
                     }
 
-                    $qrContent = base64_encode(json_encode([
+                    $qrData = [
                         'type' => 'seat',
                         'seat_number' => $seatNumber,
                         'library_id' => $libraryId,
-                    ]));
+                        'section_id' => $section->id,
+                        'uid' => uniqid(),
+                    ];
+                    $qrContent = base64_encode(json_encode($qrData));
 
-                    // Also skip if QR code already exists
                     if (Seat::where('qr_code', $qrContent)->exists()) {
-                        $counter++;
-                        continue;
+                        $qrData['uid'] = uniqid() . '_' . rand(1000, 9999);
+                        $qrContent = base64_encode(json_encode($qrData));
                     }
 
                     $seat = Seat::create([
@@ -217,10 +236,15 @@ class SeatSectionController extends Controller
                     $counter++;
                 }
             } elseif ($newSeatsCount < $oldSeatsCount) {
-                // Delete extra seats (ordered by highest suffix index)
+                // Prune unallocated available seats first (exclude table-linked seats which are managed by StudyTableController)
+                $excess = $oldSeatsCount - $newSeatsCount;
                 $seatsToDelete = $section->seats()
+                    ->whereNull('subsection_id')
+                    ->whereNull('table_id')
+                    ->where('status', 'available')
+                    ->whereDoesntHave('activeBooking')
                     ->orderByRaw('CAST(SUBSTRING_INDEX(seat_number, "-", -1) AS UNSIGNED) DESC')
-                    ->take($oldSeatsCount - $newSeatsCount)
+                    ->take($excess)
                     ->get();
 
                 foreach ($seatsToDelete as $s) {

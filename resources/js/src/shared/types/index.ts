@@ -11,6 +11,7 @@ export interface User {
   crn: string;
   icap_id_card_photo?: string;
   phone?: string;
+  gender?: 'male' | 'female' | string;
   profile_photo?: string;
   user_type: 'student' | 'librarian' | 'super_admin';
   status: 'pending' | 'approved' | 'rejected';
@@ -78,12 +79,15 @@ export interface Seat {
   seat_number: string;
   status: 'available' | 'reserved' | 'occupied' | 'maintenance' | 'free_soon' | 'overstay' | 'serious_overstay';
   type: 'regular' | 'premium' | 'group' | 'silent' | 'collaborative';
+  seat_type?: string;
   qr_code?: string;
   next_available_time?: string;
   current_booking_id?: string;
   floor: number;
   floor_id?: number;
   section_id?: number;
+  subsection_id?: number | null;
+  is_maintenance?: boolean;
   table_id?: number;
   cabin_number?: string;
   cabin_features?: {
@@ -107,6 +111,11 @@ export interface Seat {
   position_x?: number;
   position_y?: number;
   library?: Library;
+  seat_subsection?: any;
+  subsection?: any;
+  seat_section?: any;
+  seat_subsection_id?: number | null;
+  academic_level?: string;
 }
 
 // Study Table Type

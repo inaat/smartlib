@@ -27,13 +27,14 @@
       <div class="flex items-center gap-2 flex-shrink-0">
         <button
           @click="handleRequestLocation"
-          class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-all active:scale-98"
+          class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-all active:scale-98 cursor-pointer flex items-center space-x-1.5"
         >
-          Enable Location
+          <Navigation class="w-3.5 h-3.5" />
+          <span>Access My Location</span>
         </button>
         <button
           @click="libraryFilterMode = 'all'"
-          class="px-4 py-2 bg-white border border-amber-200 text-amber-800 hover:bg-amber-50 rounded-xl text-xs font-semibold transition-all active:scale-98"
+          class="px-4 py-2 bg-white border border-amber-200 text-amber-800 hover:bg-amber-50 rounded-xl text-xs font-semibold transition-all active:scale-98 cursor-pointer"
         >
           Browse All
         </button>
@@ -182,10 +183,10 @@
       <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
         <button
           @click="handleRequestLocation"
-          class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 active:scale-98 transition-all flex items-center justify-center space-x-2"
+          class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 active:scale-98 transition-all flex items-center justify-center space-x-2 cursor-pointer"
         >
           <Navigation class="w-4 h-4" />
-          <span>Enable Location Access</span>
+          <span>Access My Location</span>
         </button>
         <button
           @click="handleSelectAllMode"

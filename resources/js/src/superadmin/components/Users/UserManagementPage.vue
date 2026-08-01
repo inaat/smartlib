@@ -383,7 +383,7 @@
             <button
               type="submit"
               :disabled="banning"
-              class="flex-1 px-4 py-2.5 bg-red-655 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold cursor-pointer"
+              class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold cursor-pointer"
             >
               <span v-if="banning">Banning...</span>
               <span v-else>Confirm Ban</span>

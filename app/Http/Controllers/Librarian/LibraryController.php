@@ -24,7 +24,7 @@ class LibraryController extends Controller
         }
 
         // Load counts and relationships
-        $library->loadCount(['floors', 'seatSections', 'books', 'events']);
+        $library->loadCount(['floors', 'seatSections', 'books', 'events', 'reviews']);
         $library->load(['operatingHours', 'facilities', 'rules']);
         
         // Calculate current occupancy from active bookings
@@ -105,13 +105,17 @@ class LibraryController extends Controller
             ],
             'special_features' => $specialFeatures,
             'opening_hours' => $library->opening_hours ?? '',
+            'wifi_password' => $library->wifi_password ?? '',
             'is_active' => $library->is_active ?? true,
             'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+            'table_capacity' => $library->table_capacity ?? 4,
             'floors_count' => $library->floors_count ?? 0,
             'seat_sections_count' => $library->seat_sections_count ?? 0,
             'total_seats' => $library->seats()->count(),
             'books_count' => $library->books_count ?? 0,
             'events_count' => $library->events_count ?? 0,
+            'reviews_count' => $library->reviews_count ?? 0,
+            'average_rating' => $library->average_rating,
             'photo' => $library->photo,
             'photo_url' => $library->photo_url,
         ];
@@ -146,12 +150,14 @@ class LibraryController extends Controller
             'longitude' => 'nullable|numeric',
             'contact_info' => 'nullable|array',
             'opening_hours' => 'nullable|string',
+            'wifi_password' => 'nullable|string',
             'operating_days' => 'nullable|array',
             'facilities' => 'nullable|array',
             'rules' => 'nullable|array',
             'capacity' => 'sometimes|integer',
             'is_active' => 'sometimes|boolean',
             'seat_layout_mode' => 'nullable|string|in:individual,tables,cabins',
+            'table_capacity' => 'nullable|integer|in:2,4,6,8,10,12,14,16',
             'special_features' => 'nullable|array',
             'photo' => 'nullable|image|max:10240',
         ]);
@@ -160,7 +166,7 @@ class LibraryController extends Controller
             $validated['photo'] = $request->file('photo')->store('libraries', 'public');
         }
 
-        DB::transaction(function () use ($library, $validated) {
+        DB::transaction(function () use ($library, $validated, $request) {
             // Update basic library info
             $updateData = [
                 'name' => $validated['name'] ?? $library->name,
@@ -169,9 +175,11 @@ class LibraryController extends Controller
                 'longitude' => $validated['longitude'] ?? $library->longitude,
                 'capacity' => $validated['capacity'] ?? $library->capacity,
                 'contact_info' => $validated['contact_info'] ?? $library->contact_info,
+                'wifi_password' => $request->has('wifi_password') ? $request->input('wifi_password') : $library->wifi_password,
                 'special_features' => $validated['special_features'] ?? $library->special_features,
                 'is_active' => $validated['is_active'] ?? $library->is_active,
                 'seat_layout_mode' => $validated['seat_layout_mode'] ?? $library->seat_layout_mode,
+                'table_capacity' => $validated['table_capacity'] ?? $library->table_capacity,
             ];
 
             if (isset($validated['photo'])) {
@@ -281,6 +289,7 @@ class LibraryController extends Controller
                 'facilities' => $library->facilities->pluck('name')->toArray(),
                 'is_active' => $library->is_active,
                 'seat_layout_mode' => $library->seat_layout_mode,
+                'table_capacity' => $library->table_capacity,
                 'photo' => $library->photo,
                 'photo_url' => $library->photo_url,
             ]

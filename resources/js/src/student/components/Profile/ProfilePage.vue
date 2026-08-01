@@ -1,72 +1,114 @@
 <template>
   <div class="space-y-6 pb-12 font-outfit text-left">
-    <!-- User Info Card -->
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-      <div class="flex flex-col md:flex-row items-center gap-6">
-        <!-- Avatar Section -->
-        <div class="relative group flex-shrink-0">
-          <div class="w-28 h-28 rounded-full bg-gradient-to-tr from-blue-600 to-blue-500 flex items-center justify-center text-white text-3xl font-bold shadow-md overflow-hidden border-2 border-slate-100">
-            <img 
-              v-if="user?.profile_picture" 
-              :src="getProfilePictureUrl(user.profile_picture)" 
-              alt="Profile" 
-              class="w-full h-full object-cover"
-            />
-            <span v-else>{{ user?.name?.charAt(0).toUpperCase() }}</span>
+    <!-- Header Hero Profile Card -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+      <!-- Gradient Cover Banner -->
+      <div class="h-32 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent"></div>
+        <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+      </div>
+
+      <!-- Main Profile Banner Content -->
+      <div class="px-6 pb-6 pt-0 relative">
+        <div class="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 mb-4">
+          <!-- Avatar + Name Header Group -->
+          <div class="flex flex-col md:flex-row items-center md:items-start gap-5 text-center md:text-left">
+            <!-- Avatar Section with Glow & Camera Button (ONLY Avatar has negative top margin overlap) -->
+            <div class="relative group flex-shrink-0 -mt-12">
+              <div class="w-24 h-24 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg overflow-hidden border-4 border-white">
+                <img 
+                  v-if="user?.profile_picture" 
+                  :src="getProfilePictureUrl(user.profile_picture)" 
+                  alt="Profile" 
+                  class="w-full h-full object-cover"
+                />
+                <span v-else>{{ user?.name?.charAt(0).toUpperCase() }}</span>
+              </div>
+              <button 
+                @click="triggerFileInput"
+                class="absolute -bottom-1 -right-1 p-2 bg-white rounded-xl shadow-md border border-slate-200 text-slate-600 hover:text-blue-600 transition-all z-10 hover:scale-105 active:scale-95 cursor-pointer"
+                title="Change Photo"
+              >
+                <Camera class="w-3.5 h-3.5" />
+              </button>
+              <input 
+                type="file" 
+                ref="fileInput" 
+                class="hidden" 
+                accept="image/*"
+                @change="handleFileChange"
+              />
+            </div>
+
+            <!-- Title & Badges (Positioned cleanly on white background) -->
+            <div class="pt-3">
+              <div class="flex items-center justify-center md:justify-start space-x-2">
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight leading-tight">{{ user?.name }}</h1>
+                <span v-if="user?.status === 'approved' || user?.isApproved" class="inline-flex items-center text-emerald-600" title="Verified Account">
+                  <ShieldCheck class="w-4.5 h-4.5 fill-emerald-100" />
+                </span>
+              </div>
+              
+              <!-- Quick Tag Line -->
+              <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-2">
+                <!-- CRN Tag -->
+                <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-lg text-[11px] font-semibold tracking-wide">
+                  CRN: {{ user?.crn || 'N/A' }}
+                </span>
+                
+                <!-- Academic Level Tag -->
+                <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-lg text-[11px] font-semibold tracking-wide border border-blue-100">
+                  {{ user?.ca_level || 'PRC' }} Level
+                </span>
+
+                <!-- Gender Badge -->
+                <span 
+                  :class="[
+                    'px-2.5 py-0.5 rounded-lg text-[11px] font-semibold tracking-wide flex items-center space-x-1 border',
+                    userGenderNormalized === 'female' 
+                      ? 'bg-pink-50 text-pink-700 border-pink-200' 
+                      : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                  ]"
+                >
+                  <Users class="w-3 h-3" />
+                  <span>{{ formattedGender }}</span>
+                </span>
+
+                <!-- Role Badge -->
+                <span class="px-2.5 py-0.5 bg-purple-50 text-purple-700 rounded-lg text-[11px] font-semibold tracking-wide uppercase border border-purple-100">
+                  {{ user?.role?.toUpperCase() || 'STUDENT' }}
+                </span>
+              </div>
+            </div>
           </div>
-          <button 
-            @click="triggerFileInput"
-            class="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md border border-slate-200/50 text-slate-600 hover:text-blue-600 transition-colors z-10 hover:scale-105 active:scale-95"
-            title="Upload Photo"
-          >
-            <Camera class="w-4.5 h-4.5" />
-          </button>
-          <input 
-            type="file" 
-            ref="fileInput" 
-            class="hidden" 
-            accept="image/*"
-            @change="handleFileChange"
-          />
-        </div>
-        
-        <!-- Info Details -->
-        <div class="flex-1 text-center md:text-left min-w-0">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-            <h1 class="text-xl font-semibold text-slate-800 leading-none truncate pr-2">{{ user?.name }}</h1>
+
+          <!-- Edit Profile Action Button -->
+          <div class="pt-3">
             <button 
               @click="openEditModal"
-              class="inline-flex items-center px-4 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-all shadow-sm active:scale-98"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all shadow-sm shadow-blue-500/20 active:scale-98 flex-shrink-0 cursor-pointer"
             >
               <Settings class="w-3.5 h-3.5 mr-1.5" />
               Edit Profile
             </button>
           </div>
-          <div class="flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-2 text-xs text-slate-500 font-semibold mt-3">
-            <div class="flex items-center">
-              <Mail class="w-4 h-4 mr-1.5 text-blue-500" />
-              <span>{{ user?.email }}</span>
-            </div>
-            <div class="flex items-center" v-if="user?.phone">
-              <Phone class="w-4 h-4 mr-1.5 text-blue-500" />
-              <span>{{ user?.phone }}</span>
-            </div>
-            <div class="flex items-center">
-              <UserIcon class="w-4 h-4 mr-1.5 text-blue-500" />
-              <span>CRN: {{ user?.crn || 'N/A' }}</span>
-            </div>
+        </div>
+
+        <!-- Contact & Location Metadata Bar -->
+        <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-center md:justify-start gap-y-2 gap-x-6 text-xs font-medium text-slate-600">
+          <div class="flex items-center space-x-2">
+            <Mail class="w-4 h-4 text-blue-600" />
+            <span>{{ user?.email }}</span>
           </div>
-          
-          <div class="mt-5 flex flex-wrap justify-center md:justify-start gap-2">
-            <span class="px-3 py-1 bg-blue-50/50 text-blue-700 rounded-lg text-[10px] font-semibold border border-blue-100/50 uppercase tracking-wide">
-              {{ user?.ca_level || 'PRC' }} Level
-            </span>
-            <span class="px-3 py-1 bg-purple-50/50 text-purple-700 rounded-lg text-[10px] font-semibold border border-purple-100/50 uppercase tracking-wide">
-              {{ user?.role?.toUpperCase() }}
-            </span>
-            <span v-if="user?.status === 'approved' || user?.isApproved" class="px-3 py-1 bg-green-50/50 text-green-700 rounded-lg text-[10px] font-semibold border border-green-100/50 uppercase tracking-wide">
-              Verified Account
-            </span>
+
+          <div class="flex items-center space-x-2" v-if="user?.phone">
+            <Phone class="w-4 h-4 text-blue-600" />
+            <span>{{ user?.phone }}</span>
+          </div>
+
+          <div class="flex items-center space-x-2" v-if="user?.library">
+            <Building2 class="w-4 h-4 text-blue-600" />
+            <span>{{ user.library.name }}</span>
           </div>
         </div>
       </div>
@@ -74,23 +116,24 @@
 
     <!-- Edit Profile Modal -->
     <div v-if="showEditModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in text-left">
-        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in text-left">
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <div>
-            <h3 class="text-base font-semibold text-slate-800">Edit Profile</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Update your account details</p>
+            <h3 class="text-base font-bold text-slate-800">Edit Personal Profile</h3>
+            <p class="text-xs text-slate-400 mt-0.5 font-normal">Update your account info and preferences</p>
           </div>
-          <button @click="showEditModal = false" class="text-slate-400 hover:text-slate-700 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+          <button @click="showEditModal = false" class="text-slate-400 hover:text-slate-700 p-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
             <X class="w-5 h-5" />
           </button>
         </div>
 
         <form @submit.prevent="handleUpdateProfile" class="p-6 space-y-4 font-outfit">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Full Name -->
             <div class="space-y-1.5">
               <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Full Name</label>
               <div class="relative group">
-                <UserIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                <UserIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                 <input 
                   v-model="editForm.name"
                   type="text" 
@@ -100,65 +143,89 @@
                 />
               </div>
             </div>
+
+            <!-- Gender Selector -->
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Gender</label>
+              <div class="relative group">
+                <Users class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                <select 
+                  v-model="editForm.gender"
+                  required
+                  class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all shadow-sm appearance-none cursor-pointer"
+                >
+                  <option value="" disabled>Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Email -->
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
+              <div class="relative group">
+                <Mail class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                <input 
+                  v-model="editForm.email"
+                  type="email" 
+                  required
+                  class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all shadow-sm"
+                  placeholder="student@example.com"
+                />
+              </div>
+            </div>
+
+            <!-- Phone -->
             <div class="space-y-1.5">
               <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Phone Number</label>
               <div class="relative group">
-                <Phone class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                <Phone class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                 <input 
                   v-model="editForm.phone"
                   type="tel" 
                   class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all shadow-sm"
-                  placeholder="Your phone number"
+                  placeholder="03001234567"
                 />
               </div>
             </div>
           </div>
 
-          <div class="space-y-1.5">
-            <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
-            <div class="relative group">
-              <Mail class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-              <input 
-                v-model="editForm.email"
-                type="email" 
-                required
-                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all shadow-sm"
-                placeholder="current@email.com"
-              />
-            </div>
-          </div>
-
+          <!-- Password Change -->
           <div class="pt-4 border-t border-slate-100">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="font-semibold text-slate-800 text-xs uppercase tracking-wide">Change Password</h4>
-              <span class="text-[9px] text-slate-400 uppercase font-semibold tracking-wider">Optional</span>
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-semibold text-slate-800 text-xs uppercase tracking-wide">Update Security Password</h4>
+              <span class="text-[10px] text-slate-400 uppercase font-medium tracking-wider">Optional</span>
             </div>
             <div class="relative group">
-              <Lock class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+              <Lock class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
               <input 
                 v-model="editForm.password"
                 type="password" 
                 class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all shadow-sm"
-                placeholder="Enter new password (min 8 chars)"
+                placeholder="New Password (min. 8 characters)"
               />
             </div>
-            <p class="text-[10px] text-slate-400 mt-2 ml-1 italic font-semibold">Leave blank to keep your current password</p>
+            <p class="text-[10px] text-slate-400 mt-1.5 ml-1 italic font-normal">Leave empty if you do not wish to change your password</p>
           </div>
 
+          <!-- Action Buttons -->
           <div class="pt-4 flex gap-3">
             <button 
               type="button"
               @click="showEditModal = false"
-              class="flex-1 py-2.5 border border-slate-200 text-slate-500 font-semibold rounded-xl hover:bg-slate-50 transition-all text-xs active:scale-98"
+              class="flex-1 py-2.5 border border-slate-200 text-slate-600 font-medium rounded-xl hover:bg-slate-50 transition-all text-xs cursor-pointer active:scale-98"
             >
               Cancel
             </button>
             <button 
               type="submit"
               :disabled="updating"
-              class="flex-[2] py-2.5 bg-blue-600 hover:opacity-95 text-white font-semibold rounded-xl shadow-md shadow-blue-500/10 active:scale-98 transition-all disabled:opacity-50 text-xs flex items-center justify-center space-x-1.5"
+              class="flex-[2] py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-sm shadow-blue-500/20 active:scale-98 transition-all disabled:opacity-50 text-xs flex items-center justify-center space-x-2 cursor-pointer"
             >
-              <span v-if="!updating">Save Changes</span>
+              <span v-if="!updating">Save Profile Changes</span>
               <Loader2 v-else class="w-4 h-4 animate-spin" />
             </button>
           </div>
@@ -166,63 +233,144 @@
       </div>
     </div>
 
+    <!-- Main Profile Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Left Column: Subscription -->
+      <!-- Left 2 Columns: Personal Details & Subscription Plan -->
       <div class="lg:col-span-2 space-y-6">
-        <!-- Subscription Card -->
-        <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-          <div class="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
-          
-          <div class="relative z-10">
-            <div class="flex items-center justify-between mb-8">
-              <Zap class="w-7 h-7 text-yellow-400 fill-current" />
-              <span class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-semibold uppercase tracking-wider border border-white/10">
-                {{ user?.active_subscription ? 'Active Plan' : 'No Active Plan' }}
-              </span>
+        <!-- Personal & Academic Details Card -->
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+          <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+            <span>Account Details</span>
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Full Name -->
+            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-100">
+              <span class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Full Name</span>
+              <span class="text-sm font-semibold text-slate-800 block truncate">{{ user?.name || 'N/A' }}</span>
             </div>
-            
-            <h3 class="text-xl font-semibold mb-1">{{ user?.active_subscription?.subscription_plan?.name || 'Basic Access' }}</h3>
-            <p class="text-white/60 text-xs font-semibold mb-6">
-              {{ user?.active_subscription ? `Valid until ${formatDate(user.active_subscription.expires_at)}` : 'Subscribe to unlock premium features' }}
-            </p>
-            
-            <div v-if="user?.active_subscription" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
-              <div class="flex justify-between text-xs border-b border-white/10 pb-2">
-                <span class="text-white/60 font-semibold">Book Reservations</span>
-                <span class="font-bold">{{ user.active_subscription.subscription_plan?.book_reservations_limit === -1 || !user.active_subscription.subscription_plan?.book_reservations_limit ? 'Unlimited' : user.active_subscription.subscription_plan?.book_reservations_limit }}</span>
-              </div>
-              <div class="flex justify-between text-xs border-b border-white/10 pb-2">
-                <span class="text-white/60 font-semibold">Daily Seat Bookings</span>
-                <span class="font-bold">{{ user.active_subscription.subscription_plan?.daily_seat_bookings_limit === -1 || !user.active_subscription.subscription_plan?.daily_seat_bookings_limit ? 'Unlimited' : user.active_subscription.subscription_plan?.daily_seat_bookings_limit }}</span>
-              </div>
-              <div class="flex justify-between text-xs border-b border-white/10 pb-2">
-                <span class="text-white/60 font-semibold">Library Access</span>
-                <span class="font-bold">{{ user.active_subscription.subscription_plan?.libraries_access_limit === -1 || !user.active_subscription.subscription_plan?.libraries_access_limit ? 'Unlimited' : user.active_subscription.subscription_plan?.libraries_access_limit }}</span>
-              </div>
-              <div class="flex justify-between text-xs border-b border-white/10 pb-2">
-                <span class="text-white/60 font-semibold">Advance Booking</span>
-                <span class="font-bold">
-                  <span v-if="user.active_subscription.subscription_plan?.advance_booking_days === -1">Unlimited</span>
-                  <span v-else-if="user.active_subscription.subscription_plan?.advance_booking_days === 0">Same Day</span>
-                  <span v-else>{{ user.active_subscription.subscription_plan?.advance_booking_days }} Days</span>
+
+            <!-- Gender -->
+            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-100">
+              <span class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Gender</span>
+              <div class="flex items-center space-x-2">
+                <span 
+                  :class="[
+                    'px-2.5 py-0.5 rounded-lg text-xs font-semibold capitalize inline-flex items-center space-x-1.5 border',
+                    userGenderNormalized === 'female'
+                      ? 'bg-pink-50 text-pink-700 border-pink-200'
+                      : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                  ]"
+                >
+                  <Users class="w-3.5 h-3.5" />
+                  <span>{{ formattedGender }}</span>
                 </span>
               </div>
             </div>
 
+            <!-- Email Address -->
+            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-100">
+              <span class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Email Address</span>
+              <span class="text-sm font-semibold text-slate-800 block truncate">{{ user?.email || 'N/A' }}</span>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-100">
+              <span class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Phone Number</span>
+              <span class="text-sm font-semibold text-slate-800 block truncate">{{ user?.phone || 'Not Provided' }}</span>
+            </div>
+
+            <!-- Student CRN -->
+            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-100">
+              <span class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Student CRN Number</span>
+              <span class="text-sm font-semibold text-slate-800 block truncate">{{ user?.crn || 'N/A' }}</span>
+            </div>
+
+            <!-- Academic Level -->
+            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-100">
+              <span class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">CA Academic Level</span>
+              <span class="text-sm font-semibold text-slate-800 block truncate">{{ user?.ca_level || 'PRC' }} Level</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subscription Plan Card (Redesigned Light Mode) -->
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 relative overflow-hidden">
+          <!-- Subtle Top Accent Strip -->
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500"></div>
+
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+              <span>Subscription Status</span>
+            </h3>
+
+            <span 
+              :class="[
+                'px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border',
+                user?.active_subscription 
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                  : 'bg-amber-50 text-amber-700 border-amber-200'
+              ]"
+            >
+              {{ user?.active_subscription ? 'Active Plan' : 'No Active Plan' }}
+            </span>
+          </div>
+
+          <!-- Membership Details Banner Box -->
+          <div class="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border border-blue-100/80 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="text-[10px] font-semibold text-blue-600 uppercase tracking-wider block mb-1">Current Membership Plan</span>
+              <h4 class="text-lg font-bold text-slate-900 leading-tight">
+                {{ user?.active_subscription?.subscription_plan?.name || 'Basic Membership' }}
+              </h4>
+              <p class="text-slate-600 text-xs font-medium mt-1">
+                {{ user?.active_subscription ? `Valid until ${formatDate(user.active_subscription.expires_at)}` : 'Subscribe to a plan to unlock seat & book reservation access' }}
+              </p>
+            </div>
+
             <router-link 
               to="/student/subscription" 
-              class="inline-block px-8 py-3 bg-white text-slate-800 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors shadow-lg text-center active:scale-98 uppercase tracking-wider"
+              class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all shadow-sm shadow-blue-500/20 active:scale-98 flex-shrink-0 cursor-pointer"
             >
-              {{ user?.active_subscription ? 'Manage Plan' : 'View Plans' }}
+              <span>{{ user?.active_subscription ? 'Manage Plan' : 'Explore Plans' }}</span>
             </router-link>
+          </div>
+
+          <!-- Feature Limits Grid -->
+          <div v-if="user?.active_subscription" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center justify-between">
+              <span class="text-xs font-medium text-slate-600">Book Reservations</span>
+              <span class="text-xs font-bold text-slate-900">{{ user.active_subscription.subscription_plan?.book_reservations_limit === -1 || !user.active_subscription.subscription_plan?.book_reservations_limit ? 'Unlimited' : user.active_subscription.subscription_plan?.book_reservations_limit }}</span>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center justify-between">
+              <span class="text-xs font-medium text-slate-600">Daily Seat Bookings</span>
+              <span class="text-xs font-bold text-slate-900">{{ user.active_subscription.subscription_plan?.daily_seat_bookings_limit === -1 || !user.active_subscription.subscription_plan?.daily_seat_bookings_limit ? 'Unlimited' : user.active_subscription.subscription_plan?.daily_seat_bookings_limit }}</span>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center justify-between">
+              <span class="text-xs font-medium text-slate-600">Library Access</span>
+              <span class="text-xs font-bold text-slate-900">{{ user.active_subscription.subscription_plan?.libraries_access_limit === -1 || !user.active_subscription.subscription_plan?.libraries_access_limit ? 'Unlimited' : user.active_subscription.subscription_plan?.libraries_access_limit }}</span>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center justify-between">
+              <span class="text-xs font-medium text-slate-600">Advance Booking</span>
+              <span class="text-xs font-bold text-slate-900">
+                <span v-if="user.active_subscription.subscription_plan?.advance_booking_days === -1">Unlimited</span>
+                <span v-else-if="user.active_subscription.subscription_plan?.advance_booking_days === 0">Same Day</span>
+                <span v-else>{{ user.active_subscription.subscription_plan?.advance_booking_days }} Days</span>
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Right Column: Active Sessions -->
+      <!-- Right 1 Column: Security & Active Sessions -->
       <div class="lg:col-span-1 space-y-6">
-        <!-- Session Management Section -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <!-- Active Devices & Sessions Section -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
           <SessionManagement />
         </div>
       </div>
@@ -231,12 +379,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useAuth } from '@/shared/composables/useAuth';
 import SessionManagement from '@/shared/components/Profile/SessionManagement.vue';
 import { 
   Camera, Mail, Phone, User as UserIcon, Lock, Settings, 
-  X, Loader2, Zap
+  X, Loader2, ShieldCheck, Building2, Users
 } from 'lucide-vue-next';
 import { studentAPI } from '@/shared/services/api';
 import { useSwal } from '@/shared/composables/useSwal';
@@ -253,7 +401,20 @@ const editForm = ref({
   name: '',
   email: '',
   phone: '',
+  gender: 'male',
   password: ''
+});
+
+// Normalized Gender calculation
+const userGenderNormalized = computed(() => {
+  const g = user.value?.gender ? String(user.value.gender).toLowerCase().trim() : '';
+  if (g === 'female') return 'female';
+  if (g === 'male') return 'male';
+  return 'male';
+});
+
+const formattedGender = computed(() => {
+  return userGenderNormalized.value === 'female' ? 'Female' : 'Male';
 });
 
 const openEditModal = () => {
@@ -262,6 +423,7 @@ const openEditModal = () => {
       name: user.value.name,
       email: user.value.email,
       phone: user.value.phone || '',
+      gender: userGenderNormalized.value,
       password: ''
     };
     showEditModal.value = true;
@@ -280,7 +442,7 @@ const handleUpdateProfile = async () => {
     await studentAPI.updateProfile(updateData);
     await checkAuth(); // Refresh global user state
     showEditModal.value = false;
-    showSuccess('Profile Updated', 'Your profile information has been successfully updated.');
+    showSuccess('Profile Updated', 'Your profile information and gender have been successfully updated.');
   } catch (error: any) {
     console.error('Failed to update profile:', error);
     const message = error.response?.data?.message || 'Failed to update profile';
@@ -344,26 +506,6 @@ const formatDate = (date: string | undefined) => {
 
 .font-outfit {
   font-family: 'Outfit', sans-serif;
-}
-
-.hover-lift {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.hover-lift:hover {
-  transform: translateY(-4px);
-}
-
-.active\:scale-98:active {
-  transform: scale(0.98);
-}
-.scale-102 {
-  transform: scale(1.02);
-}
-.text-slate-600 {
-  color: #475569;
-}
-.text-slate-655 {
-  color: #475569;
 }
 
 @keyframes fadeIn {

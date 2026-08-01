@@ -1,73 +1,87 @@
 <template>
-  <div class="space-y-6">
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-      <div class="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
-        <div>
-          <h3 class="text-sm font-bold text-gray-900">Active Sessions</h3>
-          <p class="text-xs text-gray-500 mt-0.5">Manage the devices where you're currently logged in</p>
-        </div>
-        <button 
-          @click="fetchSessions" 
-          :disabled="loading"
-          class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all disabled:opacity-50"
-        >
-          <RefreshCw :class="['w-4 h-4', loading ? 'animate-spin' : '']" />
-        </button>
-      </div>
+  <div class="font-outfit text-left">
+    <!-- Header Bar -->
+    <div class="p-6 pb-2 flex items-center justify-between">
+      <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+        <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+        <span>Active Sessions</span>
+      </h3>
+      <button 
+        @click="fetchSessions" 
+        :disabled="loading"
+        class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+        title="Refresh sessions"
+      >
+        <RefreshCw :class="['w-4 h-4', loading ? 'animate-spin' : '']" />
+      </button>
+    </div>
 
-      <div class="divide-y divide-gray-50 max-h-[400px] overflow-y-auto">
-        <div v-for="session in groupedSessions" :key="session.ip_address + session.user_agent" class="p-4 sm:p-6 transition-colors hover:bg-gray-50/50">
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex items-start space-x-3 sm:space-x-4">
-              <div :class="[
-                'p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-sm hidden sm:block',
-                session.is_current ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-50 text-gray-400'
-              ]">
-                <Monitor v-if="isDesktop(session.user_agent)" class="w-5 h-5 sm:w-6 sm:h-6" />
-                <Smartphone v-else class="w-5 h-5 sm:w-6 sm:h-6" />
+    <!-- Active Device List -->
+    <div class="divide-y divide-slate-100 max-h-[380px] overflow-y-auto">
+      <div 
+        v-for="session in groupedSessions" 
+        :key="session.ip_address + session.user_agent" 
+        class="p-4 sm:p-5 transition-colors hover:bg-slate-50/50"
+      >
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center space-x-3.5 min-w-0">
+            <div 
+              :class="[
+                'p-2.5 rounded-2xl shadow-sm flex-shrink-0 border',
+                session.is_current ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-100 text-slate-400 border-slate-200/60'
+              ]"
+            >
+              <Monitor v-if="isDesktop(session.user_agent)" class="w-5 h-5" />
+              <Smartphone v-else class="w-5 h-5" />
+            </div>
+            
+            <div class="space-y-0.5 min-w-0">
+              <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                <span class="text-xs font-semibold text-slate-800 truncate">{{ getDeviceName(session.user_agent) }}</span>
+                <span 
+                  v-if="session.is_current" 
+                  class="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold uppercase tracking-wider rounded-full"
+                >
+                  Current
+                </span>
               </div>
-              <div class="space-y-1 overflow-hidden">
-                <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-                  <span class="text-xs sm:text-sm font-bold text-gray-900 truncate">{{ getDeviceName(session.user_agent) }}</span>
-                  <span v-if="session.is_current" class="px-2 py-0.5 bg-green-100 text-green-700 text-[8px] sm:text-[10px] font-black uppercase tracking-wider rounded-full">
-                    Current
-                  </span>
-                </div>
-                <div class="flex flex-col space-y-0.5">
-                  <span class="text-[10px] sm:text-xs text-gray-500 font-medium flex items-center">
-                    <Globe class="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1.5 opacity-60" />
-                    {{ session.ip_address === '127.0.0.1' || session.ip_address === '::1' ? 'Local System' : (session.ip_address || 'Current IP') }}
-                  </span>
-                  <span class="text-[9px] sm:text-[11px] text-gray-400 flex items-center">
-                    <Clock class="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1.5 opacity-60" />
-                    {{ formatDate(session.last_active) }}
-                  </span>
-                </div>
+
+              <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-3 text-[11px] text-slate-500 font-medium gap-y-0.5">
+                <span class="flex items-center">
+                  <Globe class="w-3 h-3 mr-1 text-slate-400" />
+                  {{ session.ip_address === '127.0.0.1' || session.ip_address === '::1' ? 'Local System' : (session.ip_address || 'Current IP') }}
+                </span>
+                <span class="flex items-center">
+                  <Clock class="w-3 h-3 mr-1 text-slate-400" />
+                  {{ formatDate(session.last_active) }}
+                </span>
               </div>
             </div>
-
-            <button
-              v-if="!session.is_current"
-              @click="revokeSession(session)"
-              :disabled="revoking === (session.ip_address + session.user_agent)"
-              class="shrink-0 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-all border border-transparent hover:border-red-100 disabled:opacity-50 flex items-center space-x-1"
-            >
-              <LogOut class="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-              <span class="hidden sm:inline">{{ revoking === (session.ip_address + session.user_agent) ? 'Logging out...' : 'Log out' }}</span>
-            </button>
           </div>
+
+          <!-- Individual Revoke Button -->
+          <button
+            v-if="!session.is_current"
+            @click="revokeSession(session)"
+            :disabled="revoking === (session.ip_address + session.user_agent)"
+            class="flex-shrink-0 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:border-rose-200 rounded-xl transition-all border border-rose-100 disabled:opacity-50 flex items-center space-x-1.5 cursor-pointer"
+          >
+            <LogOut class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ revoking === (session.ip_address + session.user_agent) ? 'Logging out...' : 'Log out' }}</span>
+          </button>
         </div>
       </div>
+    </div>
 
-      <div class="p-6 bg-gray-50/30 border-t border-gray-100">
-        <button
-          @click="logoutAll"
-          class="w-full py-3 px-4 bg-white border border-red-100 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl text-sm font-bold transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow-md"
-        >
-          <ShieldAlert class="w-4 h-4" />
-          <span>Logout from All Other Devices</span>
-        </button>
-      </div>
+    <!-- Bottom Global Action Footer -->
+    <div class="p-5 bg-slate-50/40 border-t border-slate-100">
+      <button
+        @click="logoutAll"
+        class="w-full py-2.5 px-4 bg-rose-50/70 border border-rose-200 text-rose-700 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-2 shadow-sm active:scale-98 cursor-pointer"
+      >
+        <ShieldAlert class="w-4 h-4" />
+        <span>Logout from All Other Devices</span>
+      </button>
     </div>
   </div>
 </template>
@@ -89,16 +103,14 @@ import { useSwal } from '@/shared/composables/useSwal';
 
 const { showSuccess, showError, showConfirm } = useSwal();
 const sessions = ref<any[]>([]);
+
 const groupedSessions = computed(() => {
   const groups: any = {};
   
   sessions.value.forEach(session => {
-    // Create a unique key for the device (IP + UserAgent)
-    // Normalize IP for grouping (::1 is same as 127.0.0.1)
     let ip = (session.ip_address || '').trim();
     if (ip === '::1' || ip === 'localhost') ip = '127.0.0.1';
     
-    // Normalize UserAgent (some browsers might have slight variations in spacing)
     const ua = (session.user_agent || '').trim();
     const key = `${ip}-${ua}`;
     
@@ -110,11 +122,8 @@ const groupedSessions = computed(() => {
         last_active: session.last_used_at || session.created_at
       };
     } else {
-      // Add this session ID to the group
       groups[key].session_ids.push(session.id);
-      // If any session in the group is current, the whole group reflects current device
       if (session.is_current) groups[key].is_current = true;
-      // Keep track of the most recent activity
       const currentActive = session.last_used_at || session.created_at;
       if (new Date(currentActive) > new Date(groups[key].last_active)) {
         groups[key].last_active = currentActive;
@@ -150,7 +159,6 @@ const revokeSession = async (group: any) => {
   if (confirmed) {
     revoking.value = group.ip_address + group.user_agent;
     try {
-      // Revoke all sessions in this group
       await Promise.all(group.session_ids.map((id: number) => authAPI.revokeSession(id)));
       showSuccess('Success', 'Device logged out successfully');
       await fetchSessions();
@@ -172,9 +180,6 @@ const logoutAll = async () => {
   if (confirmed) {
     try {
       await authAPI.logoutAll();
-      // Since logoutAll on backend might revoke ALL tokens including current,
-      // we check the backend implementation. My implementation revokes ALL.
-      // Wait, let's check AuthController logoutAll.
       window.location.href = '/login';
     } catch (error) {
       showError('Error', 'Failed to log out all devices');

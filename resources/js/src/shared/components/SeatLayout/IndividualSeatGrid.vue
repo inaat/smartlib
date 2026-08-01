@@ -1,10 +1,10 @@
 <template>
-  <div class="relative w-full overflow-auto bg-slate-50/40 p-6 rounded-3xl border border-slate-100/80 min-h-[500px]">
+  <div class="relative w-full overflow-auto">
     <!-- Visual Floor Plan Canvas -->
     <div 
       v-if="useCanvas"
       class="relative mx-auto bg-white rounded-3xl border border-slate-150 shadow-lg transition-all overflow-visible"
-      :style="{ width: canvasWidth + 'px', height: canvasHeight + 'px' }"
+      :style="{ width: canvasWidth + 'px', height: computedCanvasHeight + 'px' }"
       @dragover.prevent
       @drop="onDrop($event)"
     >
@@ -27,18 +27,12 @@
           isDesigner ? 'cursor-move active:scale-95' : 'cursor-pointer hover:scale-110 active:scale-95',
         ]"
       >
-        <!-- Seat SVG rendering status -->
+        <!-- Seat SVG rendering status with integrated white pill number -->
         <SeatSvg 
           :status="seat.status" 
+          :seat-number="seat.seat_number"
           :highlighted="selectedSeat?.id === seat.id"
         />
-
-        <!-- Seat Number Overlay Badge -->
-        <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white/95 border border-slate-200/80 px-2 py-0.5 rounded shadow-sm scale-90 z-20 pointer-events-none">
-          <span class="block text-[9.5px] font-bold text-slate-800 leading-none">
-            {{ getSimpleSeatNumber(seat.seat_number) }}
-          </span>
-        </div>
       </div>
     </div>
 
@@ -56,7 +50,7 @@
           <span>{{ group.name }} Section</span>
           <span class="text-[10px] font-bold text-slate-350">({{ group.seats.length }} seats)</span>
         </h3>
-        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 justify-items-center">
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 justify-items-center p-2 pt-3 pb-2">
           <div
             v-for="seat in group.seats"
             :key="seat.id"
@@ -67,7 +61,7 @@
               'relative w-20 h-24 rounded-2xl transition-all duration-300 flex flex-col items-center justify-between p-2 cursor-pointer shadow-sm select-none border border-slate-100',
               hoveredSeatId === seat.id ? 'z-50 shadow-lg' : 'z-10',
               selectedSeat?.id === seat.id
-                ? 'bg-blue-50/50 border-blue-600 text-blue-600 shadow-md ring-2 ring-blue-500'
+                ? 'bg-blue-50/70 border-2 border-blue-600 text-blue-700 shadow-md ring-2 ring-inset ring-blue-500/50'
                 : getStatusBgClass(seat.status) + ' hover:shadow-md hover:-translate-y-0.5'
             ]"
           >
@@ -99,7 +93,7 @@
       <!-- Flat Grid (Single Section view) -->
       <div 
         v-else 
-        class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 justify-items-center"
+        class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 justify-items-center p-2 pt-3 pb-2"
       >
         <div
           v-for="seat in sortedSeats"
@@ -111,7 +105,7 @@
             'relative w-20 h-24 rounded-2xl transition-all duration-300 flex flex-col items-center justify-between p-2 cursor-pointer shadow-sm select-none border border-slate-100',
             hoveredSeatId === seat.id ? 'z-50 shadow-lg' : 'z-10',
             selectedSeat?.id === seat.id
-              ? 'bg-blue-50/50 border-blue-600 text-blue-700 shadow-md ring-2 ring-blue-500'
+              ? 'bg-blue-50/70 border-2 border-blue-600 text-blue-700 shadow-md ring-2 ring-inset ring-blue-500/50'
               : getStatusBgClass(seat.status) + ' hover:shadow-md hover:-translate-y-0.5'
           ]"
         >
@@ -187,24 +181,34 @@ const hoveredSeat = ref<Seat | null>(null);
 const hoveredAnchorRect = ref<{ top: number; left: number; width: number; height: number } | null>(null);
 const draggedSeat = ref<Seat | null>(null);
 const dragOffset = ref({ x: 0, y: 0 });
+let hoverTimer: any = null;
 
 // Fallback seat object to avoid template errors when hoveredSeat is null
 const fallbackSeat = { id: 0, seat_number: '', status: 'available', has_computer: false, near_window: false, socket_count: 0, seat_type: 'open' } as any;
 
 const onSeatHover = (event: MouseEvent, seat: Seat) => {
-  hoveredSeatId.value = seat.id;
-  hoveredSeat.value = seat;
+  if (hoverTimer) clearTimeout(hoverTimer);
   const el = (event.currentTarget as HTMLElement);
   const rect = el.getBoundingClientRect();
-  hoveredAnchorRect.value = {
-    top: rect.top,
-    left: rect.left,
-    width: rect.width,
-    height: rect.height
-  };
+
+  // 1.5 second (1500ms) hover delay timer as requested by user
+  hoverTimer = setTimeout(() => {
+    hoveredSeatId.value = seat.id;
+    hoveredSeat.value = seat;
+    hoveredAnchorRect.value = {
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height
+    };
+  }, 1500);
 };
 
 const onSeatLeave = () => {
+  if (hoverTimer) {
+    clearTimeout(hoverTimer);
+    hoverTimer = null;
+  }
   hoveredSeatId.value = null;
   hoveredSeat.value = null;
   hoveredAnchorRect.value = null;
@@ -311,5 +315,21 @@ const naturalCompare = (a: string, b: string) => {
 
 const sortedSeats = computed(() => {
   return [...props.seats].sort((a, b) => naturalCompare(a.seat_number, b.seat_number));
+});
+
+const computedCanvasHeight = computed(() => {
+  if (!sortedSeats.value || sortedSeats.value.length === 0) {
+    return 100;
+  }
+  let maxY = 0;
+  sortedSeats.value.forEach((seat, index) => {
+    const y = (seat.position_y !== null && seat.position_y !== undefined && seat.position_y !== 0)
+      ? seat.position_y
+      : (50 + Math.floor(index / 10) * 95);
+    if (y > maxY) {
+      maxY = y;
+    }
+  });
+  return Math.max(120, maxY + 110);
 });
 </script>
