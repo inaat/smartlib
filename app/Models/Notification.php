@@ -32,6 +32,14 @@ class Notification extends Model
 
     public static function send($userId, $type, $title, $message, $related = null)
     {
+        if ($type === 'queue' && !\App\Models\SystemSetting::get('notify_on_queue_turn', true)) {
+            return null;
+        }
+
+        if (!\App\Models\SystemSetting::get('enable_email_notifications', true) && in_array($type, ['email', 'system_email'])) {
+            return null;
+        }
+
         return self::create([
             'user_id' => $userId,
             'type' => $type,

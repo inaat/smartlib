@@ -85,7 +85,9 @@
       <!-- Choose Your Plan Header -->
       <div class="text-left mt-10 mb-8">
         <h2 class="text-2xl font-bold text-slate-800 tracking-tight font-outfit">Choose Your Plan</h2>
-        <!-- All Plans Grid -->
+      </div>
+
+      <!-- All Plans Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch mb-12">
         <div 
           v-for="plan in plans" 
@@ -195,12 +197,12 @@
             <button
               v-else
               @click="subscribe(plan)"
-              :disabled="subscribingPlanId !== null || !!user?.pending_order"
+              :disabled="subscribingPlanId !== null || !!(user as any)?.pending_order"
               :class="[
                 'w-full py-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 border shadow-sm duration-200 cursor-pointer',
-                user?.pending_order?.plan_id === plan.id
+                (user as any)?.pending_order?.plan_id === plan.id
                   ? 'bg-amber-50 text-amber-700 border-amber-300 cursor-not-allowed shadow-none'
-                  : (!!user?.pending_order
+                  : (!!(user as any)?.pending_order
                       ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed shadow-none'
                       : (plan.name.toLowerCase().includes('premium') || plan.name.toLowerCase().includes('pro')
                           ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/15 border-transparent'
@@ -211,7 +213,7 @@
                 <Loader2 class="w-3.5 h-3.5 animate-spin" />
                 <span>Processing...</span>
               </template>
-              <template v-else-if="user?.pending_order?.plan_id === plan.id">
+              <template v-else-if="(user as any)?.pending_order?.plan_id === plan.id">
                 <Clock class="w-3.5 h-3.5 text-amber-500" />
                 <span>Pending Approval</span>
               </template>
@@ -221,46 +223,46 @@
             </button>
           </div>
         </div>
-      </div>      </div>
+      </div>
 
       <!-- Billing & Subscription History -->
-      <div class="mt-16 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm text-left font-outfit">
+      <div class="mt-10 sm:mt-16 bg-white rounded-3xl p-4 sm:p-8 border border-slate-200/80 shadow-sm text-left font-outfit">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-5">
           <div class="flex items-center space-x-3">
             <div class="w-10 h-10 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center text-blue-600 flex-shrink-0">
               <Receipt class="w-5 h-5" />
             </div>
             <div>
-              <h3 class="text-lg font-bold text-slate-800 tracking-tight leading-snug">Billing & Subscription History</h3>
-              <p class="text-xs text-slate-400 font-medium mt-0.5">Track your subscription purchase requests, payment receipts, and membership history.</p>
+              <h3 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight leading-snug">Billing & Subscription History</h3>
+              <p class="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">Track your subscription purchase requests, payment receipts, and membership history.</p>
             </div>
           </div>
 
-          <!-- History Tabs -->
-          <div class="flex items-center bg-slate-100 p-1 rounded-xl w-fit">
+          <!-- Responsive Segmented History Tabs -->
+          <div class="grid grid-cols-2 sm:flex sm:items-center bg-slate-100 p-1 rounded-xl w-full sm:w-fit gap-1">
             <button
               @click="activeHistoryTab = 'orders'"
               :class="[
-                'px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center space-x-1.5',
+                'px-3 sm:px-4 py-2 sm:py-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center space-x-1.5',
                 activeHistoryTab === 'orders' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'
               ]"
             >
-              <CreditCard class="w-3.5 h-3.5" />
-              <span>Orders & Receipts</span>
-              <span v-if="orders.length > 0" class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-bold">
+              <CreditCard class="w-3.5 h-3.5 flex-shrink-0" />
+              <span class="truncate">Orders</span>
+              <span v-if="orders.length > 0" class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-bold flex-shrink-0">
                 {{ orders.length }}
               </span>
             </button>
             <button
               @click="activeHistoryTab = 'subscriptions'"
               :class="[
-                'px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center space-x-1.5',
+                'px-3 sm:px-4 py-2 sm:py-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center space-x-1.5',
                 activeHistoryTab === 'subscriptions' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'
               ]"
             >
-              <Calendar class="w-3.5 h-3.5" />
-              <span>Membership Cycles</span>
-              <span v-if="subscriptionsHistory.length > 0" class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-bold">
+              <Calendar class="w-3.5 h-3.5 flex-shrink-0" />
+              <span class="truncate">History</span>
+              <span v-if="subscriptionsHistory.length > 0" class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-bold flex-shrink-0">
                 {{ subscriptionsHistory.length }}
               </span>
             </button>
@@ -282,7 +284,69 @@
           </div>
 
           <div v-else>
-            <div class="overflow-x-auto">
+            <!-- Mobile Orders Cards View (< md) -->
+            <div class="block md:hidden space-y-3 bg-slate-50/60 p-3.5 rounded-2xl border border-slate-100 mb-4">
+              <div 
+                v-for="order in paginatedOrders" 
+                :key="'mobile-order-' + order.id" 
+                class="bg-white rounded-xl border border-slate-200/90 p-3.5 shadow-xs hover:border-slate-300 transition-all flex flex-col gap-2.5 text-left"
+              >
+                <!-- Top Header: Plan Name + Status Pill -->
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center space-x-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                      <CreditCard class="w-4 h-4" />
+                    </div>
+                    <span class="text-xs font-bold text-slate-800 truncate">{{ order.plan?.name || order.notes || 'Subscription Request' }}</span>
+                  </div>
+                  <span
+                    :class="[
+                      'px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider inline-flex items-center gap-1 flex-shrink-0 shadow-2xs',
+                      order.status === 'completed' || order.status === 'approved'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : order.status === 'pending'
+                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200'
+                    ]"
+                  >
+                    <span
+                      :class="[
+                        'w-1.5 h-1.5 rounded-full',
+                        order.status === 'completed' || order.status === 'approved'
+                          ? 'bg-emerald-500'
+                          : order.status === 'pending'
+                          ? 'bg-amber-500 animate-pulse'
+                          : 'bg-rose-500'
+                      ]"
+                    ></span>
+                    {{ order.status === 'completed' || order.status === 'approved' ? 'Approved' : (order.status === 'pending' ? 'Pending' : 'Rejected') }}
+                  </span>
+                </div>
+
+                <!-- Details Grid: Amount & Payment Method -->
+                <div class="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-slate-100">
+                  <div>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Amount</span>
+                    <span class="font-bold text-slate-900 text-xs">PKR {{ formatPrice(order.amount) }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Payment Method</span>
+                    <span class="font-semibold text-slate-700 capitalize text-xs">
+                      {{ order.payment_method === 'manual' ? 'Manual / Offline' : order.payment_method }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Bottom Footer: Ref & Timestamp -->
+                <div class="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-100/60 font-semibold uppercase tracking-wider">
+                  <span>Ref: <span class="font-mono text-slate-600 lowercase">{{ order.transaction_id || '#' + order.id }}</span></span>
+                  <span>{{ formatDateTime(order.created_at) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Desktop Table View (>= md) -->
+            <div class="hidden md:block overflow-x-auto">
               <table class="w-full text-left border-collapse min-w-[640px]">
                 <thead>
                   <tr class="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -391,7 +455,65 @@
           </div>
 
           <div v-else>
-            <div class="overflow-x-auto">
+            <!-- Mobile Subscriptions Cards View (< md) -->
+            <div class="block md:hidden space-y-3 bg-slate-50/60 p-3.5 rounded-2xl border border-slate-100 mb-4">
+              <div 
+                v-for="sub in paginatedSubscriptions" 
+                :key="'mobile-sub-' + sub.id" 
+                class="bg-white rounded-xl border border-slate-200/90 p-3.5 shadow-xs hover:border-slate-300 transition-all flex flex-col gap-2.5 text-left"
+              >
+                <!-- Top Header: Plan Name + Status Pill -->
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center space-x-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+                      <Calendar class="w-4 h-4" />
+                    </div>
+                    <span class="text-xs font-bold text-slate-800 truncate">{{ sub.subscription_plan?.name || 'Membership Plan' }}</span>
+                  </div>
+                  <span
+                    :class="[
+                      'px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider inline-flex items-center gap-1 flex-shrink-0 shadow-2xs',
+                      sub.status === 'active' && new Date(sub.expires_at) >= new Date()
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : sub.status === 'cancelled'
+                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                        : 'bg-slate-100 text-slate-600 border border-slate-200'
+                    ]"
+                  >
+                    <span
+                      :class="[
+                        'w-1.5 h-1.5 rounded-full',
+                        sub.status === 'active' && new Date(sub.expires_at) >= new Date()
+                          ? 'bg-emerald-500 animate-pulse'
+                          : sub.status === 'cancelled'
+                          ? 'bg-rose-500'
+                          : 'bg-slate-400'
+                      ]"
+                    ></span>
+                    {{ sub.status === 'active' && new Date(sub.expires_at) >= new Date() ? 'Active' : (sub.status === 'cancelled' ? 'Cancelled' : 'Expired') }}
+                  </span>
+                </div>
+
+                <!-- Cycle Dates & Amount Grid -->
+                <div class="grid grid-cols-3 gap-2 text-[11px] pt-2 border-t border-slate-100 text-center sm:text-left">
+                  <div class="bg-emerald-50/50 p-2 rounded-xl border border-emerald-100/60">
+                    <span class="text-[9px] font-bold text-emerald-700 uppercase tracking-wider block">Started</span>
+                    <span class="font-bold text-emerald-800 text-[10px]">{{ formatDate(sub.started_at) }}</span>
+                  </div>
+                  <div class="bg-rose-50/50 p-2 rounded-xl border border-rose-100/60">
+                    <span class="text-[9px] font-bold text-rose-700 uppercase tracking-wider block">Expires</span>
+                    <span class="font-bold text-rose-800 text-[10px]">{{ formatDate(sub.expires_at) }}</span>
+                  </div>
+                  <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Paid</span>
+                    <span class="font-bold text-slate-800 text-[10px]">PKR {{ formatPrice(sub.amount_paid) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Desktop Table View (>= md) -->
+            <div class="hidden md:block overflow-x-auto">
               <table class="w-full text-left border-collapse min-w-[640px]">
                 <thead>
                   <tr class="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -500,11 +622,8 @@ import {
   Calendar, 
   CreditCard, 
   AlertTriangle, 
-  CheckCircle, 
   Loader2, 
   Clock, 
-  RefreshCw, 
-  Zap,
   Check,
   Receipt,
   ChevronLeft,
@@ -512,7 +631,6 @@ import {
 } from 'lucide-vue-next';
 
 const { user, checkAuth, isPlanExpired } = useAuth();
-const router = useRouter();
 
 const plans = ref<any[]>([]);
 const isLoading = ref(true);

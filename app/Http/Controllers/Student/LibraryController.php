@@ -83,7 +83,7 @@ class LibraryController extends Controller
                 'currentOccupancy' => $library->currentOccupancy ?? 0,
                 'facilities'      => $library->facilities->pluck('name')->toArray(),
                 'operating_days'  => $formattedHours,
-                'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+                'seat_layout_mode' => $library->seat_layout_mode ?? 'individual',
                 'table_capacity'   => $library->table_capacity ?? 4,
             ];
         });
@@ -145,7 +145,7 @@ class LibraryController extends Controller
                 'currentOccupancy' => $library->currentOccupancy ?? 0,
                 'facilities' => $library->facilities->pluck('name')->toArray(),
                 'operating_days' => $formattedHours,
-                'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+                'seat_layout_mode' => $library->seat_layout_mode ?? 'individual',
                 'table_capacity' => $library->table_capacity ?? 4,
                 'average_rating' => $library->average_rating,
             ];
@@ -213,7 +213,7 @@ class LibraryController extends Controller
                     'text' => $rule->rule_text
                 ];
             }),
-            'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+            'seat_layout_mode' => $library->seat_layout_mode ?? 'individual',
             'table_capacity' => $library->table_capacity ?? 4,
             'average_rating' => $library->average_rating,
         ];
@@ -249,20 +249,45 @@ class LibraryController extends Controller
             ->orderBy('seat_number')
             ->get();
 
-        // Add remaining time for occupied/booked seats
-        $seats->transform(function($seat) {
-            if ($seat->status !== 'available' && $seat->status !== 'maintenance') {
-                $lastBooking = \App\Models\SeatBooking::where('seat_id', $seat->id)
+        // Add dynamic real-time seat status for student view
+        $now = now();
+        $seats->transform(function($seat) use ($now) {
+            if ($seat->status !== 'maintenance') {
+                $currentBooking = \App\Models\SeatBooking::where('seat_id', $seat->id)
+                    ->whereNull('check_out_time')
                     ->whereIn('status', ['booked', 'checked_in'])
-                    ->latest('scheduled_end_time')
+                    ->latest('id')
                     ->first();
                 
-                if ($lastBooking) {
-                    $remaining = (int) now()->diffInMinutes($lastBooking->scheduled_end_time, false);
-                    $seat->remaining_minutes = $remaining;
-                    if ($remaining > 0 && $remaining <= 10 && $seat->status === 'occupied') {
-                        $seat->status = 'free_soon';
+                if ($currentBooking) {
+                    $endTime = $currentBooking->extended_until ?? $currentBooking->scheduled_end_time;
+
+                    if ($currentBooking->check_in_time || $currentBooking->status === 'checked_in') {
+                        if ($endTime && $now->gt($endTime)) {
+                            $overstayMinutes = (int) $now->diffInMinutes($endTime, true);
+                            if ($overstayMinutes > 30) {
+                                $seat->status = 'serious_overstay';
+                            } else {
+                                $seat->status = 'overstay';
+                            }
+                            $seat->remaining_minutes = -$overstayMinutes;
+                        } else {
+                            $remaining = $endTime ? (int) $now->diffInMinutes($endTime, false) : 0;
+                            $seat->remaining_minutes = $remaining;
+                            if ($remaining > 0 && $remaining <= 10) {
+                                $seat->status = 'free_soon';
+                            } else {
+                                $seat->status = 'occupied';
+                            }
+                        }
+                    } else if ($currentBooking->status === 'booked') {
+                        $seat->status = 'reserved';
+                        if ($endTime) {
+                            $seat->remaining_minutes = (int) $now->diffInMinutes($endTime, false);
+                        }
                     }
+                } else {
+                    $seat->status = 'available';
                 }
             }
             return $seat;
@@ -287,7 +312,7 @@ class LibraryController extends Controller
             'library' => [
                 'id' => $library->id,
                 'name' => $library->name,
-                'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+                'seat_layout_mode' => $library->seat_layout_mode ?? 'individual',
                 'table_capacity' => $library->table_capacity ?? 4,
                 'operating_days' => $formattedHours,
             ],

@@ -27,6 +27,7 @@ export interface User {
   loyaltyPoints: number;
   subscriptionPlan: string; // Dynamic from activeSubscription relationship
   active_subscription?: UserSubscription;
+  pending_order?: any;
   loyalty_transactions?: LoyaltyTransaction[];
 }
 
@@ -83,7 +84,8 @@ export interface Seat {
   qr_code?: string;
   next_available_time?: string;
   current_booking_id?: string;
-  floor: number;
+  current_booking?: any;
+  floor?: number | any;
   floor_id?: number;
   section_id?: number;
   subsection_id?: number | null;

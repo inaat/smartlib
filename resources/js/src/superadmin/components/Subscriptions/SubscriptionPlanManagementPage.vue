@@ -314,8 +314,7 @@ import {
   RefreshCw, 
   Edit2, 
   Trash2,
-  CheckCircle2,
-  AlertCircle
+  CheckCircle2
 } from 'lucide-vue-next';
 import { adminAPI } from '@/shared/services/api';
 

@@ -19,23 +19,29 @@
     </div>
 
     <template v-else>
-      <!-- Stats Grid -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 font-outfit">
+      <!-- Stats Grid (Responsive & Mobile-Optimized) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 font-outfit">
         <div 
           v-for="stat in statsCards" 
           :key="stat.label" 
-          class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 hover-lift group text-left"
+          class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 hover-lift group text-left flex flex-col justify-between"
         >
-          <div class="flex items-center space-x-3.5">
+          <div class="flex items-center justify-between gap-1.5 mb-1.5">
+            <!-- Label -->
+            <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-snug">
+              {{ stat.label }}
+            </span>
             <!-- Icon -->
-            <div :class="['p-2.5 rounded-xl border flex-shrink-0', stat.bgClass]">
-              <component :is="stat.icon" :class="['w-5 h-5', stat.iconClass]" />
+            <div :class="['p-1.5 sm:p-2.5 rounded-xl border flex-shrink-0', stat.bgClass]">
+              <component :is="stat.icon" :class="['w-4 h-4 sm:w-5 sm:h-5', stat.iconClass]" />
             </div>
-            <!-- Label & Value -->
-            <div class="min-w-0">
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none truncate">{{ stat.label }}</p>
-              <h3 class="text-3xl font-bold text-slate-800 mt-1.5 leading-none">{{ stat.value }}</h3>
-            </div>
+          </div>
+
+          <!-- Value -->
+          <div class="mt-auto">
+            <h3 class="text-xl sm:text-2xl md:text-3xl font-bold text-slate-800 leading-tight tracking-tight">
+              {{ stat.value }}
+            </h3>
           </div>
         </div>
       </div>
@@ -112,20 +118,58 @@
         </div>
       </div>
 
-      <!-- Recent Activity Table -->
+      <!-- Recent Activity Container -->
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative font-outfit text-left">
-        <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/30">
+        <div class="px-5 py-4 sm:px-6 sm:py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/30">
           <div class="flex items-center space-x-2.5">
             <div class="p-2 bg-emerald-50/60 border border-emerald-100/50 rounded-xl text-emerald-600">
               <Activity class="w-4.5 h-4.5" />
             </div>
             <h3 class="font-bold text-slate-800 text-sm">Recent Activity</h3>
           </div>
-          <router-link to="/student/libraries" class="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors">
+          <router-link to="/student/libraries" class="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors w-fit">
             Book New Seat
           </router-link>
         </div>
-        <div class="overflow-x-auto">
+
+        <!-- Mobile Distinct Cards View (block md:hidden) -->
+        <div class="block md:hidden p-3.5 space-y-3 bg-slate-50/60">
+          <div v-if="recentBookings.length === 0" class="p-6 text-center text-slate-400 italic text-xs bg-white rounded-xl border border-slate-200/70">
+            No recent bookings found.
+          </div>
+          <div 
+            v-for="booking in recentBookings" 
+            :key="'mobile-' + booking.id" 
+            class="bg-white rounded-xl border border-slate-200/90 p-3.5 shadow-xs hover:border-slate-300 transition-all flex flex-col gap-2.5"
+          >
+            <!-- Top Header: Icon + Library Name + Status Pill -->
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center space-x-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-xl bg-blue-50/70 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                  <Building2 class="w-4 h-4" />
+                </div>
+                <span class="text-xs font-bold text-slate-800 truncate">{{ booking.library?.name || 'Library' }}</span>
+              </div>
+              <span :class="['px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border flex-shrink-0 shadow-2xs', getStatusClass(booking.status)]">
+                {{ booking.status.replace('_', ' ') }}
+              </span>
+            </div>
+            
+            <!-- Bottom Details: Seat Badge + Date -->
+            <div class="flex items-center justify-between text-[11px] pt-2 border-t border-slate-100">
+              <div class="flex items-center space-x-1.5">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Seat:</span>
+                <span class="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md text-[10px] border border-slate-200/60">
+                  #{{ booking.seat?.seat_number || 'N/A' }}
+                </span>
+              </div>
+              <span class="font-semibold text-slate-400 text-[10px] uppercase tracking-wider">{{ formatDate(booking.created_at) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop Table View (hidden md:block) -->
+        <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-left">
             <thead>
               <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-400 text-[10px] font-semibold uppercase tracking-wider">
@@ -145,16 +189,16 @@
                     <div class="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-emerald-50 group-hover:text-emerald-600 group-hover:border-emerald-100 transition-all duration-300">
                       <Building2 class="w-4.5 h-4.5" />
                     </div>
-                    <span class="text-xs font-semibold text-slate-800">{{ booking.library?.name }}</span>
+                    <span class="text-xs font-bold text-slate-800">{{ booking.library?.name }}</span>
                   </div>
                 </td>
-                <td class="px-6 py-4.5 text-xs font-semibold text-slate-600">Seat #{{ booking.seat?.seat_number }}</td>
+                <td class="px-6 py-4.5 text-xs font-bold text-slate-600">Seat #{{ booking.seat?.seat_number }}</td>
                 <td class="px-6 py-4.5">
-                  <span :class="['px-2.5 py-1 rounded-lg text-[9px] font-semibold uppercase tracking-wider border', getStatusClass(booking.status)]">
+                  <span :class="['px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider border', getStatusClass(booking.status)]">
                     {{ booking.status.replace('_', ' ') }}
                   </span>
                 </td>
-                <td class="px-6 py-4.5 text-xs font-semibold text-slate-400 text-right">{{ formatDate(booking.created_at) }}</td>
+                <td class="px-6 py-4.5 text-xs font-bold text-slate-400 text-right">{{ formatDate(booking.created_at) }}</td>
               </tr>
             </tbody>
           </table>

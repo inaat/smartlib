@@ -156,7 +156,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useApp } from '@/shared/composables/useApp';
 import { useSwal } from '@/shared/composables/useSwal';
-import { X, Armchair, AlertCircle, AlertTriangle, ArrowRight, Clock } from 'lucide-vue-next';
+import { X, Armchair, AlertCircle, AlertTriangle, ArrowRight } from 'lucide-vue-next';
 
 const props = defineProps<{
   show: boolean;

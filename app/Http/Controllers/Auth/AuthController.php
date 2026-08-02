@@ -37,9 +37,15 @@ class AuthController extends Controller
             ]);
         }
 
+        if (\App\Models\SystemSetting::get('maintenance_mode', false) && !in_array($user->role, ['super_admin', 'admin', 'owner'])) {
+            throw ValidationException::withMessages([
+                'email' => ['System is currently under maintenance mode. Access is restricted to administrators.'],
+            ]);
+        }
+
         if (!$user->is_active || $user->status !== 'approved') {
             throw ValidationException::withMessages([
-                'email' => ['Your account is inactive. Please contact support.'],
+                'email' => ['Your account is pending approval or inactive. Please contact support.'],
             ]);
         }
 
@@ -99,20 +105,41 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        if (!\App\Models\SystemSetting::get('allow_user_registration', true)) {
+            return response()->json([
+                'message' => 'Student self-registration is currently disabled by administrator.'
+            ], 403);
+        }
+
+        $passwordRule = 'required|string|min:8';
+        if (\App\Models\SystemSetting::get('enforce_strong_passwords', true)) {
+            $passwordRule .= '|regex:/[a-zA-Z]/|regex:/[0-9]/';
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|unique:users,email,NULL,id,deleted_at,NULL',
             'phone' => 'required|regex:/^03\d{9}$/',
-            'crn' => 'required|regex:/^\d+$/|unique:users,crn',
+            'crn' => 'required|regex:/^\d+$/|unique:users,crn,NULL,id,deleted_at,NULL',
             'ca_level' => 'required|in:PRC,CAF,Final',
             'gender' => 'required|in:male,female',
-            'password' => 'required|string|min:8',
+            'password' => $passwordRule,
             'password_confirmation' => 'required|same:password',
             'plan_id' => 'nullable|exists:subscription_plans,id',
+        ], [
+            'password.regex' => 'Password must contain both letters and numbers for enhanced security.'
         ]);
 
+        // Clear any old soft-deleted user with matching email or CRN
+        User::withTrashed()->where('email', $request->email)->forceDelete();
+        if ($request->crn) {
+            User::withTrashed()->where('crn', $request->crn)->forceDelete();
+        }
 
-
+        // Check if student registration requires admin approval
+        $requireApproval = \App\Models\SystemSetting::get('require_student_approval', false);
+        $isActive = !$requireApproval;
+        $userStatus = $requireApproval ? 'pending' : 'approved';
 
         // Determine trial end date based on plan or default
         $trialEndsAt = now()->addDays(7);
@@ -135,7 +162,8 @@ class AuthController extends Controller
             'ca_level' => $request->ca_level,
             'gender' => $request->gender,
             'password' => Hash::make($request->password),
-            'is_active' => true,
+            'is_active' => $isActive,
+            'status' => $userStatus,
             'trial_used' => true,
             'trial_started_at' => now(),
             'trial_ends_at' => $trialEndsAt,

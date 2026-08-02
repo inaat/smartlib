@@ -13,22 +13,20 @@
 
     <!-- Active Bookings Section -->
     <div class="space-y-4">
-      <div class="flex items-center justify-between px-1">
-        <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center">
-          <Clock class="w-4 h-4 mr-2 text-blue-600" />
-          Current & Upcoming
-        </h2>
-      </div>
+      <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center space-x-2 px-1">
+        <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+        <span>Current & Upcoming</span>
+      </h3>
 
-      <div v-if="activeBookings.length === 0" class="bg-slate-100 rounded-2xl p-16 text-center border border-dashed border-slate-200/80">
-        <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-inner">
+      <div v-if="activeBookings.length === 0" class="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-200 shadow-sm">
+        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-inner">
           <Armchair class="w-7 h-7" />
         </div>
         <h3 class="text-base font-bold text-slate-800 mb-1">No Active Bookings</h3>
-        <p class="text-xs text-slate-400 max-w-xs mx-auto mb-6 leading-relaxed">You don't have any active seat reservations at the moment. Find a library to book your spot!</p>
+        <p class="text-xs text-slate-500 max-w-xs mx-auto mb-6 font-medium leading-relaxed">You don't have any active seat reservations at the moment. Find a library to book your spot!</p>
         <router-link 
           to="/student/libraries" 
-          class="inline-flex items-center px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:opacity-90 active:scale-98 transition-all uppercase tracking-wider"
+          class="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold active:scale-98 transition-all shadow-sm cursor-pointer"
         >
           Explore Libraries
         </router-link>
@@ -38,15 +36,15 @@
         <div 
           v-for="booking in activeBookings" 
           :key="booking.id"
-          class="bg-white rounded-3xl p-6 border border-slate-100/60 shadow-lg shadow-slate-100/50 hover:shadow-xl hover:shadow-slate-100/80 transition-all duration-350 group relative overflow-hidden text-left"
+          class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 group relative overflow-hidden text-left"
         >
-          <!-- Active Now floating badge -->
-          <div class="absolute top-4 right-4 flex items-center gap-2">
-            <span v-if="booking.status === 'checked_in'" class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100/60 rounded-full text-[10px] font-bold uppercase tracking-wider">
+          <!-- Top Status Tag -->
+          <div class="absolute top-5 right-6 flex items-center gap-2">
+            <span v-if="booking.status === 'checked_in'" class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[10px] font-semibold uppercase tracking-wider">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Active Now
             </span>
-            <span v-else class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100/60 rounded-full text-[10px] font-bold uppercase tracking-wider">
+            <span v-else class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-[10px] font-semibold uppercase tracking-wider">
               Upcoming Session
             </span>
           </div>
@@ -54,90 +52,90 @@
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <!-- Left Info Area -->
             <div class="flex flex-col sm:flex-row sm:items-center gap-5 flex-1 min-w-0">
-              <!-- Chair Icon Wrapper with gradient glow -->
+              <!-- Chair Icon Wrapper -->
               <div :class="[
-                'w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-inner',
+                'w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all border shadow-sm',
                 booking.status === 'checked_in' 
-                  ? 'bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-600 border border-emerald-100/70' 
-                  : 'bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-600 border border-blue-100/70 group-hover:from-blue-600 group-hover:to-blue-700 group-hover:text-white'
+                  ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                  : 'bg-blue-50 text-blue-600 border-blue-200'
               ]">
-                <Armchair class="w-7 h-7" />
+                <Armchair class="w-6 h-6" />
               </div>
 
               <!-- Main details -->
-              <div class="space-y-1.5 min-w-0">
-                <div class="flex items-center gap-2.5">
-                  <h3 class="font-bold text-slate-800 text-xl tracking-tight">Seat {{ booking.seat?.seat_number }}</h3>
-                  <span class="text-xs font-semibold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100/70 font-mono">
+              <div class="space-y-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <h4 class="font-bold text-slate-800 text-lg tracking-tight">Seat {{ booking.seat?.seat_number }}</h4>
+                  <span class="text-xs font-semibold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100 font-mono">
                     #{{ booking.id }}
                   </span>
                 </div>
                 
-                <p class="text-slate-500 text-xs flex items-center font-semibold">
-                  <MapPin class="w-4 h-4 mr-1 text-slate-400" />
+                <p class="text-slate-600 text-xs flex items-center font-medium">
+                  <MapPin class="w-3.5 h-3.5 mr-1.5 text-blue-600" />
                   {{ booking.seat?.library?.name }}
                 </p>
 
                 <!-- Amenities list -->
-                <div class="flex flex-wrap gap-1.5 pt-1">
-                  <span v-if="booking.seat?.has_computer" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-150/50 px-2.5 py-0.5 rounded-lg font-bold">
-                    <Monitor class="w-3.5 h-3.5 mr-1 text-slate-450" /> PC Included
+                <div class="flex flex-wrap gap-1.5 pt-1.5">
+                  <span v-if="booking.seat?.has_computer" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-100 px-2.5 py-0.5 rounded-lg font-semibold">
+                    <Monitor class="w-3 h-3 mr-1 text-slate-400" /> PC Included
                   </span>
-                  <span v-if="booking.seat?.near_window" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-150/50 px-2.5 py-0.5 rounded-lg font-bold">
-                    <Layout class="w-3.5 h-3.5 mr-1 text-slate-450" /> Window
+                  <span v-if="booking.seat?.near_window" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-100 px-2.5 py-0.5 rounded-lg font-semibold">
+                    <Layout class="w-3 h-3 mr-1 text-slate-400" /> Window
                   </span>
-                  <span v-if="booking.seat && booking.seat.socket_count > 0" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-150/50 px-2.5 py-0.5 rounded-lg font-bold">
-                    <Zap class="w-3.5 h-3.5 mr-1 text-slate-450" /> {{ booking.seat.socket_count }} Plug
+                  <span v-if="booking.seat && booking.seat.socket_count > 0" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-100 px-2.5 py-0.5 rounded-lg font-semibold">
+                    <Zap class="w-3 h-3 mr-1 text-slate-400" /> {{ booking.seat.socket_count }} Plug
                   </span>
                 </div>
               </div>
             </div>
 
             <!-- Right Countdown & Actions Area -->
-            <div class="flex flex-col sm:flex-row sm:items-center gap-5 flex-shrink-0 border-t lg:border-t-0 pt-5 lg:pt-0 border-slate-50">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4 flex-shrink-0 border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100">
               <!-- Styled Countdown Box -->
-              <div class="bg-slate-50/70 border border-slate-100/80 rounded-2xl px-5 py-3.5 min-w-[160px] text-center sm:text-left flex flex-col justify-center">
-                <p 
-                  class="text-[9px] font-bold uppercase tracking-widest mb-1.5" 
-                  :class="isOverdue(booking) ? 'text-red-550' : 'text-slate-400'"
+              <div class="bg-slate-50/80 border border-slate-100 rounded-2xl px-5 py-3 min-w-[150px] text-center sm:text-left flex flex-col justify-center">
+                <span 
+                  class="text-[10px] font-semibold uppercase tracking-wider block mb-1" 
+                  :class="isOverdue(booking) ? 'text-rose-600' : 'text-slate-400'"
                 >
                   {{ getTimerLabel(booking) }}
-                </p>
-                <p 
-                  class="text-2xl font-black font-mono tracking-tight leading-none" 
-                  :class="isOverdue(booking) ? 'text-red-550' : 'text-slate-800'"
+                </span>
+                <span 
+                  class="text-2xl font-bold font-mono tracking-tight leading-none" 
+                  :class="isOverdue(booking) ? 'text-rose-600' : 'text-blue-600'"
                 >
                   {{ getRemainingTime(booking) }}
-                </p>
+                </span>
               </div>
 
               <!-- Action Buttons -->
-              <div class="flex sm:flex-col lg:flex-row gap-2.5 justify-center sm:justify-start min-w-[140px]">
+              <div class="flex sm:flex-row gap-2.5 items-center justify-center sm:justify-start">
                 <button 
                   v-if="booking.status === 'booked'"
                   @click="handleCheckIn(booking.id)"
-                  class="flex-1 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold active:scale-98 transition-all uppercase tracking-wider text-center"
+                  class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm active:scale-98 transition-all cursor-pointer"
                 >
                   Check In
                 </button>
                 <button 
                   v-if="booking.status === 'booked'"
                   @click="handleCancel(booking.id)"
-                  class="flex-1 px-5 py-3 bg-white border border-slate-200 text-slate-500 rounded-xl text-xs font-bold hover:bg-slate-50 active:scale-98 transition-all uppercase tracking-wider text-center"
+                  class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   v-if="booking.status === 'checked_in'"
                   @click="handleCheckOut(booking.id)"
-                  class="flex-1 px-5 py-3 bg-rose-50 text-rose-600 border border-rose-100/60 rounded-xl text-xs font-bold hover:bg-rose-100/60 active:scale-98 transition-all uppercase tracking-wider text-center whitespace-nowrap"
+                  class="px-5 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
                 >
                   Check Out
                 </button>
                 <button 
                   v-if="booking.status === 'checked_in'"
                   @click="handleExtend(booking)"
-                  class="flex-1 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold active:scale-98 transition-all uppercase tracking-wider text-center whitespace-nowrap"
+                  class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm active:scale-98 transition-all cursor-pointer whitespace-nowrap"
                 >
                   Extend Time
                 </button>
@@ -183,99 +181,128 @@
         <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">No past bookings found.</p>
       </div>
 
-      <div v-else class="overflow-x-auto bg-white rounded-2xl border border-slate-100 shadow-sm">
-        <table class="w-full text-left">
-          <thead>
-            <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] uppercase font-bold tracking-wider text-slate-400">
-              <th class="px-6 py-3.5">Seat</th>
-              <th class="px-6 py-3.5">Library</th>
-              <th class="px-6 py-3.5">Date</th>
-              <th class="px-6 py-3.5">Scheduled Time</th>
-              <th class="px-6 py-3.5 text-center">Duration</th>
-              <th class="px-6 py-3.5 text-right">Status</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-50">
-            <tr v-for="booking in filteredHistory" :key="booking.id" class="hover:bg-slate-50/30 transition-colors group">
-              <!-- Seat Info -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center space-x-3">
-                  <div :class="[
-                    'w-9 h-9 rounded-xl border flex items-center justify-center font-bold text-xs transition-all duration-300',
-                    booking.status === 'checked_out' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
-                    booking.status === 'cancelled' ? 'bg-red-50 border-red-100 text-red-600' :
-                    'bg-slate-50 border-slate-100 text-slate-500'
+      <div v-else class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden text-left">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                <th class="px-6 py-3.5">Seat</th>
+                <th class="px-6 py-3.5">Library</th>
+                <th class="px-6 py-3.5">Date</th>
+                <th class="px-6 py-3.5">Scheduled Time</th>
+                <th class="px-6 py-3.5 text-center">Duration</th>
+                <th class="px-6 py-3.5 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              <tr v-for="booking in paginatedHistory" :key="booking.id" class="hover:bg-slate-50/30 transition-colors group">
+                <!-- Seat Info -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center space-x-3">
+                    <div :class="[
+                      'w-9 h-9 rounded-xl border flex items-center justify-center font-bold text-xs transition-all duration-300',
+                      booking.status === 'checked_out' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                      booking.status === 'cancelled' ? 'bg-red-50 border-red-100 text-red-600' :
+                      'bg-slate-50 border-slate-100 text-slate-500'
+                    ]">
+                      <Armchair class="w-4 h-4" />
+                    </div>
+                    <div class="text-left">
+                      <div class="text-xs font-bold text-slate-800 leading-snug">Seat {{ booking.seat?.seat_number || 'N/A' }}</div>
+                      <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5 leading-none">ID #{{ booking.id }}</div>
+                    </div>
+                  </div>
+                </td>
+                <!-- Library -->
+                <td class="px-6 py-4 text-left whitespace-nowrap">
+                  <div class="text-xs font-bold text-slate-700 flex items-center">
+                    <MapPin class="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" />
+                    {{ booking.seat?.library?.name || 'N/A' }}
+                  </div>
+                </td>
+                <!-- Date -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center text-xs font-bold text-slate-700">
+                    <Calendar class="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" />
+                    {{ formatDate(booking.booking_time) }}
+                  </div>
+                </td>
+                <!-- Time Window -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center text-xs font-semibold text-slate-500">
+                    <Clock class="w-3.5 h-3.5 mr-1.5 text-slate-400 flex-shrink-0" />
+                    {{ formatTime(booking.booking_time) }} - {{ formatTime(booking.scheduled_end_time) }}
+                  </div>
+                </td>
+                <!-- Duration -->
+                <td class="px-6 py-4 text-center whitespace-nowrap">
+                  <div v-if="booking.total_minutes" class="flex items-center justify-center text-xs font-bold text-blue-600">
+                    <Zap class="w-3.5 h-3.5 mr-1 text-blue-500" />
+                    {{ formatDuration(booking.total_minutes) }}
+                  </div>
+                  <div v-else class="text-xs text-slate-400">--</div>
+                </td>
+                <!-- Status -->
+                <td class="px-6 py-4 text-right whitespace-nowrap">
+                  <span :class="[
+                    'text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-lg border',
+                    booking.status === 'checked_out' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                    booking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
+                    'bg-slate-50 text-slate-700 border-slate-100'
                   ]">
-                    <Armchair class="w-4 h-4" />
-                  </div>
-                  <div class="text-left">
-                    <div class="text-xs font-bold text-slate-800 leading-snug">Seat {{ booking.seat?.seat_number }}</div>
-                    <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5 leading-none">ID #{{ booking.id }}</div>
-                  </div>
-                </div>
-              </td>
-              <!-- Library -->
-              <td class="px-6 py-4 text-left whitespace-nowrap">
-                <div class="text-xs font-bold text-slate-700 flex items-center">
-                  <MapPin class="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" />
-                  {{ booking.seat?.library?.name || 'N/A' }}
-                </div>
-              </td>
-              <!-- Date -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center text-xs font-bold text-slate-700">
-                  <Calendar class="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" />
-                  {{ formatDate(booking.booking_time) }}
-                </div>
-              </td>
-              <!-- Time Window -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center text-xs font-semibold text-slate-500">
-                  <Clock class="w-3.5 h-3.5 mr-1.5 text-slate-400 flex-shrink-0" />
-                  {{ formatTime(booking.booking_time) }} - {{ formatTime(booking.scheduled_end_time) }}
-                </div>
-              </td>
-              <!-- Duration -->
-              <td class="px-6 py-4 text-center whitespace-nowrap">
-                <div v-if="booking.total_minutes" class="flex items-center justify-center text-xs font-bold text-blue-600">
-                  <Zap class="w-3.5 h-3.5 mr-1 text-blue-500" />
-                  {{ formatDuration(booking.total_minutes) }}
-                </div>
-                <div v-else class="text-xs text-slate-400">--</div>
-              </td>
-              <!-- Status -->
-              <td class="px-6 py-4 text-right whitespace-nowrap">
-                <span :class="[
-                  'text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-lg border',
-                  booking.status === 'checked_out' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                  booking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
-                  'bg-slate-50 text-slate-700 border-slate-100'
-                ]">
-                  {{ booking.status.replace('_', ' ') }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <!-- Load More Button -->
-      <div class="mt-8 text-center" v-if="filteredHistory && filteredHistory.length >= 10">
-        <button class="px-8 py-3 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-all border border-slate-200/80 active:scale-98 shadow-sm">
-          Load More History
-        </button>
+                    {{ booking.status.replace('_', ' ') }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar (Attendance Page Style) -->
+        <div v-if="filteredHistory.length > 0" class="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+          <div>Showing {{ historyStartIndex }} to {{ historyEndIndex }} of {{ filteredHistory.length }} entries</div>
+          <div class="flex items-center space-x-1.5">
+            <button 
+              @click="historyPage--" 
+              :disabled="historyPage === 1"
+              class="px-3 py-1.5 border border-slate-200 bg-white rounded-xl text-slate-600 font-bold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-xs cursor-pointer shadow-2xs"
+            >
+              Previous
+            </button>
+            <button 
+              v-for="page in totalHistoryPages" 
+              :key="page"
+              @click="historyPage = page"
+              :class="[
+                'w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs',
+                historyPage === page 
+                  ? 'bg-blue-600 text-white shadow-sm' 
+                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+              ]"
+            >
+              {{ page }}
+            </button>
+            <button 
+              @click="historyPage++" 
+              :disabled="historyPage === totalHistoryPages"
+              class="px-3 py-1.5 border border-slate-200 bg-white rounded-xl text-slate-600 font-bold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-xs cursor-pointer shadow-2xs"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useApp } from '@/shared/composables/useApp';
 import { 
   Armchair, MapPin, Clock, Zap, Monitor, Layout, 
-  History, Plus, Calendar
+  History, Plus, Calendar, ChevronLeft, ChevronRight
 } from 'lucide-vue-next';
 import { useSwal } from '@/shared/composables/useSwal';
 import SeatExtensionModal from './SeatExtensionModal.vue';
@@ -304,6 +331,38 @@ const filteredHistory = computed(() => {
   if (historyFilter.value === 'cancelled') return pastBookings.filter(b => b.status === 'cancelled' || b.status === 'expired');
   
   return pastBookings;
+});
+
+// Pagination for Booking History (10 items per page)
+const historyPage = ref(1);
+const historyItemsPerPage = 10;
+
+watch(historyFilter, () => {
+  historyPage.value = 1;
+});
+
+watch(filteredHistory, () => {
+  if (historyPage.value > totalHistoryPages.value) {
+    historyPage.value = Math.max(1, totalHistoryPages.value);
+  }
+});
+
+const totalHistoryPages = computed(() => {
+  return Math.ceil(filteredHistory.value.length / historyItemsPerPage) || 1;
+});
+
+const paginatedHistory = computed(() => {
+  const start = (historyPage.value - 1) * historyItemsPerPage;
+  return filteredHistory.value.slice(start, start + historyItemsPerPage);
+});
+
+const historyStartIndex = computed(() => {
+  if (filteredHistory.value.length === 0) return 0;
+  return (historyPage.value - 1) * historyItemsPerPage + 1;
+});
+
+const historyEndIndex = computed(() => {
+  return Math.min(historyPage.value * historyItemsPerPage, filteredHistory.value.length);
 });
 
 const getTargetTime = (booking: any): Date | null => {

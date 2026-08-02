@@ -14,10 +14,10 @@
           />
         </div>
         
-        <!-- Filters -->
-        <div class="flex gap-4">
+        <!-- Filters (Grid responsive stack, 100% contained inside parent card) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto">
           <!-- Category Filter -->
-          <div class="relative min-w-[160px] group">
+          <div class="relative group w-full">
             <Filter class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
             <select
               v-model="filterCategory"
@@ -30,7 +30,7 @@
           </div>
 
           <!-- Type Filter -->
-          <div class="relative min-w-[140px] group">
+          <div class="relative group w-full">
             <BookOpen class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
             <select
               v-model="filterType"
@@ -44,7 +44,7 @@
           </div>
 
           <!-- Library Filter -->
-          <div class="relative min-w-[160px] group">
+          <div class="relative group w-full">
             <LibraryIcon class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
             <select
               v-model="filterLibrary"

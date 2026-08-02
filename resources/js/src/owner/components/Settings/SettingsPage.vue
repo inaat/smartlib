@@ -38,7 +38,7 @@
             <div class="flex items-start space-x-6">
               <div class="relative group">
                 <div class="w-32 h-32 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden transition-all group-hover:border-indigo-300">
-                  <img v-if="previewLogo || form.current_logo" :src="previewLogo || form.current_logo" class="w-full h-full object-contain p-2" />
+                  <img v-if="previewLogo || form.current_logo" :src="(previewLogo || form.current_logo) || undefined" class="w-full h-full object-contain p-2" />
                   <Image v-else class="w-10 h-10 text-gray-300" />
                 </div>
               </div>

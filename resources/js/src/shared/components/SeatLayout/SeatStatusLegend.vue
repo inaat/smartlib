@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-slate-50/80 backdrop-blur-sm border border-slate-100 rounded-2xl px-4 py-2 flex flex-wrap items-center justify-center gap-4.5 shadow-2xs">
+  <div class="bg-slate-50/80 backdrop-blur-sm border border-slate-100 rounded-2xl px-3 sm:px-4 py-2 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4.5 shadow-2xs">
     <div 
       v-for="item in legendItems" 
       :key="item.label" 

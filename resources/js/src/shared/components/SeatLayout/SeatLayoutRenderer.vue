@@ -16,17 +16,18 @@
         <ChevronDown class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
       </div>
 
-      <!-- Section Tabs -->
+      <!-- Section Tabs (Scrollable & Responsive, 100% Contained, Hidden Scrollbar Line) -->
       <div 
         v-if="currentFloorSections.length > 0"
-        class="flex items-center bg-slate-100 p-1 rounded-xl w-fit gap-1"
+        class="flex items-center bg-slate-100/90 p-1 rounded-2xl max-w-full overflow-x-auto gap-1 border border-slate-200/50 flex-shrink-0 no-scrollbar"
+        style="scrollbar-width: none; -ms-overflow-style: none;"
       >
         <button
           @click="activeSectionId = null"
           :class="[
-            'px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-98 cursor-pointer border border-transparent',
+            'px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap flex-shrink-0 active:scale-98 cursor-pointer border border-transparent',
             activeSectionId === null
-              ? 'bg-white text-emerald-700 shadow-sm border-slate-200/40'
+              ? 'bg-white text-emerald-700 shadow-sm border-slate-200/60'
               : 'text-slate-500 hover:text-slate-700'
           ]"
         >
@@ -37,9 +38,9 @@
           :key="section.id"
           @click="activeSectionId = section.id"
           :class="[
-            'px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-98 cursor-pointer border border-transparent',
+            'px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap flex-shrink-0 active:scale-98 cursor-pointer border border-transparent',
             activeSectionId === section.id
-              ? 'bg-white text-emerald-700 shadow-sm border-slate-200/40'
+              ? 'bg-white text-emerald-700 shadow-sm border-slate-200/60'
               : 'text-slate-500 hover:text-slate-700'
           ]"
         >
@@ -50,14 +51,15 @@
       <!-- Subsection Tabs -->
       <div 
         v-if="currentSubsections.length > 0"
-        class="flex items-center bg-blue-50/80 p-1 rounded-xl w-fit gap-1 border border-blue-100 flex-wrap"
+        class="flex items-center bg-blue-50/80 p-1 rounded-2xl max-w-full overflow-x-auto gap-1 border border-blue-100 flex-shrink-0 no-scrollbar"
+        style="scrollbar-width: none; -ms-overflow-style: none;"
       >
         <button
           @click="activeSubsectionId = null"
           :class="[
-            'px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-98 cursor-pointer border border-transparent',
+            'px-3 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap flex-shrink-0 active:scale-98 cursor-pointer border border-transparent',
             activeSubsectionId === null
-              ? 'bg-white text-blue-700 shadow-sm border-blue-200/40'
+              ? 'bg-white text-blue-700 shadow-sm border-blue-200/60'
               : 'text-blue-600/80 hover:text-blue-900'
           ]"
         >
@@ -68,9 +70,9 @@
           :key="sub.id"
           @click="activeSubsectionId = sub.id"
           :class="[
-            'px-3.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-98 cursor-pointer border border-transparent',
+            'px-3.5 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap flex-shrink-0 active:scale-98 cursor-pointer border border-transparent',
             activeSubsectionId === sub.id
-              ? 'bg-white text-blue-700 shadow-sm border-blue-200/40'
+              ? 'bg-white text-blue-700 shadow-sm border-blue-200/60'
               : 'text-blue-600/80 hover:text-blue-900'
           ]"
         >

@@ -197,7 +197,7 @@ const displayTables = computed(() => {
       table_number: `T-${i + 1}`,
       position_x: null,
       position_y: null
-    } as StudyTable);
+    } as unknown as StudyTable);
   }
 
   return virtualTables;

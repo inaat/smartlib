@@ -124,7 +124,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
-import { Search, X } from 'lucide-vue-next';
+import { Search } from 'lucide-vue-next';
 import { superadminAPI } from '../../services/superadminApi';
 import LibrarySelector from '../Shared/LibrarySelector.vue';
 

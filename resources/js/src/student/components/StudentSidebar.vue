@@ -4,7 +4,7 @@
     :class="[
       'fixed inset-y-0 left-0 z-50 flex flex-col bg-blue-600 border-r border-white/10 shadow-2xl transition-all duration-300 ease-in-out overflow-x-hidden overscroll-contain',
       // Mobile: always full width sidebar, translate in/out
-      'w-72',
+      'w-72 max-w-[85vw]',
       // Desktop overrides: sticky h-screen locks height to exact viewport
       isCollapsed ? 'lg:w-20 lg:shadow-none lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden' : 'lg:w-64 lg:shadow-none lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden',
       // Translate: hidden on mobile unless open, always visible on desktop
@@ -124,7 +124,7 @@
                 isReservationsDropdownActive && !showCollapsed ? 'text-white font-semibold' : 'text-white hover:bg-white/10'
               ]"
             >
-              <BookMarked
+              <BookmarkCheck
                 :class="[
                   'w-5 h-5 transition-colors',
                   isReservationsDropdownActive && showCollapsed ? 'text-blue-600' : (isReservationsDropdownActive ? 'text-white' : 'text-white/90 group-hover:text-white')
@@ -432,6 +432,7 @@ import {
   CreditCard,
   BarChart3,
   BookMarked,
+  BookmarkCheck,
   LifeBuoy,
   CalendarCheck,
   Armchair,

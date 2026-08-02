@@ -1,10 +1,10 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
+  <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 relative overflow-hidden text-left">
     <!-- Header -->
-    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center">
-      <Calendar class="w-4 h-4 mr-2 text-blue-600" />
-      Active & Upcoming
-    </h2>
+    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center space-x-2">
+      <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+      <span>Active & Upcoming</span>
+    </h3>
     
     <!-- Empty state -->
     <div v-if="activeBookings.length === 0" class="text-center py-10 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
@@ -22,77 +22,62 @@
       <div 
         v-for="booking in activeBookings" 
         :key="booking.id" 
-        class="p-4.5 bg-slate-50/40 border border-slate-100 hover:border-slate-200/80 hover:bg-white rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-slate-100/50 text-left relative group overflow-hidden"
+        class="p-5 bg-white border border-slate-100 hover:border-slate-200/80 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md text-left relative group overflow-hidden"
       >
-        <!-- Top border status accent line -->
-        <div 
-          class="absolute top-0 left-0 right-0 h-1 transition-all"
-          :class="booking.status === 'checked_in' ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-blue-600 to-cyan-400'"
-        ></div>
-
         <!-- Upper Row: Seat & Countdown -->
         <div class="flex items-start justify-between mb-4">
           <div class="flex items-center space-x-3">
             <!-- Seat Icon Block -->
             <div 
-              class="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner relative flex-shrink-0"
-              :class="booking.status === 'checked_in' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100/50' : 'bg-blue-50 text-blue-600 border border-blue-100/50'"
+              class="w-12 h-12 rounded-2xl flex items-center justify-center relative flex-shrink-0 border shadow-sm"
+              :class="booking.status === 'checked_in' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-blue-50 text-blue-600 border-blue-200'"
             >
-              <Armchair class="w-5 h-5" />
-              <!-- Pulsing indicator dot -->
-              <span 
-                class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white"
-                :class="booking.status === 'checked_in' ? 'bg-emerald-500 animate-ping-fast' : 'bg-blue-500 animate-ping-fast'"
-              ></span>
-              <span 
-                class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white"
-                :class="booking.status === 'checked_in' ? 'bg-emerald-500' : 'bg-blue-500'"
-              ></span>
+              <Armchair class="w-5.5 h-5.5" />
             </div>
             
             <!-- Seat details -->
             <div>
-              <h3 class="font-bold text-slate-800 text-sm">
+              <h4 class="font-bold text-slate-800 text-base">
                 Seat {{ booking.seat?.seat_number }}
-              </h3>
+              </h4>
               <!-- Badge -->
               <span 
-                class="inline-block text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md mt-1 border"
-                :class="booking.status === 'checked_in' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-blue-50 text-blue-700 border-blue-100'"
+                class="inline-block text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full mt-1 border"
+                :class="booking.status === 'checked_in' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-blue-50 text-blue-700 border-blue-200'"
               >
-                {{ booking.status === 'checked_in' ? 'Active Now' : 'Reserved' }}
+                {{ booking.status === 'checked_in' ? 'Active Now' : 'Upcoming Session' }}
               </span>
             </div>
           </div>
 
           <!-- Countdown timer -->
-          <div class="text-right">
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+          <div class="bg-slate-50/80 border border-slate-100 rounded-xl px-3.5 py-2 text-right">
+            <span class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider leading-none mb-1 block">
               {{ getTimerLabel(booking) }}
-            </p>
-            <p 
-              class="text-sm font-black font-mono tracking-tight leading-none" 
-              :class="isOverdue(booking) ? 'text-red-500' : (booking.status === 'checked_in' ? 'text-emerald-600' : 'text-blue-600')"
+            </span>
+            <span 
+              class="text-sm font-bold font-mono tracking-tight leading-none" 
+              :class="isOverdue(booking) ? 'text-rose-600' : (booking.status === 'checked_in' ? 'text-emerald-600' : 'text-blue-600')"
             >
               {{ getRemainingTime(booking) }}
-            </p>
+            </span>
           </div>
         </div>
 
         <!-- Session ending soon warning -->
         <div 
           v-if="booking.status === 'checked_in' && isEndingSoon(booking)" 
-          class="mb-3.5 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center text-red-700 animate-pulse-slow text-xs"
+          class="mb-3.5 p-3 bg-rose-50 border border-rose-100 rounded-xl flex items-center text-rose-700 text-xs font-semibold"
         >
-          <AlertTriangle class="w-4 h-4 mr-2 text-red-500 flex-shrink-0" />
-          <span class="font-bold">Your session ends in less than 15 minutes!</span>
+          <AlertTriangle class="w-4 h-4 mr-2 text-rose-500 flex-shrink-0" />
+          <span>Your session ends in less than 15 minutes!</span>
         </div>
 
         <!-- Middle Details: Location, Time & Tags -->
-        <div class="space-y-2.5 text-xs text-slate-500 border-t border-slate-100/60 pt-3.5">
+        <div class="space-y-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
           <!-- Library Name -->
           <div class="flex items-center">
-            <MapPin class="w-3.5 h-3.5 mr-2 text-slate-400" />
+            <MapPin class="w-3.5 h-3.5 mr-2 text-blue-600" />
             <span class="font-semibold text-slate-700">{{ booking.seat?.library?.name }}</span>
           </div>
 
@@ -103,25 +88,25 @@
           </div>
 
           <!-- Feature badges -->
-          <div class="flex flex-wrap gap-2 pt-1.5">
-            <span v-if="booking.seat?.has_computer" class="flex items-center text-[9px] bg-blue-50 text-blue-700 border border-blue-100/40 px-2 py-0.5 rounded-md font-bold">
-              <Monitor class="w-2.5 h-2.5 mr-1 text-blue-500" /> PC Workspace
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <span v-if="booking.seat?.has_computer" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-100 px-2 py-0.5 rounded-lg font-semibold">
+              <Monitor class="w-3 h-3 mr-1 text-slate-400" /> PC Workspace
             </span>
-            <span v-if="booking.seat?.near_window" class="flex items-center text-[9px] bg-yellow-50 text-yellow-700 border border-yellow-100/40 px-2 py-0.5 rounded-md font-bold">
-              <Layout class="w-2.5 h-2.5 mr-1 text-yellow-600" /> Window Seat
+            <span v-if="booking.seat?.near_window" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-100 px-2 py-0.5 rounded-lg font-semibold">
+              <Layout class="w-3 h-3 mr-1 text-slate-400" /> Window
             </span>
-            <span v-if="booking.seat && (booking.seat.socket_count ?? 0) > 0" class="flex items-center text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-100/40 px-2 py-0.5 rounded-md font-bold">
-              <Zap class="w-2.5 h-2.5 mr-1 text-emerald-600" /> Power Socket ({{ booking.seat.socket_count }})
+            <span v-if="booking.seat && (booking.seat.socket_count ?? 0) > 0" class="flex items-center text-[10px] bg-slate-50 text-slate-600 border border-slate-100 px-2 py-0.5 rounded-lg font-semibold">
+              <Zap class="w-3 h-3 mr-1 text-slate-400" /> Plug ({{ booking.seat.socket_count }})
             </span>
           </div>
         </div>
 
         <!-- Lower Row: Dynamic Action Buttons -->
-        <div class="mt-4.5 flex gap-2.5 pt-3 border-t border-slate-100/60">
+        <div class="mt-4 flex gap-2 pt-3 border-t border-slate-100">
           <button 
             v-if="booking.status === 'booked'"
             @click="handleCheckIn(booking.id)"
-            class="flex-1 py-2 px-3 bg-blue-600 text-white rounded-xl text-xs font-extrabold shadow-md shadow-blue-500/10 transition-all flex items-center justify-center space-x-1"
+            class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer"
           >
             <span>Check In</span>
           </button>
@@ -129,7 +114,7 @@
           <button 
             v-if="booking.status === 'booked'"
             @click="handleCancel(booking.id)"
-            class="flex-1 py-2 px-3 bg-white border border-red-200 hover:bg-red-50 text-red-500 rounded-xl text-xs font-bold transition-all"
+            class="flex-1 py-2 px-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold transition-all cursor-pointer"
           >
             Cancel
           </button>
@@ -137,7 +122,7 @@
           <button 
             v-if="booking.status === 'checked_in'"
             @click="handleCheckOut(booking.id)"
-            class="flex-1 py-2 px-3 bg-red-50/50 text-red-600 border border-red-600 rounded-xl text-xs font-extrabold shadow-md shadow-orange-500/10 transition-all"
+            class="flex-1 py-2 px-3 bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 rounded-xl text-xs font-semibold transition-all cursor-pointer"
           >
             Check Out
           </button>
@@ -145,7 +130,7 @@
           <button 
             v-if="booking.status === 'checked_in'"
             @click="handleExtend(booking)"
-            class="flex-1 py-2 px-3 bg-emerald-50/50 text-emerald-600 border border-emerled-600 rounded-xl text-xs font-extrabold shadow-md shadow-indigo-500/10 transition-all"
+            class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer"
           >
             Extend
           </button>

@@ -67,6 +67,18 @@ body,
   background: #555;
 }
 
+/* Hide scrollbar line while keeping scrolling active */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
 /* Focus visible for accessibility */
 *:focus-visible {
   outline: 2px solid #4F46E5;

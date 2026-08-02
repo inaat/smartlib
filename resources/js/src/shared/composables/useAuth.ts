@@ -27,6 +27,8 @@ interface User {
     loyalty_points?: number;
     loyalty_transactions?: any[];
     profile_picture?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 interface Notification {

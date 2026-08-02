@@ -67,14 +67,20 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'crn' => 'nullable|string|unique:users',
-            'email' => 'required|email|unique:users',
+            'crn' => 'nullable|string|unique:users,crn,NULL,id,deleted_at,NULL',
+            'email' => 'required|email|unique:users,email,NULL,id,deleted_at,NULL',
             'password' => 'required|min:8',
             'role' => 'required|in:student,librarian,super_admin',
             'library_id' => 'nullable|exists:libraries,id',
             'ca_level' => 'nullable|string|in:PRC,CAF,Final',
             'phone' => 'nullable|string|max:20',
         ]);
+
+        // If an old soft-deleted user existed with this email or CRN, purge it completely
+        User::withTrashed()->where('email', $request->email)->forceDelete();
+        if ($request->crn) {
+            User::withTrashed()->where('crn', $request->crn)->forceDelete();
+        }
 
         $user = User::create([
             'name' => $request->name,
@@ -113,13 +119,13 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'email' => 'sometimes|email|unique:users,email,' . $user->id . ',id,deleted_at,NULL',
             'role' => 'sometimes|in:student,librarian,super_admin',
             'status' => 'sometimes|in:pending,approved,suspended,banned',
             'library_id' => 'nullable|exists:libraries,id',
             'ca_level' => 'nullable|string|in:PRC,CAF,Final',
             'phone' => 'nullable|string|max:20',
-            'crn' => 'nullable|string|unique:users,crn,' . $user->id,
+            'crn' => 'nullable|string|unique:users,crn,' . $user->id . ',id,deleted_at,NULL',
         ]);
 
         $user->update($request->only(['name', 'email', 'role', 'status', 'library_id', 'ca_level', 'phone', 'crn']));
@@ -142,7 +148,8 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        $user->delete();
+        $user->tokens()->delete();
+        $user->forceDelete();
 
         if (request()->expectsJson() || request()->is('api/*')) {
             return response()->json(['message' => 'User deleted successfully']);
@@ -169,7 +176,8 @@ class UserController extends Controller
     public function reject(User $user)
     {
         $userId = $user->id;
-        $user->delete();
+        $user->tokens()->delete();
+        $user->forceDelete();
 
         // Check if API request
         if (request()->expectsJson() || request()->is('api/*')) {

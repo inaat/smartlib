@@ -45,9 +45,11 @@
         </div>
 
         <div v-if="qrCode && !isCheckingIn" class="space-y-3 text-center">
-          <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-left">
-            <p class="font-semibold text-xs uppercase tracking-wider">QR Code Scanned!</p>
-            <p class="text-xs font-medium break-all mt-1 text-emerald-700/90 leading-relaxed">{{ qrCode }}</p>
+          <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <p class="font-semibold text-sm tracking-tight">QR Code Scanned Successfully</p>
           </div>
           <button
             @click="performCheckInWithScanner"
@@ -281,33 +283,60 @@ const performCheckIn = async (code: string = '') => {
 
   isCheckingIn.value = true;
   try {
-    await studentAPI.checkIn(idToSend, code || qrCode.value, latitude.value, longitude.value);
+    const result = await studentAPI.checkIn(idToSend, code || qrCode.value, latitude.value, longitude.value);
     await loadBookings();
-    showSuccess('Checked In!', 'Welcome to the library. Enjoy your session!');
+    showSuccess('Scanned Successfully!', result.message || 'Welcome to the library. Enjoy your session!');
     router.push('/student/dashboard');
   } catch (error: any) {
     console.error('Check-in failed:', error);
-    const msg: string = error.message || error.response?.data?.message || 'Check-in failed';
+    const responseData = error.response?.data || {};
+    const msg: string = responseData.message || error.message || 'Check-in failed';
+    const errorType: string = responseData.error_type || '';
 
-    // Detect distance-related errors and show nearby libraries
-    const isTooFar = /too far|distance|location|proximity|range|meters/i.test(msg);
-    if (isTooFar) {
-      const result = await Swal.fire({
+    if (errorType === 'qr_mismatch') {
+      const expectedSeat = responseData.expected_seat || 'your reserved seat';
+      await Swal.fire({
         icon: 'error',
-        title: 'Check-in Failed',
-        text: msg,
-        showCancelButton: true,
-        confirmButtonText: 'Show Nearby Library',
-        cancelButtonText: 'Cancel',
+        title: 'Wrong QR Code!',
+        html: `<div style="text-align:center;">
+          <p style="font-size:14px;color:#64748b;margin-bottom:8px;">The scanned QR code does not match your reserved seat.</p>
+          <p style="font-size:13px;font-weight:700;color:#1e293b;">Your Reserved Seat: <span style="color:#2563eb;">${expectedSeat}</span></p>
+          <p style="font-size:12px;color:#94a3b8;margin-top:8px;">Please find and scan the correct seat QR code.</p>
+        </div>`,
+        confirmButtonText: 'Scan Again',
         confirmButtonColor: '#2563eb',
-        cancelButtonColor: '#9ca3af'
       });
-      
-      if (result.isConfirmed) {
-        await fetchNearbyLibraries();
-      }
+      resetScanner();
+    } else if (errorType === 'qr_required') {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'QR Scan Required',
+        text: msg,
+        confirmButtonText: 'Scan Now',
+        confirmButtonColor: '#2563eb',
+      });
+      resetScanner();
     } else {
-      showError('Check-in Failed', msg);
+      // Detect distance-related errors and show nearby libraries
+      const isTooFar = /too far|distance|location|proximity|range|meters/i.test(msg);
+      if (isTooFar) {
+        const result = await Swal.fire({
+          icon: 'error',
+          title: 'Check-in Failed',
+          text: msg,
+          showCancelButton: true,
+          confirmButtonText: 'Show Nearby Library',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#2563eb',
+          cancelButtonColor: '#9ca3af'
+        });
+        
+        if (result.isConfirmed) {
+          await fetchNearbyLibraries();
+        }
+      } else {
+        showError('Check-in Failed', msg);
+      }
     }
   } finally {
     isCheckingIn.value = false;

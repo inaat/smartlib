@@ -59,27 +59,17 @@
           :key="groupKey"
           @click="activeGroup = groupKey"
           :class="[
-            'w-full text-left px-4 py-3.5 rounded-2xl transition-all flex items-center justify-between font-bold text-xs cursor-pointer border',
+            'w-full text-left px-4 py-3.5 rounded-2xl transition-all flex items-center space-x-3 font-bold text-xs cursor-pointer border',
             activeGroup === groupKey 
               ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-600/10' 
               : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-100 hover:border-slate-200'
           ]"
         >
-          <div class="flex items-center space-x-3">
-            <component 
-              :is="getGroupIcon(groupKey)" 
-              :class="['w-4 h-4', activeGroup === groupKey ? 'text-white' : 'text-purple-600']" 
-            />
-            <span class="capitalize">{{ formatGroupName(groupKey) }}</span>
-          </div>
-          <span 
-            :class="[
-              'text-[10px] px-2 py-0.5 rounded-full font-bold',
-              activeGroup === groupKey ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-            ]"
-          >
-            {{ settingsGroups[groupKey]?.length || 0 }}
-          </span>
+          <component 
+            :is="getGroupIcon(groupKey)" 
+            :class="['w-4 h-4', activeGroup === groupKey ? 'text-white' : 'text-purple-600']" 
+          />
+          <span class="capitalize">{{ formatGroupName(groupKey) }}</span>
         </button>
       </div>
 
@@ -98,9 +88,6 @@
                 <p class="text-xs text-slate-500 mt-0.5 font-normal">Configure and manage parameters for {{ formatGroupName(activeGroup).toLowerCase() }}.</p>
               </div>
             </div>
-            <span class="text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 bg-purple-50 border border-purple-100 text-purple-700 rounded-full">
-              {{ settingsGroups[activeGroup]?.length || 0 }} Options
-            </span>
           </div>
 
           <!-- Card Body: Settings Rows -->
@@ -116,9 +103,6 @@
                   {{ setting.label }}
                 </label>
                 <p class="text-[11px] text-slate-500 leading-relaxed font-normal">{{ setting.description }}</p>
-                <span class="inline-block mt-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded">
-                  Key: {{ setting.key }}
-                </span>
               </div>
 
               <!-- Setting Input Control -->
@@ -228,7 +212,7 @@ import {
 import { adminAPI } from '@/shared/services/api';
 import { useSwal } from '@/shared/composables/useSwal';
 
-const { showSuccess, showError, confirmAction } = useSwal();
+const { showSuccess, showError, showConfirm } = useSwal();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -269,11 +253,10 @@ const saveAllSettings = async () => {
 };
 
 const resetToDefaults = async () => {
-  const confirmed = await confirmAction(
+  const confirmed = await showConfirm(
     'Reset All System Settings?',
     'This will restore all system settings, rules, limits, and configurations back to default values. Are you sure?',
-    'Yes, Reset to Defaults',
-    'warning'
+    'Yes, Reset to Defaults'
   );
 
   if (!confirmed) return;

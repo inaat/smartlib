@@ -125,12 +125,105 @@
             <template v-else-if="!isGenderMismatch(selectedSeat)">
               <div class="space-y-4">
                 <div>
-                  <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Duration</label>
-                  <select v-model="bookingDuration" :disabled="maxAvailableHours === 0" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Duration</label>
+                    <button 
+                      type="button"
+                      @click="toggleCustomDuration"
+                      class="text-[10px] font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider underline cursor-pointer"
+                    >
+                      {{ isCustomDuration ? '← Presets' : '+ Custom Time' }}
+                    </button>
+                  </div>
+
+                  <!-- Preset Select Dropdown -->
+                  <select 
+                    v-if="!isCustomDuration"
+                    v-model="bookingDuration" 
+                    @change="handleDurationChange"
+                    :disabled="maxAvailableHours === 0" 
+                    class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <option v-for="opt in durationOptions" :key="opt.value" :value="opt.value">
                       {{ opt.label }}
                     </option>
+                    <option value="custom">Custom Time</option>
                   </select>
+
+                  <!-- Custom Hours & Minutes Controls -->
+                  <div v-else class="space-y-2.5 p-3 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                    <div class="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Hours</label>
+                        <div class="relative">
+                          <input 
+                            type="number" 
+                            v-model.number="customHours" 
+                            min="0" 
+                            :max="maxHoursAllowed" 
+                            @input="updateCustomDuration"
+                            class="w-full p-2 pr-7 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 text-center shadow-2xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            placeholder="0"
+                          />
+                          <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400 pointer-events-none">hrs</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Minutes</label>
+                        <div class="relative">
+                          <input 
+                            type="number" 
+                            v-model.number="customMinutes" 
+                            min="0" 
+                            max="59" 
+                            step="5"
+                            @input="updateCustomDuration"
+                            class="w-full p-2 pr-7 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 text-center shadow-2xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            placeholder="0"
+                          />
+                          <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400 pointer-events-none">mins</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Quick Preset Short-cuts -->
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <button 
+                        type="button" 
+                        @click="customHours = 0; customMinutes = 30; updateCustomDuration();"
+                        class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[9.5px] font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                      >
+                        30m
+                      </button>
+                      <button 
+                        type="button" 
+                        @click="customHours = 1; customMinutes = 30; updateCustomDuration();"
+                        class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[9.5px] font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                      >
+                        1h 30m
+                      </button>
+                      <button 
+                        type="button" 
+                        @click="customHours = 3; customMinutes = 0; updateCustomDuration();"
+                        class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[9.5px] font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                      >
+                        3h
+                      </button>
+                      <button 
+                        type="button" 
+                        @click="customHours = Math.floor(maxAvailableHours); customMinutes = Math.round((maxAvailableHours - Math.floor(maxAvailableHours)) * 60); updateCustomDuration();"
+                        class="px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-[9.5px] font-bold text-blue-700 hover:bg-blue-100 cursor-pointer ml-auto"
+                      >
+                        Max Until Close
+                      </button>
+                    </div>
+
+                    <!-- Computed Total Display -->
+                    <div class="text-[11px] font-bold text-blue-900 bg-white p-2 rounded-xl border border-blue-100 flex items-center justify-between shadow-2xs">
+                      <span class="text-slate-500 font-semibold text-[10px] uppercase tracking-wider">Total Duration:</span>
+                      <span class="text-blue-700 font-bold">{{ formatHours(typeof bookingDuration === 'number' ? bookingDuration : 1) }}</span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Closing time notice / closed error -->
@@ -169,9 +262,6 @@
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         Live
                       </span>
-                      <button v-else-if="isManualTime && selectedDate === minDate" @click="resetToCurrentTime" type="button" class="text-[8.5px] font-bold text-blue-600 hover:underline uppercase tracking-tight">
-                        Use Now
-                      </button>
                     </label>
                     <input
                       type="time"
@@ -342,7 +432,61 @@ const effectiveLayoutMode = computed(() => {
 const showSuccessModal = ref(false);
 
 const selectedSeat = ref<any | null>(null);
-const bookingDuration = ref(2);
+const bookingDuration = ref<number | string>(2);
+const isCustomDuration = ref(false);
+const customHours = ref<number>(1);
+const customMinutes = ref<number>(0);
+
+const maxHoursAllowed = computed(() => {
+  return Math.max(0, Math.floor(maxAvailableHours.value));
+});
+
+const handleDurationChange = (e: Event) => {
+  const val = (e.target as HTMLSelectElement).value;
+  if (val === 'custom') {
+    isCustomDuration.value = true;
+    updateCustomDuration();
+  } else {
+    isCustomDuration.value = false;
+  }
+};
+
+const toggleCustomDuration = () => {
+  isCustomDuration.value = !isCustomDuration.value;
+  if (isCustomDuration.value) {
+    const total = typeof bookingDuration.value === 'number' ? bookingDuration.value : (parseFloat(String(bookingDuration.value)) || 1);
+    customHours.value = Math.floor(total);
+    customMinutes.value = Math.round((total - customHours.value) * 60);
+    updateCustomDuration();
+  } else {
+    bookingDuration.value = 1;
+  }
+};
+
+const updateCustomDuration = () => {
+  let h = typeof customHours.value === 'number' && !isNaN(customHours.value) ? customHours.value : 0;
+  let m = typeof customMinutes.value === 'number' && !isNaN(customMinutes.value) ? customMinutes.value : 0;
+
+  if (h < 0) h = 0;
+  if (m < 0) m = 0;
+  if (m > 59) m = 59;
+
+  let total = h + (m / 60);
+
+  if (maxAvailableHours.value > 0 && total > maxAvailableHours.value) {
+    total = maxAvailableHours.value;
+    h = Math.floor(total);
+    m = Math.round((total - h) * 60);
+    customHours.value = h;
+    customMinutes.value = m;
+  }
+
+  if (total <= 0) {
+    total = 0.25;
+  }
+
+  bookingDuration.value = total;
+};
 
 const { user, isTrialActive } = useAuth();
 
@@ -522,8 +666,13 @@ const formatTimeOnly = (date: Date | null) => {
 };
 
 watch([maxAvailableHours, bookingDuration], ([newMax, newDuration]) => {
-  if (newMax > 0 && newDuration > newMax) {
+  const numDur = typeof newDuration === 'number' ? newDuration : (parseFloat(String(newDuration)) || 0);
+  if (newMax > 0 && numDur > newMax) {
     bookingDuration.value = newMax;
+    if (isCustomDuration.value) {
+      customHours.value = Math.floor(newMax);
+      customMinutes.value = Math.round((newMax - customHours.value) * 60);
+    }
   }
 });
 
@@ -741,7 +890,8 @@ const confirmBooking = async () => {
     isManualTime.value = false;
   }
 
-  const endTime = new Date(startTime.getTime() + bookingDuration.value * 60 * 60 * 1000);
+  const durationInHours = typeof bookingDuration.value === 'number' ? bookingDuration.value : (parseFloat(String(bookingDuration.value)) || 1);
+  const endTime = new Date(startTime.getTime() + durationInHours * 60 * 60 * 1000);
 
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const dayName = days[startTime.getDay()];

@@ -21,54 +21,54 @@
 
     <!-- Notifications List -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-      <div v-if="notifications.length === 0" class="p-16 text-center font-outfit">
+      <div v-if="notifications.length === 0" class="p-12 sm:p-16 text-center font-outfit">
         <div class="w-12 h-12 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Bell class="w-5 h-5 text-slate-400" />
         </div>
         <h3 class="text-sm font-semibold text-slate-800 mb-1">No notifications yet</h3>
-        <p class="text-xs text-slate-400 font-semibold">We'll notify you when something important happens.</p>
+        <p class="text-xs text-slate-400 font-medium">We'll notify you when something important happens.</p>
       </div>
 
-      <div v-else class="divide-y divide-slate-100/60">
+      <div v-else class="divide-y divide-slate-100">
         <div 
           v-for="notification in notifications" 
           :key="notification.id"
-          class="p-6 hover:bg-slate-50/50 transition-colors cursor-pointer group relative flex items-start justify-between"
-          :class="{ 'bg-blue-50/15': !notification.is_read }"
+          class="p-4 sm:p-6 hover:bg-slate-50/50 transition-colors cursor-pointer group relative flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-left"
+          :class="{ 'bg-blue-50/20': !notification.is_read }"
           @click="handleNotificationClick(notification)"
         >
-          <div class="flex items-start space-x-4 flex-1 text-left">
+          <div class="flex items-start space-x-3.5 flex-1 min-w-0">
             <!-- Icon -->
             <div 
-              class="p-2.5 rounded-xl border transition-transform group-hover:scale-105"
+              class="p-2.5 rounded-xl border flex-shrink-0 transition-transform group-hover:scale-105"
               :class="getNotificationIconClass(notification.type)"
             >
               <component :is="getNotificationIcon(notification.type)" class="w-4 h-4" />
             </div>
 
             <!-- Content -->
-            <div class="flex-1 min-w-0 pr-4">
-              <div class="flex items-center justify-between mb-1.5">
-                <h3 class="text-xs font-bold text-slate-800 truncate" :class="{ 'text-blue-900': !notification.is_read }">
+            <div class="flex-1 min-w-0 pr-2">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-1 gap-1">
+                <h3 class="text-xs font-bold text-slate-800 break-words" :class="{ 'text-blue-900': !notification.is_read }">
                   {{ notification.title }}
                 </h3>
-                <span class="text-[10px] font-semibold text-slate-400 whitespace-nowrap ml-3 uppercase tracking-wider">
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex-shrink-0">
                   {{ formatDate(notification.created_at) }}
                 </span>
               </div>
-              <p class="text-xs text-slate-500 font-semibold leading-relaxed max-w-3xl">
+              <p class="text-xs text-slate-500 font-medium leading-relaxed break-words max-w-3xl">
                 {{ notification.message }}
               </p>
             </div>
           </div>
 
           <!-- Action Buttons / Status Indicator -->
-          <div class="flex items-center space-x-1.5 ml-4 flex-shrink-0" @click.stop>
+          <div class="flex items-center justify-end space-x-1.5 sm:ml-4 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100/60" @click.stop>
             <!-- Mark as Read button (if unread) -->
             <button
               v-if="!notification.is_read"
               @click="markAsRead(notification.id)"
-              class="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-55/60 transition-colors"
+              class="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
               title="Mark as read"
             >
               <Check class="w-4 h-4" />
@@ -77,7 +77,7 @@
             <!-- Clear/Delete button -->
             <button
               @click="deleteSingle(notification.id)"
-              class="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-55/60 transition-colors"
+              class="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
               title="Delete notification"
             >
               <Trash2 class="w-4 h-4" />
@@ -188,11 +188,11 @@ const clearAll = async () => {
   }
 };
 
-const markAsRead = async (id: number) => {
+const markAsRead = async (id: number | string) => {
   await markNotificationAsRead(id);
 };
 
-const deleteSingle = async (id: number) => {
+const deleteSingle = async (id: number | string) => {
   await deleteNotification(id);
 };
 </script>

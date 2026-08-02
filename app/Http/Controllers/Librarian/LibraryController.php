@@ -107,7 +107,7 @@ class LibraryController extends Controller
             'opening_hours' => $library->opening_hours ?? '',
             'wifi_password' => $library->wifi_password ?? '',
             'is_active' => $library->is_active ?? true,
-            'seat_layout_mode' => $library->seat_layout_mode ?? 'layout',
+            'seat_layout_mode' => $library->seat_layout_mode ?? 'individual',
             'table_capacity' => $library->table_capacity ?? 4,
             'floors_count' => $library->floors_count ?? 0,
             'seat_sections_count' => $library->seat_sections_count ?? 0,

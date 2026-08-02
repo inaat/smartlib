@@ -203,7 +203,6 @@ import {
   TrendingDown,
   Activity,
   UserCheck,
-  User,
   CheckCircle,
   XCircle,
   Plus,

@@ -1,5 +1,5 @@
 import api from '@/shared/services/api';
-import { User, Library, Book, Event, Analytics } from '@/shared/types';
+import { User, Library, Book, Event } from '@/shared/types';
 
 const handleApiError = (error: any) => {
   if (error.response) {
@@ -15,6 +15,15 @@ const handleApiError = (error: any) => {
 };
 
 export const superadminAPI = {
+  async updateStudyTable(id: number | string, data: any): Promise<any> {
+    try {
+      const response = await api.put(`/admin/study-tables/${id}`, data);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
   // Dashboard
   async getDashboard(params?: any): Promise<any> {
     try {
@@ -379,6 +388,37 @@ export const superadminAPI = {
   async getUserSubscriptions(params?: any): Promise<any> {
     try {
       const response = await api.get('/admin/user-subscriptions', { params });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  // Scheduled Reports
+  async getScheduledReports(params?: any): Promise<any> {
+    try {
+      const response = await api.get('/admin/scheduled-reports', { params });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async getGeneratedReports(params?: any): Promise<any> {
+    try {
+      const response = await api.get('/admin/generated-reports', { params });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  },
+
+  async runScheduledReportNow(id: number): Promise<any> {
+    try {
+      const response = await api.post(`/admin/scheduled-reports/${id}/run-now`);
       return response.data;
     } catch (error) {
       handleApiError(error);

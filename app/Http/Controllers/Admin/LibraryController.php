@@ -142,8 +142,9 @@ class LibraryController extends Controller
 
     public function destroy(Library $library)
     {
-        // Revoke tokens of librarians assigned to this library
-        $librarians = User::where('role', 'librarian')
+        // Revoke tokens and completely purge librarians assigned to this library
+        $librarians = User::withTrashed()
+            ->where('role', 'librarian')
             ->where(function($query) use ($library) {
                 $query->where('library_id', $library->id)
                       ->orWhereHas('libraries', function($q) use ($library) {
@@ -154,16 +155,17 @@ class LibraryController extends Controller
 
         foreach ($librarians as $librarian) {
             $librarian->tokens()->delete();
+            $librarian->forceDelete();
         }
 
         $library->delete();
 
         // Check if API request
         if (request()->expectsJson() || request()->is('api/*')) {
-            return response()->json(['message' => 'Library deleted successfully']);
+            return response()->json(['message' => 'Library and associated librarian accounts deleted successfully']);
         }
 
         return redirect()->route('admin.libraries.index')
-            ->with('success', 'Library deleted successfully');
+            ->with('success', 'Library and associated librarian accounts deleted successfully');
     }
 }

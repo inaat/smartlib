@@ -172,4 +172,37 @@ class SeatExtensionTest extends TestCase
         $this->assertStringContainsString('Cannot extend beyond library closing time', $response->json('message'));
         $this->assertStringContainsString('Maximum available extension is 30 minutes', $response->json('message'));
     }
+
+    public function test_student_can_extend_overnight_booking_past_midnight()
+    {
+        $dayOfWeek = now()->format('l');
+
+        // Library open 08:00:00 to 06:00:00 next day
+        LibraryOperatingHour::create([
+            'library_id' => $this->library->id,
+            'day_of_week' => $dayOfWeek,
+            'is_open' => true,
+            'open_time' => '08:00:00',
+            'close_time' => '06:00:00',
+        ]);
+
+        $booking = SeatBooking::create([
+            'user_id' => $this->student->id,
+            'seat_id' => $this->seat->id,
+            'library_id' => $this->library->id,
+            'booking_time' => now()->subHour(),
+            'scheduled_end_time' => now()->addMinutes(30),
+            'status' => 'checked_in',
+            'extension_count' => 0,
+        ]);
+
+        Sanctum::actingAs($this->student, ['*']);
+
+        $response = $this->postJson("/api/student/bookings/{$booking->id}/extend", [
+            'minutes' => 60
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+    }
 }

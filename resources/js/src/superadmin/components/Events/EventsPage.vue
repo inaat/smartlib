@@ -293,7 +293,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
-import { Calendar, Clock, Users, X, MapPin, Building2, Plus } from 'lucide-vue-next';
+import { Calendar, Clock, Users, X, Building2, Plus } from 'lucide-vue-next';
 import { superadminAPI } from '../../services/superadminApi';
 import LibrarySelector from '../Shared/LibrarySelector.vue';
 

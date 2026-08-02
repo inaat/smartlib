@@ -799,6 +799,23 @@ export const librarianAPI = {
     const response = await api.get('/librarian/reviews');
     return response.data;
   },
+
+  async getScheduledReports() {
+    const response = await api.get('/librarian/scheduled-reports');
+    return response.data;
+  },
+  async createScheduledReport(data: { report_type: string; frequency: string; format: string; recipient_email: string; send_time?: string }) {
+    const response = await api.post('/librarian/scheduled-reports', data);
+    return response.data;
+  },
+  async toggleScheduledReport(id: number) {
+    const response = await api.post(`/librarian/scheduled-reports/${id}/toggle`);
+    return response.data;
+  },
+  async deleteScheduledReport(id: number) {
+    const response = await api.delete(`/librarian/scheduled-reports/${id}`);
+    return response.data;
+  },
 };
 
 // Owner API
@@ -870,6 +887,10 @@ export const ownerAPI = {
   },
   async updateSettings(data: FormData) {
     const response = await api.post('/owner/settings', data);
+    return response.data;
+  },
+  async getPublicSettings() {
+    const response = await api.get('/settings/public');
     return response.data;
   },
 };

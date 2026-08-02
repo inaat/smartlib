@@ -13,54 +13,54 @@
       </div>
     </div>
 
-    <!-- Stat Cards (white, no background color) -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <!-- Stat Cards (Responsive & Mobile-Optimized) -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 font-outfit">
       <!-- Total Bookings -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow">
-        <div class="flex items-center space-x-2">
-          <div class="p-2 bg-blue-50 rounded-lg">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all group text-left">
+        <div class="flex items-center justify-between gap-1.5 mb-1">
+          <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-snug">Total Bookings</span>
+          <div class="p-1.5 sm:p-2 bg-blue-50 border border-blue-100/60 rounded-xl flex-shrink-0">
             <Calendar class="w-4 h-4 text-blue-600" />
           </div>
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Bookings</span>
         </div>
-        <div class="text-3xl font-bold text-slate-800">{{ checkedInBookingsCount }}</div>
-        <div class="text-[10px] text-slate-400 font-medium">Reservations completed this month</div>
+        <div class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight my-1">{{ checkedInBookingsCount }}</div>
+        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight line-clamp-1">Completed this month</div>
       </div>
 
       <!-- Hours Today -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow">
-        <div class="flex items-center space-x-2">
-          <div class="p-2 bg-purple-50 rounded-lg">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all group text-left">
+        <div class="flex items-center justify-between gap-1.5 mb-1">
+          <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-snug">Hours Today</span>
+          <div class="p-1.5 sm:p-2 bg-purple-50 border border-purple-100/60 rounded-xl flex-shrink-0">
             <Clock class="w-4 h-4 text-purple-600" />
           </div>
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Hours Today</span>
         </div>
-        <div class="text-3xl font-bold text-slate-800">{{ hoursToday }}h</div>
-        <div class="text-[10px] text-slate-400 font-medium">Study hours logged in libraries</div>
+        <div class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight my-1">{{ hoursToday }}h</div>
+        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight line-clamp-1">Logged in libraries</div>
       </div>
 
       <!-- Reserved Books -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow">
-        <div class="flex items-center space-x-2">
-          <div class="p-2 bg-emerald-50 rounded-lg">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all group text-left">
+        <div class="flex items-center justify-between gap-1.5 mb-1">
+          <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-snug">Reserved Books</span>
+          <div class="p-1.5 sm:p-2 bg-emerald-50 border border-emerald-100/60 rounded-xl flex-shrink-0">
             <BookMarked class="w-4 h-4 text-emerald-600" />
           </div>
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Reserved Books</span>
         </div>
-        <div class="text-3xl font-bold text-slate-800">{{ reservedBooksCount }}</div>
-        <div class="text-[10px] text-slate-400 font-medium">Catalog items ready at desk</div>
+        <div class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight my-1">{{ reservedBooksCount }}</div>
+        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight line-clamp-1">Items ready at desk</div>
       </div>
 
       <!-- Available Libraries -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow">
-        <div class="flex items-center space-x-2">
-          <div class="p-2 bg-orange-50 rounded-lg">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all group text-left">
+        <div class="flex items-center justify-between gap-1.5 mb-1">
+          <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-snug">Available Libraries</span>
+          <div class="p-1.5 sm:p-2 bg-orange-50 border border-orange-100/60 rounded-xl flex-shrink-0">
             <MapPin class="w-4 h-4 text-orange-500" />
           </div>
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Available Libraries</span>
         </div>
-        <div class="text-3xl font-bold text-slate-800">{{ libraries.length }}</div>
-        <div class="text-[10px] text-slate-400 font-medium">National partner locations</div>
+        <div class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight my-1">{{ libraries.length }}</div>
+        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight line-clamp-1">Partner locations</div>
       </div>
     </div>
 

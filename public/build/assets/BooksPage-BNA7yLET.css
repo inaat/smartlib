@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit[data-v-b7ef37cc] {
+  font-family: 'Outfit', sans-serif;
+}
+@keyframes pulseSlow-b7ef37cc {
+0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+}
+50% {
+    transform: scale(1.03);
+    opacity: 0.9;
+}
+}
+.animate-pulse-slow[data-v-b7ef37cc] {
+  animation: pulseSlow-b7ef37cc 3s infinite ease-in-out;
+}
+@keyframes fadeIn-b7ef37cc {
+from {
+    opacity: 0;
+    transform: translateY(12px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-b7ef37cc] {
+  animation: fadeIn-b7ef37cc 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes scaleUp-b7ef37cc {
+from {
+    opacity: 0;
+    transform: scale(0.95);
+}
+to {
+    opacity: 1;
+    transform: scale(1);
+}
+}
+.animate-scale-up[data-v-b7ef37cc] {
+  animation: scaleUp-b7ef37cc 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hover-lift[data-v-b7ef37cc] {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift[data-v-b7ef37cc]:hover {
+  transform: translateY(-4px);
+}
+.active\:scale-98[data-v-b7ef37cc]:active {
+  transform: scale(0.98);
+}
+.text-slate-650[data-v-b7ef37cc] {
+  color: #475569;
+}
+.bg-green-750[data-v-b7ef37cc] {
+  background-color: #15803d;
+}
+.accent-blue-650[data-v-b7ef37cc] {
+  accent-color: #2563eb;
+}
+.text-slate-450[data-v-b7ef37cc] {
+  color: #64748b;
+}

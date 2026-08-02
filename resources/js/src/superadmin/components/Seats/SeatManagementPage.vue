@@ -8,7 +8,7 @@
       </div>
       <div class="flex items-center space-x-3">
         <button
-          @click="fetchData"
+          @click="() => fetchData()"
           :disabled="loading"
           class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 disabled:opacity-50"
         >
@@ -360,16 +360,12 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 import { 
-  Monitor, 
-  Zap, 
-  Wind, 
   X as XIcon, 
   RefreshCw, 
   Plus, 
   Building2, 
   CheckCircle, 
   AlertTriangle, 
-  Layout, 
   Wrench,
   Printer,
   User,
@@ -399,8 +395,20 @@ const loading = ref(false);
 const isLayoutMode = ref(false);
 const isArranging = ref(false);
 const activeSectionId = ref<number | null>(null);
-const draggedSeat = ref<any>(null);
-const dragOffset = ref({ x: 0, y: 0 });
+const activeFloorId = ref<number | null>(null);
+
+const filteredSectionSeats = computed(() => {
+  return seats.value.filter(s => {
+    if (activeFloorId.value && s.floor_id !== activeFloorId.value) return false;
+    if (activeSectionId.value && s.section_id !== activeSectionId.value) return false;
+    if (searchQuery.value) {
+      const q = searchQuery.value.toLowerCase();
+      return (s.seat_number && s.seat_number.toLowerCase().includes(q)) ||
+             (s.cabin_number && s.cabin_number.toLowerCase().includes(q));
+    }
+    return true;
+  });
+});
 
 const eShapeCoordinates = [
   { x: 50, y: 30 }, { x: 85, y: 30 }, { x: 120, y: 30 }, { x: 155, y: 30 }, { x: 190, y: 30 }, 

@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->date('last_streak_date')->nullable()->after('last_checkin_date');
+            if (!Schema::hasColumn('users', 'last_streak_date')) {
+                $table->date('last_streak_date')->nullable()->after('last_checkin_date');
+            }
         });
     }
 

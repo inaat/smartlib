@@ -331,7 +331,6 @@ import {
   BookOpen, 
   Building2,
   RefreshCw,
-  Calendar,
   BarChart3,
   FileBarChart,
   GraduationCap
@@ -364,7 +363,12 @@ const levelStats = ref({
   total: 0
 });
 
-const genderTotal = computed(() => (genderStats.value.male + genderStats.value.female));
+const genderTotal = computed(() => {
+  if (genderStats.value.total && genderStats.value.total > 0) {
+    return genderStats.value.total;
+  }
+  return (genderStats.value.male || 0) + (genderStats.value.female || 0);
+});
 
 const genderDonutSegments = computed(() => {
   const total = genderTotal.value;

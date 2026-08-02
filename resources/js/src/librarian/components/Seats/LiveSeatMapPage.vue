@@ -108,7 +108,7 @@
                   {{ selectedSeat.seat_number?.replace(/\D/g, '').slice(-2) || selectedSeat.seat_number }}
                 </div>
                 <div class="text-left">
-                  <h3 class="text-sm font-extrabold text-slate-800 tracking-tight">{{ getSeatDisplayTitle(selectedSeat) }}</h3>
+                  <h3 class="text-sm font-bold text-slate-800 tracking-tight">{{ getSeatDisplayTitle(selectedSeat) }}</h3>
                   <span :class="[
                     'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mt-0.5',
                     seatStatusBadge(selectedSeat.status)
@@ -214,7 +214,7 @@
                   <div class="flex items-center justify-between" v-if="selectedSeat.current_booking.minutes_left !== null && selectedSeat.current_booking.minutes_left !== undefined">
                     <span class="text-[10px] text-slate-400 font-bold uppercase">Time Details</span>
                     <span :class="[
-                      'text-xs font-extrabold px-2.5 py-0.5 rounded-full',
+                      'text-xs font-semibold px-2.5 py-0.5 rounded-full',
                       selectedSeat.status === 'serious_overstay' ? 'bg-purple-100 text-purple-700' :
                       selectedSeat.status === 'overstay' ? 'bg-orange-100 text-orange-700' : 
                       selectedSeat.status === 'free_soon' ? 'bg-amber-100 text-amber-700' : 
@@ -303,7 +303,7 @@
                 <div class="flex items-center justify-between">
                   <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Table Seats Status</span>
                   <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                    {{ getTableSeats(selectedTable).filter(s => s.status === 'occupied').length }} Occupied / {{ getTableSeats(selectedTable).length }} Total
+                    {{ getTableSeats(selectedTable).filter((s: Seat) => s.status === 'occupied').length }} Occupied / {{ getTableSeats(selectedTable).length }} Total
                   </span>
                 </div>
 
@@ -478,7 +478,7 @@ const getSectionName = (sectionId: any) => {
   return s?.name || '';
 };
 
-const getTableSeats = (table: any) => {
+const getTableSeats = (table: any): Seat[] => {
   if (!table) return [];
   const tableId = typeof table === 'object' ? table.id : table;
   

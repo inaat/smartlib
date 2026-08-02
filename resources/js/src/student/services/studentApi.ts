@@ -109,7 +109,7 @@ export const studentAPI = {
       throw error;
     }
   },
-  async checkIn(bookingId: string, qrCode: string, latitude?: number, longitude?: number): Promise<{ success: boolean }> {
+  async checkIn(bookingId: string, qrCode: string, latitude?: number, longitude?: number): Promise<{ success: boolean; message?: string }> {
     try {
       const response = await api.post(`/student/bookings/${bookingId}/checkin`, {
         qrCode,

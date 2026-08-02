@@ -948,7 +948,7 @@
                 <td class="py-3 px-4 text-right">
                   <div class="flex items-center justify-end gap-1.5">
                     <button
-                      @click="toggleScheduleStatus(idx)"
+                      @click="toggleScheduleStatus(sr)"
                       class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer"
                       :title="sr.status === 'active' ? 'Pause' : 'Resume'"
                     >
@@ -956,7 +956,7 @@
                       <Play v-else class="w-3.5 h-3.5" />
                     </button>
                     <button
-                      @click="deleteScheduled(idx)"
+                      @click="deleteScheduled(sr)"
                       class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
                       title="Delete"
                     >
@@ -1217,23 +1217,28 @@ const handleTimeRangeChange = () => {
 };
 
 // ---------- Loaders ----------
-const loadScheduled = () => {
-  const saved = localStorage.getItem('librarian-scheduled-reports');
-  if (saved) scheduledReports.value = JSON.parse(saved);
+const loadScheduled = async () => {
+  try {
+    const res = await librarianAPI.getScheduledReports();
+    scheduledReports.value = res.scheduled || [];
+    const localHist = localStorage.getItem('smartlib_report_history');
+    if (localHist) {
+      try {
+        reportHistory.value = JSON.parse(localHist);
+      } catch (e) {
+        reportHistory.value = res.history || [];
+      }
+    } else {
+      reportHistory.value = res.history || [];
+    }
+  } catch (err) {
+    console.error('Failed to load scheduled reports:', err);
+  }
 };
 
-const saveScheduled = () => {
-  localStorage.setItem('librarian-scheduled-reports', JSON.stringify(scheduledReports.value));
-};
-
-const loadHistory = () => {
-  const saved = localStorage.getItem('librarian-report-history');
-  if (saved) reportHistory.value = JSON.parse(saved);
-};
-
-const saveHistory = () => {
-  localStorage.setItem('librarian-report-history', JSON.stringify(reportHistory.value));
-};
+onMounted(() => {
+  loadScheduled();
+});
 
 // ---------- Helpers ----------
 const fmtDuration = (mins: number) => {
@@ -2058,6 +2063,14 @@ const statusBadgeHtml = (status: any) => {
   return `<span class="px-2 py-0.5 rounded text-[10px] font-black text-white uppercase tracking-wider block text-center" style="background: ${c}">${status.replace(/_/g, ' ')}</span>`;
 };
 
+const saveHistory = () => {
+  try {
+    localStorage.setItem('smartlib_report_history', JSON.stringify(reportHistory.value));
+  } catch (e) {
+    console.error('Failed to save report history:', e);
+  }
+};
+
 // ---------- Export Reports ----------
 const exportReport = (format: 'pdf' | 'excel') => {
   if (!generatedReport.value) return;
@@ -2420,7 +2433,11 @@ const downloadAsCSV = (filename: string, content: string) => {
 };
 
 const downloadReport = (entry: any) => {
-  exportReport(entry.format as 'pdf' | 'excel');
+  if (entry.id) {
+    window.open(`/api/librarian/generated-reports/${entry.id}/download`, '_blank');
+  } else {
+    exportReport(entry.format as 'pdf' | 'excel');
+  }
 };
 
 // ---------- Config Schedule Modal ----------
@@ -2442,33 +2459,45 @@ const openScheduleModalFromConfig = () => {
   scheduleModal.show = true;
 };
 
-const saveSchedule = () => {
+const saveSchedule = async () => {
   if (!scheduleModal.recipient) {
     showError('Email Required', 'Recipient email is required for delivery scheduling.');
     return;
   }
-  scheduledReports.value.push({
-    type: scheduleModal.reportType,
-    frequency: scheduleModal.frequency,
-    format: scheduleModal.format,
-    recipient: scheduleModal.recipient,
-    time: scheduleModal.time,
-    status: 'active',
-  });
-  saveScheduled();
-  scheduleModal.show = false;
-  showSuccess('Automation Saved', `Daily reports for ${scheduleModal.reportType} configured successfully.`);
+  try {
+    await librarianAPI.createScheduledReport({
+      report_type: scheduleModal.reportType,
+      frequency: scheduleModal.frequency,
+      format: scheduleModal.format,
+      recipient_email: scheduleModal.recipient,
+      send_time: scheduleModal.time,
+    });
+    scheduleModal.show = false;
+    showSuccess('Automation Saved', `${scheduleModal.frequency.toUpperCase()} report automation for ${scheduleModal.reportType} configured & available for Super Admin.`);
+    await loadScheduled();
+  } catch (err: any) {
+    showError('Save Failed', err.response?.data?.message || 'Failed to save schedule.');
+  }
 };
 
-const toggleScheduleStatus = (idx: number) => {
-  scheduledReports.value[idx].status = scheduledReports.value[idx].status === 'active' ? 'paused' : 'active';
-  saveScheduled();
+const toggleScheduleStatus = async (sr: any) => {
+  try {
+    await librarianAPI.toggleScheduledReport(sr.id);
+    await loadScheduled();
+    showSuccess('Updated', 'Automation status updated.');
+  } catch (err) {
+    showError('Error', 'Failed to toggle status.');
+  }
 };
 
-const deleteScheduled = (idx: number) => {
-  scheduledReports.value.splice(idx, 1);
-  saveScheduled();
-  showSuccess('Deleted', 'Schedule entry removed.');
+const deleteScheduled = async (sr: any) => {
+  try {
+    await librarianAPI.deleteScheduledReport(sr.id);
+    await loadScheduled();
+    showSuccess('Deleted', 'Schedule entry removed.');
+  } catch (err) {
+    showError('Error', 'Failed to delete schedule.');
+  }
 };
 
 // ---------- Utility Formatters ----------
@@ -2497,11 +2526,6 @@ const fmtTimeStr = (time: string) => {
     return time;
   }
 };
-
-onMounted(() => {
-  loadScheduled();
-  loadHistory();
-});
 </script>
 
 <style scoped>

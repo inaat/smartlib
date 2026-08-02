@@ -133,7 +133,7 @@
           />
         </div>
         
-        <div class="relative min-w-[180px] group">
+        <div class="relative w-full sm:w-52 group">
           <Filter class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
           <select
             v-model="filterFacility"
@@ -231,7 +231,7 @@ import LibraryCard from './LibraryCard.vue';
 import LibraryMap from './LibraryMap.vue';
 import { Search, Filter, MapPin, List, ChevronDown, Navigation, MapPinOff, Building2 } from 'lucide-vue-next';
 
-const { latitude, longitude, locationGranted, locationLoading, locationError, requestLocation } = useGeolocation();
+const { latitude, longitude, locationGranted, locationLoading, requestLocation } = useGeolocation();
 
 const viewMode = ref<'list' | 'map'>('list');
 const libraryFilterMode = ref<'nearby' | 'all'>('nearby');

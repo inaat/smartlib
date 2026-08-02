@@ -1,0 +1,18 @@
+
+@keyframes fadeIn-ed172058 {
+from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+}
+to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+}
+.animate-fade-in[data-v-ed172058] {
+  animation: fadeIn-ed172058 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+input[type="range"][data-v-ed172058]::-webkit-slider-thumb {
+  border: 2px solid white;
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
+}

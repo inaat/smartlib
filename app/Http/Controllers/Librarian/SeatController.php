@@ -87,11 +87,15 @@ class SeatController extends Controller
                     $now = now();
                     
                     if ($currentBooking->check_in_time && $endTime && $now->gt($endTime)) {
-                        $overstayMinutes = $now->diffInMinutes($endTime, true);
-                        if ($overstayMinutes > 30) {
-                            $status = 'serious_overstay';
+                        if (\App\Models\SystemSetting::get('overstay_penalty_enabled', true)) {
+                            $overstayMinutes = $now->diffInMinutes($endTime, true);
+                            if ($overstayMinutes > 30) {
+                                $status = 'serious_overstay';
+                            } else {
+                                $status = 'overstay';
+                            }
                         } else {
-                            $status = 'overstay';
+                            $status = 'occupied';
                         }
                     } elseif ($currentBooking->status === 'reserved') {
                         $status = 'reserved';

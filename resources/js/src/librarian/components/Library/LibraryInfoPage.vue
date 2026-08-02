@@ -786,7 +786,7 @@ const libraryData = ref({
   current_occupancy: 0,
   latitude: null as number | null,
   longitude: null as number | null,
-  seat_layout_mode: 'layout',
+  seat_layout_mode: 'individual',
   wifi_password: '',
   photo: null as string | null,
   photo_url: null as string | null
@@ -1120,7 +1120,7 @@ const fetchLibraryInfo = async () => {
         current_occupancy: data.current_occupancy,
         latitude: data.latitude,
         longitude: data.longitude,
-        seat_layout_mode: data.seat_layout_mode || 'layout',
+        seat_layout_mode: data.seat_layout_mode || 'individual',
         wifi_password: data.wifi_password || '',
         photo: data.photo,
         photo_url: data.photo_url

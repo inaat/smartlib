@@ -1,7 +1,6 @@
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref } from 'vue';
 import { Library, Seat, Book, Booking, Event, Reservation, Analytics, AIRecommendation, Payment } from '@/shared/types';
 import { studentAPI, adminAPI, librarianAPI } from '@/shared/services/api';
-import { parseISO } from 'date-fns';
 
 const libraries = ref<Library[]>([]);
 const seats = ref<Seat[]>([]);

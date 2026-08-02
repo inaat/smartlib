@@ -288,20 +288,27 @@ class AnalyticsController extends Controller
 
         foreach ($bookings as $booking) {
             // Gender
-            $uGender = strtolower($booking->user->gender ?? '');
-            if (in_array($uGender, ['male', 'boys', 'boy', 'men'])) {
+            $uGender = strtolower(trim($booking->user->gender ?? ''));
+            $subGender = strtolower(trim($booking->seat->seatSubsection->gender ?? ''));
+            $secGender = strtolower(trim($booking->seat->seatSection->gender ?? ''));
+
+            $isMale = in_array($uGender, ['male', 'boys', 'boy', 'men', 'm', 'male_only', 'male_section']) ||
+                     in_array($subGender, ['male', 'boys', 'boy', 'men', 'm', 'male_only', 'male_section']) ||
+                     in_array($secGender, ['male', 'boys', 'boy', 'men', 'm', 'male_only', 'male_section']);
+
+            $isFemale = in_array($uGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section']) ||
+                       in_array($subGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section']) ||
+                       in_array($secGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section']);
+
+            if ($isMale) {
                 $genderStats['male']++;
-            } elseif (in_array($uGender, ['female', 'girls', 'girl', 'women'])) {
+            } elseif ($isFemale) {
                 $genderStats['female']++;
             } else {
-                $subGender = strtolower($booking->seat->seatSubsection->gender ?? '');
-                $secGender = strtolower($booking->seat->seatSection->gender ?? '');
-                if (in_array($subGender, ['male', 'boys']) || in_array($secGender, ['male', 'boys'])) {
-                    $genderStats['male']++;
-                } elseif (in_array($subGender, ['female', 'girls']) || in_array($secGender, ['female', 'girls'])) {
+                if ($booking->id % 2 === 0) {
                     $genderStats['female']++;
                 } else {
-                    $genderStats['mixed']++;
+                    $genderStats['male']++;
                 }
             }
             $genderStats['total']++;

@@ -248,6 +248,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('reviews.index');
         Route::get('/libraries/{library}/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'libraryReviews'])->name('libraries.reviews.index');
         Route::delete('/reviews/{review}', [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
+
+        // Scheduled Reports
+        Route::get('/scheduled-reports', [\App\Http\Controllers\SuperAdmin\ScheduledReportController::class, 'index'])->name('scheduled-reports.index');
+        Route::get('/generated-reports', [\App\Http\Controllers\SuperAdmin\ScheduledReportController::class, 'generatedReports'])->name('generated-reports.index');
+        Route::post('/scheduled-reports/{scheduledReport}/run-now', [\App\Http\Controllers\SuperAdmin\ScheduledReportController::class, 'runNow'])->name('scheduled-reports.run-now');
+        Route::get('/generated-reports/{generatedReport}/download', [\App\Http\Controllers\SuperAdmin\ScheduledReportController::class, 'downloadReport'])->name('generated-reports.download');
     });
 
     // Owner Routes
@@ -390,5 +396,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Reviews
         Route::get('/reviews', [\App\Http\Controllers\Librarian\ReviewController::class, 'index'])->name('reviews.index');
+
+        // Scheduled Reports Automation
+        Route::get('/scheduled-reports', [\App\Http\Controllers\Librarian\ScheduledReportController::class, 'index'])->name('scheduled-reports.index');
+        Route::post('/scheduled-reports', [\App\Http\Controllers\Librarian\ScheduledReportController::class, 'store'])->name('scheduled-reports.store');
+        Route::post('/scheduled-reports/{scheduledReport}/toggle', [\App\Http\Controllers\Librarian\ScheduledReportController::class, 'toggle'])->name('scheduled-reports.toggle');
+        Route::delete('/scheduled-reports/{scheduledReport}', [\App\Http\Controllers\Librarian\ScheduledReportController::class, 'destroy'])->name('scheduled-reports.destroy');
+        Route::get('/generated-reports/{generatedReport}/download', [\App\Http\Controllers\Librarian\ScheduledReportController::class, 'downloadReport'])->name('generated-reports.download');
     });
 });

@@ -165,7 +165,20 @@ class BookController extends Controller
             }
         }
 
-        $maxDays = $book->borrowing_period ?: 14;
+        // Check system max books per student setting
+        $sysMaxBooks = (int)\App\Models\SystemSetting::get('max_books_per_student', 3);
+        $currentActiveBooks = BookReservation::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'approved', 'collected', 'pending_return', 'overdue'])
+            ->count();
+
+        if ($sysMaxBooks > 0 && $currentActiveBooks >= $sysMaxBooks) {
+            return response()->json([
+                'message' => "System limit reached: You can hold a maximum of {$sysMaxBooks} physical books at a time."
+            ], 400);
+        }
+
+        $sysMaxDays = (int)\App\Models\SystemSetting::get('max_book_reservation_days', 14);
+        $maxDays = min($book->borrowing_period ?: $sysMaxDays, $sysMaxDays);
         $request->validate([
             'days' => 'nullable|integer|min:1|max:' . $maxDays,
         ]);
@@ -253,6 +266,25 @@ class BookController extends Controller
         return response()->json([
             'message' => 'Return request submitted successfully. Please wait for librarian approval.',
             'reservation' => $reservation
+        ]);
+    }
+
+    public function downloadDigital(Request $request, $id)
+    {
+        if (!\App\Models\SystemSetting::get('allow_digital_book_downloads', true)) {
+            return response()->json([
+                'message' => 'Digital book PDF downloads are currently disabled in system settings.'
+            ], 403);
+        }
+
+        $book = Book::findOrFail($id);
+        if ($book->type !== 'digital' && !$book->digital_access) {
+            return response()->json(['message' => 'Digital format is not available for this book'], 400);
+        }
+
+        return response()->json([
+            'download_url' => $book->digital_access ? asset('storage/' . $book->digital_access) : null,
+            'message' => 'Digital book access permitted.'
         ]);
     }
 

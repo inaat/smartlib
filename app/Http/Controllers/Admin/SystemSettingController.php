@@ -16,11 +16,19 @@ class SystemSettingController extends Controller
 
     public function publicSettings()
     {
-        $settings = SystemSetting::whereIn('key', ['app_name', 'app_logo'])->get()->keyBy('key');
+        $allSettings = SystemSetting::all()->keyBy('key');
         
         return response()->json([
-            'app_name' => $settings->get('app_name')?->value ?? config('app.name'),
-            'app_logo' => $settings->get('app_logo')?->value ? asset('storage/' . $settings->get('app_logo')->value) : null,
+            'site_name' => $allSettings->get('site_name')?->value ?? $allSettings->get('app_name')?->value ?? 'Smart Lib',
+            'site_description' => $allSettings->get('site_description')?->value ?? '',
+            'contact_email' => $allSettings->get('contact_email')?->value ?? 'support@smartlib.com',
+            'contact_phone' => $allSettings->get('contact_phone')?->value ?? '',
+            'maintenance_mode' => SystemSetting::get('maintenance_mode', false),
+            'allow_user_registration' => SystemSetting::get('allow_user_registration', true),
+            'require_student_approval' => SystemSetting::get('require_student_approval', false),
+            'enforce_strong_passwords' => SystemSetting::get('enforce_strong_passwords', true),
+            'app_name' => $allSettings->get('site_name')?->value ?? config('app.name'),
+            'app_logo' => $allSettings->get('app_logo')?->value ? asset('storage/' . $allSettings->get('app_logo')->value) : null,
         ]);
     }
 

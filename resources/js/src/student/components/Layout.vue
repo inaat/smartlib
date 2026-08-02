@@ -17,8 +17,17 @@
       <StudentTopbar @menu-click="sidebarOpen = true" />
       
       <!-- Page Content -->
-      <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-5">
-        <slot />
+      <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-5 flex flex-col justify-between">
+        <div>
+          <slot />
+        </div>
+
+        <!-- App Footer -->
+        <footer class="mt-8 pt-4 border-t border-slate-200/60 text-center">
+          <p class="text-[11px] font-medium text-slate-400">
+            © {{ new Date().getFullYear() }} SmartLib System. All rights reserved.
+          </p>
+        </footer>
       </main>
     </div>
     

@@ -1,0 +1,22 @@
+
+@keyframes popoverIn-ce34296e {
+from {
+    opacity: 0;
+    transform: scale(0.95);
+}
+to {
+    opacity: 1;
+    transform: scale(1);
+}
+}
+.animate-popover-in[data-v-ce34296e] {
+  animation: popoverIn-ce34296e 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.no-scrollbar[data-v-b4bd7082]::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar[data-v-b4bd7082] {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

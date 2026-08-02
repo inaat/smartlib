@@ -167,9 +167,9 @@
           </div>
 
           <!-- Other Reviews Header & Sort Sub-Tabs -->
-          <div v-if="reviews.length > 0" class="flex items-center justify-between pt-2 pb-1 text-left">
+          <div v-if="reviews.length > 0" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 pb-1 text-left">
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Student Reviews ({{ reviews.length }})</h4>
-            <div class="flex items-center space-x-1 p-0.5 bg-slate-100/80 rounded-xl text-[11px] font-semibold">
+            <div class="flex items-center space-x-1 p-0.5 bg-slate-100/80 rounded-xl text-[11px] font-semibold w-fit">
               <button 
                 @click="reviewSortMode = 'newest'; visibleReviewCount = 3"
                 :class="[
@@ -212,10 +212,23 @@
                 class="py-4.5 first:pt-0 last:pb-0 text-left"
               >
                 <div class="flex items-start space-x-3">
-                  <img 
-                    :src="review.user.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.user.name)}&background=random`" 
-                    class="w-9 h-9 rounded-full object-cover border border-slate-100"
-                  />
+                  <div class="w-9 h-9 flex-shrink-0">
+                    <img 
+                      v-if="review.user?.profile_picture && !imageLoadErrors[review.id]" 
+                      :src="getProfilePictureUrl(review.user.profile_picture)" 
+                      @error="onAvatarError(review.id)"
+                      class="w-9 h-9 rounded-full object-cover border border-slate-100 shadow-2xs"
+                    />
+                    <div 
+                      v-else
+                      :class="[
+                        'w-9 h-9 rounded-full bg-gradient-to-br text-white font-bold text-xs flex items-center justify-center border border-white shadow-2xs uppercase',
+                        getAvatarColor(review.user?.name)
+                      ]"
+                    >
+                      {{ getInitials(review.user?.name) }}
+                    </div>
+                  </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between mb-1.5">
                       <h4 class="font-semibold text-slate-800 text-xs leading-none truncate pr-3">{{ review.user.name }}</h4>
@@ -355,6 +368,44 @@ const submittingReview = ref(false);
 const newReview = ref({ rating: 0, comment: '' });
 const reviewSortMode = ref<'newest' | 'popular' | 'lowest'>('newest');
 const visibleReviewCount = ref(3);
+
+const imageLoadErrors = ref<Record<string | number, boolean>>({});
+
+const onAvatarError = (id: string | number) => {
+  imageLoadErrors.value[id] = true;
+};
+
+const getInitials = (name?: string) => {
+  if (!name) return 'S';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+};
+
+const getAvatarColor = (name?: string) => {
+  const gradients = [
+    'from-blue-500 to-indigo-600',
+    'from-emerald-500 to-teal-600',
+    'from-purple-500 to-pink-600',
+    'from-amber-500 to-orange-600',
+    'from-rose-500 to-red-600',
+    'from-cyan-500 to-blue-600'
+  ];
+  if (!name) return gradients[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return gradients[Math.abs(hash) % gradients.length];
+};
+
+const getProfilePictureUrl = (path?: string) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return `/storage/${path.replace(/^\//, '')}`;
+};
 
 const userReview = computed(() => {
   return reviews.value.find(r => r.user_id === user.value?.id);

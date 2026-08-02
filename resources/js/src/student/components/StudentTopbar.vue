@@ -1,10 +1,10 @@
 <template>
-  <div v-if="isPlanExpired" class="bg-red-600 text-white px-6 py-2.5 flex items-center justify-between animate-pulse z-50 relative">
+  <div v-if="isPlanExpired" class="bg-red-600 text-white px-4 sm:px-6 py-2 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left animate-pulse z-50 relative">
     <div class="flex items-center space-x-2">
-      <AlertTriangle class="w-4 h-4" />
+      <AlertTriangle class="w-4 h-4 flex-shrink-0" />
       <span class="text-xs font-semibold">Your subscription has expired. Please renew to continue using all features.</span>
     </div>
-    <router-link to="/student/subscription" class="text-xs font-bold underline hover:text-red-100">
+    <router-link to="/student/subscription" class="text-xs font-bold underline hover:text-red-100 whitespace-nowrap">
       Renew Now
     </router-link>
   </div>
@@ -45,56 +45,65 @@
               {{ unreadCount > 9 ? '9+' : unreadCount }}
             </span>
           </button>
+        </div>
 
-          <!-- Notifications Dropdown -->
-          <div v-if="showNotifications" class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-fade-in">
-            <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
-              <h3 class="text-xs font-semibold text-slate-800 uppercase tracking-wider">Notifications</h3>
+        <!-- Teleported Notifications Dropdown (Compact & Viewport Aligned) -->
+        <Teleport to="body">
+          <div 
+            v-if="showNotifications" 
+            ref="notificationsDropdownRef"
+            class="fixed top-16 right-3 sm:right-6 w-72 sm:w-80 max-w-[calc(100vw-24px)] z-[9999] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden font-outfit max-h-[380px] flex flex-col animate-fade-in"
+          >
+            <!-- Header -->
+            <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/30 flex-shrink-0">
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Notifications</h3>
               <span class="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full" v-if="unreadCount > 0">
                 {{ unreadCount }} New
               </span>
             </div>
             
-            <div class="max-h-[350px] overflow-y-auto">
-              <div v-if="notifications.length === 0" class="p-8 text-center">
-                <Bell class="w-10 h-10 text-slate-200 mx-auto mb-3" />
+            <!-- List Container -->
+            <div class="flex-1 overflow-y-auto min-h-0">
+              <div v-if="notifications.length === 0" class="p-6 text-center">
+                <Bell class="w-8 h-8 text-slate-200 mx-auto mb-2" />
                 <p class="text-xs font-medium text-slate-400">No new notifications</p>
               </div>
-              <div v-else>
+              <div v-else class="divide-y divide-slate-50">
                 <div 
                   v-for="notification in notifications" 
                   :key="notification.id"
-                  class="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer relative"
+                  class="p-3.5 hover:bg-slate-50 transition-colors cursor-pointer relative text-left"
                   :class="{ 'bg-blue-50/20': !notification.is_read }"
                   @click="markNotificationAsRead(notification.id)"
                 >
-                  <div class="flex items-start space-x-3">
-                    <div class="p-2 rounded-lg" :class="getNotificationIconClass(notification.type)">
-                      <component :is="getNotificationIcon(notification.type)" class="w-4 h-4" />
+                  <div class="flex items-start space-x-2.5">
+                    <div class="p-1.5 rounded-lg flex-shrink-0 mt-0.5" :class="getNotificationIconClass(notification.type)">
+                      <component :is="getNotificationIcon(notification.type)" class="w-3.5 h-3.5" />
                     </div>
-                    <div class="flex-1 text-left">
-                      <div class="flex items-center justify-between mb-0.5">
-                        <span class="text-xs font-semibold text-slate-800">{{ notification.title }}</span>
-                        <span class="text-[9px] text-slate-400 font-semibold">{{ formatDate(notification.created_at) }}</span>
+                    <div class="flex-1 min-w-0 text-left">
+                      <div class="flex items-center justify-between mb-0.5 gap-1">
+                        <span class="text-xs font-bold text-slate-800 truncate" :class="{ 'text-blue-900': !notification.is_read }">{{ notification.title }}</span>
+                        <span class="text-[9px] text-slate-400 font-semibold flex-shrink-0 whitespace-nowrap">{{ formatDate(notification.created_at) }}</span>
                       </div>
-                      <p class="text-[11px] text-slate-500 leading-normal">{{ notification.message }}</p>
+                      <p class="text-[11px] text-slate-500 font-medium leading-normal break-words line-clamp-2">{{ notification.message }}</p>
                     </div>
                   </div>
-                  <div v-if="!notification.is_read" class="absolute right-3 top-3 w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
+                  <div v-if="!notification.is_read" class="absolute right-2.5 top-3 w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
                 </div>
               </div>
             </div>
             
-            <div v-if="notifications.length > 0" class="p-3 border-t border-slate-100 text-center bg-slate-50/10">
+            <!-- Footer (Always Visible) -->
+            <div class="p-2.5 border-t border-slate-100 text-center bg-slate-50/50 flex-shrink-0">
               <button 
                 @click="router.push('/student/notifications'); showNotifications = false"
-                class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                class="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer w-full flex items-center justify-center space-x-1"
               >
-                View All Notifications
+                <span>View All Notifications</span>
               </button>
             </div>
           </div>
-        </div>
+        </Teleport>
 
         <!-- User Menu -->
         <div class="relative" ref="userMenuRef">
@@ -235,13 +244,20 @@ const userInitials = computed(() => {
 
 // Click outside handling
 const notificationsRef = ref<HTMLElement | null>(null);
+const notificationsDropdownRef = ref<HTMLElement | null>(null);
 const userMenuRef = ref<HTMLElement | null>(null);
 
 const handleClickOutside = (event: MouseEvent) => {
-  if (notificationsRef.value && !notificationsRef.value.contains(event.target as Node)) {
+  const target = event.target as Node;
+  if (
+    notificationsRef.value && 
+    !notificationsRef.value.contains(target) &&
+    notificationsDropdownRef.value &&
+    !notificationsDropdownRef.value.contains(target)
+  ) {
     showNotifications.value = false;
   }
-  if (userMenuRef.value && !userMenuRef.value.contains(event.target as Node)) {
+  if (userMenuRef.value && !userMenuRef.value.contains(target)) {
     showUserMenu.value = false;
   }
 };

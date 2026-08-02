@@ -164,7 +164,7 @@ class LibrarianAuthenticationTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors('email');
-        $this->assertStringContainsString('Your account is inactive', $response->json('errors.email.0'));
+        $this->assertStringContainsString('Your account is pending approval or inactive', $response->json('errors.email.0'));
     }
 
     public function test_changing_librarian_status_to_inactive_revokes_tokens_and_blocks_further_requests()

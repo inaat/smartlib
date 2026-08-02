@@ -1,18 +1,15 @@
 <template>
   <div class="font-outfit text-left">
-    <!-- Header Bar -->
-    <div class="p-6 pb-2 flex items-center justify-between">
-      <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
-        <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-        <span>Active Sessions</span>
-      </h3>
+    <!-- Action Bar -->
+    <div class="p-2 flex justify-end">
       <button 
         @click="fetchSessions" 
         :disabled="loading"
-        class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+        class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all disabled:opacity-50 cursor-pointer flex items-center space-x-1.5 text-xs font-semibold"
         title="Refresh sessions"
       >
         <RefreshCw :class="['w-4 h-4', loading ? 'animate-spin' : '']" />
+        <span>Refresh</span>
       </button>
     </div>
 
@@ -104,8 +101,17 @@ import { useSwal } from '@/shared/composables/useSwal';
 const { showSuccess, showError, showConfirm } = useSwal();
 const sessions = ref<any[]>([]);
 
-const groupedSessions = computed(() => {
-  const groups: any = {};
+interface SessionGroup {
+  ip_address: string;
+  user_agent: string;
+  session_ids: number[];
+  is_current: boolean;
+  last_active: string;
+  [key: string]: any;
+}
+
+const groupedSessions = computed<SessionGroup[]>(() => {
+  const groups: Record<string, SessionGroup> = {};
   
   sessions.value.forEach(session => {
     let ip = (session.ip_address || '').trim();
@@ -131,7 +137,7 @@ const groupedSessions = computed(() => {
     }
   });
 
-  return Object.values(groups).sort((a: any, b: any) => (b.is_current ? 1 : -1));
+  return Object.values(groups).sort((a, b) => (b.is_current ? 1 : 0) - (a.is_current ? 1 : 0));
 });
 
 const loading = ref(false);

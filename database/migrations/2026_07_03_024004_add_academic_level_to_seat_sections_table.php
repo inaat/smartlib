@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('seat_sections', function (Blueprint $table) {
-            $table->string('academic_level')->nullable()->default('all')->after('gender');
+            if (!Schema::hasColumn('seat_sections', 'academic_level')) {
+                $table->string('academic_level')->nullable()->default('all')->after('gender');
+            }
         });
     }
 

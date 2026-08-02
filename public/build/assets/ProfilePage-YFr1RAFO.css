@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit[data-v-98bef46e] {
+  font-family: 'Outfit', sans-serif;
+}
+@keyframes fadeIn-98bef46e {
+from {
+    opacity: 0;
+    transform: translateY(4px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-98bef46e] {
+  animation: fadeIn-98bef46e 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

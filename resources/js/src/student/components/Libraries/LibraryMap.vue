@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { onMounted, watch } from 'vue';
 import { useGeolocation } from '@/shared/composables/useGeolocation';
 import { Users, Clock } from 'lucide-vue-next';
 

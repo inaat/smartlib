@@ -343,17 +343,13 @@ import {
   Calendar,
   UserCheck,
   Clock,
-  Building2,
-  Users,
-  AlertCircle,
   MoreVertical,
   BookOpen,
   MessageSquare,
   MapPin,
   Printer,
   AlertTriangle,
-  ShieldAlert,
-  Wrench
+  ShieldAlert
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
 import { format } from 'date-fns';

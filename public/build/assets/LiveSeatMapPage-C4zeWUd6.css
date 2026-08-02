@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit[data-v-9334d2c0] {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Slide up transition for the detail panel */
+.slide-up-enter-active[data-v-9334d2c0],
+.slide-up-leave-active[data-v-9334d2c0] {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-up-enter-from[data-v-9334d2c0] {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.slide-up-leave-to[data-v-9334d2c0] {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Tabular numbers for stats */
+.tabular-nums[data-v-9334d2c0] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hide scrollbar for horizontal cards */
+.hide-scrollbar[data-v-9334d2c0] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar[data-v-9334d2c0]::-webkit-scrollbar {
+  display: none;
+}

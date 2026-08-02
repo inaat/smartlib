@@ -4,7 +4,7 @@
     :class="[
       'fixed inset-y-0 left-0 z-50 flex flex-col bg-purple-700 border-r border-white/10 shadow-2xl transition-all duration-300 ease-in-out',
       // Mobile: always full width sidebar, translate in/out
-      'w-72',
+      'w-72 max-w-[85vw]',
       // Desktop overrides: relative h-full and width depends on collapsed state
       isCollapsed ? 'lg:w-20 lg:shadow-none lg:relative lg:top-0 lg:h-full lg:flex-shrink-0 lg:overflow-hidden' : 'lg:w-64 lg:shadow-none lg:relative lg:top-0 lg:h-full lg:flex-shrink-0 lg:overflow-hidden',
       // Translate: hidden on mobile unless open, always visible on desktop
@@ -269,7 +269,6 @@ import {
   Calendar,
   LifeBuoy,
   BarChart3,
-  FileBarChart,
   Settings,
   LogOut,
   X,
@@ -287,7 +286,6 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'toggle-collapse']);
 
-const route = useRoute();
 const { logout: authLogout, user, settings } = useAuth();
 const { showConfirm } = useSwal();
 

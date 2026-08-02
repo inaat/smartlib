@@ -4,7 +4,7 @@
     :class="[
       'fixed inset-y-0 left-0 z-50 flex flex-col bg-emerald-700 border-r border-emerald-800/40 shadow-2xl transition-all duration-300 ease-in-out overflow-x-hidden overscroll-contain',
       // Mobile: always full width sidebar, translate in/out
-      'w-72',
+      'w-72 max-w-[85vw]',
       // Desktop overrides: sticky h-screen locks height to viewport
       isCollapsed ? 'lg:w-20 lg:shadow-none lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden' : 'lg:w-64 lg:shadow-none lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden',
       // Translate: hidden on mobile unless open, always visible on desktop

@@ -108,6 +108,16 @@ class BookingController extends Controller
         $seat = Seat::with(['floor.library', 'seatSection'])->findOrFail($request->seat_id);
         $libraryId = $seat->floor->library_id;
 
+        // Enforce system max booking duration setting
+        $sysMaxDuration = (int)\App\Models\SystemSetting::get('max_booking_duration', 240);
+        $bStart = \Carbon\Carbon::parse($request->booking_time);
+        $bEnd = \Carbon\Carbon::parse($request->scheduled_end_time);
+        if ($sysMaxDuration > 0 && $bStart->diffInMinutes($bEnd) > $sysMaxDuration) {
+            return response()->json([
+                'message' => "Maximum allowed single booking duration is {$sysMaxDuration} minutes."
+            ], 400);
+        }
+
         // Location-based booking restriction
         $library = $seat->floor->library;
         if ($request->latitude && $request->longitude && $library->latitude && $library->longitude) {
@@ -556,9 +566,7 @@ class BookingController extends Controller
         $library = $booking->seat->library;
         
         if (!$library->latitude || !$library->longitude) {
-             // If library coordinates are not set, allow check-in (or handle as error depending on policy)
-             // For now, we'll allow it but log a warning or just proceed.
-             // Ideally, all libraries should have coordinates.
+             // If library coordinates are not set, allow check-in
         } else {
             $distance = $this->calculateDistance(
                 $request->latitude, 
@@ -575,6 +583,49 @@ class BookingController extends Controller
             }
         }
 
+        // ─── QR Code Seat Validation ────────────────────────────────────
+        $scannedQr = $request->input('qrCode') ?? $request->input('qr_code') ?? '';
+        $seatQr = $booking->seat->qr_code ?? '';
+
+        if (!empty($seatQr) && !empty($scannedQr)) {
+            // Decode both to compare seat_number + library_id for robust matching
+            $scannedData = json_decode(base64_decode($scannedQr), true);
+            $seatData = json_decode(base64_decode($seatQr), true);
+
+            $qrMatch = false;
+
+            if ($scannedData && $seatData) {
+                // Compare by seat identifiers (seat_number + library_id)
+                $qrMatch = (
+                    isset($scannedData['seat_number'], $seatData['seat_number']) &&
+                    $scannedData['seat_number'] === $seatData['seat_number'] &&
+                    (
+                        (!isset($scannedData['library_id']) && !isset($seatData['library_id'])) ||
+                        (isset($scannedData['library_id'], $seatData['library_id']) && (int)$scannedData['library_id'] === (int)$seatData['library_id'])
+                    )
+                );
+            }
+
+            // Fallback: exact string comparison
+            if (!$qrMatch) {
+                $qrMatch = (trim($scannedQr) === trim($seatQr));
+            }
+
+            if (!$qrMatch) {
+                return response()->json([
+                    'message' => 'QR code does not match your reserved seat. Please scan the correct seat QR code.',
+                    'error_type' => 'qr_mismatch',
+                    'expected_seat' => $booking->seat->seat_number ?? 'Unknown',
+                ], 400);
+            }
+        } elseif (empty($scannedQr) && !empty($seatQr) && ($library->require_qr_scan ?? true)) {
+            // Library requires QR scan but no QR was provided
+            return response()->json([
+                'message' => 'Please scan the QR code on your reserved seat to check in.',
+                'error_type' => 'qr_required',
+            ], 400);
+        }
+
         $now = now();
         $durationMinutes = Carbon::parse($booking->booking_time)->diffInMinutes(Carbon::parse($booking->scheduled_end_time), true);
 
@@ -583,6 +634,8 @@ class BookingController extends Controller
             'check_in_time' => $now,
             'booking_time' => $now,
             'scheduled_end_time' => $now->copy()->addMinutes($durationMinutes),
+            'qr_scanned' => !empty($scannedQr),
+            'qr_scanned_at' => !empty($scannedQr) ? $now : null,
         ]);
 
         $booking->seat->update(['status' => 'occupied']);
@@ -606,6 +659,7 @@ class BookingController extends Controller
 
         return response()->json([
             'success' => true, 
+            'message' => 'Scanned successfully! You are now checked in.',
             'booking' => $booking
         ]);
     }
@@ -663,12 +717,13 @@ class BookingController extends Controller
 
         if ($nextInQueue) {
             $nextInQueue->update(['status' => 'notified']);
+            $holdMins = (int)\App\Models\SystemSetting::get('queue_hold_minutes', 10);
             
             Notification::send(
                 $nextInQueue->user_id,
                 'queue',
                 'Seat Available!',
-                "Seat {$booking->seat->seat_number} is now free. You have 10 minutes to check in.",
+                "Seat {$booking->seat->seat_number} is now free. You have {$holdMins} minutes to check in.",
                 $booking->seat
             );
         }
@@ -677,9 +732,18 @@ class BookingController extends Controller
     }
     public function extend(Request $request, $id)
     {
+        if (!\App\Models\SystemSetting::get('allow_seat_extensions', true)) {
+            return response()->json(['message' => 'Active seat extensions are currently disabled in system settings.'], 403);
+        }
+
         $request->validate([
             'minutes' => 'required|integer|min:10',
         ]);
+
+        $sysMaxExtension = (int)\App\Models\SystemSetting::get('max_extension_minutes', 60);
+        if ($sysMaxExtension > 0 && $request->minutes > $sysMaxExtension) {
+            return response()->json(['message' => "Maximum single extension duration allowed is {$sysMaxExtension} minutes."], 400);
+        }
 
         $booking = SeatBooking::findOrFail($id);
 
@@ -702,15 +766,54 @@ class BookingController extends Controller
         $newEndTime = $booking->scheduled_end_time->copy()->addMinutes($request->minutes);
 
         // Rule: Cannot extend beyond library closing time
-        $dayOfWeek = $booking->scheduled_end_time->format('l');
+        $bookingTime = Carbon::parse($booking->booking_time);
+        $dayOfWeek = $bookingTime->format('l');
         $operatingHour = \App\Models\LibraryOperatingHour::where('library_id', $booking->library_id)
             ->where('day_of_week', $dayOfWeek)
             ->first();
 
         if ($operatingHour && $operatingHour->is_open) {
-            $closeAt = Carbon::parse($booking->scheduled_end_time->format('Y-m-d') . ' ' . $operatingHour->close_time);
-            
-            $maxMinutes = $booking->scheduled_end_time->diffInMinutes($closeAt, false);
+            $openTimeStr = strlen($operatingHour->open_time) === 5 ? $operatingHour->open_time . ':00' : $operatingHour->open_time;
+            $closeTimeStr = strlen($operatingHour->close_time) === 5 ? $operatingHour->close_time . ':00' : $operatingHour->close_time;
+
+            $openAt = Carbon::createFromFormat('H:i:s', $openTimeStr, $bookingTime->timezone);
+            $closeAt = Carbon::createFromFormat('H:i:s', $closeTimeStr, $bookingTime->timezone);
+
+            $openAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day);
+            $closeAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day);
+
+            if ($closeAt->lte($openAt)) {
+                $closeAt->addDay();
+            }
+
+            // Handle case where booking start time was early morning in an overnight shift starting yesterday
+            if ($bookingTime->lt($openAt)) {
+                $yesterday = (clone $bookingTime)->subDay()->format('l');
+                $yesterdayOperating = \App\Models\LibraryOperatingHour::where('library_id', $booking->library_id)
+                    ->where('day_of_week', $yesterday)
+                    ->first();
+
+                if ($yesterdayOperating && $yesterdayOperating->is_open) {
+                    $yOpenStr = strlen($yesterdayOperating->open_time) === 5 ? $yesterdayOperating->open_time . ':00' : $yesterdayOperating->open_time;
+                    $yCloseStr = strlen($yesterdayOperating->close_time) === 5 ? $yesterdayOperating->close_time . ':00' : $yesterdayOperating->close_time;
+
+                    $yOpenAt = Carbon::createFromFormat('H:i:s', $yOpenStr, $bookingTime->timezone);
+                    $yCloseAt = Carbon::createFromFormat('H:i:s', $yCloseStr, $bookingTime->timezone);
+
+                    $yOpenAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day)->subDay();
+                    $yCloseAt->setDate($bookingTime->year, $bookingTime->month, $bookingTime->day);
+                    if ($yCloseAt->lte($yOpenAt)) {
+                        $yCloseAt->addDay();
+                    }
+
+                    if ($bookingTime->gte($yOpenAt) && $bookingTime->lt($yCloseAt)) {
+                        $openAt = $yOpenAt;
+                        $closeAt = $yCloseAt;
+                    }
+                }
+            }
+
+            $maxMinutes = (int) $booking->scheduled_end_time->diffInMinutes($closeAt, false);
             
             if ($newEndTime->gt($closeAt) || $request->minutes > $maxMinutes) {
                 $formattedClose = $closeAt->format('h:i A');
@@ -746,6 +849,10 @@ class BookingController extends Controller
     }
     public function cancel(Request $request, $id)
     {
+        if (!\App\Models\SystemSetting::get('allow_cancellations', true)) {
+            return response()->json(['message' => 'Student booking cancellations are currently disabled in system settings.'], 403);
+        }
+
         SeatBooking::cancelExpiredBookings();
         $booking = SeatBooking::findOrFail($id);
 

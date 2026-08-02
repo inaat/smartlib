@@ -175,64 +175,119 @@
             <span>Book Your First Seat</span>
           </router-link>
         </div>
+        <div v-else>
+          <!-- Desktop Table View (>= md) -->
+          <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] uppercase font-semibold tracking-wider text-slate-400">
+                  <th class="px-6 py-3.5">Date</th>
+                  <th class="px-6 py-3.5">Library</th>
+                  <th class="px-6 py-3.5">Check In</th>
+                  <th class="px-6 py-3.5">Check Out</th>
+                  <th class="px-6 py-3.5 text-center">Duration</th>
+                  <th class="px-6 py-3.5 text-right">Method</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-50">
+                <tr v-for="log in paginatedAttendance" :key="log.id" class="hover:bg-slate-50/30 transition-colors group">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-300">
+                        {{ getDay(log.date) }}
+                      </div>
+                      <div class="text-left">
+                        <div class="text-xs font-semibold text-slate-800 leading-snug">{{ formatDate(log.date) }}</div>
+                        <div class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5 leading-none">{{ getDayName(log.date) }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 text-left">
+                    <div class="text-xs font-semibold text-slate-700">{{ log.library?.name || 'N/A' }}</div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center text-[11px] font-semibold text-emerald-600 bg-emerald-50/60 border border-emerald-100/50 px-2.5 py-1 rounded-lg w-fit">
+                      <Clock class="w-3 h-3 mr-1.5" />
+                      {{ formatTime(log.check_in_time) }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div v-if="log.check_out_time" class="flex items-center text-[11px] font-semibold text-red-500 bg-red-50/60 border border-red-100/50 px-2.5 py-1 rounded-lg w-fit">
+                      <Clock class="w-3 h-3 mr-1.5" />
+                      {{ formatTime(log.check_out_time) }}
+                    </div>
+                    <div v-else class="flex items-center text-[9px] font-semibold uppercase tracking-widest text-blue-600 bg-blue-50/50 border border-blue-100/30 px-2.5 py-1 rounded-lg w-fit animate-pulse">
+                      Present Now
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 text-center">
+                    <div class="text-xs font-bold text-slate-700">{{ log.total_minutes ? formatDuration(log.total_minutes) : '--' }}</div>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <span :class="[
+                      'text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border',
+                      log.marked_manually ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-slate-50 text-slate-400 border-slate-100'
+                    ]">
+                      {{ log.marked_manually ? 'Manual' : 'Auto' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-left">
-            <thead>
-              <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] uppercase font-semibold tracking-wider text-slate-400">
-                <th class="px-6 py-3.5">Date</th>
-                <th class="px-6 py-3.5">Library</th>
-                <th class="px-6 py-3.5">Check In</th>
-                <th class="px-6 py-3.5">Check Out</th>
-                <th class="px-6 py-3.5 text-center">Duration</th>
-                <th class="px-6 py-3.5 text-right">Method</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-50">
-              <tr v-for="log in paginatedAttendance" :key="log.id" class="hover:bg-slate-50/30 transition-colors group">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-300">
-                      {{ getDay(log.date) }}
-                    </div>
-                    <div class="text-left">
-                      <div class="text-xs font-semibold text-slate-800 leading-snug">{{ formatDate(log.date) }}</div>
-                      <div class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5 leading-none">{{ getDayName(log.date) }}</div>
-                    </div>
+          <!-- Mobile Distinct Cards View (< md) -->
+          <div class="block md:hidden p-3.5 space-y-3 bg-slate-50/60">
+            <div v-if="paginatedAttendance.length === 0" class="p-6 text-center text-slate-400 italic text-xs bg-white rounded-xl border border-slate-200/70">
+              No attendance logs found.
+            </div>
+            <div 
+              v-for="log in paginatedAttendance" 
+              :key="'mobile-' + log.id"
+              class="bg-white rounded-xl border border-slate-200/90 p-3.5 shadow-xs hover:border-slate-300 transition-all text-left space-y-3"
+            >
+              <!-- Top Row: Date, Library & Method Tag -->
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                <div class="flex items-center space-x-2.5 min-w-0">
+                  <div class="w-9 h-9 rounded-xl bg-blue-50/70 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0">
+                    {{ getDay(log.date) }}
                   </div>
-                </td>
-                <td class="px-6 py-4 text-left">
-                  <div class="text-xs font-semibold text-slate-700">{{ log.library?.name || 'N/A' }}</div>
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex items-center text-[11px] font-semibold text-emerald-600 bg-emerald-50/60 border border-emerald-100/50 px-2.5 py-1 rounded-lg w-fit">
-                    <Clock class="w-3 h-3 mr-1.5" />
-                    {{ formatTime(log.check_in_time) }}
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-slate-800 leading-snug truncate">{{ formatDate(log.date) }}</div>
+                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wide mt-0.5 truncate">{{ log.library?.name || 'Library Entry' }}</div>
                   </div>
-                </td>
-                <td class="px-6 py-4">
-                  <div v-if="log.check_out_time" class="flex items-center text-[11px] font-semibold text-red-500 bg-red-50/60 border border-red-100/50 px-2.5 py-1 rounded-lg w-fit">
-                    <Clock class="w-3 h-3 mr-1.5" />
-                    {{ formatTime(log.check_out_time) }}
-                  </div>
-                  <div v-else class="flex items-center text-[9px] font-semibold uppercase tracking-widest text-blue-600 bg-blue-50/50 border border-blue-100/30 px-2.5 py-1 rounded-lg w-fit animate-pulse">
-                    Present Now
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <div class="text-xs font-bold text-slate-700">{{ log.total_minutes ? formatDuration(log.total_minutes) : '--' }}</div>
-                </td>
-                <td class="px-6 py-4 text-right">
-                  <span :class="[
-                    'text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border',
-                    log.marked_manually ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-slate-50 text-slate-400 border-slate-100'
-                  ]">
-                    {{ log.marked_manually ? 'Manual' : 'Auto' }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </div>
+                <span :class="[
+                  'text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border flex-shrink-0 shadow-2xs',
+                  log.marked_manually ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                ]">
+                  {{ log.marked_manually ? 'Manual' : 'Auto' }}
+                </span>
+              </div>
+
+              <!-- Times & Duration Row -->
+              <div class="grid grid-cols-3 gap-2 text-left pt-0.5">
+                <!-- Check In -->
+                <div class="bg-emerald-50/60 border border-emerald-100/80 p-2 rounded-xl text-center sm:text-left">
+                  <span class="text-[9px] font-bold text-emerald-700 uppercase tracking-wider block mb-0.5">Check In</span>
+                  <span class="text-xs font-bold text-emerald-800 block">{{ formatTime(log.check_in_time) }}</span>
+                </div>
+
+                <!-- Check Out -->
+                <div class="bg-slate-50 border border-slate-100 p-2 rounded-xl text-center sm:text-left">
+                  <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Check Out</span>
+                  <span v-if="log.check_out_time" class="text-xs font-bold text-rose-600 block">{{ formatTime(log.check_out_time) }}</span>
+                  <span v-else class="text-[10px] font-bold text-blue-600 animate-pulse uppercase block">Present</span>
+                </div>
+
+                <!-- Duration -->
+                <div class="bg-blue-50/50 border border-blue-100/80 p-2 rounded-xl text-center sm:text-left">
+                  <span class="text-[9px] font-bold text-blue-600/90 uppercase tracking-wider block mb-0.5">Duration</span>
+                  <span class="text-xs font-bold text-slate-800 block">{{ log.total_minutes ? formatDuration(log.total_minutes) : '--' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- 6-Item Pagination Bar -->
           <div class="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">

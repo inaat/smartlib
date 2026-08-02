@@ -408,7 +408,6 @@ import {
   Clock,
   CreditCard,
   Plus,
-  TrendingUp,
   Calendar,
   Ban
 } from 'lucide-vue-next';

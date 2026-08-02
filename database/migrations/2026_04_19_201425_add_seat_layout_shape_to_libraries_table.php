@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('libraries', function (Blueprint $table) {
-            $table->string('seat_layout_shape')->default('E')->after('seat_layout_mode');
+            if (!Schema::hasColumn('libraries', 'seat_layout_shape')) {
+                $table->string('seat_layout_shape')->default('E')->after('seat_layout_mode');
+            }
         });
     }
 

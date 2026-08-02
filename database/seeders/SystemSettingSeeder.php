@@ -78,14 +78,6 @@ class SystemSettingSeeder extends Seeder
                 'description' => 'Maximum single session duration allowed per seat booking.',
             ],
             [
-                'key' => 'booking_advance_days',
-                'value' => '7',
-                'group' => 'booking',
-                'type' => 'number',
-                'label' => 'Advance Booking Limit (Days)',
-                'description' => 'How many days in advance students can book a seat.',
-            ],
-            [
                 'key' => 'allow_seat_extensions',
                 'value' => 'true',
                 'group' => 'booking',
@@ -118,14 +110,6 @@ class SystemSettingSeeder extends Seeder
                 'description' => 'Permit students to cancel upcoming bookings prior to start time.',
             ],
             [
-                'key' => 'cancellation_buffer_minutes',
-                'value' => '15',
-                'group' => 'booking',
-                'type' => 'number',
-                'label' => 'Cancellation Notice Buffer (Minutes)',
-                'description' => 'Minimum minutes before session start allowed for cancellation without penalty.',
-            ],
-            [
                 'key' => 'overstay_penalty_enabled',
                 'value' => 'true',
                 'group' => 'booking',
@@ -152,14 +136,6 @@ class SystemSettingSeeder extends Seeder
                 'description' => 'Standard loan duration granted for book reservations.',
             ],
             [
-                'key' => 'late_book_fine_per_day',
-                'value' => '10',
-                'group' => 'inventory',
-                'type' => 'number',
-                'label' => 'Overdue Book Fine per Day (Rs.)',
-                'description' => 'Daily penalty charge applied to overdue physical books.',
-            ],
-            [
                 'key' => 'allow_digital_book_downloads',
                 'value' => 'true',
                 'group' => 'inventory',
@@ -178,22 +154,6 @@ class SystemSettingSeeder extends Seeder
                 'description' => 'Send transactional emails for booking confirmations, cancellations, and alerts.',
             ],
             [
-                'key' => 'notify_on_booking_expiry',
-                'value' => 'true',
-                'group' => 'notifications',
-                'type' => 'boolean',
-                'label' => 'Send Pre-Expiry Reminders',
-                'description' => 'Alert students shortly before their active booking session expires.',
-            ],
-            [
-                'key' => 'expiry_reminder_lead_minutes',
-                'value' => '15',
-                'group' => 'notifications',
-                'type' => 'number',
-                'label' => 'Expiry Lead Warning Time (Minutes)',
-                'description' => 'Minutes before checkout when the pre-expiry alert is triggered.',
-            ],
-            [
                 'key' => 'notify_on_queue_turn',
                 'value' => 'true',
                 'group' => 'notifications',
@@ -204,22 +164,6 @@ class SystemSettingSeeder extends Seeder
 
             // Security & Controls Settings
             [
-                'key' => 'session_timeout_minutes',
-                'value' => '120',
-                'group' => 'security',
-                'type' => 'number',
-                'label' => 'Inactive Session Timeout (Minutes)',
-                'description' => 'Duration of inactivity before user web sessions are automatically logged out.',
-            ],
-            [
-                'key' => 'max_login_attempts',
-                'value' => '5',
-                'group' => 'security',
-                'type' => 'number',
-                'label' => 'Max Failed Login Attempts',
-                'description' => 'Number of failed password attempts allowed before temporary lockout.',
-            ],
-            [
                 'key' => 'enforce_strong_passwords',
                 'value' => 'true',
                 'group' => 'security',
@@ -228,6 +172,9 @@ class SystemSettingSeeder extends Seeder
                 'description' => 'Require passwords to contain at least 8 characters with numbers and symbols.',
             ],
         ];
+
+        $keysToKeep = array_column($settings, 'key');
+        SystemSetting::whereNotIn('key', $keysToKeep)->delete();
 
         foreach ($settings as $setting) {
             SystemSetting::updateOrCreate(['key' => $setting['key']], $setting);

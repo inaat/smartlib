@@ -175,7 +175,7 @@
                 <div>
                   <span class="text-[8px] font-medium text-slate-400 uppercase tracking-widest">Seat</span>
                   <p class="text-[11px] font-semibold text-blue-600 mt-0.5">
-                    {{ selectedPassEvent?.seat_number ? 'Seat ' + selectedPassEvent.seat_number : 'General Admission' }}
+                    {{ (selectedPassEvent as any)?.seat_number ? 'Seat ' + (selectedPassEvent as any).seat_number : 'General Admission' }}
                   </p>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import axios from 'axios';
 
 const appName = ref(import.meta.env.VITE_APP_NAME || 'SmartLib');
