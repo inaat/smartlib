@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('override_requests', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('seat_id')->constrained('seats')->onDelete('cascade');
-            $table->foreignId('library_id')->constrained('libraries')->onDelete('cascade');
-            $table->string('status')->default('pending'); // pending, approved, rejected
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('override_requests')) {
+            Schema::create('override_requests', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+                $table->foreignId('seat_id')->constrained('seats')->onDelete('cascade');
+                $table->foreignId('library_id')->constrained('libraries')->onDelete('cascade');
+                $table->string('status')->default('pending'); // pending, approved, rejected
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void
