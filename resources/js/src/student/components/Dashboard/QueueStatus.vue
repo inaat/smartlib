@@ -32,7 +32,7 @@
             ]">
               {{ queue.status === 'notified' ? 'Seat Ready!' : `Pos #${queue.queue_position}` }}
             </div>
-            <p v-if="queue.status === 'notified'" class="text-[9px] text-green-600 font-bold">Expires in 10m</p>
+            <p v-if="queue.status === 'notified'" class="text-[9px] text-green-600 font-bold">Expires in 5-Minutes</p>
           </div>
         </div>
         

@@ -26,6 +26,19 @@ class BookReservationController extends Controller
                 }
             });
 
+        if ($request->has('search') && !empty($request->search)) {
+            $search = strtolower(trim($request->search));
+            $query->where(function($q) use ($search) {
+                $q->whereHas('book', function($qb) use ($search) {
+                    $qb->whereRaw('LOWER(title) LIKE ?', ["%{$search}%"])
+                       ->orWhereRaw('LOWER(isbn) LIKE ?', ["%{$search}%"]);
+                })->orWhereHas('user', function($qu) use ($search) {
+                    $qu->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                       ->orWhereRaw('LOWER(crn) LIKE ?', ["%{$search}%"]);
+                });
+            });
+        }
+
         // Filter by date range if provided
         if ($request->has('from_date') && $request->from_date) {
             $query->whereDate('created_at', '>=', $request->from_date);
@@ -39,16 +52,17 @@ class BookReservationController extends Controller
             $query->where('status', $request->status);
         }
 
-        $reservations = $query->orderBy('created_at', 'desc')->get();
+        $perPage = (int) $request->get('per_page', 20);
+        $paginated = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
-        // Update overdue status
-        foreach ($reservations as $reservation) {
+        // Update overdue status for current page items
+        foreach ($paginated->getCollection() as $reservation) {
             if ($reservation->isOverdue() && $reservation->status === 'collected') {
                 $reservation->update(['status' => 'overdue']);
             }
         }
 
-        return response()->json($reservations);
+        return response()->json($paginated);
     }
 
     /**
@@ -161,10 +175,10 @@ class BookReservationController extends Controller
 
         $dueDateStr = $reservation->due_date ? \Carbon\Carbon::parse($reservation->due_date)->format('M d, Y') : 'N/A';
         
-        $isOverdue = $reservation->isOverdue() || $reservation->status === 'overdue';
-        $title = $isOverdue ? "URGENT: Overdue Book Return Reminder" : "Book Return Reminder";
+        $isOverdue = $reservation->isOverdue() || $reservation->status === 'overdue' || ($reservation->due_date && \Carbon\Carbon::parse($reservation->due_date)->isPast() && $reservation->status !== 'returned');
+        $title = $isOverdue ? "URGENT: Overdue Book Return Notification" : "Book Return Reminder Notification";
         $message = $isOverdue 
-            ? "URGENT: Your borrowed book \"{$reservation->book->title}\" is OVERDUE (Due date was {$dueDateStr}). Please return it to the library immediately!"
+            ? "OVERDUE ALERT: Your borrowed book \"{$reservation->book->title}\" was due on {$dueDateStr}. Please return it to the library immediately!"
             : "Reminder: Please return your borrowed book \"{$reservation->book->title}\" to the library by {$dueDateStr}.";
 
         \App\Models\Notification::send(

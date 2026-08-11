@@ -39,9 +39,22 @@ class BookingController extends Controller
             $query->where('library_id', $library->id);
         }
 
-        // Filter by date range if provided
-        if ($request->has('from_date') && $request->has('to_date')) {
-            $query->whereBetween('booking_time', [$request->from_date . ' 00:00:00', $request->to_date . ' 23:59:59']);
+        // Time Frame Filter
+        $timeRange = $request->input('time_range', 'today');
+        if ($timeRange === 'today') {
+            $query->whereBetween('booking_time', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()]);
+        } elseif ($timeRange === 'yesterday') {
+            $query->whereBetween('booking_time', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()]);
+        } elseif ($timeRange === 'this_month') {
+            $query->whereBetween('booking_time', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
+        } elseif ($timeRange === 'last_month') {
+            $query->whereBetween('booking_time', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()]);
+        } elseif ($timeRange === 'this_year') {
+            $query->whereBetween('booking_time', [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()]);
+        } elseif ($timeRange === 'custom' || ($request->has('from_date') && $request->has('to_date'))) {
+            if ($request->filled('from_date') && $request->filled('to_date')) {
+                $query->whereBetween('booking_time', [$request->from_date . ' 00:00:00', $request->to_date . ' 23:59:59']);
+            }
         }
 
         // Filter by status if provided
@@ -49,8 +62,8 @@ class BookingController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Search by student name or ID
-        if ($request->has('search')) {
+        // Search by student name or CRN
+        if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->whereHas('user', function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -58,10 +71,11 @@ class BookingController extends Controller
             });
         }
 
-        $perPage = $request->input('per_page', 15);
-        $bookings = ($perPage === 'all' || $perPage === -1) 
-            ? $query->latest()->paginate(999999)
-            : $query->latest()->paginate($perPage);
+        $perPage = $request->input('per_page', 20);
+        if ($perPage === 'all' || $perPage == -1) {
+            $perPage = 999999;
+        }
+        $bookings = $query->latest('booking_time')->paginate((int)$perPage);
 
         $bookings->getCollection()->transform(function ($booking) {
             return [
@@ -254,7 +268,44 @@ class BookingController extends Controller
             }
         }
 
-        $requests = $query->with(['user', 'seat.floor', 'seat.seatSection', 'seat.seatSubsection'])->latest()->get();
+        // Time Frame Filter for Override Requests
+        $timeRange = $request->input('time_range', 'today');
+        if ($timeRange === 'today') {
+            $query->whereBetween('created_at', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()]);
+        } elseif ($timeRange === 'yesterday') {
+            $query->whereBetween('created_at', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()]);
+        } elseif ($timeRange === 'this_month') {
+            $query->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
+        } elseif ($timeRange === 'last_month') {
+            $query->whereBetween('created_at', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()]);
+        } elseif ($timeRange === 'this_year') {
+            $query->whereBetween('created_at', [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()]);
+        } elseif ($timeRange === 'custom' || ($request->has('from_date') && $request->has('to_date'))) {
+            if ($request->filled('from_date') && $request->filled('to_date')) {
+                $query->whereBetween('created_at', [$request->from_date . ' 00:00:00', $request->to_date . ' 23:59:59']);
+            }
+        }
+
+        // Status filter if provided
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Search by student name or CRN
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('crn', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = $request->input('per_page', 20);
+        if ($perPage === 'all' || $perPage == -1) {
+            $perPage = 999999;
+        }
+
+        $requests = $query->with(['user', 'seat.floor', 'seat.seatSection', 'seat.seatSubsection'])->latest()->paginate((int)$perPage);
 
         return response()->json($requests);
     }

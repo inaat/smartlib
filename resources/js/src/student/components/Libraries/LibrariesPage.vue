@@ -263,7 +263,7 @@ const fetchLibraries = async () => {
   loadingLibraries.value = true;
   try {
     let data;
-    if (locationGranted.value && latitude.value && longitude.value) {
+    if (libraryFilterMode.value === 'nearby' && locationGranted.value && latitude.value && longitude.value) {
       data = await studentAPI.getNearbyLibraries(latitude.value, longitude.value);
     } else {
       data = await studentAPI.getLibraries();

@@ -107,16 +107,6 @@
                   <span>Joined {{ formatDate(student.created_at) }}</span>
                 </div>
               </div>
-
-              <div v-if="student.active_subscription" class="mt-6 p-4 bg-gradient-to-br from-emerald-50 to-teal-50/40 rounded-xl border border-emerald-100/60 text-left relative overflow-hidden">
-                <div class="flex items-center justify-between mb-3 relative z-10">
-                  <span class="text-[9px] font-semibold text-emerald-600 uppercase tracking-widest bg-white/80 border border-emerald-100 px-2 py-0.5 rounded-md">Membership Pass</span>
-                  <CheckCircle2 class="w-4 h-4 text-emerald-600" />
-                </div>
-                <p class="font-bold text-emerald-900 text-sm relative z-10">{{ student.active_subscription.subscription_plan?.name }}</p>
-                <p class="text-[10px] text-emerald-600 font-semibold mt-1.5 relative z-10">Expires {{ formatDate(student.active_subscription.expires_at) }}</p>
-                <div class="absolute bottom-0 right-0 w-16 h-16 bg-emerald-100/10 rounded-full translate-x-4 translate-y-4"></div>
-              </div>
             </div>
           </div>
         </div>

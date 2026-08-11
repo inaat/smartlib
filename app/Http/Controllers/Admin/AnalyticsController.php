@@ -39,14 +39,28 @@ class AnalyticsController extends Controller
             });
         }
 
-        $range = request()->query('range', 'monthly');
+        $range = request()->query('range', request()->query('timeRange', 'today'));
 
-        $dateFilter = match($range) {
+        $startDate = match($range) {
             'today' => now()->startOfDay(),
-            'weekly', 'week' => now()->subDays(7),
-            'yearly', 'year' => now()->subMonths(12),
-            default => now()->subDays(30),
+            'yesterday' => now()->subDay()->startOfDay(),
+            'this_month', 'monthly', 'month' => now()->startOfMonth(),
+            'last_month' => now()->subMonth()->startOfMonth(),
+            'this_year', 'yearly', 'year' => now()->startOfYear(),
+            'custom' => request()->filled('from_date') ? Carbon::parse(request()->from_date)->startOfDay() : now()->startOfDay(),
+            'all' => Carbon::create(2000, 1, 1)->startOfDay(),
+            'weekly', 'week' => now()->subDays(7)->startOfDay(),
+            default => now()->startOfDay(),
         };
+
+        $endDate = match($range) {
+            'yesterday' => now()->subDay()->endOfDay(),
+            'last_month' => now()->subMonth()->endOfMonth(),
+            'custom' => request()->filled('to_date') ? Carbon::parse(request()->to_date)->endOfDay() : now()->endOfDay(),
+            default => now()->endOfDay(),
+        };
+
+        $dateFilter = $startDate;
 
         $analytics = [
             'total_users' => (clone $usersQuery)->count(),
@@ -70,39 +84,134 @@ class AnalyticsController extends Controller
             'digital_books' => Book::whereIn('library_id', $myLibraryIds)->where('type', 'digital')->count(),
         ];
 
-        if ($range === 'today') {
-            $monthlyBookings = (clone $bookingQuery)->selectRaw("DATE_FORMAT(created_at, '%H:00') as date, COUNT(*) as count")
-                ->where('created_at', '>=', now()->startOfDay())
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get();
-        } elseif ($range === 'weekly' || $range === 'week') {
-            $monthlyBookings = (clone $bookingQuery)->selectRaw('DATE(created_at) as date, COUNT(*) as count')
-                ->where('created_at', '>=', now()->subDays(7))
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get()
-                ->map(function ($item) {
-                    $item->date = Carbon::parse($item->date)->format('D');
-                    return $item;
-                });
-        } elseif ($range === 'yearly' || $range === 'year') {
-            $monthlyBookings = (clone $bookingQuery)->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as date, COUNT(*) as count")
-                ->where('created_at', '>=', now()->subMonths(12))
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get()
-                ->map(function ($item) {
-                    $item->date = Carbon::parse($item->date . '-01')->format('M');
-                    return $item;
-                });
-        } else { // monthly / month (default)
-            $monthlyBookings = (clone $bookingQuery)->selectRaw('DATE(created_at) as date, COUNT(*) as count')
-                ->where('created_at', '>=', now()->subDays(30))
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get();
+        $monthlyBookingsList = [];
+        $allBookingsInRange = (clone $bookingQuery)->whereBetween('created_at', [$startDate, $endDate])->get();
+
+        if (in_array($range, ['today', 'yesterday'])) {
+            $targetDay = $range === 'yesterday' ? Carbon::yesterday() : Carbon::today();
+            for ($h = 0; $h <= 22; $h += 2) {
+                $slotStart = $targetDay->copy()->setTime($h, 0, 0);
+                $slotEnd = $targetDay->copy()->setTime($h + 1, 59, 59);
+
+                $cnt = $allBookingsInRange->filter(function ($b) use ($slotStart, $slotEnd) {
+                    $bt = Carbon::parse($b->created_at);
+                    return $bt->between($slotStart, $slotEnd);
+                })->count();
+
+                $monthlyBookingsList[] = [
+                    'date' => $slotStart->format('g A'),
+                    'count' => $cnt
+                ];
+            }
+        } elseif (in_array($range, ['this_month', 'last_month', 'monthly', 'month'])) {
+            $current = $startDate->copy();
+            while ($current->lte($endDate)) {
+                $dayStart = $current->copy()->startOfDay();
+                $dayEnd = $current->copy()->endOfDay();
+
+                $cnt = $allBookingsInRange->filter(function ($b) use ($dayStart, $dayEnd) {
+                    $bt = Carbon::parse($b->created_at);
+                    return $bt->between($dayStart, $dayEnd);
+                })->count();
+
+                $monthlyBookingsList[] = [
+                    'date' => $current->format('j M'),
+                    'count' => $cnt
+                ];
+                $current->addDay();
+            }
+        } elseif (in_array($range, ['this_year', 'yearly', 'year'])) {
+            $startOfYear = Carbon::now()->startOfYear();
+            for ($m = 0; $m < 12; $m++) {
+                $monthDate = $startOfYear->copy()->addMonths($m);
+                $monthStart = $monthDate->copy()->startOfMonth();
+                $monthEnd = $monthDate->copy()->endOfMonth();
+
+                $cnt = $allBookingsInRange->filter(function ($b) use ($monthStart, $monthEnd) {
+                    $bt = Carbon::parse($b->created_at);
+                    return $bt->between($monthStart, $monthEnd);
+                })->count();
+
+                $monthlyBookingsList[] = [
+                    'date' => $monthDate->format('M'),
+                    'count' => $cnt
+                ];
+            }
+        } elseif ($range === 'custom') {
+            $daysDiff = $startDate->diffInDays($endDate);
+            if ($daysDiff <= 2) {
+                $curr = $startDate->copy();
+                while ($curr->lte($endDate)) {
+                    $slotStart = $curr->copy();
+                    $slotEnd = $curr->copy()->addHours(2)->subSecond();
+
+                    $cnt = $allBookingsInRange->filter(function ($b) use ($slotStart, $slotEnd) {
+                        $bt = Carbon::parse($b->created_at);
+                        return $bt->between($slotStart, $slotEnd);
+                    })->count();
+
+                    $monthlyBookingsList[] = [
+                        'date' => $daysDiff <= 1 ? $slotStart->format('g A') : $slotStart->format('M j g A'),
+                        'count' => $cnt
+                    ];
+                    $curr->addHours(2);
+                }
+            } elseif ($daysDiff <= 60) {
+                $curr = $startDate->copy();
+                while ($curr->lte($endDate)) {
+                    $dayStart = $curr->copy()->startOfDay();
+                    $dayEnd = $curr->copy()->endOfDay();
+
+                    $cnt = $allBookingsInRange->filter(function ($b) use ($dayStart, $dayEnd) {
+                        $bt = Carbon::parse($b->created_at);
+                        return $bt->between($dayStart, $dayEnd);
+                    })->count();
+
+                    $monthlyBookingsList[] = [
+                        'date' => $curr->format('j M'),
+                        'count' => $cnt
+                    ];
+                    $curr->addDay();
+                }
+            } else {
+                $curr = $startDate->copy()->startOfMonth();
+                while ($curr->lte($endDate)) {
+                    $mStart = $curr->copy()->startOfMonth();
+                    $mEnd = $curr->copy()->endOfMonth();
+
+                    $cnt = $allBookingsInRange->filter(function ($b) use ($mStart, $mEnd) {
+                        $bt = Carbon::parse($b->created_at);
+                        return $bt->between($mStart, $mEnd);
+                    })->count();
+
+                    $monthlyBookingsList[] = [
+                        'date' => $curr->format('M Y'),
+                        'count' => $cnt
+                    ];
+                    $curr->addMonth();
+                }
+            }
+        } else {
+            // All time / default (Last 12 Months)
+            $startOfYear = Carbon::now()->subMonths(11)->startOfMonth();
+            for ($m = 0; $m < 12; $m++) {
+                $monthDate = $startOfYear->copy()->addMonths($m);
+                $monthStart = $monthDate->copy()->startOfMonth();
+                $monthEnd = $monthDate->copy()->endOfMonth();
+
+                $cnt = $allBookingsInRange->filter(function ($b) use ($monthStart, $monthEnd) {
+                    $bt = Carbon::parse($b->created_at);
+                    return $bt->between($monthStart, $monthEnd);
+                })->count();
+
+                $monthlyBookingsList[] = [
+                    'date' => $monthDate->format('M Y'),
+                    'count' => $cnt
+                ];
+            }
         }
+
+        $monthlyBookings = $monthlyBookingsList;
 
         // Top libraries by bookings
         $topLibraries = (clone $librariesQuery)->withCount('seatBookings')
@@ -117,7 +226,7 @@ class AnalyticsController extends Controller
             ->get();
 
         // Gender & Level wise analytics for SuperAdmin
-        $bookingsForStats = (clone $bookingQuery)->where('created_at', '>=', $dateFilter)->with(['user', 'seat.seatSubsection', 'seat.seatSection'])->get();
+        $bookingsForStats = (clone $bookingQuery)->where('created_at', '>=', $dateFilter)->with(['user', 'seat.seatSubsection', 'seat.seatSection', 'seat.floor'])->get();
 
         $genderStats = [
             'male' => 0,
@@ -135,47 +244,50 @@ class AnalyticsController extends Controller
         ];
 
         foreach ($bookingsForStats as $booking) {
-            // Gender
+            // Gender: Priority to User Profile Gender
             $uGender = strtolower(trim($booking->user->gender ?? ''));
             $subGender = strtolower(trim($booking->seat->seatSubsection->gender ?? ''));
             $secGender = strtolower(trim($booking->seat->seatSection->gender ?? ''));
+            $floorGender = strtolower(trim($booking->seat->floor->type ?? ''));
 
-            $isMale = in_array($uGender, ['male', 'boys', 'boy', 'men', 'm', 'male_only', 'male_section']) ||
-                     in_array($subGender, ['male', 'boys', 'boy', 'men', 'm', 'male_only', 'male_section']) ||
-                     in_array($secGender, ['male', 'boys', 'boy', 'men', 'm', 'male_only', 'male_section']);
+            $isFemale = in_array($uGender, ['female', 'girls', 'girl', 'women', 'f']);
+            $isMale = in_array($uGender, ['male', 'boys', 'boy', 'men', 'm']);
 
-            $isFemale = in_array($uGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section']) ||
-                       in_array($subGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section']) ||
-                       in_array($secGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section']);
+            if (!$isFemale && !$isMale) {
+                // Fallback to area gender if user profile gender is unspecified
+                $isFemale = in_array($subGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section', 'girls_only']) ||
+                            in_array($secGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section', 'girls_only']) ||
+                            in_array($floorGender, ['girls_only', 'female_only', 'girls']);
+            }
 
-            if ($isMale) {
-                $genderStats['male']++;
-            } elseif ($isFemale) {
+            if ($isFemale) {
                 $genderStats['female']++;
             } else {
-                if ($booking->id % 2 === 0) {
-                    $genderStats['female']++;
-                } else {
-                    $genderStats['male']++;
-                }
+                $genderStats['male']++;
             }
             $genderStats['total']++;
 
-            // Academic Level
+            // Academic Level: Priority to User ca_level > Subsection level > Section level
+            $userLevel = $booking->user->ca_level ?? $booking->user->academic_level ?? '';
             $subLevel = $booking->seat->seatSubsection->academic_level ?? '';
             $secLevel = $booking->seat->seatSection->academic_level ?? '';
-            $userLevel = $booking->user->academic_level ?? '';
 
-            $lvl = !empty($subLevel) && $subLevel !== 'all' ? $subLevel : (!empty($secLevel) && $secLevel !== 'all' ? $secLevel : (!empty($userLevel) && $userLevel !== 'all' ? $userLevel : 'all'));
+            $lvl = !empty($userLevel) && strtolower($userLevel) !== 'all' 
+                ? $userLevel 
+                : (!empty($subLevel) && strtolower($subLevel) !== 'all' 
+                    ? $subLevel 
+                    : (!empty($secLevel) && strtolower($secLevel) !== 'all' 
+                        ? $secLevel 
+                        : 'PRC'));
 
             if (strcasecmp($lvl, 'PRC') === 0) {
                 $levelStats['PRC']++;
             } elseif (strcasecmp($lvl, 'CAF') === 0) {
                 $levelStats['CAF']++;
-            } elseif (strcasecmp($lvl, 'Final') === 0) {
+            } elseif (strcasecmp($lvl, 'Final') === 0 || strcasecmp($lvl, 'Final Year') === 0) {
                 $levelStats['Final']++;
             } else {
-                $levelStats['all']++;
+                $levelStats['PRC']++;
             }
             $levelStats['total']++;
         }

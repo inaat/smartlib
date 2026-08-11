@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('libraries', function (Blueprint $table) {
             if (!Schema::hasColumn('libraries', 'table_capacity')) {
-                $table->integer('table_capacity')->default(4)->after('seat_layout_mode');
+                $table->integer('table_capacity')->default(6)->after('seat_layout_mode');
             }
         });
     }

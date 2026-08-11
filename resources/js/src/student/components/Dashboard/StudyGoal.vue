@@ -1,16 +1,16 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-hidden relative group font-outfit">
-    <!-- Background glow decoration -->
-    <div class="absolute -right-16 -top-16 w-36 h-36 bg-blue-50 rounded-full blur-2xl group-hover:bg-blue-100/50 transition-colors duration-500"></div>
-    
+  <div class="bg-white rounded-3xl p-6 border border-slate-100/90 shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden relative font-outfit text-left">
     <div class="relative z-10 flex flex-col space-y-5">
       <!-- Title & Header controls -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
-            <Target class="w-4 h-4 mr-2 text-blue-600" />
-            Target Progress
-          </h2>
+      <div class="flex items-center justify-between gap-4 border-b border-slate-100/80 pb-4">
+        <div class="flex items-center space-x-3 text-left">
+          <div class="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <Target class="w-4.5 h-4.5" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-800 tracking-tight leading-snug">Target Progress</h3>
+            <p class="text-[11px] text-slate-400 font-medium">Track your study goals and streak progress.</p>
+          </div>
         </div>
 
         <div class="flex items-center space-x-2">
@@ -21,7 +21,7 @@
               :class="[
                 'px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer',
                 activeGoalTab === 'weekly'
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-indigo-600 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
               ]"
             >
@@ -32,7 +32,7 @@
               :class="[
                 'px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer',
                 activeGoalTab === 'monthly'
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-indigo-600 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
               ]"
             >
@@ -43,7 +43,7 @@
           <!-- Edit Goal Button -->
           <button
             @click="openGoalModal"
-            class="p-1.5 bg-blue-50 border border-blue-100 hover:bg-blue-100/70 rounded-xl text-blue-700 transition-colors cursor-pointer"
+            class="p-1.5 bg-slate-50 border border-slate-200/80 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors cursor-pointer"
             title="Set Target Goals"
           >
             <Settings2 class="w-4 h-4" />
@@ -51,129 +51,137 @@
         </div>
       </div>
 
-      <!-- Active Goal Pill Badge -->
-      <div class="flex items-center justify-between bg-blue-50/60 border border-blue-100 px-3 py-1.5 rounded-xl">
-        <span class="text-xs font-semibold text-blue-900">
-          {{ activeGoalTab === 'weekly' ? 'Weekly Goal' : 'Monthly Goal' }}
-        </span>
-        <span class="text-xs font-extrabold text-blue-700">
-          Goal: {{ activeGoalTab === 'weekly' ? weeklyGoal : monthlyGoal }} hrs
-        </span>
-      </div>
-
-      <!-- Main Progress Display -->
-      <div class="flex items-center space-x-6">
-        <!-- SVG Circular Progress Indicator -->
-        <div class="relative flex items-center justify-center flex-shrink-0">
-          <svg class="w-24 h-24 transform -rotate-90">
-            <!-- Background circle -->
-            <circle
-              cx="48"
-              cy="48"
-              r="40"
-              stroke="#e2e8f0"
-              stroke-width="7"
-              fill="transparent"
-            />
-            <!-- Progress circle with gradient -->
-            <circle
-              cx="48"
-              cy="48"
-              r="40"
-              stroke="url(#blueGradient)"
-              stroke-width="8"
-              fill="transparent"
-              :stroke-dasharray="251.2"
-              :stroke-dashoffset="dashOffset"
-              stroke-linecap="round"
-              class="transition-all duration-1000 ease-out"
-            />
-            <!-- Gradients -->
-            <defs>
-              <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#2563eb" />
-                <stop offset="100%" stop-color="#06b6d4" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <!-- Center Text -->
-          <div class="absolute flex flex-col items-center justify-center">
-            <span class="text-lg font-black text-slate-800">{{ currentProgress }}%</span>
-            <span class="text-[9px] text-slate-400 font-bold uppercase">Done</span>
-          </div>
-        </div>
-
-        <!-- Progress Details -->
-        <div class="flex-1 space-y-3.5">
-          <!-- Total Hours -->
-          <div>
-            <div class="flex justify-between items-baseline mb-1">
-              <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                {{ activeGoalTab === 'weekly' ? 'Studied This Week' : 'Studied This Month' }}
-              </span>
-              <span class="text-sm font-black text-slate-700">{{ currentHours }}h</span>
+      <!-- Main Progress Box (Clean White / Slate Theme) -->
+      <div class="bg-slate-50/70 border border-slate-100 rounded-2xl p-5 relative overflow-hidden">
+        <div class="flex flex-col sm:flex-row items-center gap-5">
+          <!-- SVG Circular Progress Ring -->
+          <div class="relative flex items-center justify-center flex-shrink-0">
+            <svg class="w-20 h-20 transform -rotate-90">
+              <!-- Background circle -->
+              <circle
+                cx="40"
+                cy="40"
+                r="33"
+                stroke="#e2e8f0"
+                stroke-width="6"
+                fill="transparent"
+              />
+              <!-- Progress circle -->
+              <circle
+                cx="40"
+                cy="40"
+                r="33"
+                stroke="url(#indigoBlueGradient)"
+                stroke-width="6"
+                fill="transparent"
+                :stroke-dasharray="207.3"
+                :stroke-dashoffset="dashOffset"
+                stroke-linecap="round"
+                class="transition-all duration-1000 ease-out"
+              />
+              <defs>
+                <linearGradient id="indigoBlueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#3b82f6" />
+                  <stop offset="100%" stop-color="#2563eb" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <!-- Center Percentage Text -->
+            <div class="absolute flex flex-col items-center justify-center text-center">
+              <span class="text-base font-black tracking-tight text-slate-800 leading-none">{{ currentProgress }}%</span>
+              <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Done</span>
             </div>
-            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+          </div>
+
+          <!-- Progress Details -->
+          <div class="flex-1 min-w-0 w-full space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                {{ activeGoalTab === 'weekly' ? 'Weekly Target' : 'Monthly Target' }}
+              </span>
+              <span class="text-[11px] font-bold text-indigo-500 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full">
+                Goal: {{ activeGoalTab === 'weekly' ? weeklyGoal : monthlyGoal }}h
+              </span>
+            </div>
+
+            <div class="flex items-baseline space-x-1.5">
+              <span class="text-2xl font-extrabold text-slate-800 tracking-tight leading-none">{{ currentHours }}</span>
+              <span class="text-xs text-slate-400 font-medium">/ {{ activeGoalTab === 'weekly' ? weeklyGoal : monthlyGoal }} hrs studied</span>
+            </div>
+
+            <!-- Clean Progress Bar -->
+            <div class="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden">
               <div 
-                class="bg-blue-600 h-full rounded-full transition-all duration-1000"
+                class="bg-indigo-500 h-full rounded-full transition-all duration-1000"
                 :style="{ width: `${currentProgress}%` }"
               ></div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Streak Display -->
-          <div class="flex items-center justify-between p-2.5 bg-gradient-to-r from-orange-50/50 to-amber-50/30 border border-orange-100/50 rounded-xl">
+      <!-- Daily Streak Card -->
+      <div class="bg-orange-50/60 border border-orange-100 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+        <div class="flex items-center space-x-3 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+            <Flame class="w-4.5 h-4.5 fill-current" />
+          </div>
+          <div class="min-w-0 text-left">
             <div class="flex items-center space-x-2">
-              <div class="w-8 h-8 rounded-lg bg-orange-100/80 flex items-center justify-center text-orange-600 animate-pulse-slow">
-                <Flame class="w-4.5 h-4.5 text-orange-600 fill-current" />
-              </div>
-              <div class="text-left">
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wide leading-none">Daily Streak</p>
-                <p class="text-xs font-extrabold text-orange-700 mt-1 leading-none">{{ streak ?? 0 }} Days active</p>
-              </div>
+              <h4 class="text-xs font-bold text-slate-800 tracking-tight">{{ streak ?? 0 }} Days Active Streak</h4>
+              <span v-if="(streak ?? 0) >= 3" class="text-[9px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-md border border-orange-200 uppercase tracking-wider">
+                🔥 On Fire!
+              </span>
             </div>
-            <span v-if="(streak ?? 0) >= 3" class="text-[9px] font-bold text-orange-600 bg-orange-100/50 px-2 py-0.5 rounded border border-orange-200">
-              On Fire!
-            </span>
+            <p class="text-[11px] text-slate-500 font-medium truncate mt-0.5">Keep learning daily to increase your streak count.</p>
           </div>
         </div>
       </div>
 
-      <!-- Quick Metrics Grid -->
-      <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+      <!-- 3 Metrics Grid -->
+      <div class="grid grid-cols-3 gap-3 pt-1">
         <!-- Studied Today -->
-        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3 text-left">
+        <div class="bg-slate-50/80 border border-slate-100 rounded-2xl p-3 text-left">
           <div class="flex items-center space-x-1.5 text-slate-400 mb-1">
-            <Clock class="w-3.5 h-3.5 text-slate-400" />
-            <span class="text-[9px] font-bold uppercase tracking-wider leading-none">Studied Today</span>
+            <Clock class="w-3.5 h-3.5 text-blue-500" />
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Today</span>
           </div>
-          <span class="text-sm font-extrabold text-slate-700">{{ formattedHoursToday }} hrs</span>
+          <span class="text-base font-extrabold text-slate-800 tracking-tight">{{ formattedHoursToday }}h</span>
         </div>
 
-        <!-- Remaining to target -->
-        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3 text-left">
+        <!-- Target Goal -->
+        <div class="bg-slate-50/80 border border-slate-100 rounded-2xl p-3 text-left">
           <div class="flex items-center space-x-1.5 text-slate-400 mb-1">
-            <TrendingUp class="w-3.5 h-3.5 text-slate-400" />
-            <span class="text-[9px] font-bold uppercase tracking-wider leading-none">Remaining</span>
+            <Target class="w-3.5 h-3.5 text-indigo-500" />
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Target</span>
           </div>
-          <span class="text-sm font-extrabold text-slate-700">{{ formattedRemainingHours }} hrs</span>
+          <span class="text-base font-extrabold text-slate-800 tracking-tight">{{ activeGoalTab === 'weekly' ? weeklyGoal : monthlyGoal }}h</span>
+        </div>
+
+        <!-- Remaining -->
+        <div class="bg-slate-50/80 border border-slate-100 rounded-2xl p-3 text-left">
+          <div class="flex items-center space-x-1.5 text-slate-400 mb-1">
+            <TrendingUp class="w-3.5 h-3.5 text-emerald-500" />
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Remaining</span>
+          </div>
+          <span class="text-base font-extrabold text-slate-800 tracking-tight">{{ formattedRemainingHours }}h</span>
         </div>
       </div>
     </div>
 
     <!-- Set Study Goals Modal -->
     <Teleport to="body">
-      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in font-outfit">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 p-6 space-y-6 text-left">
+      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in font-outfit">
+        <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 p-6 space-y-6 text-left">
           <!-- Modal Header -->
           <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-            <div class="flex items-center space-x-2.5">
-              <div class="p-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
-                <Target class="w-5 h-5" />
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 flex items-center justify-center shadow-2xs">
+                <Target class="w-4.5 h-4.5" />
               </div>
               <div>
                 <h3 class="text-base font-bold text-slate-800 leading-tight">Set Study Target Goals</h3>
-                <p class="text-[11px] font-semibold text-slate-400">Customize your study targets in hours</p>
+                <p class="text-[11px] font-medium text-slate-400">Customize your target hours</p>
               </div>
             </div>
             <button @click="showModal = false" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
@@ -189,7 +197,7 @@
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Weekly Target Goal (Hours)
                 </label>
-                <span v-if="![10, 15, 20, 30, 40].includes(tempWeeklyGoal)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                <span v-if="![10, 15, 20, 30, 40].includes(tempWeeklyGoal)" class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100">
                   Custom: {{ tempWeeklyGoal }}h
                 </span>
               </div>
@@ -198,10 +206,10 @@
                 type="number"
                 min="1"
                 max="168"
-                placeholder="Enter any custom hours (e.g. 25)"
-                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                placeholder="Enter custom hours (e.g. 25)"
+                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50/50"
               />
-              <p class="text-[10px] font-medium text-slate-400 mt-1">Type any custom goal hours or click a quick preset below:</p>
+              <p class="text-[10px] font-medium text-slate-400 mt-1">Type custom goal hours or click a preset below:</p>
               <!-- Presets -->
               <div class="flex items-center space-x-2 mt-2 flex-wrap gap-y-1">
                 <span class="text-[10px] font-semibold text-slate-400">Presets:</span>
@@ -212,7 +220,7 @@
                   @click="tempWeeklyGoal = preset"
                   :class="[
                     'px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer',
-                    tempWeeklyGoal === preset ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    tempWeeklyGoal === preset ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                   ]"
                 >
                   {{ preset }}h
@@ -226,7 +234,7 @@
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Monthly Target Goal (Hours)
                 </label>
-                <span v-if="![40, 60, 80, 100, 120].includes(tempMonthlyGoal)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                <span v-if="![40, 60, 80, 100, 120].includes(tempMonthlyGoal)" class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100">
                   Custom: {{ tempMonthlyGoal }}h
                 </span>
               </div>
@@ -235,10 +243,10 @@
                 type="number"
                 min="1"
                 max="720"
-                placeholder="Enter any custom hours (e.g. 90)"
-                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                placeholder="Enter custom hours (e.g. 90)"
+                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50/50"
               />
-              <p class="text-[10px] font-medium text-slate-400 mt-1">Type any custom goal hours or click a quick preset below:</p>
+              <p class="text-[10px] font-medium text-slate-400 mt-1">Type custom goal hours or click a preset below:</p>
               <!-- Presets -->
               <div class="flex items-center space-x-2 mt-2 flex-wrap gap-y-1">
                 <span class="text-[10px] font-semibold text-slate-400">Presets:</span>
@@ -249,7 +257,7 @@
                   @click="tempMonthlyGoal = preset"
                   :class="[
                     'px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer',
-                    tempMonthlyGoal === preset ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    tempMonthlyGoal === preset ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                   ]"
                 >
                   {{ preset }}h
@@ -271,7 +279,7 @@
               type="button"
               @click="saveGoals"
               :disabled="saving"
-              class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer flex items-center space-x-1.5 disabled:opacity-50"
+              class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer flex items-center space-x-1.5 disabled:opacity-50"
             >
               <RefreshCw v-if="saving" class="w-3.5 h-3.5 animate-spin" />
               <span>{{ saving ? 'Saving...' : 'Save Target Goals' }}</span>
@@ -363,10 +371,10 @@ const currentHours = computed(() => {
   return (props.monthlyHours ?? 0).toFixed(1);
 });
 
-// SVG circular math
+// SVG circular math (radius 33 -> 2 * PI * 33 = 207.3)
 const dashOffset = computed(() => {
   const percent = Math.min(100, Math.max(0, currentProgress.value));
-  const circumference = 251.2; // 2 * Math.PI * 40
+  const circumference = 207.3;
   return circumference - (percent / 100) * circumference;
 });
 
@@ -393,20 +401,6 @@ const formattedRemainingHours = computed(() => {
 
 .font-outfit {
   font-family: 'Outfit', sans-serif;
-}
-
-@keyframes pulseSlow {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.95;
-  }
-}
-.animate-pulse-slow {
-  animation: pulseSlow 2s infinite ease-in-out;
 }
 
 @keyframes fadeIn {

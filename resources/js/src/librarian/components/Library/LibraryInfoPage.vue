@@ -743,6 +743,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import {
   Building2,
+  Armchair,
   MapPin,
   Save,
   Wifi,
@@ -993,9 +994,6 @@ const openMapModal = async () => {
   await nextTick();
   setTimeout(() => {
     initializePickerMap();
-    if (!libraryData.value.latitude || !libraryData.value.longitude) {
-      detectLocationForMap();
-    }
   }, 150);
 };
 
@@ -1126,11 +1124,6 @@ const fetchLibraryInfo = async () => {
         photo_url: data.photo_url
     };
 
-    // Auto-fill location if missing
-    if (!data.latitude || !data.longitude) {
-        getCurrentLocation();
-    }
-
     if (data.contact_info) {
         contactInfo.value = { ...contactInfo.value, ...data.contact_info };
     }
@@ -1199,9 +1192,16 @@ const saveChanges = async () => {
     photoPreview.value = null;
 
     fetchLibraryInfo();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating library info:', error);
-    showError('Save Failed', 'Failed to update library information');
+    let msg = 'Failed to update library information';
+    if (error.response?.data?.errors) {
+      const errList = Object.values(error.response.data.errors).flat().join(' ');
+      msg = errList || error.response?.data?.message || msg;
+    } else if (error.response?.data?.message) {
+      msg = error.response.data.message;
+    }
+    showError('Save Failed', msg);
   } finally {
     saving.value = false;
   }

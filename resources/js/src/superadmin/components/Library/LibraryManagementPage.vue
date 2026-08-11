@@ -200,39 +200,9 @@
             />
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Latitude</label>
-              <input
-                v-model.number="form.latitude"
-                type="number"
-                step="any"
-                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
-                placeholder="e.g. 31.5204"
-              />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Longitude</label>
-              <input
-                v-model.number="form.longitude"
-                type="number"
-                step="any"
-                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
-                placeholder="e.g. 74.3587"
-              />
-            </div>
-          </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Opening Hours</label>
-            <input
-              v-model="form.opening_hours"
-              type="text"
-              required
-              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
-              placeholder="e.g. 08:00 AM - 10:00 PM"
-            />
-          </div>
+
+
 
           <!-- Image Upload Selector -->
           <div>
@@ -344,9 +314,6 @@ const form = ref({
   id: null as number | null,
   name: '',
   address: '',
-  latitude: null as number | null,
-  longitude: null as number | null,
-  opening_hours: '08:00 AM - 10:00 PM',
   description: '',
   wifi_password: '',
   parking_available: true,
@@ -409,9 +376,6 @@ const openCreateModal = () => {
     id: null,
     name: '',
     address: '',
-    latitude: null,
-    longitude: null,
-    opening_hours: '08:00 AM - 10:00 PM',
     description: '',
     wifi_password: '',
     parking_available: true,
@@ -429,9 +393,6 @@ const editLibrary = (library: any) => {
     id: library.id,
     name: library.name,
     address: library.address,
-    latitude: library.latitude,
-    longitude: library.longitude,
-    opening_hours: library.opening_hours,
     description: library.description || '',
     wifi_password: library.wifi_password || '',
     parking_available: !!library.parking_available,
@@ -448,9 +409,6 @@ const saveLibrary = async () => {
     const formData = new FormData();
     formData.append('name', form.value.name);
     formData.append('address', form.value.address);
-    if (form.value.latitude) formData.append('latitude', form.value.latitude.toString());
-    if (form.value.longitude) formData.append('longitude', form.value.longitude.toString());
-    formData.append('opening_hours', form.value.opening_hours);
     formData.append('description', form.value.description || '');
     formData.append('wifi_password', form.value.wifi_password || '');
     formData.append('parking_available', form.value.parking_available ? '1' : '0');

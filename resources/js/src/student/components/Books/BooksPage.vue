@@ -1,6 +1,6 @@
 <template>
-  <div class="space-y-6">
-    <!-- Search and Filters -->
+  <div class="space-y-6 font-outfit text-left">
+    <!-- Search, Filters and Favorites Switch Header -->
     <div class="bg-gradient-to-r from-slate-50 to-white rounded-2xl shadow-sm border border-slate-200/60 p-5 font-outfit">
       <div class="flex flex-col md:flex-row gap-4">
         <!-- Search bar -->
@@ -14,46 +14,60 @@
           />
         </div>
         
-        <!-- Filters (Grid responsive stack, 100% contained inside parent card) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto">
+        <!-- Filters & Favorites Switcher -->
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <!-- Favorites Switch Toggle Button -->
+          <button
+            @click="showFavoritesOnly = !showFavoritesOnly"
+            :class="[
+              'px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center space-x-2 border cursor-pointer shadow-sm',
+              showFavoritesOnly 
+                ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-rose-500/10 ring-2 ring-rose-500/20' 
+                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+            ]"
+          >
+            <Heart :class="['w-4 h-4', showFavoritesOnly ? 'fill-rose-500 text-rose-500' : 'text-slate-400']" />
+            <span>Favorites {{ favoritesList.length > 0 ? `(${favoritesList.length})` : '' }}</span>
+          </button>
+
           <!-- Category Filter -->
-          <div class="relative group w-full">
-            <Filter class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+          <div class="relative group min-w-[140px] flex-1 sm:flex-none">
+            <Filter class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
             <select
               v-model="filterCategory"
-              class="w-full pl-11 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-sm text-slate-700 appearance-none cursor-pointer"
+              class="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-xs font-semibold text-slate-700 appearance-none cursor-pointer"
             >
               <option value="">All Categories</option>
               <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
             </select>
-            <ChevronDown class="absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <ChevronDown class="absolute right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
           </div>
 
           <!-- Type Filter -->
-          <div class="relative group w-full">
-            <BookOpen class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+          <div class="relative group min-w-[120px] flex-1 sm:flex-none">
+            <BookOpen class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
             <select
               v-model="filterType"
-              class="w-full pl-11 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-sm text-slate-700 appearance-none cursor-pointer"
+              class="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-xs font-semibold text-slate-700 appearance-none cursor-pointer"
             >
               <option value="">All Types</option>
               <option value="physical">Physical</option>
               <option value="digital">Digital</option>
             </select>
-            <ChevronDown class="absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <ChevronDown class="absolute right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
           </div>
 
           <!-- Library Filter -->
-          <div class="relative group w-full">
-            <LibraryIcon class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+          <div class="relative group min-w-[140px] flex-1 sm:flex-none">
+            <LibraryIcon class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
             <select
               v-model="filterLibrary"
-              class="w-full pl-11 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-sm text-slate-700 appearance-none cursor-pointer"
+              class="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-xs font-semibold text-slate-700 appearance-none cursor-pointer"
             >
               <option value="">All Libraries</option>
               <option v-for="lib in libraryOptions" :key="lib.id" :value="lib.id">{{ lib.name }}</option>
             </select>
-            <ChevronDown class="absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <ChevronDown class="absolute right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
           </div>
         </div>
       </div>
@@ -65,98 +79,64 @@
       <p class="text-xs font-semibold text-slate-400 font-outfit uppercase tracking-wider animate-pulse">Loading catalog...</p>
     </div>
 
-    <!-- Books Grid -->
-    <div v-else-if="filteredBooks.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 font-outfit animate-fade-in">
+    <!-- Minimal Ultra-Clean Books Grid (Only Picture, Name, Author & Favorite Heart) -->
+    <div v-else-if="filteredBooks.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 font-outfit animate-fade-in">
       <div
         v-for="book in filteredBooks"
         :key="book.id"
-        class="bg-white rounded-2xl border border-slate-100 hover:border-slate-200/80 transition-all duration-300 hover-lift hover:shadow-xl hover:shadow-slate-100/65 p-3.5 flex flex-col group h-full relative"
+        class="bg-white rounded-2xl border border-slate-100 hover:border-slate-200/80 transition-all duration-300 hover-lift hover:shadow-md p-2.5 flex flex-col group h-full relative cursor-pointer"
+        @click="openDetailsModal(book)"
       >
-        <!-- Book Cover Container -->
-        <div @click="openDetailsModal(book)" class="aspect-[3/4.2] relative overflow-hidden bg-slate-50 rounded-xl shadow-inner border border-slate-100/40 mb-4 flex items-center justify-center cursor-pointer">
+        <!-- Book Cover Picture Container -->
+        <div class="aspect-[3/4.2] relative overflow-hidden bg-slate-100 rounded-xl shadow-2xs mb-2.5 flex items-center justify-center">
           <img
             v-if="book.cover_url"
             :src="book.cover_url"
             :alt="book.title"
-            class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          <div v-else class="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-300">
-            <BookIcon class="w-10 h-10 mb-2 stroke-1" />
-            <span class="text-[10px] font-medium uppercase tracking-wider">No Cover</span>
+          <div v-else class="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-300">
+            <BookIcon class="w-7 h-7 stroke-1" />
           </div>
-          <!-- Availability Badge -->
-          <div class="absolute top-2.5 right-2.5">
+
+          <!-- Book Status Tag (Top-Left) -->
+          <div class="absolute top-2 left-2 z-10">
             <span
               v-if="book.type?.toLowerCase() === 'digital'"
-              class="px-2.5 py-1 bg-blue-600 text-white text-[9px] font-semibold uppercase tracking-wider rounded-lg shadow-sm border border-blue-500/20"
+              class="px-2 py-0.5 bg-blue-600/90 backdrop-blur-xs text-white text-[9px] font-bold uppercase tracking-wider rounded-md shadow-xs block"
             >
               Digital
             </span>
             <span
               v-else-if="book.availability === 'available'"
-              class="px-2.5 py-1 bg-emerald-500 text-white text-[9px] font-semibold uppercase tracking-wider rounded-lg shadow-sm border border-emerald-400/20"
+              class="px-2 py-0.5 bg-emerald-600/90 backdrop-blur-xs text-white text-[9px] font-bold uppercase tracking-wider rounded-md shadow-xs block"
             >
               Available
             </span>
             <span
               v-else
-              class="px-2.5 py-1 bg-amber-500 text-white text-[9px] font-semibold uppercase tracking-wider rounded-lg shadow-sm border border-amber-400/20"
+              class="px-2 py-0.5 bg-amber-600/90 backdrop-blur-xs text-white text-[9px] font-bold uppercase tracking-wider rounded-md shadow-xs block"
             >
               Reserved
             </span>
           </div>
+
+          <!-- Wishlist Favorite Heart Button (Top-Right) -->
+          <button 
+            @click.stop="toggleFavorite(book.id)" 
+            class="absolute top-2 right-2 p-1.5 rounded-full bg-slate-900/40 backdrop-blur-xs text-white hover:bg-rose-500 transition-colors z-10 cursor-pointer"
+            title="Toggle Favorite"
+          >
+            <Heart :class="['w-3.5 h-3.5', isFavorite(book.id) ? 'fill-rose-500 text-rose-500' : 'text-white']" />
+          </button>
         </div>
 
-        <!-- Book Info -->
+        <!-- Book Name (Title) & Author Name ONLY -->
         <div class="flex-1 flex flex-col min-w-0">
-          <div class="mb-4">
-            <span class="inline-block text-[9px] font-semibold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded uppercase tracking-wider mb-2">
-              {{ book.category }}
-            </span>
-            <h3 @click="openDetailsModal(book)" class="font-semibold text-slate-800 text-sm line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors cursor-pointer" :title="book.title">
-              {{ book.title }}
-            </h3>
-            <p class="text-xs text-slate-400 font-semibold mt-1">by {{ book.author }}</p>
-          </div>
-
-          <!-- Library details -->
-          <div class="mt-auto mb-4 p-2 bg-slate-50 border border-slate-100/50 rounded-xl flex items-center space-x-2">
-            <LibraryIcon class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-            <span class="text-[10px] font-medium text-slate-500 truncate" :title="book.library?.name || 'Main Library'">
-              {{ book.library?.name || 'Main Library' }}
-            </span>
-          </div>
-
-          <!-- Actions -->
-          <div class="pt-3 border-t border-slate-100 flex items-center space-x-2">
-            <!-- Digital Books Actions -->
-            <template v-if="book.type?.toLowerCase() === 'digital'">
-              <button
-                @click="readBook(book)"
-                class="flex-1 py-2 px-3 bg-green-600 hover:opacity-95 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-green-500/10 flex items-center justify-center space-x-1.5 active:scale-98"
-              >
-                <Eye class="w-3.5 h-3.5" />
-                <span>Read</span>
-              </button>
-              <button
-                @click="downloadBook(book)"
-                class="py-2 px-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold border border-slate-200/60 transition-all flex items-center justify-center active:scale-98"
-                title="Download PDF"
-              >
-                <Download class="w-3.5 h-3.5" />
-              </button>
-            </template>
-
-            <!-- Physical Books Actions -->
-            <template v-else>
-              <button
-                @click="openDetailsModal(book)"
-                class="w-full py-2 px-3 bg-blue-500 hover:opacity-95 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/10 border border-transparent transition-all flex items-center justify-center space-x-1.5 active:scale-98"
-              >
-                <span>{{ book.availability === 'available' ? 'Reserve Book' : 'View Details' }}</span>
-              </button>
-            </template>
-          </div>
+          <h3 class="font-bold text-slate-800 text-xs line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors" :title="book.title">
+            {{ book.title }}
+          </h3>
+          <p class="text-[11px] text-slate-400 font-medium mt-1 truncate">by {{ book.author }}</p>
         </div>
       </div>
     </div>
@@ -166,20 +146,24 @@
       <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200/50 shadow-inner animate-pulse-slow">
         <BookIcon class="w-7 h-7" />
       </div>
-      <h3 class="text-base font-semibold text-slate-800 mb-1">No books found</h3>
-      <p class="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">Try adjusting your search or filters to find what you're looking for.</p>
+      <h3 class="text-base font-semibold text-slate-800 mb-1">
+        {{ showFavoritesOnly ? 'No favorite books saved' : 'No books found' }}
+      </h3>
+      <p class="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+        {{ showFavoritesOnly ? 'Click the heart icon on any book to add it to your favorites list.' : 'Try adjusting your search or filters to find what you\'re looking for.' }}
+      </p>
       <button @click="resetFilters" class="mt-4 px-4 py-2 bg-white hover:bg-slate-50 text-blue-600 rounded-xl text-xs font-semibold border border-slate-300 transition-all shadow-sm">
         Clear all filters
       </button>
     </div>
 
-    <!-- Book Details & Reservation Modal -->
-    <div v-if="isDetailsModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-outfit">
+    <!-- Book Details & Reservation Modal (Shows full details & reservation actions on click) -->
+    <div v-if="isDetailsModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in font-outfit">
       <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh] md:max-h-[85vh] animate-scale-up text-left">
         <!-- Header -->
         <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center justify-between">
           <h2 class="font-semibold text-sm uppercase tracking-wider">Book Details</h2>
-          <button @click="isDetailsModalOpen = false" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+          <button @click="isDetailsModalOpen = false" class="p-1.5 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer">
             <X class="w-5 h-5 text-white" />
           </button>
         </div>
@@ -198,12 +182,23 @@
 
             <!-- Right Side: Details -->
             <div class="flex-1 space-y-4">
-              <div>
-                <span class="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-semibold uppercase tracking-wider rounded-lg border border-blue-100">
-                  {{ selectedBook.category }}
-                </span>
-                <h3 class="font-semibold text-slate-800 text-lg leading-tight mt-2.5">{{ selectedBook.title }}</h3>
-                <p class="text-xs text-slate-400 font-semibold mt-1">by <span class="text-slate-650 font-bold">{{ selectedBook.author }}</span></p>
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-semibold uppercase tracking-wider rounded-lg border border-blue-100">
+                    {{ selectedBook.category }}
+                  </span>
+                  <h3 class="font-semibold text-slate-800 text-lg leading-tight mt-2.5">{{ selectedBook.title }}</h3>
+                  <p class="text-xs text-slate-400 font-semibold mt-1">by <span class="text-slate-650 font-bold">{{ selectedBook.author }}</span></p>
+                </div>
+                
+                <!-- Toggle Favorite inside Modal -->
+                <button 
+                  @click="toggleFavorite(selectedBook.id)" 
+                  class="p-2 rounded-xl border border-slate-200 hover:bg-rose-50 transition-colors"
+                  title="Favorite Book"
+                >
+                  <Heart :class="['w-4 h-4', isFavorite(selectedBook.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-400']" />
+                </button>
               </div>
 
               <!-- Metadata Grid -->
@@ -228,8 +223,8 @@
                   </span>
                 </div>
                 <div>
-                  <span class="block text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Location / Shelf</span>
-                  <span class="font-bold text-slate-700">{{ selectedBook.location || 'N/A' }}</span>
+                  <span class="block text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Location / Library</span>
+                  <span class="font-bold text-slate-700">{{ selectedBook.library?.name || selectedBook.location || 'Main Library' }}</span>
                 </div>
               </div>
             </div>
@@ -237,7 +232,7 @@
 
           <!-- Description -->
           <div class="space-y-2">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-450">Synopsis / Description</h4>
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Synopsis / Description</h4>
             <p class="text-slate-600 text-xs leading-relaxed bg-slate-50/30 p-4 border border-slate-100 rounded-2xl whitespace-pre-line">{{ selectedBook.description || 'No description available for this book.' }}</p>
           </div>
 
@@ -265,7 +260,7 @@
                   min="1" 
                   :max="maxAllowedDays" 
                   v-model.number="reservationDays" 
-                  class="flex-1 accent-blue-650 h-1.5 bg-slate-100 rounded-lg cursor-pointer"
+                  class="flex-1 accent-blue-600 h-1.5 bg-slate-100 rounded-lg cursor-pointer"
                 />
                 <span class="text-xs font-medium text-slate-400">{{ maxAllowedDays }}d</span>
               </div>
@@ -288,7 +283,7 @@
         <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end space-x-3">
           <button 
             @click="isDetailsModalOpen = false" 
-            class="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold border border-slate-200 transition-all active:scale-98"
+            class="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold border border-slate-200 transition-all cursor-pointer"
           >
             Close
           </button>
@@ -297,30 +292,33 @@
           <template v-if="selectedBook.type?.toLowerCase() === 'digital'">
             <button 
               @click="readBook(selectedBook)" 
-              class="px-5 py-2.5 bg-green-600 hover:bg-green-750 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-green-500/10 flex items-center space-x-1.5 active:scale-98"
+              class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-green-500/10 flex items-center space-x-1.5 cursor-pointer"
             >
-              <Eye class="w-3.5 h-3.5" />
+              <Eye class="w-4 h-4" />
               <span>Read Online</span>
             </button>
             <button 
+              v-if="allowDigitalBookDownloads"
               @click="downloadBook(selectedBook)" 
-              class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-slate-800/10 flex items-center space-x-1.5 active:scale-98"
+              class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-200 transition-all flex items-center space-x-1.5 cursor-pointer"
             >
-              <Download class="w-3.5 h-3.5" />
+              <Download class="w-4 h-4" />
               <span>Download PDF</span>
             </button>
+            <span v-else class="text-[11px] font-medium text-slate-400 italic px-2">
+              (PDF Downloads disabled by admin)
+            </span>
           </template>
 
           <!-- Physical Actions -->
           <template v-else-if="selectedBook.availability === 'available'">
-            <button 
-              @click="submitReservation" 
+            <button
+              @click="submitReservation"
               :disabled="reserving === selectedBook.id"
-              class="px-5 py-2.5 bg-blue-600 hover:opacity-95 text-white rounded-xl text-xs font-semibold transition-all shadow-md shadow-blue-500/15 flex items-center space-x-1.5 active:scale-98 disabled:opacity-50"
+              class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
             >
-              <span v-if="reserving === selectedBook.id" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-              <BookIcon v-else class="w-3.5 h-3.5" />
-              <span>Request Reservation</span>
+              <CheckCircle v-if="reserving !== selectedBook.id" class="w-4 h-4" />
+              <span>{{ reserving === selectedBook.id ? 'Reserving...' : 'Confirm Reservation' }}</span>
             </button>
           </template>
         </div>
@@ -332,41 +330,50 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { 
-  Search, 
-  Filter, 
-  Book as BookIcon, 
-  BookOpen, 
-  Library as LibraryIcon,
+import { useSwal } from '@/shared/composables/useSwal';
+import { useSettings } from '@/shared/composables/useSettings';
+import { useGeolocation } from '@/shared/composables/useGeolocation';
+import { studentAPI } from '@/shared/services/api';
+import {
+  Search,
+  Filter,
   ChevronDown,
+  BookOpen,
+  Library as LibraryIcon,
+  Book as BookIcon,
   Eye,
   Download,
-  X
+  X,
+  Heart,
+  CheckCircle
 } from 'lucide-vue-next';
-import { studentAPI } from '@/shared/services/api';
-import { useSwal } from '@/shared/composables/useSwal';
-import { useGeolocation } from '@/shared/composables/useGeolocation';
 
 const route = useRoute();
 const { showSuccess, showError, showWarning } = useSwal();
-const { latitude, longitude } = useGeolocation();
+const { allowDigitalBookDownloads, maxBookReservationDays, fetchPublicSettings } = useSettings();
+const { latitude, longitude, requestLocation } = useGeolocation();
 
 const books = ref<any[]>([]);
 const loading = ref(true);
 const reserving = ref<number | null>(null);
 
-// Modal states
+// Modal & Favorites states
 const isDetailsModalOpen = ref(false);
 const selectedBook = ref<any>({});
 const reservationDays = ref(14);
+const favoritesList = ref<number[]>([]);
+const showFavoritesOnly = ref(false);
 
 const maxAllowedDays = computed(() => {
-  return selectedBook.value?.borrowing_period || 14;
+  const sysDays = Number(maxBookReservationDays.value) || 14;
+  if (!selectedBook.value) return sysDays;
+  return Math.min(selectedBook.value.borrowing_period || sysDays, sysDays);
 });
 
 const openDetailsModal = (book: any) => {
   selectedBook.value = book;
-  reservationDays.value = book.borrowing_period || 14;
+  const sysDays = Number(maxBookReservationDays.value) || 14;
+  reservationDays.value = Math.min(book.borrowing_period || sysDays, sysDays);
   isDetailsModalOpen.value = true;
 };
 
@@ -386,10 +393,10 @@ const filteredBooks = computed(() => {
     
     const matchesCategory = !filterCategory.value || book.category === filterCategory.value;
     const matchesType = !filterType.value || book.type?.toLowerCase() === filterType.value.toLowerCase();
-
     const matchesLibrary = !filterLibrary.value || book.library_id == filterLibrary.value || book.library?.id == filterLibrary.value;
+    const matchesFavorite = !showFavoritesOnly.value || favoritesList.value.includes(book.id);
 
-    return matchesSearch && matchesCategory && matchesType && matchesLibrary;
+    return matchesSearch && matchesCategory && matchesType && matchesLibrary && matchesFavorite;
   });
 });
 
@@ -404,7 +411,6 @@ const libraryOptions = computed(() => {
   return Array.from(seen.entries()).map(([id, name]) => ({ id, name }));
 });
 
-// Categories list
 const categories = computed(() => {
   const all = books.value.map(b => b.category).filter(Boolean);
   return [...new Set(all)];
@@ -420,6 +426,19 @@ const fetchBooks = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const toggleFavorite = (bookId: number) => {
+  const idx = favoritesList.value.indexOf(bookId);
+  if (idx > -1) {
+    favoritesList.value.splice(idx, 1);
+  } else {
+    favoritesList.value.push(bookId);
+  }
+};
+
+const isFavorite = (bookId: number) => {
+  return favoritesList.value.includes(bookId);
 };
 
 const submitReservation = async () => {
@@ -443,17 +462,23 @@ const submitReservation = async () => {
 };
 
 const readBook = (book: any) => {
-  if (book.digital_access?.file_url) {
-    window.open(book.digital_access.file_url, '_blank');
+  const fileUrl = book.digital_access?.file_url || (book.digital_access ? `/storage/${book.digital_access}` : null);
+  if (fileUrl) {
+    window.open(fileUrl, '_blank');
   } else {
-    showWarning('Not Available', 'This digital book is not yet available for reading.');
+    showWarning('Not Available', 'This digital book is not yet available for online reading.');
   }
 };
 
 const downloadBook = (book: any) => {
-  if (book.digital_access?.file_url) {
+  if (!allowDigitalBookDownloads.value) {
+    showWarning('Downloads Disabled', 'Digital book PDF downloads are currently disabled by system administrator. You can still read this book online.');
+    return;
+  }
+  const fileUrl = book.digital_access?.file_url || (book.digital_access ? `/storage/${book.digital_access}` : null);
+  if (fileUrl) {
     const link = document.createElement('a');
-    link.href = book.digital_access.file_url;
+    link.href = fileUrl;
     link.download = `${book.title}.pdf`;
     document.body.appendChild(link);
     link.click();
@@ -468,10 +493,11 @@ const resetFilters = () => {
   filterCategory.value = '';
   filterType.value = '';
   filterLibrary.value = '';
+  showFavoritesOnly.value = false;
 };
 
 onMounted(() => {
-  // Pre-set library filter from query params (from 'Reserve Book' on library card)
+  fetchPublicSettings();
   const libraryParam = route.query.library;
   if (libraryParam) {
     filterLibrary.value = Number(libraryParam);
@@ -536,19 +562,13 @@ onMounted(() => {
   transform: translateY(-4px);
 }
 
-.active\:scale-98:active {
-  transform: scale(0.98);
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .text-slate-650 {
   color: #475569;
-}
-.bg-green-750 {
-  background-color: #15803d;
-}
-.accent-blue-650 {
-  accent-color: #2563eb;
-}
-.text-slate-450 {
-  color: #64748b;
 }
 </style>

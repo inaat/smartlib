@@ -31,8 +31,8 @@
                   <span>{{ library.availableSeats }}/{{ library.totalSeats }} Seats</span>
                 </div>
                 <div class="flex items-center">
-                  <Clock class="w-3.5 h-3.5 mr-1 text-slate-400" />
-                  <span>{{ library.openingHours || 'Hours spec' }}</span>
+                  <Clock class="w-3.5 h-3.5 mr-1 text-blue-500" />
+                  <span>{{ getTodayHoursDisplay(library) }}</span>
                 </div>
               </div>
             </div>
@@ -61,6 +61,53 @@ const props = defineProps<{
 }>();
 
 const { latitude, longitude } = useGeolocation();
+
+const format12HourTime = (timeStr: string) => {
+  if (!timeStr) return '';
+  const cleanStr = timeStr.trim();
+  const match12 = cleanStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (match12) {
+    let h = parseInt(match12[1]);
+    const m = match12[2];
+    const ampm = match12[3].toUpperCase();
+    return `${h}:${m} ${ampm}`;
+  }
+  const match24 = cleanStr.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    let h = parseInt(match24[1]);
+    const m = match24[2];
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const displayH = h % 12 === 0 ? 12 : h % 12;
+    return `${displayH}:${m} ${ampm}`;
+  }
+  return timeStr;
+};
+
+const getTodayHoursDisplay = (library: any) => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const now = new Date();
+  const todayName = days[now.getDay()];
+
+  if (library?.operating_days && Array.isArray(library.operating_days)) {
+    const todaySchedule = library.operating_days.find((d: any) => d.day === todayName);
+    if (todaySchedule) {
+      if (!todaySchedule.isOpen) {
+        return 'Closed Today';
+      }
+      if (todaySchedule.openTime && todaySchedule.closeTime) {
+        const openStr = format12HourTime(todaySchedule.openTime);
+        const closeStr = format12HourTime(todaySchedule.closeTime);
+        return `Today: ${openStr} - ${closeStr}`;
+      }
+    }
+  }
+
+  if (library?.openingHours || library?.opening_hours) {
+    return library.openingHours || library.opening_hours;
+  }
+
+  return 'Hours not specified';
+};
 
 let map: any = null;
 let markers: any[] = [];

@@ -43,9 +43,21 @@ class AuthController extends Controller
             ]);
         }
 
-        if (!$user->is_active || $user->status !== 'approved') {
+        if ($user->status === 'suspended') {
             throw ValidationException::withMessages([
-                'email' => ['Your account is pending approval or inactive. Please contact support.'],
+                'email' => ['Account is suspended. Please contact administration.'],
+            ]);
+        }
+
+        if ($user->status === 'banned') {
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been banned. Please contact your library administrator.'],
+            ]);
+        }
+
+        if (!$user->is_active && $user->status !== 'pending') {
+            throw ValidationException::withMessages([
+                'email' => ['Your account is not active. Please contact support.'],
             ]);
         }
 
@@ -82,12 +94,13 @@ class AuthController extends Controller
                 'role' => $user->role,
                 'ca_level' => $user->ca_level,
                 'is_active' => $user->is_active,
+                'status' => $user->status,
                 'trial_used' => $user->trial_used,
                 'trial_started_at' => $user->trial_started_at,
                 'trial_ends_at' => $user->trial_ends_at,
                 'created_at' => $user->created_at,
-                'isApproved' => $user->is_active, // For frontend compatibility
-                'role' => $user->role, // For frontend compatibility
+                'isApproved' => $user->is_active && $user->status === 'approved',
+                'role' => $user->role,
                 'library_id' => $libraryId,
                 'library' => $user->library,
                 'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
@@ -96,7 +109,9 @@ class AuthController extends Controller
                 'gender' => $user->gender,
             ],
             'token' => $token,
-            'message' => 'Login successful'
+            'message' => $user->status === 'pending'
+                ? 'Your account is pending administrator approval.'
+                : 'Login successful'
         ]);
     }
 
@@ -222,11 +237,11 @@ class AuthController extends Controller
                 'role' => $user->role,
                 'ca_level' => $user->ca_level,
                 'is_active' => $user->is_active,
+                'status' => $user->status,
                 'trial_used' => $user->trial_used,
                 'trial_started_at' => $user->trial_started_at,
                 'trial_ends_at' => $user->trial_ends_at,
-                'isApproved' => true,
-                'role' => 'student',
+                'isApproved' => $user->is_active && $user->status === 'approved',
                 'library_id' => null,
                 'active_subscription' => $user->activeSubscription()->with('subscriptionPlan')->first(),
                 'pending_order' => $user->pendingOrder()->with('plan')->first(),
@@ -234,7 +249,9 @@ class AuthController extends Controller
                 'gender' => $user->gender,
             ],
             'token' => $token,
-            'message' => 'Registration successful! Welcome to SMART LIB.'
+            'message' => $user->status === 'pending'
+                ? 'Registration successful! Your account is pending administrator approval.'
+                : 'Registration successful! Welcome to SMART LIB.'
         ], 201);
     }
 
@@ -293,7 +310,12 @@ class AuthController extends Controller
     {
         $user = $request->user();
         
-        if (!$user->is_active || $user->status !== 'approved') {
+        if ($user->status === 'suspended' || $user->status === 'banned') {
+            $user->tokens()->delete();
+            return response()->json(['message' => 'Your account is not active.'], 403);
+        }
+
+        if (!$user->is_active && $user->status !== 'pending') {
             $user->tokens()->delete();
             return response()->json(['message' => 'Your account is inactive.'], 403);
         }
@@ -318,11 +340,12 @@ class AuthController extends Controller
             'role' => $user->role,
             'ca_level' => $user->ca_level,
             'is_active' => $user->is_active,
+            'status' => $user->status,
             'trial_used' => $user->trial_used,
             'trial_started_at' => $user->trial_started_at,
             'trial_ends_at' => $user->trial_ends_at,
             'created_at' => $user->created_at,
-            'isApproved' => $user->is_active,
+            'isApproved' => $user->is_active && $user->status === 'approved',
             'role' => $user->role,
             'library_id' => $libraryId,
             'library' => $user->library,

@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@keyframes fadeIn-ed172058 {
+from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+}
+to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+}
+.animate-fade-in[data-v-ed172058] {
+  animation: fadeIn-ed172058 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+input[type="range"][data-v-ed172058]::-webkit-slider-thumb {
+  border: 2px solid white;
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
+}
+
+
+.font-outfit[data-v-ccb1a45c] {
+  font-family: 'Outfit', sans-serif;
+}
+@keyframes fadeIn-ccb1a45c {
+from {
+    opacity: 0;
+    transform: translateY(6px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-ccb1a45c] {
+  animation: fadeIn-ccb1a45c 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hover-lift[data-v-ccb1a45c] {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift[data-v-ccb1a45c]:hover {
+  transform: translateY(-4px);
+}
+.active\:scale-98[data-v-ccb1a45c]:active {
+  transform: scale(0.98);
+}
+.bg-indigo-600[data-v-ccb1a45c] {
+  background-color: #4f46e5;
+}
+.bg-indigo-600[data-v-ccb1a45c]:hover {
+  background-color: #4338ca;
+}
+.shadow-indigo-500\/15[data-v-ccb1a45c] {
+  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.15);
+}

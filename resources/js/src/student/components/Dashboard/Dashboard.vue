@@ -13,54 +13,54 @@
       </div>
     </div>
 
-    <!-- Stat Cards (Responsive & Mobile-Optimized) -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 font-outfit">
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 font-outfit">
       <!-- Total Bookings -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all group text-left">
-        <div class="flex items-center justify-between gap-1.5 mb-1">
-          <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-snug">Total Bookings</span>
-          <div class="p-1.5 sm:p-2 bg-blue-50 border border-blue-100/60 rounded-xl flex-shrink-0">
-            <Calendar class="w-4 h-4 text-blue-600" />
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow text-left">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 bg-blue-50/60 rounded-lg text-blue-600">
+            <Calendar class="w-5 h-5" />
           </div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Bookings</span>
         </div>
-        <div class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight my-1">{{ checkedInBookingsCount }}</div>
-        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight line-clamp-1">Completed this month</div>
+        <div class="text-3xl font-bold text-slate-700 text-left tracking-tight">{{ checkedInBookingsCount }}</div>
+        <div class="text-[10px] text-slate-400 font-medium text-left uppercase">Completed this month</div>
       </div>
 
       <!-- Hours Today -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all group text-left">
-        <div class="flex items-center justify-between gap-1.5 mb-1">
-          <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-snug">Hours Today</span>
-          <div class="p-1.5 sm:p-2 bg-purple-50 border border-purple-100/60 rounded-xl flex-shrink-0">
-            <Clock class="w-4 h-4 text-purple-600" />
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow text-left">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 bg-purple-50/60 rounded-lg text-purple-600">
+            <Clock class="w-5 h-5" />
           </div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Hours Today</span>
         </div>
-        <div class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight my-1">{{ hoursToday }}h</div>
-        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight line-clamp-1">Logged in libraries</div>
+        <div class="text-3xl font-bold text-slate-700 text-left tracking-tight">{{ hoursToday }}h</div>
+        <div class="text-[10px] text-slate-400 font-medium text-left uppercase">Logged in libraries</div>
       </div>
 
       <!-- Reserved Books -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all group text-left">
-        <div class="flex items-center justify-between gap-1.5 mb-1">
-          <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-snug">Reserved Books</span>
-          <div class="p-1.5 sm:p-2 bg-emerald-50 border border-emerald-100/60 rounded-xl flex-shrink-0">
-            <BookMarked class="w-4 h-4 text-emerald-600" />
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow text-left">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 bg-emerald-50/60 rounded-lg text-emerald-600">
+            <BookMarked class="w-5 h-5" />
           </div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Reserved Books</span>
         </div>
-        <div class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight my-1">{{ reservedBooksCount }}</div>
-        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight line-clamp-1">Items ready at desk</div>
+        <div class="text-3xl font-bold text-slate-700 text-left tracking-tight">{{ reservedBooksCount }}</div>
+        <div class="text-[10px] text-slate-400 font-medium text-left uppercase">Items ready at desk</div>
       </div>
 
       <!-- Available Libraries -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all group text-left">
-        <div class="flex items-center justify-between gap-1.5 mb-1">
-          <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-snug">Available Libraries</span>
-          <div class="p-1.5 sm:p-2 bg-orange-50 border border-orange-100/60 rounded-xl flex-shrink-0">
-            <MapPin class="w-4 h-4 text-orange-500" />
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex flex-col space-y-2 hover:shadow-md transition-shadow text-left">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 bg-orange-50/60 rounded-lg text-orange-600">
+            <MapPin class="w-5 h-5" />
           </div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Libraries</span>
         </div>
-        <div class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight my-1">{{ libraries.length }}</div>
-        <div class="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight line-clamp-1">Partner locations</div>
+        <div class="text-3xl font-bold text-slate-700 text-left tracking-tight">{{ libraries.length }}</div>
+        <div class="text-[10px] text-slate-400 font-medium text-left uppercase">Partner locations</div>
       </div>
     </div>
 
@@ -68,26 +68,26 @@
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Left Column - AI Recommendations & Study Analytics -->
+      <!-- Left Column - Study Analytics & Recent Activity -->
       <div class="lg:col-span-2 space-y-6">
-        <!-- AI Recommendations -->
-        <RecommendationSlider 
-          :recommendations="recommendations" 
-          @action="handleRecommendationAction"
-        />
-
         <!-- Study Analytics -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-900 flex items-center">
-              <BarChart3 class="w-5 h-5 mr-2 text-blue-600" />
-              Study Analytics
-            </h2>
+        <div class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100/90 shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden font-outfit text-left">
+          <!-- Header -->
+          <div class="flex items-center justify-between gap-4 mb-5 border-b border-slate-100/80 pb-4">
+            <div class="flex items-center space-x-3 text-left">
+              <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                <BarChart3 class="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-800 tracking-tight leading-snug">Study Analytics</h3>
+                <p class="text-[11px] text-slate-400 font-medium">Your weekly and monthly study session breakdown.</p>
+              </div>
+            </div>
             <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
               <button
                 @click="activeTab = 'weekly'"
                 :class="[
-                  'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300',
+                  'px-3 py-1 rounded-lg text-xs font-bold transition-all duration-300 cursor-pointer',
                   activeTab === 'weekly' 
                     ? 'bg-white text-blue-600 shadow-sm' 
                     : 'text-slate-500 hover:text-slate-700'
@@ -98,7 +98,7 @@
               <button
                 @click="activeTab = 'monthly'"
                 :class="[
-                  'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300',
+                  'px-3 py-1 rounded-lg text-xs font-bold transition-all duration-300 cursor-pointer',
                   activeTab === 'monthly' 
                     ? 'bg-white text-blue-600 shadow-sm' 
                     : 'text-slate-500 hover:text-slate-700'
@@ -109,76 +109,32 @@
             </div>
           </div>
 
-          <!-- Study Hours Chart -->
-          <div class="mb-6">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-                {{ activeTab === 'weekly' ? 'Weekly Study Hours' : 'Monthly Study Hours' }}
-              </span>
-              <span class="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full shadow-sm">
-                {{ chartTotalHours }}h total
-              </span>
-            </div>
-            
-            <div class="relative h-48 mb-3">
-              <!-- Y-Axis Gridlines -->
-              <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                <div v-for="i in 4" :key="i" class="w-full border-t border-slate-100"></div>
-              </div>
-
-              <!-- Bars Container -->
-              <div class="absolute inset-0 flex items-end justify-between space-x-3.5 pt-4">
-                <div
-                  v-for="(item, index) in activeChartData"
-                  :key="index"
-                  class="flex-1 flex flex-col items-center group h-full justify-end"
-                >
-                  <!-- Bar -->
-                  <div 
-                    class="w-full bg-gradient-to-t from-blue-600 to-cyan-500 rounded-t-lg transition-all duration-500 hover:from-blue-500 hover:to-cyan-400 cursor-pointer relative shadow-sm hover:shadow-md group-hover:scale-x-105"
-                    :style="{ height: (item.hours / maxChartHours * 100) + '%' }"
-                  >
-                    <!-- Tooltip -->
-                    <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap shadow-lg border border-slate-700 pointer-events-none z-20">
-                      {{ item.hours }}h
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- X-Axis Labels -->
-            <div class="flex justify-between px-2 pt-2 border-t border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              <span v-for="(item, index) in activeChartData" :key="index" class="flex-1 text-center truncate">
-                {{ item.label }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Study Stats -->
-          <div class="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
-            <div class="text-center">
-              <div class="text-2xl font-bold text-gray-900">{{ avgSessionDuration }}h</div>
-              <div class="text-xs text-gray-600">Avg. Session</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-gray-900">{{ totalSessions }}</div>
-              <div class="text-xs text-gray-600">Total Sessions</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-gray-900">{{ focusScore }}%</div>
-              <div class="text-xs text-gray-600">Focus Score</div>
-            </div>
+          <!-- Study Hours Chart (Matching Librarian Panel) -->
+          <div class="pt-2">
+            <BookingTrendsChart 
+              :data="activeChartData" 
+              x-key="label" 
+              y-key="value" 
+              label="Hours" 
+              color="#2563eb"
+            />
           </div>
         </div>
 
         <!-- Recent Activity -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
-          <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
-            <Activity class="w-5 h-5 mr-2 text-blue-600" />
-            Recent Activity
-          </h2>
-          <div class="relative pl-6 border-l-2 border-slate-100 space-y-6 ml-3 text-left">
+        <div class="bg-white rounded-3xl p-6 border border-slate-100/90 shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden font-outfit text-left">
+          <!-- Header -->
+          <div class="flex items-center space-x-3 mb-5 border-b border-slate-100/80 pb-4 text-left">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+              <Activity class="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-800 tracking-tight leading-snug">Recent Activity</h3>
+              <p class="text-[11px] text-slate-400 font-medium">Latest bookings, check-ins, and library activities.</p>
+            </div>
+          </div>
+
+          <div class="relative pl-6 border-l-2 border-slate-100 space-y-5 ml-3 text-left">
             <div
               v-for="activity in recentActivities"
               :key="activity.id"
@@ -195,7 +151,7 @@
                 ]"
               ></span>
 
-              <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-slate-200/80 hover:bg-slate-50/80 transition-all hover-lift flex items-start space-x-3.5 relative">
+              <div class="p-4 bg-slate-50/70 border border-slate-100 rounded-2xl hover:border-slate-200/80 hover:bg-slate-50 transition-all flex items-start space-x-3.5 relative">
                 <div :class="[
                   'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border',
                   activity.type === 'booking' ? 'bg-blue-50/50 border-blue-100 text-blue-600' :
@@ -207,7 +163,7 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-xs font-bold text-slate-800">{{ activity.title }}</p>
-                  <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{{ activity.description }}</p>
+                  <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed font-medium">{{ activity.description }}</p>
                 </div>
                 <div class="text-[10px] font-semibold text-slate-400 text-right whitespace-nowrap self-start">
                   {{ activity.time }}
@@ -222,9 +178,6 @@
       <div class="space-y-6">
         <!-- Quick Actions -->
         <QuickActions />
-        
-        <!-- Upcoming Bookings -->
-        <UpcomingBookings />
 
         <!-- Seat Waiting List (Queue) -->
         <QueueStatus :queues="activeQueues" />
@@ -252,8 +205,7 @@ import { useRouter } from 'vue-router';
 import { useAuth } from '@/shared/composables/useAuth';
 import { useApp } from '@/shared/composables/useApp';
 import { studentAPI } from '@/shared/services/api';
-import RecommendationSlider from './RecommendationSlider.vue';
-import UpcomingBookings from './UpcomingBookings.vue';
+import BookingTrendsChart from '@/shared/components/charts/BookingTrendsChart.vue';
 import QueueStatus from './QueueStatus.vue';
 import QuickActions from './QuickActions.vue';
 import StudyGoal from './StudyGoal.vue';
@@ -267,55 +219,41 @@ import {
 } from 'lucide-vue-next';
 
 const { user } = useAuth();
-const { bookings, libraries, books, events, generateAIRecommendations } = useApp();
+const { bookings, libraries, books, events } = useApp();
 const router = useRouter();
 
 const checkedInBookingsCount = computed(() => {
   return bookings.value.filter(b => b.check_in_time !== null && b.check_in_time !== undefined).length;
 });
 
-// Automatically reload dashboard data when bookings change (e.g. check in, check out, cancel, extend)
-watch(bookings, () => {
-  loadDashboardData();
-}, { deep: true });
+// Study Analytics refs
+const activeTab = ref<'weekly' | 'monthly'>('weekly');
+const weeklyStudyData = ref<any[]>([]);
+const monthlyStudyData = ref<any[]>([]);
 
 const activeChartData = computed(() => {
   if (activeTab.value === 'weekly') {
     return weeklyStudyData.value.map(d => ({
       label: d.day,
-      hours: d.hours
+      value: d.hours
     }));
   } else {
     return monthlyStudyData.value.map(d => ({
       label: d.month,
-      hours: d.hours
+      value: d.hours
     }));
   }
 });
 
 const maxChartHours = computed(() => {
   if (activeChartData.value.length === 0) return 1;
-  return Math.max(...activeChartData.value.map(d => d.hours), 1);
+  return Math.max(...activeChartData.value.map(d => d.value), 1);
 });
 
 const chartTotalHours = computed(() => {
-  const sum = activeChartData.value.reduce((acc, curr) => acc + curr.hours, 0);
+  const sum = activeChartData.value.reduce((acc, curr) => acc + curr.value, 0);
   return Math.round(sum * 10) / 10;
 });
-
-const handleRecommendationAction = (recommendation: any) => {
-  switch (recommendation.type) {
-    case 'seat':
-      router.push('/student/libraries');
-      break;
-    case 'book':
-      router.push('/student/books');
-      break;
-    case 'event':
-      router.push('/student/events');
-      break;
-  }
-};
 
 // Dashboard data from API
 const dashboardData = ref<any>(null);
@@ -335,9 +273,6 @@ const avgSessionDuration = ref(0);
 const totalSessions = ref(0);
 const focusScore = ref(0);
 const reservedBooksCount = ref(0);
-const weeklyStudyData = ref<any[]>([]);
-const monthlyStudyData = ref<any[]>([]);
-const activeTab = ref<'weekly' | 'monthly'>('weekly');
 const recentActivities = ref<any[]>([]);
 const activeQueues = ref<any[]>([]);
 
@@ -419,77 +354,6 @@ const formatTimeAgo = (dateString: string) => {
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
   return `${Math.floor(diffInSeconds / 86400)} days ago`;
 };
-
-// Removed achievements and studyTip as they are no longer used on the dashboard
-
-const recommendations = computed(() => {
-  const aiRecs = user.value?.id ? generateAIRecommendations(user.value.id) : [];
-  
-  const mappedRecs = aiRecs.slice(0, 3).map(rec => {
-    if (rec.type === 'time_slot') {
-      return {
-        type: 'seat' as const,
-        title: rec.title,
-        description: rec.description,
-        action: 'Book Now',
-        time: rec.data?.recommendedTime || '',
-        location: rec.data?.libraryName || 'ICAP Library'
-      };
-    } else if (rec.type === 'book') {
-      return {
-        type: 'book' as const,
-        title: rec.title,
-        description: rec.description,
-        action: 'Reserve',
-        author: rec.data?.author || 'Unknown'
-      };
-    } else {
-      return {
-        type: 'event' as const,
-        title: rec.title,
-        description: rec.description,
-        action: 'Register',
-        date: rec.data?.date || ''
-      };
-    }
-  });
-
-  if (mappedRecs.length === 0) {
-    const defaultRecs: any[] = [];
-    if (books.value.length > 0) {
-      const latestBook = books.value[0];
-      defaultRecs.push({
-        type: 'book',
-        title: 'New Book Available',
-        description: `${latestBook.title} is now available for pickup.`,
-        action: 'Reserve',
-        author: latestBook.author || 'Unknown Author'
-      });
-    }
-    if (events.value.length > 0) {
-      const upcomingEvent = events.value[0];
-      defaultRecs.push({
-        type: 'event',
-        title: upcomingEvent.title || 'Upcoming Event',
-        description: upcomingEvent.description || 'Join us for this event.',
-        action: 'Register',
-        date: upcomingEvent.event_date ? new Date(upcomingEvent.event_date).toLocaleDateString() : ''
-      });
-    }
-    if (libraries.value.length > 0) {
-      defaultRecs.push({
-        type: 'seat',
-        title: 'Book a Study Seat',
-        description: `Visit ${libraries.value[0].name} and secure your spot for productive studying.`,
-        action: 'Book Now',
-        location: libraries.value[0].name
-      });
-    }
-    return defaultRecs;
-  }
-
-  return mappedRecs;
-});
 
 onMounted(() => {
   loadDashboardData();

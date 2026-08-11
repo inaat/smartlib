@@ -73,24 +73,46 @@ class UserController extends Controller
             'role' => 'required|in:student,librarian,super_admin',
             'library_id' => 'nullable|exists:libraries,id',
             'ca_level' => 'nullable|string|in:PRC,CAF,Final',
+            'gender' => 'nullable|string|in:male,female',
             'phone' => 'nullable|string|max:20',
         ]);
 
+        $crn = $request->crn;
+        if ($request->role === 'librarian' && empty($crn)) {
+            $lastLibrarian = User::where('role', 'librarian')
+                ->whereNotNull('crn')
+                ->whereRaw("crn REGEXP '^[0-9]+$'")
+                ->orderByRaw('CAST(crn AS UNSIGNED) DESC')
+                ->first();
+
+            if ($lastLibrarian && is_numeric($lastLibrarian->crn)) {
+                $nextNum = intval($lastLibrarian->crn) + 1;
+            } else {
+                $nextNum = 1001;
+            }
+            $crn = (string)$nextNum;
+        }
+
         // If an old soft-deleted user existed with this email or CRN, purge it completely
         User::withTrashed()->where('email', $request->email)->forceDelete();
-        if ($request->crn) {
-            User::withTrashed()->where('crn', $request->crn)->forceDelete();
+        if ($crn) {
+            User::withTrashed()->where('crn', $crn)->forceDelete();
         }
+
+        $status = $request->status ?? 'approved';
+        $isActive = ($status === 'approved');
 
         $user = User::create([
             'name' => $request->name,
-            'crn' => $request->crn,
+            'crn' => $crn,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            'status' => $request->status ?? 'approved',
+            'status' => $status,
+            'is_active' => $isActive,
             'library_id' => $request->library_id,
             'ca_level' => $request->ca_level,
+            'gender' => $request->gender,
             'phone' => $request->phone,
             'created_by' => auth()->id(),
         ]);
@@ -124,11 +146,17 @@ class UserController extends Controller
             'status' => 'sometimes|in:pending,approved,suspended,banned',
             'library_id' => 'nullable|exists:libraries,id',
             'ca_level' => 'nullable|string|in:PRC,CAF,Final',
+            'gender' => 'nullable|string|in:male,female',
             'phone' => 'nullable|string|max:20',
             'crn' => 'nullable|string|unique:users,crn,' . $user->id . ',id,deleted_at,NULL',
         ]);
 
-        $user->update($request->only(['name', 'email', 'role', 'status', 'library_id', 'ca_level', 'phone', 'crn']));
+        $data = $request->only(['name', 'email', 'role', 'status', 'library_id', 'ca_level', 'gender', 'phone', 'crn']);
+        if ($request->has('status')) {
+            $data['is_active'] = ($request->status === 'approved');
+        }
+
+        $user->update($data);
         
         if ($user->status !== 'approved') {
             $user->tokens()->delete();
@@ -148,8 +176,12 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        $user->tokens()->delete();
-        $user->forceDelete();
+        if ($user->role === 'super_admin') {
+            User::purgeSuperAdmin($user);
+        } else {
+            $user->tokens()->delete();
+            $user->forceDelete();
+        }
 
         if (request()->expectsJson() || request()->is('api/*')) {
             return response()->json(['message' => 'User deleted successfully']);
@@ -160,7 +192,10 @@ class UserController extends Controller
 
     public function approve(User $user)
     {
-        $user->update(['status' => 'approved']);
+        $user->update([
+            'status' => 'approved',
+            'is_active' => true,
+        ]);
 
         // Check if API request
         if (request()->expectsJson() || request()->is('api/*')) {
@@ -175,6 +210,11 @@ class UserController extends Controller
 
     public function reject(User $user)
     {
+        $user->update([
+            'status' => 'suspended',
+            'is_active' => false,
+        ]);
+        
         $userId = $user->id;
         $user->tokens()->delete();
         $user->forceDelete();
@@ -216,6 +256,10 @@ class UserController extends Controller
             ]
         );
 
+        // Update user status and invalidate active tokens
+        $user->update(['status' => 'banned']);
+        $user->tokens()->delete();
+
         return response()->json(['message' => 'User banned successfully']);
     }
 
@@ -227,6 +271,8 @@ class UserController extends Controller
         \App\Models\Ban::where('user_id', $user->id)
             ->where('super_admin_id', $superAdminId)
             ->delete();
+
+        $user->update(['status' => 'approved']);
 
         return response()->json(['message' => 'User unbanned successfully']);
     }

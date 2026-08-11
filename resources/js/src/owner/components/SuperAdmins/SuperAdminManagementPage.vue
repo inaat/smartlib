@@ -326,11 +326,15 @@ const saveAdmin = async () => {
   saving.value = true;
   errors.value = {};
   try {
+    const payload: any = { ...form.value };
+    if (isEditing.value && !payload.password) {
+      delete payload.password;
+    }
     if (isEditing.value && form.value.id) {
-      await ownerAPI.updateSuperAdmin(form.value.id, form.value);
+      await ownerAPI.updateSuperAdmin(form.value.id, payload);
       showSuccess('Success', 'Superadmin updated successfully');
     } else {
-      await ownerAPI.createSuperAdmin(form.value);
+      await ownerAPI.createSuperAdmin(payload);
       showSuccess('Success', 'Superadmin created successfully');
     }
     await fetchSuperAdmins();

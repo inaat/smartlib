@@ -113,7 +113,6 @@
               <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Check Out</th>
               <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Duration</th>
               <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Mark Type</th>
-              <th class="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-widest">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 bg-white">
@@ -157,57 +156,68 @@
                   {{ record.marked_manually ? 'Manual' : 'System' }}
                 </span>
               </td>
-              
-              <td class="px-6 py-4 whitespace-nowrap text-right">
-                <button
-                  v-if="!record.check_out_time"
-                  @click="handleManualCheckOut(record.user.crn)"
-                  class="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250/30 rounded-xl transition-colors cursor-pointer shadow-sm"
-                >
-                  Check Out
-                </button>
-                <span v-else class="text-xs text-slate-400 font-semibold">-</span>
-              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Pagination Block (6 items per page) -->
-      <div v-if="pagination.total > 0" class="bg-slate-50/50 px-6 py-4 border-t border-slate-100">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            Showing <span class="text-slate-700 font-bold">{{ pagination.from }}</span> to <span class="text-slate-700 font-bold">{{ pagination.to }}</span> of <span class="text-slate-700 font-bold">{{ pagination.total }}</span> entries
-          </div>
-          <div class="flex items-center space-x-1.5">
-            <button
-              @click="changePage(pagination.current_page - 1)"
-              :disabled="pagination.current_page === 1"
-              class="px-3.5 py-1.5 border border-slate-200 bg-white rounded-xl text-slate-550 font-bold hover:bg-slate-50 transition-colors disabled:opacity-50 text-xs cursor-pointer shadow-sm"
+      <!-- Pagination controls with Per Page Select -->
+      <div v-if="pagination.total > 0" class="px-6 py-4 bg-gray-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 font-outfit text-xs font-semibold text-slate-500">
+        <div class="flex items-center space-x-3">
+          <span>Showing {{ pagination.from || 0 }} to {{ pagination.to || 0 }} of {{ pagination.total }} entries</span>
+          
+          <!-- Items per page dropdown -->
+          <div class="relative flex items-center space-x-1.5 border-l border-slate-200 pl-3">
+            <span class="text-slate-400 font-medium">Show</span>
+            <select
+              v-model="perPage"
+              @change="fetchAttendance(1)"
+              class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none cursor-pointer shadow-2xs"
             >
-              Previous
-            </button>
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span class="text-slate-400 font-medium">per page</span>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button
+            @click="fetchAttendance(pagination.current_page - 1)"
+            :disabled="pagination.current_page === 1"
+            class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+          >
+            Previous
+          </button>
+
+          <!-- Page Number Buttons -->
+          <div class="flex items-center space-x-1">
             <button
-              v-for="page in pagination.last_page"
-              :key="page"
-              @click="changePage(page)"
+              v-for="p in visiblePages"
+              :key="p"
+              @click="typeof p === 'number' && fetchAttendance(p)"
+              :disabled="typeof p !== 'number'"
               :class="[
-                'w-8.5 h-8.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm',
-                pagination.current_page === page
-                  ? 'bg-emerald-700 text-white'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                'px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer',
+                p === pagination.current_page
+                  ? 'bg-emerald-600 text-white shadow-2xs'
+                  : typeof p === 'number'
+                  ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  : 'bg-transparent text-slate-400 cursor-default'
               ]"
             >
-              {{ page }}
-            </button>
-            <button
-              @click="changePage(pagination.current_page + 1)"
-              :disabled="pagination.current_page === pagination.last_page"
-              class="px-3.5 py-1.5 border border-slate-200 bg-white rounded-xl text-slate-550 font-bold hover:bg-slate-50 transition-colors disabled:opacity-50 text-xs cursor-pointer shadow-sm"
-            >
-              Next
+              {{ p }}
             </button>
           </div>
+
+          <button
+            @click="fetchAttendance(pagination.current_page + 1)"
+            :disabled="pagination.current_page === pagination.last_page"
+            class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
@@ -268,7 +278,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   Users,
   UserCheck,
@@ -308,6 +318,7 @@ const markForm = ref<{
   type: 'check_in'
 });
 
+const perPage = ref('20');
 const pagination = ref({
   current_page: 1,
   last_page: 1,
@@ -321,7 +332,7 @@ const fetchAttendance = async (page = 1) => {
   try {
     const response = await librarianAPI.getAttendance({
       page,
-      per_page: 6,
+      per_page: perPage.value,
       date: selectedDate.value,
       search: searchQuery.value,
       status: statusFilter.value === 'all' ? null : statusFilter.value
@@ -341,6 +352,24 @@ const fetchAttendance = async (page = 1) => {
     loading.value = false;
   }
 };
+
+const visiblePages = computed(() => {
+  const total = pagination.value.last_page;
+  const current = pagination.value.current_page;
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const pages: (number | string)[] = [1];
+  if (current > 3) pages.push('...');
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+  if (current < total - 2) pages.push('...');
+  pages.push(total);
+  return pages;
+});
 
 const fetchStats = async () => {
   try {

@@ -1,10 +1,18 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
-    <h2 class="text-sm font-semibold text-slate-800 uppercase tracking-wider mb-5 flex items-center">
-      <Zap class="w-4 h-4 mr-2 text-blue-600 fill-current" />
-      Quick Actions
-    </h2>
-    <div class="grid grid-cols-2 gap-3.5">
+  <div class="bg-white rounded-3xl p-6 border border-slate-100/90 shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden font-outfit text-left">
+    <!-- Header -->
+    <div class="flex items-center space-x-3 mb-5 border-b border-slate-100/80 pb-4 text-left">
+      <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+        <Zap class="w-4.5 h-4.5" />
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-slate-800 tracking-tight leading-snug">Quick Actions</h3>
+        <p class="text-[11px] text-slate-400 font-medium">Shortcuts to discover libraries, books & events.</p>
+      </div>
+    </div>
+
+    <!-- Clean, Decent Actions Grid -->
+    <div class="grid grid-cols-2 gap-3">
       <router-link
         v-for="(action, index) in actions"
         :key="index"
@@ -12,19 +20,17 @@
         class="group block relative"
       >
         <div 
-          class="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-slate-200/80 transition-all duration-300 hover-lift hover:shadow-lg hover:shadow-slate-100/60 flex flex-col justify-between h-full min-h-[110px] text-left"
+          class="p-4 rounded-2xl border border-slate-100 bg-slate-50/70 hover:bg-white hover:border-blue-200/80 hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full min-h-[105px] text-left"
         >
           <div>
-            <div :class="['w-9 h-9 rounded-xl flex items-center justify-center mb-3.5 shadow-sm text-white bg-gradient-to-br', action.gradient]">
-              <component :is="action.icon" class="w-4.5 h-4.5" />
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-9 h-9 rounded-xl bg-white border border-slate-200/70 text-slate-700 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-200 flex items-center justify-center shadow-2xs">
+                <component :is="action.icon" class="w-4.5 h-4.5" />
+              </div>
+              <ChevronRight class="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200" />
             </div>
-            <h3 class="font-semibold text-slate-800 text-xs tracking-wide">{{ action.title }}</h3>
-            <p class="text-[10px] text-slate-400 font-medium mt-1 leading-normal">{{ action.description }}</p>
-          </div>
-          
-          <!-- Hover slide arrow -->
-          <div class="flex justify-end mt-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300">
-            <ArrowRight class="w-3.5 h-3.5 text-slate-400" />
+            <h4 class="font-bold text-slate-800 text-xs tracking-tight group-hover:text-blue-600 transition-colors">{{ action.title }}</h4>
+            <p class="text-[10px] text-slate-400 font-medium mt-0.5 leading-snug">{{ action.description }}</p>
           </div>
         </div>
       </router-link>
@@ -33,36 +39,32 @@
 </template>
 
 <script setup lang="ts">
-import { MapPin, BookOpen, Calendar, User, Zap, ArrowRight } from 'lucide-vue-next';
+import { MapPin, BookOpen, Calendar, User, Zap, ChevronRight } from 'lucide-vue-next';
 
 const actions = [
   {
     title: 'Find Library',
     description: 'Locate partner study spaces',
     icon: MapPin,
-    link: '/student/libraries',
-    gradient: 'from-blue-600 to-blue-500 shadow-blue-500/10'
+    link: '/student/libraries'
   },
   {
     title: 'Browse Books',
     description: 'Search & request physical books',
     icon: BookOpen,
-    link: '/student/books',
-    gradient: 'from-emerald-600 to-emerald-500 shadow-emerald-500/10'
+    link: '/student/books'
   },
   {
     title: 'View Events',
     description: 'Check academic seminars',
     icon: Calendar,
-    link: '/student/events',
-    gradient: 'from-purple-600 to-purple-500 shadow-purple-500/10'
+    link: '/student/events'
   },
   {
     title: 'My Profile',
     description: 'Manage details & settings',
     icon: User,
-    link: '/student/profile',
-    gradient: 'from-orange-500 to-orange-400 shadow-orange-500/10'
+    link: '/student/profile'
   }
 ];
 </script>

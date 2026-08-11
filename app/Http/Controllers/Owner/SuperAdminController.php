@@ -43,13 +43,13 @@ class SuperAdminController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $id,
-            'password' => 'sometimes|string|min:8',
+            'password' => 'nullable|string|min:8',
             'is_active' => 'sometimes|boolean',
         ]);
 
         if ($request->has('name')) $user->name = $request->name;
         if ($request->has('email')) $user->email = $request->email;
-        if ($request->has('password')) $user->password = Hash::make($request->password);
+        if ($request->filled('password')) $user->password = Hash::make($request->password);
         if ($request->has('is_active')) $user->is_active = $request->is_active;
 
         $user->save();
@@ -60,7 +60,7 @@ class SuperAdminController extends Controller
     public function destroy($id)
     {
         $user = User::where('role', 'super_admin')->findOrFail($id);
-        $user->delete();
-        return response()->json(['message' => 'Superadmin deleted successfully']);
+        User::purgeSuperAdmin($user);
+        return response()->json(['message' => 'Superadmin and all associated libraries, librarians, and students deleted successfully']);
     }
 }

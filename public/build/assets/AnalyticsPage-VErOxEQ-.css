@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+.fade-enter-active[data-v-292b2f3f],
+.fade-leave-active[data-v-292b2f3f] {
+  transition: opacity 0.15s ease;
+}
+.fade-enter-from[data-v-292b2f3f],
+.fade-leave-to[data-v-292b2f3f] {
+  opacity: 0;
+}
+
+
+.font-outfit[data-v-ccfa6660] {
+  font-family: 'Outfit', sans-serif;
+}

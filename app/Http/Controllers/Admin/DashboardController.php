@@ -42,6 +42,7 @@ class DashboardController extends Controller
         $stats = [
             'total_students' => (clone $studentsQuery)->count(),
             'active_students' => (clone $studentsQuery)->where('is_active', true)->count(),
+            'banned_students' => (clone $studentsQuery)->where('status', 'banned')->count(),
             'total_libraries' => (clone $librariesQuery)->count(),
             'active_libraries' => (clone $librariesQuery)->where('is_active', true)->count(),
             'total_seats' => Seat::whereHas('floor', function($q) use ($myLibraryIds) { $q->whereIn('library_id', $myLibraryIds); })->count(),

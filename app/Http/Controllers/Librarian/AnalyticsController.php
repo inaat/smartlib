@@ -19,29 +19,25 @@ class AnalyticsController extends Controller
             return response()->json(['error' => 'No library assigned to you'], 403);
         }
 
-        $timeRange = $request->input('timeRange', 'week');
-        $daysCount = match ($timeRange) {
-            'today' => 1,
-            'week' => 7,
-            'month' => 30,
-            'year' => 365,
-            default => 7,
-        };
+        $timeRange = $request->input('timeRange', $request->input('range', 'today'));
+        
+        $startDate = $this->getStartDate($timeRange, $request);
+        $endDate = $this->getEndDate($timeRange, $request);
+        $previousStartDate = $this->getPreviousStartDate($timeRange, $startDate, $endDate);
+        $previousEndDate = $startDate->copy()->subSecond();
 
-        $startDate = $this->getStartDate($timeRange);
-        $previousStartDate = $this->getPreviousStartDate($timeRange);
+        $daysCount = max(1, $startDate->diffInDays($endDate));
 
         // Get bookings for the current time range with relations
         $bookings = $library->seatBookings()
-            ->where('seat_bookings.booking_time', '>=', $startDate)
+            ->whereBetween('seat_bookings.booking_time', [$startDate, $endDate])
             ->where('seat_bookings.status', '!=', 'cancelled')
-            ->with(['user', 'seat.seatSubsection', 'seat.seatSection'])
+            ->with(['user', 'seat.seatSubsection', 'seat.seatSection', 'seat.floor'])
             ->get();
 
         // Get bookings for the previous time range
         $previousBookings = $library->seatBookings()
-            ->where('seat_bookings.booking_time', '>=', $previousStartDate)
-            ->where('seat_bookings.booking_time', '<', $startDate)
+            ->whereBetween('seat_bookings.booking_time', [$previousStartDate, $previousEndDate])
             ->where('seat_bookings.status', '!=', 'cancelled')
             ->get();
 
@@ -94,12 +90,62 @@ class AnalyticsController extends Controller
 
         // Trends grouping for the requested range
         $dailyTrends = [];
-        if ($timeRange === 'year') {
-            // Group month-wise for the last 12 months
-            for ($i = 11; $i >= 0; $i--) {
-                $monthDate = Carbon::now()->subMonths($i);
-                $monthBookings = $bookings->filter(function ($booking) use ($monthDate) {
-                    return Carbon::parse($booking->booking_time)->isSameMonth($monthDate);
+
+        if (in_array($timeRange, ['today', 'yesterday'])) {
+            $targetDay = $timeRange === 'yesterday' ? Carbon::yesterday() : Carbon::today();
+            // 2-hour intervals (00:00 to 22:00)
+            for ($h = 0; $h <= 22; $h += 2) {
+                $slotStart = $targetDay->copy()->setTime($h, 0, 0);
+                $slotEnd = $targetDay->copy()->setTime($h + 1, 59, 59);
+
+                $slotBookings = $bookings->filter(function ($booking) use ($slotStart, $slotEnd) {
+                    $bt = Carbon::parse($booking->booking_time);
+                    return $bt->between($slotStart, $slotEnd);
+                });
+
+                $dailyTrends[] = [
+                    'date' => $slotStart->format('Y-m-d H:i'),
+                    'day' => $slotStart->format('g A'),
+                    'bookings' => $slotBookings->count(),
+                    'completed' => $slotBookings->where('status', 'checked_out')->count(),
+                ];
+            }
+        } elseif (in_array($timeRange, ['this_month', 'last_month', 'month'])) {
+            $startOfMonth = $timeRange === 'last_month' 
+                ? Carbon::now()->subMonth()->startOfMonth() 
+                : Carbon::now()->startOfMonth();
+            $endOfMonth = $timeRange === 'last_month' 
+                ? Carbon::now()->subMonth()->endOfMonth() 
+                : Carbon::now()->endOfDay();
+
+            $current = $startOfMonth->copy();
+            while ($current->lte($endOfMonth)) {
+                $dayStart = $current->copy()->startOfDay();
+                $dayEnd = $current->copy()->endOfDay();
+
+                $dayBookings = $bookings->filter(function ($booking) use ($dayStart, $dayEnd) {
+                    $bt = Carbon::parse($booking->booking_time);
+                    return $bt->between($dayStart, $dayEnd);
+                });
+
+                $dailyTrends[] = [
+                    'date' => $current->format('Y-m-d'),
+                    'day' => $current->format('j M'),
+                    'bookings' => $dayBookings->count(),
+                    'completed' => $dayBookings->where('status', 'checked_out')->count(),
+                ];
+                $current->addDay();
+            }
+        } elseif (in_array($timeRange, ['this_year', 'year'])) {
+            $startOfYear = Carbon::now()->startOfYear();
+            for ($m = 0; $m < 12; $m++) {
+                $monthDate = $startOfYear->copy()->addMonths($m);
+                $monthStart = $monthDate->copy()->startOfMonth();
+                $monthEnd = $monthDate->copy()->endOfMonth();
+
+                $monthBookings = $bookings->filter(function ($booking) use ($monthStart, $monthEnd) {
+                    $bt = Carbon::parse($booking->booking_time);
+                    return $bt->between($monthStart, $monthEnd);
                 });
 
                 $dailyTrends[] = [
@@ -109,41 +155,84 @@ class AnalyticsController extends Controller
                     'completed' => $monthBookings->where('status', 'checked_out')->count(),
                 ];
             }
-        } elseif ($timeRange === 'month') {
-            // Group week-wise (4 weeks of the last 30 days)
-            for ($i = 3; $i >= 0; $i--) {
-                $endDays = $i * 7;
-                $startDays = ($i + 1) * 7 - 1;
-                if ($i === 3) $startDays = 29; // cover full 30 days
-                
-                $start = Carbon::now()->subDays($startDays)->startOfDay();
-                $end = Carbon::now()->subDays($endDays)->endOfDay();
-                
-                $weekBookings = $bookings->filter(function ($booking) use ($start, $end) {
-                    $bt = Carbon::parse($booking->booking_time);
-                    return $bt->between($start, $end);
-                });
+        } elseif ($timeRange === 'custom') {
+            $daysDiff = $startDate->diffInDays($endDate);
+            if ($daysDiff <= 2) {
+                $curr = $startDate->copy();
+                while ($curr->lte($endDate)) {
+                    $slotStart = $curr->copy();
+                    $slotEnd = $curr->copy()->addHours(2)->subSecond();
 
-                $dailyTrends[] = [
-                    'date' => $start->format('Y-m-d'),
-                    'day' => 'Week ' . (4 - $i),
-                    'bookings' => $weekBookings->count(),
-                    'completed' => $weekBookings->where('status', 'checked_out')->count(),
-                ];
+                    $slotBookings = $bookings->filter(function ($booking) use ($slotStart, $slotEnd) {
+                        $bt = Carbon::parse($booking->booking_time);
+                        return $bt->between($slotStart, $slotEnd);
+                    });
+
+                    $dailyTrends[] = [
+                        'date' => $slotStart->format('Y-m-d H:i'),
+                        'day' => $daysDiff <= 1 ? $slotStart->format('g A') : $slotStart->format('M j g A'),
+                        'bookings' => $slotBookings->count(),
+                        'completed' => $slotBookings->where('status', 'checked_out')->count(),
+                    ];
+                    $curr->addHours(2);
+                }
+            } elseif ($daysDiff <= 60) {
+                $curr = $startDate->copy();
+                while ($curr->lte($endDate)) {
+                    $dayStart = $curr->copy()->startOfDay();
+                    $dayEnd = $curr->copy()->endOfDay();
+
+                    $dayBookings = $bookings->filter(function ($booking) use ($dayStart, $dayEnd) {
+                        $bt = Carbon::parse($booking->booking_time);
+                        return $bt->between($dayStart, $dayEnd);
+                    });
+
+                    $dailyTrends[] = [
+                        'date' => $curr->format('Y-m-d'),
+                        'day' => $curr->format('j M'),
+                        'bookings' => $dayBookings->count(),
+                        'completed' => $dayBookings->where('status', 'checked_out')->count(),
+                    ];
+                    $curr->addDay();
+                }
+            } else {
+                $curr = $startDate->copy()->startOfMonth();
+                while ($curr->lte($endDate)) {
+                    $mStart = $curr->copy()->startOfMonth();
+                    $mEnd = $curr->copy()->endOfMonth();
+
+                    $mBookings = $bookings->filter(function ($booking) use ($mStart, $mEnd) {
+                        $bt = Carbon::parse($booking->booking_time);
+                        return $bt->between($mStart, $mEnd);
+                    });
+
+                    $dailyTrends[] = [
+                        'date' => $curr->format('Y-m'),
+                        'day' => $curr->format('M Y'),
+                        'bookings' => $mBookings->count(),
+                        'completed' => $mBookings->where('status', 'checked_out')->count(),
+                    ];
+                    $curr->addMonth();
+                }
             }
         } else {
-            // Default to day-wise (for week or today)
-            for ($i = $daysCount - 1; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i);
-                $dayBookings = $bookings->filter(function ($booking) use ($date) {
-                    return Carbon::parse($booking->booking_time)->isSameDay($date);
+            // All Time or Default (Last 12 Months)
+            $startOfYear = Carbon::now()->subMonths(11)->startOfMonth();
+            for ($m = 0; $m < 12; $m++) {
+                $monthDate = $startOfYear->copy()->addMonths($m);
+                $monthStart = $monthDate->copy()->startOfMonth();
+                $monthEnd = $monthDate->copy()->endOfMonth();
+
+                $monthBookings = $bookings->filter(function ($booking) use ($monthStart, $monthEnd) {
+                    $bt = Carbon::parse($booking->booking_time);
+                    return $bt->between($monthStart, $monthEnd);
                 });
 
                 $dailyTrends[] = [
-                    'date' => $date->format('Y-m-d'),
-                    'day' => $date->format('D'),
-                    'bookings' => $dayBookings->count(),
-                    'completed' => $dayBookings->where('status', 'checked_out')->count(),
+                    'date' => $monthDate->format('Y-m'),
+                    'day' => $monthDate->format('M Y'),
+                    'bookings' => $monthBookings->count(),
+                    'completed' => $monthBookings->where('status', 'checked_out')->count(),
                 ];
             }
         }
@@ -162,16 +251,101 @@ class AnalyticsController extends Controller
             ];
         })->values();
 
-        // Current library occupancy
-        $totalSeats = $library->seats()->count();
-        $availableSeats = $library->seats()->where('seats.status', 'available')->count();
-        $occupiedSeats = $totalSeats - $availableSeats;
-        $occupancyRate = $totalSeats > 0 ? round(($occupiedSeats / $totalSeats) * 100, 1) : 0;
+        // Hourly traffic distribution based ONLY on confirmed checked-in bookings (exact start hour)
+        $checkedInBookings = $bookings->filter(function ($b) {
+            return in_array($b->status, ['checked_in', 'checked_out', 'completed', 'pending_return']) 
+                || !is_null($b->check_in_time) 
+                || $b->qr_scanned;
+        });
 
-        // Compare daily booking averages for occupancy proxy trends
-        $currAvgBookingsPerDay = $totalBookings / max($daysCount, 1);
-        $prevAvgBookingsPerDay = $prevTotalBookings / max($daysCount, 1);
-        $occupancyRateChange = $this->calculatePercentageChange($currAvgBookingsPerDay, $prevAvgBookingsPerDay);
+        $hourlyDistribution = [];
+        $appTimezone = config('app.timezone', 'Asia/Karachi');
+
+        // Group confirmed checked-in bookings by their exact booking start hour
+        $hourlyGroup = $checkedInBookings->groupBy(function ($booking) use ($appTimezone) {
+            return (int) Carbon::parse($booking->booking_time)->setTimezone($appTimezone)->format('H');
+        });
+
+        // Dynamically compute min/max hour span to capture all checked-in bookings
+        $minHour = 8;
+        $maxHour = 20;
+
+        foreach ($hourlyGroup->keys() as $hourKey) {
+            if ($hourKey < $minHour) $minHour = max(0, (int)$hourKey);
+            if ($hourKey > $maxHour) $maxHour = min(23, (int)$hourKey);
+        }
+
+        for ($h = $minHour; $h <= $maxHour; $h++) {
+            $label = $h < 12 ? ($h == 0 ? "12a" : "{$h}a") : ($h == 12 ? "12p" : ($h - 12) . "p");
+            $fullLabel = Carbon::today()->setTime($h, 0)->format('g:i A');
+
+            // Count exact confirmed checked-in bookings starting at hour $h
+            $cnt = isset($hourlyGroup[$h]) ? $hourlyGroup[$h]->count() : 0;
+
+            $hourlyDistribution[] = [
+                'hour' => $h,
+                'label' => $label,
+                'fullTime' => $fullLabel,
+                'bookings' => $cnt,
+            ];
+        }
+
+        // Library occupancy & occupancy rate based on confirmed checked-in seat bookings
+        $totalSeats = $library->seats()->count();
+
+        if ($totalSeats > 0) {
+            // Group checked-in bookings by date and count unique seats booked each day
+            $dailyUniqueSeats = $checkedInBookings->groupBy(function ($booking) {
+                return Carbon::parse($booking->booking_time ?? $booking->created_at)->toDateString();
+            })->map(function ($group) {
+                return $group->pluck('seat_id')->unique()->count();
+            });
+
+            // Active days where there were bookings in this range
+            $activeDaysCount = in_array($timeRange, ['today', 'yesterday']) ? 1 : max(1, $dailyUniqueSeats->count());
+
+            // Average daily occupied seats
+            $avgOccupiedSeats = $dailyUniqueSeats->count() > 0 
+                ? ($dailyUniqueSeats->sum() / $activeDaysCount) 
+                : 0;
+
+            $occupancyRate = round(($avgOccupiedSeats / $totalSeats) * 100, 1);
+            if ($occupancyRate > 100) {
+                $occupancyRate = 100.0;
+            }
+
+            $availableSeats = max(0, (int) round($totalSeats - $avgOccupiedSeats));
+
+            // Previous period average daily occupied seats for checked-in bookings
+            $prevCheckedInBookings = $previousBookings->filter(function ($b) {
+                return in_array($b->status, ['checked_in', 'checked_out', 'completed', 'pending_return']) 
+                    || !is_null($b->check_in_time) 
+                    || $b->qr_scanned;
+            });
+
+            $prevDailyUniqueSeats = $prevCheckedInBookings->groupBy(function ($booking) {
+                return Carbon::parse($booking->booking_time ?? $booking->created_at)->toDateString();
+            })->map(function ($group) {
+                return $group->pluck('seat_id')->unique()->count();
+            });
+
+            $prevActiveDaysCount = in_array($timeRange, ['today', 'yesterday']) ? 1 : max(1, $prevDailyUniqueSeats->count());
+
+            $prevAvgOccupiedSeats = $prevDailyUniqueSeats->count() > 0 
+                ? ($prevDailyUniqueSeats->sum() / $prevActiveDaysCount) 
+                : 0;
+
+            $prevOccupancyRate = round(($prevAvgOccupiedSeats / $totalSeats) * 100, 1);
+            if ($prevOccupancyRate > 100) {
+                $prevOccupancyRate = 100.0;
+            }
+
+            $occupancyRateChange = $this->calculatePercentageChange($occupancyRate, $prevOccupancyRate);
+        } else {
+            $availableSeats = 0;
+            $occupancyRate = 0.0;
+            $occupancyRateChange = 0;
+        }
 
         // Book stats
         $totalBooks = $library->books()->count();
@@ -287,47 +461,50 @@ class AnalyticsController extends Controller
         ];
 
         foreach ($bookings as $booking) {
-            // Gender
+            // Gender: Priority to User Profile Gender
             $uGender = strtolower(trim($booking->user->gender ?? ''));
             $subGender = strtolower(trim($booking->seat->seatSubsection->gender ?? ''));
             $secGender = strtolower(trim($booking->seat->seatSection->gender ?? ''));
+            $floorGender = strtolower(trim($booking->seat->floor->type ?? ''));
 
-            $isMale = in_array($uGender, ['male', 'boys', 'boy', 'men', 'm', 'male_only', 'male_section']) ||
-                     in_array($subGender, ['male', 'boys', 'boy', 'men', 'm', 'male_only', 'male_section']) ||
-                     in_array($secGender, ['male', 'boys', 'boy', 'men', 'm', 'male_only', 'male_section']);
+            $isFemale = in_array($uGender, ['female', 'girls', 'girl', 'women', 'f']);
+            $isMale = in_array($uGender, ['male', 'boys', 'boy', 'men', 'm']);
 
-            $isFemale = in_array($uGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section']) ||
-                       in_array($subGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section']) ||
-                       in_array($secGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section']);
+            if (!$isFemale && !$isMale) {
+                // Fallback to area gender if user profile gender is unspecified
+                $isFemale = in_array($subGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section', 'girls_only']) ||
+                            in_array($secGender, ['female', 'girls', 'girl', 'women', 'f', 'female_only', 'female_section', 'girls_only']) ||
+                            in_array($floorGender, ['girls_only', 'female_only', 'girls']);
+            }
 
-            if ($isMale) {
-                $genderStats['male']++;
-            } elseif ($isFemale) {
+            if ($isFemale) {
                 $genderStats['female']++;
             } else {
-                if ($booking->id % 2 === 0) {
-                    $genderStats['female']++;
-                } else {
-                    $genderStats['male']++;
-                }
+                $genderStats['male']++;
             }
             $genderStats['total']++;
 
-            // Academic Level
+            // Academic Level: Priority to User ca_level > Subsection level > Section level
+            $userLevel = $booking->user->ca_level ?? $booking->user->academic_level ?? '';
             $subLevel = $booking->seat->seatSubsection->academic_level ?? '';
             $secLevel = $booking->seat->seatSection->academic_level ?? '';
-            $userLevel = $booking->user->academic_level ?? '';
 
-            $lvl = !empty($subLevel) && $subLevel !== 'all' ? $subLevel : (!empty($secLevel) && $secLevel !== 'all' ? $secLevel : (!empty($userLevel) && $userLevel !== 'all' ? $userLevel : 'all'));
+            $lvl = !empty($userLevel) && strtolower($userLevel) !== 'all' 
+                ? $userLevel 
+                : (!empty($subLevel) && strtolower($subLevel) !== 'all' 
+                    ? $subLevel 
+                    : (!empty($secLevel) && strtolower($secLevel) !== 'all' 
+                        ? $secLevel 
+                        : 'PRC'));
 
             if (strcasecmp($lvl, 'PRC') === 0) {
                 $levelStats['PRC']++;
             } elseif (strcasecmp($lvl, 'CAF') === 0) {
                 $levelStats['CAF']++;
-            } elseif (strcasecmp($lvl, 'Final') === 0) {
+            } elseif (strcasecmp($lvl, 'Final') === 0 || strcasecmp($lvl, 'Final Year') === 0) {
                 $levelStats['Final']++;
             } else {
-                $levelStats['all']++;
+                $levelStats['PRC']++;
             }
             $levelStats['total']++;
         }
@@ -360,6 +537,7 @@ class AnalyticsController extends Controller
             ],
             'dailyTrends' => $dailyTrends,
             'popularTimeSlots' => $popularTimeSlots,
+            'hourlyDistribution' => $hourlyDistribution,
             'topStudents' => $topStudents,
             'popularSeats' => $popularSeats,
             'genderStats' => $genderStats,
@@ -383,25 +561,36 @@ class AnalyticsController extends Controller
         return round((($current - $previous) / $previous) * 100, 1);
     }
 
-    private function getStartDate($timeRange)
+    private function getStartDate($timeRange, Request $request)
     {
         return match ($timeRange) {
-            'today' => Carbon::today(),
-            'week' => Carbon::now()->subWeek(),
-            'month' => Carbon::now()->subMonth(),
-            'year' => Carbon::now()->subYear(),
-            default => Carbon::now()->subWeek(),
+            'today' => Carbon::today()->startOfDay(),
+            'yesterday' => Carbon::yesterday()->startOfDay(),
+            'this_month', 'month' => Carbon::now()->startOfMonth(),
+            'last_month' => Carbon::now()->subMonth()->startOfMonth(),
+            'this_year', 'year' => Carbon::now()->startOfYear(),
+            'custom' => ($request->filled('from_date') ? Carbon::parse($request->from_date)->startOfDay() : Carbon::today()->startOfDay()),
+            'all' => Carbon::create(2000, 1, 1)->startOfDay(),
+            'week' => Carbon::now()->subDays(7)->startOfDay(),
+            default => Carbon::today()->startOfDay(),
         };
     }
 
-    private function getPreviousStartDate($timeRange)
+    private function getEndDate($timeRange, Request $request)
     {
         return match ($timeRange) {
-            'today' => Carbon::yesterday(),
-            'week' => Carbon::now()->subWeeks(2),
-            'month' => Carbon::now()->subMonths(2),
-            'year' => Carbon::now()->subYears(2),
-            default => Carbon::now()->subWeeks(2),
+            'yesterday' => Carbon::yesterday()->endOfDay(),
+            'last_month' => Carbon::now()->subMonth()->endOfMonth(),
+            'this_month', 'month' => Carbon::now()->endOfMonth(),
+            'this_year', 'year' => Carbon::now()->endOfYear(),
+            'custom' => ($request->filled('to_date') ? Carbon::parse($request->to_date)->endOfDay() : Carbon::now()->endOfDay()),
+            default => Carbon::now()->endOfDay(),
         };
+    }
+
+    private function getPreviousStartDate($timeRange, $startDate, $endDate)
+    {
+        $diffSeconds = $startDate->diffInSeconds($endDate);
+        return $startDate->copy()->subSeconds($diffSeconds + 1);
     }
 }

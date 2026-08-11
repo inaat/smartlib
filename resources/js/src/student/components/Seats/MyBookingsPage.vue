@@ -12,14 +12,27 @@
     </div>
 
     <!-- Active Bookings Section -->
-    <div class="space-y-4">
-      <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center space-x-2 px-1">
-        <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-        <span>Current & Upcoming</span>
-      </h3>
+    <div class="space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100/80 pb-4">
+        <div class="flex items-center space-x-3 text-left">
+          <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <Armchair class="w-4.5 h-4.5" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-800 tracking-tight leading-snug">Current & Upcoming</h3>
+            <p class="text-[11px] text-slate-400 font-medium">Your active seat reservations and upcoming scheduled sessions.</p>
+          </div>
+        </div>
+        <div v-if="activeBookings.length > 0" class="flex items-center space-x-2 self-start sm:self-auto">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse mr-1.5"></span>
+            {{ activeBookings.length }} Active Session{{ activeBookings.length > 1 ? 's' : '' }}
+          </span>
+        </div>
+      </div>
 
       <div v-if="activeBookings.length === 0" class="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-200 shadow-sm">
-        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-inner">
+        <div class="w-16 h-16 bg-slate-50 text-slate-600 rounded-4xl flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-inner">
           <Armchair class="w-7 h-7" />
         </div>
         <h3 class="text-base font-bold text-slate-800 mb-1">No Active Bookings</h3>
@@ -155,20 +168,26 @@
     />
 
     <!-- Booking History Section -->
-    <div class="pt-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center px-1">
-          <History class="w-4 h-4 mr-2 text-purple-600" />
-          Booking History
-        </h2>
-        <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl w-fit">
+    <div class="pt-8">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100/80 pb-4 mb-6">
+        <div class="flex items-center space-x-3 text-left">
+          <div class="w-9 h-9 rounded-xl bg-purple-50 border border-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <History class="w-4.5 h-4.5" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-800 tracking-tight leading-snug">Booking History</h3>
+            <p class="text-[11px] text-slate-400 font-medium">Past completed and cancelled seat reservation records.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl w-full sm:w-auto">
           <button 
             v-for="filter in ['all', 'completed', 'cancelled']" 
             :key="filter"
             @click="historyFilter = filter as any"
             :class="[
-              'px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all',
-              historyFilter === filter ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-700'
+              'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center',
+              historyFilter === filter ? 'bg-white shadow-xs text-slate-800' : 'text-slate-500 hover:text-slate-700'
             ]"
           >
             {{ filter }}

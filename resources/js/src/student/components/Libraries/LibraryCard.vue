@@ -54,8 +54,8 @@
 
         <!-- Opening Hours -->
         <div class="flex items-center text-xs text-slate-500 font-semibold">
-          <Clock class="w-3.5 h-3.5 mr-1.5 text-slate-400 flex-shrink-0" />
-          <span>{{ library.openingHours || 'Hours not specified' }}</span>
+          <Clock class="w-3.5 h-3.5 mr-1.5 text-blue-500 flex-shrink-0" />
+          <span>{{ todayHoursDisplay }}</span>
         </div>
 
         <!-- Availability Progress -->
@@ -121,6 +121,53 @@ const formatDistance = (distanceKm?: number) => {
   if (distanceKm < 1.0) return 'Near';
   return `${distanceKm} km`;
 };
+
+const format12HourTime = (timeStr: string) => {
+  if (!timeStr) return '';
+  const cleanStr = timeStr.trim();
+  const match12 = cleanStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (match12) {
+    let h = parseInt(match12[1]);
+    const m = match12[2];
+    const ampm = match12[3].toUpperCase();
+    return `${h}:${m} ${ampm}`;
+  }
+  const match24 = cleanStr.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    let h = parseInt(match24[1]);
+    const m = match24[2];
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const displayH = h % 12 === 0 ? 12 : h % 12;
+    return `${displayH}:${m} ${ampm}`;
+  }
+  return timeStr;
+};
+
+const todayHoursDisplay = computed(() => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const now = new Date();
+  const todayName = days[now.getDay()];
+
+  if (props.library?.operating_days && Array.isArray(props.library.operating_days)) {
+    const todaySchedule = props.library.operating_days.find((d: any) => d.day === todayName);
+    if (todaySchedule) {
+      if (!todaySchedule.isOpen) {
+        return 'Closed Today';
+      }
+      if (todaySchedule.openTime && todaySchedule.closeTime) {
+        const openStr = format12HourTime(todaySchedule.openTime);
+        const closeStr = format12HourTime(todaySchedule.closeTime);
+        return `Today: ${openStr} - ${closeStr}`;
+      }
+    }
+  }
+
+  if (props.library?.openingHours || props.library?.opening_hours) {
+    return props.library.openingHours || props.library.opening_hours;
+  }
+
+  return 'Hours not specified';
+});
 
 const availabilityPercentage = computed(() => {
   if (!props.library.totalSeats || props.library.totalSeats === 0) return 0;

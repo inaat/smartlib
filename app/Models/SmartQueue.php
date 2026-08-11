@@ -16,12 +16,16 @@ class SmartQueue extends Model
         'seat_type_preference',
         'queue_position',
         'joined_at',
+        'notified_at',
+        'claim_expires_at',
         'status',
         'wait_time_minutes',
     ];
 
     protected $casts = [
         'joined_at' => 'datetime',
+        'notified_at' => 'datetime',
+        'claim_expires_at' => 'datetime',
     ];
 
     public function user()

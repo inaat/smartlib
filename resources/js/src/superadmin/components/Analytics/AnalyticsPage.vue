@@ -29,25 +29,37 @@
         </button>
       </div>
 
-      <!-- Time Range Controls for Analytics (Aligned on Same Line) -->
-      <div v-if="activeView === 'analytics'" class="flex items-center space-x-3 sm:ml-auto">
-        <select 
-          v-model="selectedTrendRange" 
-          class="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 bg-white text-xs font-semibold text-slate-600 cursor-pointer shadow-sm appearance-none pr-8 relative"
-        >
-          <option value="today">Today</option>
-          <option value="week">Last 7 Days</option>
-          <option value="month">Last 30 Days</option>
-          <option value="year">Last Year</option>
-        </select>
+      <!-- Time Range Controls for Analytics (Top Right Header) -->
+      <div v-if="activeView === 'analytics'" class="flex items-center gap-2 sm:ml-auto">
+        <TimeFrameSelector
+          v-model="selectedTrendRange"
+          @change="fetchAnalytics"
+        />
         
+        <!-- Custom Date Inputs (when Custom Range selected) -->
+        <div v-if="selectedTrendRange === 'custom'" class="flex items-center gap-1.5">
+          <input 
+            type="date" 
+            v-model="fromDate" 
+            @change="fetchAnalytics" 
+            class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-purple-500/20 shadow-2xs"
+          />
+          <span class="text-xs text-slate-400 font-bold">to</span>
+          <input 
+            type="date" 
+            v-model="toDate" 
+            @change="fetchAnalytics" 
+            class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-purple-500/20 shadow-2xs"
+          />
+        </div>
+
         <button 
           @click="fetchAnalytics" 
           :disabled="loading"
-          class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-purple-50 hover:text-purple-600 transition-all cursor-pointer shadow-sm flex items-center justify-center disabled:opacity-50"
-          title="Refresh Data"
+          class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shadow-sm flex items-center justify-center"
+          title="Refresh Statistics"
         >
-          <RefreshCw :class="['w-4 h-4 text-slate-500', loading ? 'animate-spin' : '']" />
+          <RefreshCw :class="['w-4 h-4 text-slate-500', loading ? 'animate-spin text-purple-600' : '']" />
         </button>
       </div>
     </div>
@@ -74,45 +86,25 @@
 
       <!-- Charts and Top Libraries Row -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Booking Trends Card -->
+        <!-- Booking Trends Card (Smart Tailor Design) -->
         <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between">
-          <div class="flex items-center justify-between mb-6 text-left">
-            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Booking Trends</h3>
-            <select
-              v-model="selectedTrendRange"
-              class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none cursor-pointer"
-            >
-              <option value="today">Today</option>
-              <option value="week">Last 7 Days</option>
-              <option value="month">Last 30 Days</option>
-              <option value="year">Last Year</option>
-            </select>
-          </div>
-          
-          <div class="h-64 flex items-end justify-between space-x-1.5 px-2">
-            <div
-              v-for="(day, index) in monthlyBookings"
-              :key="index"
-              class="flex-1 flex flex-col items-center group relative h-full justify-end"
-            >
-              <!-- Bar fill with gradient -->
-              <div 
-                class="w-full bg-gradient-to-t from-purple-600 to-fuchsia-600 rounded-t-lg transition-all duration-300 hover:from-purple-700 hover:to-fuchsia-700 cursor-pointer shadow-sm"
-                :style="{ height: (day.count / maxBookingCount * 100) + '%' }"
-              >
-                <!-- Hover Tooltip overlay -->
-                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-slate-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-25 shadow-md font-bold">
-                  {{ day.date }}: {{ day.count }} bookings
-                </div>
-              </div>
+          <div class="flex items-center justify-between mb-2 text-left">
+            <div>
+              <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-2">
+                <TrendingUp class="w-4 h-4 text-purple-600" />
+                <span>Booking Trends</span>
+              </h3>
+              <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Total bookings distribution over selected time duration.</p>
             </div>
           </div>
 
-          <div class="flex justify-between mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider px-2">
-            <span>{{ monthlyBookings[0]?.date }}</span>
-            <span>{{ monthlyBookings[Math.floor(monthlyBookings.length / 2)]?.date }}</span>
-            <span>{{ monthlyBookings[monthlyBookings.length - 1]?.date }}</span>
-          </div>
+          <BookingTrendsChart
+            :data="monthlyBookings"
+            x-key="date"
+            y-key="count"
+            label="Bookings"
+            color="#9333ea"
+          />
         </div>
 
         <!-- Top Libraries Side Panel -->
@@ -328,6 +320,8 @@
 import { ref, onMounted, computed, watch, defineAsyncComponent } from 'vue';
 import { 
   Users, 
+  Calendar,
+  ChevronDown,
   BookOpen, 
   Building2,
   RefreshCw,
@@ -336,7 +330,9 @@ import {
   GraduationCap
 } from 'lucide-vue-next';
 import { superadminAPI } from '../../services/superadminApi';
+import TimeFrameSelector from '@/shared/components/TimeFrameSelector.vue';
 import { format } from 'date-fns';
+import BookingTrendsChart from '@/shared/components/charts/BookingTrendsChart.vue';
 
 // Lazy-load ReportsPage to avoid loading its heavy code unless the Reports tab is active
 const ReportsPage = defineAsyncComponent(() => import('@/superadmin/components/Reports/ReportsPage.vue'));
@@ -412,11 +408,79 @@ const levelBars = computed(() => {
   ];
 });
 
-const selectedTrendRange = ref('month');
+const getTimeRangeLabel = (val: string) => {
+  const map: Record<string, string> = {
+    today: 'Today',
+    yesterday: 'Yesterday',
+    this_month: 'This Month',
+    last_month: 'Last Month',
+    this_year: 'This Year',
+    custom: 'Custom Range',
+    all: 'All Time'
+  };
+  return map[val] || 'Today';
+};
+
+const todayStr = format(new Date(), 'yyyy-MM-dd');
+const selectedTrendRange = ref('this_month');
+const fromDate = ref(todayStr);
+const toDate = ref(todayStr);
+
+// Computed SVG Line Chart Drawing Math
+const maxTrendValue = computed(() => {
+  if (!monthlyBookings.value || monthlyBookings.value.length === 0) return 5;
+  const max = Math.max(...monthlyBookings.value.map(d => d.count || 0), 0);
+  return max === 0 ? 5 : Math.ceil(max * 1.25);
+});
+
+const trendLinePoints = computed(() => {
+  if (!monthlyBookings.value || monthlyBookings.value.length === 0) return [];
+  const max = maxTrendValue.value;
+  const width = 500;
+  const height = 180;
+  const paddingX = 30;
+  const paddingY = 20;
+
+  const count = monthlyBookings.value.length;
+  const stepX = count > 1 ? (width - paddingX * 2) / (count - 1) : 0;
+
+  return monthlyBookings.value.map((item, idx) => {
+    const x = count === 1 ? width / 2 : paddingX + idx * stepX;
+    const y = height - paddingY - ((item.count || 0) / max) * (height - paddingY * 2);
+    return { x, y, label: item.date, value: item.count || 0 };
+  });
+});
+
+const linePathD = computed(() => {
+  const points = trendLinePoints.value;
+  if (points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+
+  return points.reduce((acc, point, idx) => {
+    if (idx === 0) return `M ${point.x} ${point.y}`;
+    const prev = points[idx - 1];
+    const cp1x = prev.x + (point.x - prev.x) / 2;
+    const cp1y = prev.y;
+    const cp2x = prev.x + (point.x - prev.x) / 2;
+    const cp2y = point.y;
+    return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${point.x} ${point.y}`;
+  }, '');
+});
+
+const areaPathD = computed(() => {
+  const lineD = linePathD.value;
+  if (!lineD) return '';
+  const points = trendLinePoints.value;
+  if (points.length === 0) return '';
+  const lastX = points[points.length - 1].x;
+  const firstX = points[0].x;
+  const bottomY = 180;
+  return `${lineD} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
+});
 
 const statsCards = computed(() => [
   {
-    label: 'Total Users',
+    label: 'Total Students',
     value: analyticsData.value?.total_users || 0,
     icon: Users,
     iconClass: 'text-blue-600'
@@ -443,7 +507,12 @@ const maxBookingCount = computed(() => {
 const fetchAnalytics = async () => {
   try {
     loading.value = true;
-    const data = await superadminAPI.getAnalytics({ range: selectedTrendRange.value });
+    const params: any = { range: selectedTrendRange.value, timeRange: selectedTrendRange.value };
+    if (selectedTrendRange.value === 'custom' && fromDate.value && toDate.value) {
+      params.from_date = fromDate.value;
+      params.to_date = toDate.value;
+    }
+    const data = await superadminAPI.getAnalytics(params);
     analyticsData.value = data.analytics;
     monthlyBookings.value = data.monthlyBookings || [];
     topLibraries.value = data.topLibraries || [];

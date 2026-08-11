@@ -156,6 +156,7 @@
               required 
               class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-bold text-slate-655 bg-white cursor-pointer"
             >
+              <option :value="null" disabled>-- Select Library Venue --</option>
               <option v-for="lib in libraries" :key="lib.id" :value="lib.id">{{ lib.name }}</option>
             </select>
           </div>
@@ -296,6 +297,9 @@ import { ref, watch, onMounted, computed } from 'vue';
 import { Calendar, Clock, Users, X, Building2, Plus } from 'lucide-vue-next';
 import { superadminAPI } from '../../services/superadminApi';
 import LibrarySelector from '../Shared/LibrarySelector.vue';
+import { useSwal } from '@/shared/composables/useSwal';
+
+const { showConfirm, showSuccess, showError } = useSwal();
 
 const selectedLibraryId = ref<number | null>(null);
 const events = ref<any[]>([]);
@@ -358,11 +362,12 @@ const handleImageUpload = (event: Event) => {
 
 const openCreateModal = () => {
   isEditing.value = false;
+  const initialLibId = selectedLibraryId.value ? Number(selectedLibraryId.value) : (libraries.value.length > 0 ? libraries.value[0].id : null);
   form.value = {
     id: null,
     title: '',
     description: '',
-    library_id: selectedLibraryId.value || (libraries.value.length > 0 ? libraries.value[0].id : null),
+    library_id: initialLibId,
     date: '',
     start_time: '',
     end_time: '',
@@ -383,7 +388,7 @@ const editEvent = (event: any) => {
     id: event.id,
     title: event.title,
     description: event.description,
-    library_id: event.library_id,
+    library_id: event.library_id ? Number(event.library_id) : null,
     date: event.date ? event.date.substring(0, 10) : '',
     start_time: event.start_time,
     end_time: event.end_time,
@@ -403,12 +408,17 @@ const closeModal = () => {
 };
 
 const saveEvent = async () => {
+  if (!form.value.library_id) {
+    showError('Library Required', 'Please select a library venue for this event.');
+    return;
+  }
+
   loading.value = true;
   try {
     const formData = new FormData();
     formData.append('title', form.value.title);
     formData.append('description', form.value.description || '');
-    formData.append('library_id', form.value.library_id?.toString() || '');
+    formData.append('library_id', form.value.library_id.toString());
     formData.append('date', form.value.date);
     formData.append('start_time', form.value.start_time);
     formData.append('end_time', form.value.end_time);
@@ -422,27 +432,38 @@ const saveEvent = async () => {
     if (form.value.image) formData.append('image', form.value.image);
 
     if (isEditing.value && form.value.id) {
-      formData.append('_method', 'PUT');
       await superadminAPI.updateEvent(form.value.id.toString(), formData as any);
+      showSuccess('Updated!', 'Event updated successfully.');
     } else {
       await superadminAPI.createEvent(formData as any);
+      showSuccess('Created!', 'Event created successfully.');
     }
     await fetchEvents();
     closeModal();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving event:', error);
+    const errData = error.response?.data;
+    let msg = 'Failed to save event details.';
+    if (errData?.errors) {
+      msg = Object.values(errData.errors).flat().join(' ');
+    } else if (errData?.message) {
+      msg = errData.message;
+    }
+    showError('Save Failed', msg);
   } finally {
     loading.value = false;
   }
 };
 
 const confirmDelete = async (event: any) => {
-  if (confirm('Are you sure you want to delete this event?')) {
+  if (await showConfirm('Delete Event', `Are you sure you want to delete "${event.title}"?`, 'Yes, Delete')) {
     try {
       await superadminAPI.deleteEvent(event.id.toString());
+      showSuccess('Deleted!', 'Event deleted successfully.');
       await fetchEvents();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting event:', error);
+      showError('Delete Failed', error.response?.data?.message || 'Could not delete event.');
     }
   }
 };

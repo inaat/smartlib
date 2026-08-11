@@ -64,7 +64,7 @@ class DashboardController extends Controller
         $recentBookings = $library->seatBookings()
             ->with(['user', 'seat.floor'])
             ->latest()
-            ->take(10)
+            ->take(6)
             ->get();
 
         $upcomingEvents = $library->events()

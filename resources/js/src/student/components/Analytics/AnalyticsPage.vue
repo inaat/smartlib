@@ -1,16 +1,38 @@
 <template>
   <div class="space-y-6">
-    <!-- Inline Mini Action Bar for Refresh -->
-    <div class="flex justify-end font-outfit">
-      <button 
-        @click="fetchAnalytics" 
-        :disabled="loading"
-        class="flex items-center space-x-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-semibold border border-slate-200 shadow-sm active:scale-98 transition-all disabled:opacity-50" 
-        title="Refresh Data"
-      >
-        <RefreshCw :class="['w-3.5 h-3.5 text-slate-500', loading ? 'animate-spin' : '']" />
-        <span>{{ loading ? 'Refreshing...' : 'Refresh Data' }}</span>
-      </button>
+    <!-- Top Action Header with TimeFrameSelector -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-3 font-outfit">
+      <div class="flex flex-wrap items-center gap-2 sm:ml-auto">
+        <TimeFrameSelector
+          v-model="timeRange"
+          @change="fetchAnalytics"
+        />
+
+        <div v-if="timeRange === 'custom'" class="flex items-center gap-1.5">
+          <input 
+            type="date" 
+            v-model="fromDate" 
+            @change="fetchAnalytics" 
+            class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
+          />
+          <span class="text-xs text-slate-400 font-bold">to</span>
+          <input 
+            type="date" 
+            v-model="toDate" 
+            @change="fetchAnalytics" 
+            class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
+          />
+        </div>
+
+        <button 
+          @click="fetchAnalytics" 
+          :disabled="loading"
+          class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shadow-sm flex items-center justify-center text-slate-600" 
+          title="Refresh Data"
+        >
+          <RefreshCw :class="['w-4 h-4 text-slate-500', loading ? 'animate-spin' : '']" />
+        </button>
+      </div>
     </div>
 
     <div v-if="loading && !analyticsData" class="flex flex-col items-center justify-center py-24 space-y-4">
@@ -49,35 +71,22 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Study Trends Chart -->
         <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 relative overflow-hidden font-outfit text-left">
-          <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center justify-between mb-4">
             <div class="flex items-center space-x-2.5">
               <div class="p-2 bg-blue-50/60 border border-blue-100/50 rounded-xl text-blue-600">
                 <TrendingUp class="w-4.5 h-4.5" />
               </div>
-              <h3 class="font-bold text-slate-800 text-sm">Study Frequency (Last 30 Days)</h3>
+              <h3 class="font-bold text-slate-800 text-sm">{{ chartTitle }}</h3>
             </div>
           </div>
-          <div class="h-64 flex items-end justify-between space-x-1.5 px-2">
-            <div
-              v-for="(day, index) in monthlyTrends"
-              :key="index"
-              class="flex-1 flex flex-col items-center group relative h-full justify-end"
-            >
-              <div 
-                class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-md transition-all duration-300 hover:opacity-85 hover:scale-x-105 cursor-pointer"
-                :style="{ height: (day.count / maxTrendCount * 100) + '%' }"
-              >
-                <!-- Tooltip -->
-                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-slate-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 shadow-lg font-medium border border-slate-700">
-                  {{ formatDateShort(day.date) }}: {{ day.count }} Bookings
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex justify-between mt-5 px-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            <span>{{ formatDateShort(monthlyTrends[0]?.date) }}</span>
-            <span>{{ formatDateShort(monthlyTrends[monthlyTrends.length - 1]?.date) }}</span>
-          </div>
+
+          <BookingTrendsChart 
+            :data="monthlyTrendsChartData" 
+            x-key="label" 
+            y-key="value" 
+            label="Bookings" 
+            color="#2563eb"
+          />
         </div>
 
         <!-- Favorite Spots -->
@@ -134,11 +143,11 @@
 
         <!-- Mobile Distinct Cards View (block md:hidden) -->
         <div class="block md:hidden p-3.5 space-y-3 bg-slate-50/60">
-          <div v-if="recentBookings.length === 0" class="p-6 text-center text-slate-400 italic text-xs bg-white rounded-xl border border-slate-200/70">
+          <div v-if="paginatedBookings.length === 0" class="p-6 text-center text-slate-400 italic text-xs bg-white rounded-xl border border-slate-200/70">
             No recent bookings found.
           </div>
           <div 
-            v-for="booking in recentBookings" 
+            v-for="booking in paginatedBookings" 
             :key="'mobile-' + booking.id" 
             class="bg-white rounded-xl border border-slate-200/90 p-3.5 shadow-xs hover:border-slate-300 transition-all flex flex-col gap-2.5"
           >
@@ -180,10 +189,10 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-              <tr v-if="recentBookings.length === 0">
+              <tr v-if="paginatedBookings.length === 0">
                 <td colspan="4" class="px-6 py-10 text-center text-slate-400 italic text-xs">No recent bookings found.</td>
               </tr>
-              <tr v-for="booking in recentBookings" :key="booking.id" class="hover:bg-slate-50/30 transition-colors group">
+              <tr v-for="booking in paginatedBookings" :key="booking.id" class="hover:bg-slate-50/30 transition-colors group">
                 <td class="px-6 py-4.5">
                   <div class="flex items-center space-x-3">
                     <div class="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-emerald-50 group-hover:text-emerald-600 group-hover:border-emerald-100 transition-all duration-300">
@@ -203,6 +212,37 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Pagination Footer -->
+        <div v-if="recentBookings.length > 0" class="px-6 py-3.5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between font-outfit">
+          <p class="text-xs text-slate-500 font-medium">
+            Showing <span class="font-bold text-slate-700">{{ paginationStart }}</span> to <span class="font-bold text-slate-700">{{ paginationEnd }}</span> of <span class="font-bold text-slate-700">{{ recentBookings.length }}</span> entries
+          </p>
+
+          <div class="flex items-center space-x-1.5">
+            <button
+              @click="currentPage--"
+              :disabled="currentPage === 1"
+              class="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs"
+              title="Previous Page"
+            >
+              <ChevronLeft class="w-4 h-4" />
+            </button>
+
+            <span class="text-xs font-bold text-slate-700 px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-2xs">
+              {{ currentPage }} / {{ totalPages }}
+            </span>
+
+            <button
+              @click="currentPage++"
+              :disabled="currentPage === totalPages"
+              class="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs"
+              title="Next Page"
+            >
+              <ChevronRight class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </div>
     </template>
   </div>
@@ -219,18 +259,71 @@ import {
   MapPin,
   Building2,
   ChevronRight,
+  ChevronLeft,
   Clock,
   BookMarked,
   Flame
 } from 'lucide-vue-next';
 import { studentAPI } from '@/shared/services/api';
+import TimeFrameSelector from '@/shared/components/TimeFrameSelector.vue';
+import BookingTrendsChart from '@/shared/components/charts/BookingTrendsChart.vue';
 import { format } from 'date-fns';
 
 const loading = ref(true);
+const timeRange = ref('this_month');
+const fromDate = ref('');
+const toDate = ref('');
 const analyticsData = ref<any>(null);
 const monthlyTrends = ref<any[]>([]);
 const topLibraries = ref<any[]>([]);
 const recentBookings = ref<any[]>([]);
+
+// Pagination state for Recent Activity
+const currentPage = ref(1);
+const itemsPerPage = ref(5);
+
+const totalPages = computed(() => Math.ceil(recentBookings.value.length / itemsPerPage.value) || 1);
+
+const paginatedBookings = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  return recentBookings.value.slice(start, start + itemsPerPage.value);
+});
+
+const paginationStart = computed(() => {
+  if (recentBookings.value.length === 0) return 0;
+  return (currentPage.value - 1) * itemsPerPage.value + 1;
+});
+
+const paginationEnd = computed(() => {
+  return Math.min(currentPage.value * itemsPerPage.value, recentBookings.value.length);
+});
+
+const monthlyTrendsChartData = computed(() => {
+  return monthlyTrends.value.map(item => ({
+    label: item.label || formatDateShort(item.date),
+    value: item.count || 0
+  }));
+});
+
+const chartTitle = computed(() => {
+  switch (timeRange.value) {
+    case 'today':
+    case 'this_month':
+      return 'Study Frequency (This Month)';
+    case 'yesterday':
+      return 'Study Frequency (Yesterday)';
+    case 'last_month':
+      return 'Study Frequency (Last Month)';
+    case 'this_year':
+      return 'Study Frequency (This Year)';
+    case 'custom':
+      return 'Study Frequency (Custom Range)';
+    case 'all':
+      return 'Study Frequency (All Time)';
+    default:
+      return 'Study Frequency';
+  }
+});
 
 const statsCards = computed(() => [
   {
@@ -271,11 +364,20 @@ const maxTrendCount = computed(() => {
 const fetchAnalytics = async () => {
   try {
     loading.value = true;
-    const data = await studentAPI.getAnalytics();
+    const params: any = {
+      timeRange: timeRange.value,
+      range: timeRange.value
+    };
+    if (timeRange.value === 'custom' && fromDate.value && toDate.value) {
+      params.from_date = fromDate.value;
+      params.to_date = toDate.value;
+    }
+    const data = await studentAPI.getAnalytics(params);
     analyticsData.value = data.stats;
     monthlyTrends.value = data.monthlyTrends || [];
     topLibraries.value = data.topLibraries || [];
     recentBookings.value = data.recentBookings || [];
+    currentPage.value = 1;
   } catch (error) {
     console.error('Failed to fetch analytics:', error);
   } finally {

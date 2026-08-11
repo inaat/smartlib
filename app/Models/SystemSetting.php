@@ -16,15 +16,33 @@ class SystemSetting extends Model
     ];
 
     /**
-     * Get setting by key
+     * Get setting by key with alias fallback & strict boolean conversion
      */
     public static function get($key, $default = null)
     {
         $setting = self::where('key', $key)->first();
+
+        // Support alias key mappings
+        if (!$setting) {
+            if ($key === 'enable_system_email_notifications') {
+                $setting = self::where('key', 'enable_email_notifications')->first();
+            } elseif ($key === 'enable_email_notifications') {
+                $setting = self::where('key', 'enable_system_email_notifications')->first();
+            } elseif ($key === 'queue_availability_alerts') {
+                $setting = self::where('key', 'notify_on_queue_turn')->first();
+            } elseif ($key === 'notify_on_queue_turn') {
+                $setting = self::where('key', 'queue_availability_alerts')->first();
+            } elseif ($key === 'allow_digital_book_downloads') {
+                $setting = self::where('key', 'allow_digital_downloads')->first();
+            } elseif ($key === 'allow_digital_downloads') {
+                $setting = self::where('key', 'allow_digital_book_downloads')->first();
+            }
+        }
+
         if (!$setting) return $default;
 
-        if ($setting->type === 'boolean') {
-            return filter_var($setting->value, FILTER_VALIDATE_BOOLEAN);
+        if ($setting->type === 'boolean' || in_array(strtolower((string)$setting->value), ['true', 'false', '1', '0', 'yes', 'no', 'on', 'off'])) {
+            return in_array(strtolower((string)$setting->value), ['true', '1', 'yes', 'on'], true);
         }
 
         if ($setting->type === 'json') {

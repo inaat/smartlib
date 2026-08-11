@@ -27,11 +27,11 @@
 
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
         <div class="text-left">
-          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Plans</p>
-          <h3 class="text-2xl font-black text-slate-800 mt-1.5">{{ activeSubscriptionsCount }}</h3>
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Suspended Students</p>
+          <h3 class="text-2xl font-black text-slate-800 mt-1.5">{{ suspendedCount }}</h3>
         </div>
-        <div class="p-3.5 rounded-xl bg-green-50 text-green-600">
-          <CreditCard class="w-5 h-5" />
+        <div class="p-3.5 rounded-xl bg-orange-50 text-orange-600">
+          <UserX class="w-5 h-5" />
         </div>
       </div>
 
@@ -64,7 +64,7 @@
           <input
             type="text"
             v-model="searchQuery"
-            placeholder="Search by name, ID, or email..."
+            placeholder="Search by name, CRN, or email..."
             class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-655 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none placeholder-slate-400"
           />
         </div>
@@ -110,8 +110,8 @@
           <thead class="bg-gray-50/50">
             <tr>
               <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Student</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">CRN & Level</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Subscription</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Student CRN</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">CA Level</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-widest">Status</th>
               <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-widest">Action</th>
             </tr>
@@ -138,21 +138,22 @@
                 </div>
               </td>
 
-              <!-- CRN & CA Level -->
-              <td class="px-6 py-4 whitespace-nowrap text-left">
-                <div class="text-xs font-bold text-slate-700">CRN: {{ user.crn || 'N/A' }}</div>
-                <div class="text-[10px] text-slate-400 font-semibold tracking-wide mt-0.5 uppercase">Level: {{ user.ca_level || 'No Level' }}</div>
+              <!-- Student CRN -->
+              <td class="px-6 py-4 whitespace-nowrap text-left font-bold text-xs text-slate-700">
+                CRN: {{ user.crn || 'N/A' }}
               </td>
 
-              <!-- Subscription -->
+              <!-- CA Level -->
               <td class="px-6 py-4 whitespace-nowrap text-left">
-                <div v-if="user.active_subscription" class="flex flex-col">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100">
-                    {{ user.active_subscription.subscription_plan?.name }}
-                  </span>
-                  <span class="text-[9px] text-slate-400 mt-1">Expires: {{ formatDate(user.active_subscription.expires_at) }}</span>
-                </div>
-                <div v-else class="text-xs text-slate-400 italic">No active plan</div>
+                <span :class="[
+                  'inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider',
+                  user.ca_level === 'PRC' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                  user.ca_level === 'CAF' ? 'bg-purple-50 text-purple-700 border-purple-100' :
+                  user.ca_level === 'Final' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                  'bg-slate-50 text-slate-500 border-slate-100'
+                ]">
+                  {{ user.ca_level || 'No Level' }}
+                </span>
               </td>
 
               <!-- Status Badge -->
@@ -189,13 +190,6 @@
                     title="Edit Student"
                   >
                     <Edit2 class="w-4 h-4" />
-                  </button>
-                  <button 
-                    @click="openBanModal(user)" 
-                    class="p-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-orange-750 hover:text-orange-800 transition-all cursor-pointer shadow-sm"
-                    title="Ban Student"
-                  >
-                    <Ban class="w-4 h-4" />
                   </button>
                   <button 
                     @click="confirmDelete(user)" 
@@ -295,7 +289,6 @@
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
                 <option value="suspended">Suspended</option>
-                <option value="banned">Banned</option>
               </select>
             </div>
             <div>
@@ -332,66 +325,6 @@
         </form>
       </div>
     </div>
-
-    <!-- Ban Modal -->
-    <div v-if="showBanModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 border border-slate-100 flex flex-col">
-        <!-- Modal Header -->
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between text-left">
-          <h2 class="text-lg font-bold text-slate-800">Ban Student</h2>
-          <button @click="showBanModal = false" class="p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">
-            <X class="w-5 h-5 text-slate-450" />
-          </button>
-        </div>
-
-        <!-- Form Body -->
-        <form @submit.prevent="submitBan" class="p-6 space-y-4 text-left">
-          <div>
-            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Restrict Access For</label>
-            <p class="text-xs text-slate-500 mt-1 mb-2 font-medium">Student: {{ banForm.userName }}</p>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Ban Duration (Days)</label>
-            <input
-              v-model="banForm.days"
-              type="number"
-              min="1"
-              placeholder="Leave empty for lifetime ban"
-              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
-            />
-          </div>
-          
-          <div>
-            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Reason</label>
-            <textarea
-              v-model="banForm.reason"
-              rows="3"
-              placeholder="Reason for banning"
-              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white resize-none"
-            ></textarea>
-          </div>
-
-          <div class="pt-4 flex items-center space-x-3">
-            <button
-              type="button"
-              @click="showBanModal = false"
-              class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition-colors text-xs cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="banning"
-              class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 text-xs font-bold cursor-pointer"
-            >
-              <span v-if="banning">Banning...</span>
-              <span v-else>Confirm Ban</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -409,7 +342,8 @@ import {
   CreditCard,
   Plus,
   Calendar,
-  Ban
+  UserX,
+  ShieldCheck
 } from 'lucide-vue-next';
 import { adminAPI } from '@/shared/services/api';
 import { format, isSameMonth, parseISO } from 'date-fns';
@@ -421,15 +355,6 @@ const saving = ref(false);
 const showModal = ref(false);
 const isEditing = ref(false);
 const statusUpdating = ref<number | null>(null);
-
-const showBanModal = ref(false);
-const banning = ref(false);
-const banForm = ref({
-  userId: null as number | null,
-  userName: '',
-  days: null as number | null,
-  reason: ''
-});
 
 const searchQuery = ref('');
 const filterLibrary = ref('');
@@ -446,6 +371,10 @@ const form = ref({
   status: 'approved',
   library_id: null as number | null,
   role: 'student'
+});
+
+const suspendedCount = computed(() => {
+  return users.value.filter(u => u.status === 'suspended').length;
 });
 
 const activeSubscriptionsCount = computed(() => {
@@ -540,35 +469,6 @@ const editUser = (user: any) => {
   showModal.value = true;
 };
 
-const openBanModal = (user: any) => {
-  banForm.value = {
-    userId: user.id,
-    userName: user.name,
-    days: null,
-    reason: ''
-  };
-  showBanModal.value = true;
-};
-
-const submitBan = async () => {
-  if (!banForm.value.userId) return;
-  banning.value = true;
-  try {
-    await adminAPI.banUser(banForm.value.userId, {
-      days: banForm.value.days || undefined,
-      reason: banForm.value.reason
-    });
-    showBanModal.value = false;
-    alert(`User ${banForm.value.userName} banned successfully.`);
-    await fetchUsers();
-  } catch (error) {
-    console.error('Error banning user:', error);
-    alert('Failed to ban user.');
-  } finally {
-    banning.value = false;
-  }
-};
-
 const saveUser = async () => {
   saving.value = true;
   try {
@@ -613,9 +513,7 @@ const approveUser = async (user: any) => {
 const cycleUserStatus = async (user: any) => {
   if (statusUpdating.value) return;
   
-  const statuses = ['approved', 'suspended', 'banned', 'pending'];
-  const currentIndex = statuses.indexOf(user.status);
-  const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+  const nextStatus = user.status === 'approved' ? 'suspended' : 'approved';
   
   statusUpdating.value = user.id;
   try {

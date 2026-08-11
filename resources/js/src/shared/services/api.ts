@@ -22,10 +22,15 @@ api.interceptors.request.use(
   }
 );
 
+import { useSettings } from '@/shared/composables/useSettings';
+
 // Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 503 || error.response?.data?.maintenance_mode) {
+      useSettings().setMaintenanceMode(true);
+    }
     if (error.response?.status === 401) {
       // Unauthorized - clear token and redirect to login
       localStorage.removeItem('auth_token');
@@ -261,8 +266,8 @@ export const studentAPI = {
     const response = await api.delete(`/notifications/${notificationId}`);
     return response.data;
   },
-  async getAnalytics() {
-    const response = await api.get('/student/analytics');
+  async getAnalytics(params?: any) {
+    const response = await api.get('/student/analytics', { params });
     return response.data;
   },
 
@@ -696,8 +701,8 @@ export const librarianAPI = {
     return response.data;
   },
 
-  async getOverrideRequests() {
-    const response = await api.get('/librarian/override-requests');
+  async getOverrideRequests(params: any = {}) {
+    const response = await api.get('/librarian/override-requests', { params });
     return response.data;
   },
 
@@ -712,8 +717,8 @@ export const librarianAPI = {
   },
 
 
-  async getStudents() {
-    const response = await api.get('/librarian/students');
+  async getStudents(params?: any) {
+    const response = await api.get('/librarian/students', { params });
     return response.data;
   },
   async getStudentStats() {
@@ -839,8 +844,8 @@ export const ownerAPI = {
   },
 
   // Analytics
-  async getAnalytics() {
-    const response = await api.get('/owner/analytics');
+  async getAnalytics(params?: any) {
+    const response = await api.get('/owner/analytics', { params });
     return response.data;
   },
 

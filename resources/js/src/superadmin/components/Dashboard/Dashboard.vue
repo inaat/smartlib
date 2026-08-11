@@ -211,7 +211,8 @@ import {
   UserPlus,
   LifeBuoy,
   ArrowUpRight,
-  Clock
+  Clock,
+  Ban
 } from 'lucide-vue-next';
 import { superadminAPI } from '../../services/superadminApi';
 import { useAuth } from '@/shared/composables/useAuth';

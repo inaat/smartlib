@@ -38,13 +38,20 @@ class StudentController extends Controller
             })->exists();
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $librarian = Auth::user();
         $library   = $librarian->library;
 
         if (!$library) {
-            return response()->json([]);
+            return response()->json([
+                'data' => [],
+                'current_page' => 1,
+                'last_page' => 1,
+                'total' => 0,
+                'from' => 0,
+                'to' => 0
+            ]);
         }
 
         $query = User::where('role', 'student')
@@ -65,9 +72,31 @@ class StudentController extends Controller
                   });
             });
 
-        $students = $query->latest()->get();
+        if ($request->has('search') && !empty($request->search)) {
+            $search = strtolower(trim($request->search));
+            $query->where(function($q) use ($search) {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                  ->orWhereRaw('LOWER(email) LIKE ?', ["%{$search}%"])
+                  ->orWhereRaw('LOWER(crn) LIKE ?', ["%{$search}%"]);
+            });
+        }
 
-        $data = $students->map(function ($student) use ($library) {
+        if ($request->has('status') && $request->status !== 'all') {
+            if ($request->status === 'active') {
+                $query->where('is_active', true);
+            } elseif ($request->status === 'inactive') {
+                $query->where('is_active', false);
+            }
+        }
+
+        if ($request->has('ca_level') && $request->ca_level !== 'all') {
+            $query->where('ca_level', $request->ca_level);
+        }
+
+        $perPage = (int) $request->get('per_page', 20);
+        $paginated = $query->latest()->paginate($perPage);
+
+        $paginated->getCollection()->transform(function ($student) use ($library) {
             $isBanned = $student->isBannedFrom($library->id);
             $activeBan = null;
             if ($isBanned) {
@@ -98,7 +127,7 @@ class StudentController extends Controller
             ];
         });
 
-        return response()->json($data);
+        return response()->json($paginated);
     }
 
     public function store(Request $request)

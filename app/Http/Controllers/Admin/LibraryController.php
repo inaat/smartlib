@@ -58,21 +58,26 @@ class LibraryController extends Controller
             'description' => 'nullable|string',
             'address' => 'required|string',
             'capacity' => 'sometimes|nullable|integer|min:1',
-            'opening_hours' => 'required|string',
+            'opening_hours' => 'nullable|string',
             'photo' => 'nullable|image|max:10240',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
             'facilities' => 'nullable|array',
             'wifi_password' => 'nullable|string',
             'parking_available' => 'nullable|boolean',
             'operating_days' => 'nullable|array',
             'rules' => 'nullable|array',
             'special_features' => 'nullable|array',
-            'contact_info' => 'nullable|array',
+            'contact_info' => 'nullable',
+            'phone' => 'nullable|string|max:50',
         ]);
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('libraries', 'public');
+        }
+
+        if ($request->filled('phone')) {
+            $contactInfo = is_array($request->contact_info ?? null) ? $request->contact_info : [];
+            $contactInfo['phone'] = $request->phone;
+            $validated['contact_info'] = $contactInfo;
         }
 
         $validated['created_by'] = auth()->id();
@@ -113,20 +118,25 @@ class LibraryController extends Controller
             'capacity' => 'sometimes|nullable|integer|min:1',
             'opening_hours' => 'sometimes|string',
             'photo' => 'nullable|image|max:10240',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
             'facilities' => 'nullable|array',
             'wifi_password' => 'nullable|string',
             'parking_available' => 'nullable|boolean',
             'operating_days' => 'nullable|array',
             'rules' => 'nullable|array',
             'special_features' => 'nullable|array',
-            'contact_info' => 'nullable|array',
+            'contact_info' => 'nullable',
+            'phone' => 'nullable|string|max:50',
             'is_active' => 'nullable|boolean',
         ]);
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('libraries', 'public');
+        }
+
+        if ($request->has('phone')) {
+            $contactInfo = is_array($request->contact_info ?? null) ? $request->contact_info : ($library->contact_info ?? []);
+            $contactInfo['phone'] = $request->phone;
+            $validated['contact_info'] = $contactInfo;
         }
 
         $library->update($validated);
@@ -142,9 +152,8 @@ class LibraryController extends Controller
 
     public function destroy(Library $library)
     {
-        // Revoke tokens and completely purge librarians assigned to this library
-        $librarians = User::withTrashed()
-            ->where('role', 'librarian')
+        // Unassign librarians assigned to this library (do NOT delete librarian accounts)
+        $librarians = User::where('role', 'librarian')
             ->where(function($query) use ($library) {
                 $query->where('library_id', $library->id)
                       ->orWhereHas('libraries', function($q) use ($library) {
@@ -154,18 +163,20 @@ class LibraryController extends Controller
             ->get();
 
         foreach ($librarians as $librarian) {
-            $librarian->tokens()->delete();
-            $librarian->forceDelete();
+            $librarian->update(['library_id' => null]);
+            if (method_exists($librarian, 'libraries')) {
+                $librarian->libraries()->detach($library->id);
+            }
         }
 
         $library->delete();
 
         // Check if API request
         if (request()->expectsJson() || request()->is('api/*')) {
-            return response()->json(['message' => 'Library and associated librarian accounts deleted successfully']);
+            return response()->json(['message' => 'Library deleted successfully and librarian accounts unassigned']);
         }
 
         return redirect()->route('admin.libraries.index')
-            ->with('success', 'Library and associated librarian accounts deleted successfully');
+            ->with('success', 'Library deleted successfully and librarian accounts unassigned');
     }
 }

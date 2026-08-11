@@ -133,7 +133,7 @@ class LibraryController extends Controller
         }
 
         // Decode JSON strings if sent as FormData
-        foreach (['contact_info', 'operating_days', 'facilities', 'rules', 'special_features', 'is_active', 'capacity', 'latitude', 'longitude'] as $field) {
+        foreach (['contact_info', 'operating_days', 'facilities', 'rules', 'special_features'] as $field) {
             if ($request->has($field) && is_string($request->input($field))) {
                 $decoded = json_decode($request->input($field), true);
                 if (json_last_error() === JSON_ERROR_NONE) {
@@ -142,10 +142,49 @@ class LibraryController extends Controller
             }
         }
 
+        // Pre-process and sanitize input fields to prevent FormData type conversion validation failures
+        $input = $request->all();
+
+        if (array_key_exists('latitude', $input)) {
+            $input['latitude'] = (is_numeric($input['latitude']) && $input['latitude'] !== '') ? (float)$input['latitude'] : null;
+        }
+        if (array_key_exists('longitude', $input)) {
+            $input['longitude'] = (is_numeric($input['longitude']) && $input['longitude'] !== '') ? (float)$input['longitude'] : null;
+        }
+        if (array_key_exists('capacity', $input)) {
+            $input['capacity'] = is_numeric($input['capacity']) ? (int)$input['capacity'] : $library->capacity;
+        }
+        if (array_key_exists('is_active', $input)) {
+            $input['is_active'] = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
+        }
+
+        // Standardize seat_layout_mode
+        if (array_key_exists('seat_layout_mode', $input)) {
+            $mode = strtolower(trim((string)$input['seat_layout_mode']));
+            if (in_array($mode, ['layout', 'grid', ''])) {
+                $mode = 'individual';
+            }
+            if (!in_array($mode, ['individual', 'tables', 'cabins'])) {
+                $mode = 'individual';
+            }
+            $input['seat_layout_mode'] = $mode;
+        }
+
+        // Standardize table_capacity
+        if (array_key_exists('table_capacity', $input)) {
+            $tableCap = (int)$input['table_capacity'];
+            if (!in_array($tableCap, [2, 4, 6, 8, 10, 12, 14, 16])) {
+                $tableCap = 4;
+            }
+            $input['table_capacity'] = $tableCap;
+        }
+
+        $request->replace($input);
+
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
+            'name' => 'sometimes|nullable|string|max:255',
             'description' => 'nullable|string',
-            'address' => 'sometimes|string',
+            'address' => 'sometimes|nullable|string',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'contact_info' => 'nullable|array',
@@ -154,10 +193,10 @@ class LibraryController extends Controller
             'operating_days' => 'nullable|array',
             'facilities' => 'nullable|array',
             'rules' => 'nullable|array',
-            'capacity' => 'sometimes|integer',
-            'is_active' => 'sometimes|boolean',
+            'capacity' => 'nullable|integer',
+            'is_active' => 'nullable|boolean',
             'seat_layout_mode' => 'nullable|string|in:individual,tables,cabins',
-            'table_capacity' => 'nullable|integer|in:2,4,6,8,10,12,14,16',
+            'table_capacity' => 'nullable|integer',
             'special_features' => 'nullable|array',
             'photo' => 'nullable|image|max:10240',
         ]);

@@ -35,7 +35,7 @@
           <input
             type="text"
             v-model="searchQuery"
-            placeholder="Search by name, ID, or email..."
+            placeholder="Search by name, CRN, or email..."
             class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-655 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none placeholder-slate-400"
           />
         </div>
@@ -63,7 +63,7 @@
     <div v-if="loading" class="flex justify-center py-12">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
     </div>
-    <div v-else-if="filteredStudents.length === 0" class="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
+    <div v-else-if="students.length === 0" class="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
       <Users class="w-12 h-12 text-slate-300 mx-auto mb-4" />
       <p class="text-xs font-bold text-slate-455 uppercase tracking-widest">No students found matching your criteria.</p>
     </div>
@@ -81,7 +81,7 @@
           </thead>
           <tbody class="divide-y divide-gray-100 bg-white">
             <tr 
-              v-for="student in filteredStudents" 
+              v-for="student in students" 
               :key="student.id"
               class="hover:bg-slate-50/50 transition-colors"
             >
@@ -149,6 +149,66 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination controls with Per Page Select -->
+      <div v-if="pagination.total > 0" class="px-6 py-4 bg-gray-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 font-outfit text-xs font-semibold text-slate-500">
+        <div class="flex items-center space-x-3">
+          <span>Showing {{ pagination.from || 0 }} to {{ pagination.to || 0 }} of {{ pagination.total }} entries</span>
+          
+          <!-- Items per page dropdown -->
+          <div class="relative flex items-center space-x-1.5 border-l border-slate-200 pl-3">
+            <span class="text-slate-400 font-medium">Show</span>
+            <select
+              v-model="perPage"
+              @change="fetchStudents(1)"
+              class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none cursor-pointer shadow-2xs"
+            >
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span class="text-slate-400 font-medium">per page</span>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button
+            @click="fetchStudents(pagination.current_page - 1)"
+            :disabled="pagination.current_page === 1"
+            class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+          >
+            Previous
+          </button>
+
+          <!-- Page Number Buttons -->
+          <div class="flex items-center space-x-1">
+            <button
+              v-for="p in visiblePages"
+              :key="p"
+              @click="typeof p === 'number' && fetchStudents(p)"
+              :disabled="typeof p !== 'number'"
+              :class="[
+                'px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer',
+                p === pagination.current_page
+                  ? 'bg-emerald-600 text-white shadow-2xs'
+                  : typeof p === 'number'
+                  ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  : 'bg-transparent text-slate-400 cursor-default'
+              ]"
+            >
+              {{ p }}
+            </button>
+          </div>
+
+          <button
+            @click="fetchStudents(pagination.current_page + 1)"
+            :disabled="pagination.current_page === pagination.last_page"
+            class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
 
@@ -272,7 +332,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import Swal from 'sweetalert2';
 import { jsPDF } from 'jspdf';
 import {
@@ -295,10 +355,19 @@ const saving = ref(false);
 const searchQuery = ref('');
 const statusFilter = ref('all');
 const levelFilter = ref('all');
+const perPage = ref('20');
 const showModal = ref(false);
 const isEditing = ref(false);
 const changePassword = ref(false);
 const currentStudentId = ref<number | null>(null);
+
+const pagination = ref({
+  current_page: 1,
+  last_page: 1,
+  total: 0,
+  from: 0,
+  to: 0
+});
 
 const stats = ref({
   total: 0,
@@ -330,14 +399,34 @@ const form = ref({
 import { useSwal } from '@/shared/composables/useSwal';
 const { showSuccess, showError, showWarning } = useSwal();
 
-const fetchStudents = async () => {
+const fetchStudents = async (page: number = 1) => {
   try {
     loading.value = true;
-    const [studentsData, statsData] = await Promise.all([
-      librarianAPI.getStudents(),
+    const params: any = {
+      page,
+      per_page: perPage.value
+    };
+    if (searchQuery.value) params.search = searchQuery.value;
+    if (statusFilter.value !== 'all') params.status = statusFilter.value;
+    if (levelFilter.value !== 'all') params.ca_level = levelFilter.value;
+
+    const [res, statsData] = await Promise.all([
+      librarianAPI.getStudents(params),
       librarianAPI.getStudentStats()
     ]);
-    students.value = studentsData;
+
+    if (res && res.data) {
+      students.value = res.data;
+      pagination.value = {
+        current_page: res.current_page || 1,
+        last_page: res.last_page || 1,
+        total: res.total || 0,
+        from: res.from || 0,
+        to: res.to || 0
+      };
+    } else {
+      students.value = Array.isArray(res) ? res : [];
+    }
     stats.value = statsData;
   } catch (error) {
     console.error('Error fetching students:', error);
@@ -347,30 +436,30 @@ const fetchStudents = async () => {
   }
 };
 
-onMounted(fetchStudents);
+watch([searchQuery, statusFilter, levelFilter, perPage], () => {
+  fetchStudents(1);
+});
 
-const filteredStudents = computed(() => {
-  let filtered = students.value;
+onMounted(() => {
+  fetchStudents(1);
+});
 
-  if (statusFilter.value !== 'all') {
-    const isActive = statusFilter.value === 'active';
-    filtered = filtered.filter(s => s.is_active === isActive);
+const visiblePages = computed(() => {
+  const total = pagination.value.last_page;
+  const current = pagination.value.current_page;
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
-
-  if (levelFilter.value !== 'all') {
-    filtered = filtered.filter(s => s.ca_level === levelFilter.value);
+  const pages: (number | string)[] = [1];
+  if (current > 3) pages.push('...');
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
   }
-
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    filtered = filtered.filter(s =>
-      s.name.toLowerCase().includes(query) ||
-      (s.crn && s.crn.toLowerCase().includes(query)) ||
-      s.email.toLowerCase().includes(query)
-    );
-  }
-
-  return filtered;
+  if (current < total - 2) pages.push('...');
+  pages.push(total);
+  return pages;
 });
 
 const openAddModal = () => {
@@ -420,7 +509,7 @@ const exportToCSV = () => {
   const headers = ['Name', 'Email', 'Phone', 'Student ID (CRN)', 'CA Level', 'Status'];
   
   // Construct CSV rows
-  const rows = filteredStudents.value.map(student => [
+  const rows = students.value.map(student => [
     `"${(student.name || '').replace(/"/g, '""')}"`,
     `"${(student.email || '').replace(/"/g, '""')}"`,
     `"${(student.phone || 'N/A').replace(/"/g, '""')}"`,
@@ -469,7 +558,7 @@ const exportToPDF = () => {
     minute: '2-digit'
   });
   doc.text(`Generated on: ${dateStr}`, 14, 27);
-  doc.text(`Total Records: ${filteredStudents.value.length}`, 14, 32);
+  doc.text(`Total Records: ${students.value.length}`, 14, 32);
   
   // Draw a dividing line
   doc.setDrawColor(226, 232, 240); // slate-200
@@ -494,7 +583,7 @@ const exportToPDF = () => {
   let y = 52;
   const pageHeight = doc.internal.pageSize.height;
   
-  filteredStudents.value.forEach((student: any, index: number) => {
+  students.value.forEach((student: any, index: number) => {
     // Check page overflow
     if (y > pageHeight - 20) {
       doc.addPage();
@@ -544,7 +633,7 @@ const exportToPDF = () => {
 };
 
 const exportStudents = async () => {
-  if (filteredStudents.value.length === 0) {
+  if (students.value.length === 0) {
     showWarning('No Data', 'There are no student records to export.');
     return;
   }

@@ -12,37 +12,97 @@ use Carbon\Carbon;
 
 class BookingController extends Controller
 {
+    public static function processQueueExpirations($seatId = null)
+    {
+        $query = SmartQueue::where('status', 'notified')
+            ->whereNotNull('claim_expires_at')
+            ->where('claim_expires_at', '<=', now());
+
+        if ($seatId) {
+            $query->where('seat_id', $seatId);
+        }
+
+        $expiredEntries = $query->get();
+
+        foreach ($expiredEntries as $expired) {
+            $expired->update(['status' => 'cancelled']);
+
+            // Re-order remaining waiting students
+            $remaining = SmartQueue::where('seat_id', $expired->seat_id)
+                ->where('status', 'waiting')
+                ->orderBy('queue_position', 'asc')
+                ->get();
+
+            foreach ($remaining as $idx => $item) {
+                $item->update(['queue_position' => $idx + 1]);
+            }
+
+            // Grant 5-minute priority claim window to next student in queue
+            $next = SmartQueue::with('seat')->where('seat_id', $expired->seat_id)
+                ->where('status', 'waiting')
+                ->orderBy('queue_position', 'asc')
+                ->first();
+
+            if ($next) {
+                $holdMins = (int)\App\Models\SystemSetting::get('queue_hold_minutes', 5);
+                if ($holdMins <= 0) $holdMins = 5;
+
+                $next->update([
+                    'status' => 'notified',
+                    'notified_at' => now(),
+                    'claim_expires_at' => now()->addMinutes($holdMins),
+                ]);
+
+                $seatNum = $next->seat->seat_number ?? '';
+                Notification::send(
+                    $next->user_id,
+                    'queue',
+                    'Priority Seat Claim Available!',
+                    "It's your turn! You have {$holdMins} minutes to reserve Seat #{$seatNum}.",
+                    $next->seat
+                );
+            }
+        }
+    }
+
     public function myQueue(Request $request)
     {
         SeatBooking::cancelExpiredBookings();
+        self::processQueueExpirations();
+
         $queueEntries = SmartQueue::with(['seat.library', 'seat.floor'])
             ->where('user_id', $request->user()->id)
             ->whereIn('status', ['waiting', 'notified'])
             ->orderBy('joined_at', 'desc')
             ->get();
 
-        // Calculate estimated wait time for each entry
         foreach ($queueEntries as $entry) {
-            $activeBooking = SeatBooking::where('seat_id', $entry->seat_id)
-                ->whereIn('status', ['booked', 'checked_in'])
-                ->orderBy('scheduled_end_time', 'desc')
-                ->first();
+            if ($entry->status === 'notified') {
+                $remainingSecs = $entry->claim_expires_at ? max(0, (int) round(now()->diffInSeconds($entry->claim_expires_at, false))) : 300;
+                $entry->claim_remaining_seconds = $remainingSecs;
+                $entry->claim_expires_at_iso = $entry->claim_expires_at ? $entry->claim_expires_at->toIso8601String() : null;
+                $entry->estimated_wait_time = 0;
+            } else {
+                $activeBooking = SeatBooking::where('seat_id', $entry->seat_id)
+                    ->whereIn('status', ['booked', 'checked_in'])
+                    ->orderBy('scheduled_end_time', 'desc')
+                    ->first();
 
-            if ($activeBooking) {
-                $minutesRemaining = now()->diffInMinutes($activeBooking->scheduled_end_time, false);
-                $entry->estimated_wait_time = max(0, $minutesRemaining > 0 ? $minutesRemaining : 0);
-                
-                // Add factor for people ahead in queue
                 $aheadInQueue = SmartQueue::where('seat_id', $entry->seat_id)
                     ->where('status', 'waiting')
                     ->where('queue_position', '<', $entry->queue_position)
                     ->count();
-                
-                // Assuming 2 hours (120 mins) per person if seat is just starting, but here we just look at current booking.
-                // If there are people ahead, we add their expected duration (default 2h)
-                $entry->estimated_wait_time += ($aheadInQueue * 120);
-            } else {
-                $entry->estimated_wait_time = 0; // Should be notified soon
+
+                // 5-minute claim window per person ahead in queue
+                $queueHoldMins = (int)\App\Models\SystemSetting::get('queue_hold_minutes', 5);
+                if ($queueHoldMins <= 0) $queueHoldMins = 5;
+
+                if ($activeBooking) {
+                    $minutesRemaining = max(0, now()->diffInMinutes($activeBooking->scheduled_end_time, false));
+                    $entry->estimated_wait_time = (int) round($minutesRemaining + ($aheadInQueue * $queueHoldMins));
+                } else {
+                    $entry->estimated_wait_time = (int) round(($aheadInQueue + 1) * $queueHoldMins);
+                }
             }
         }
 
@@ -107,16 +167,6 @@ class BookingController extends Controller
         $user = $request->user();
         $seat = Seat::with(['floor.library', 'seatSection'])->findOrFail($request->seat_id);
         $libraryId = $seat->floor->library_id;
-
-        // Enforce system max booking duration setting
-        $sysMaxDuration = (int)\App\Models\SystemSetting::get('max_booking_duration', 240);
-        $bStart = \Carbon\Carbon::parse($request->booking_time);
-        $bEnd = \Carbon\Carbon::parse($request->scheduled_end_time);
-        if ($sysMaxDuration > 0 && $bStart->diffInMinutes($bEnd) > $sysMaxDuration) {
-            return response()->json([
-                'message' => "Maximum allowed single booking duration is {$sysMaxDuration} minutes."
-            ], 400);
-        }
 
         // Location-based booking restriction
         $library = $seat->floor->library;
@@ -328,6 +378,35 @@ class BookingController extends Controller
             }
         }
 
+        // ─── QUEUE SEAT PROTECTION ──────────────────────────────────────────
+        self::processQueueExpirations($seat->id);
+
+        $activeNotifiedQueue = SmartQueue::where('seat_id', $seat->id)
+            ->where('status', 'notified')
+            ->where('claim_expires_at', '>', now())
+            ->first();
+
+        if ($activeNotifiedQueue) {
+            if ($activeNotifiedQueue->user_id !== $user->id) {
+                $remSecs = max(1, now()->diffInSeconds($activeNotifiedQueue->claim_expires_at, false));
+                $remMins = ceil($remSecs / 60);
+                return response()->json([
+                    'message' => "This seat is currently reserved for a queued student's 5-minute priority claim window ({$remMins}m remaining). Only the student at the top of the queue can book this seat right now."
+                ], 403);
+            }
+        } else {
+            $waitingQueue = SmartQueue::where('seat_id', $seat->id)
+                ->where('status', 'waiting')
+                ->orderBy('queue_position', 'asc')
+                ->first();
+
+            if ($waitingQueue && $waitingQueue->user_id !== $user->id) {
+                return response()->json([
+                    'message' => "This seat has an active waitlist. Please join the queue to reserve this seat when your turn arrives."
+                ], 403);
+            }
+        }
+
         // Check if seat is available
         if ($seat->status !== 'available') {
             return response()->json(['message' => 'Seat is not available'], 400);
@@ -439,6 +518,15 @@ class BookingController extends Controller
         ]);
 
         $seat->update(['status' => 'reserved']);
+
+        if (isset($activeNotifiedQueue) && $activeNotifiedQueue && $activeNotifiedQueue->user_id === $user->id) {
+            $activeNotifiedQueue->update(['status' => 'assigned']);
+        } else {
+            SmartQueue::where('user_id', $user->id)
+                ->where('seat_id', $seat->id)
+                ->whereIn('status', ['waiting', 'notified'])
+                ->update(['status' => 'assigned']);
+        }
 
         Notification::send(
             $user->id,
@@ -716,14 +804,20 @@ class BookingController extends Controller
             ->first();
 
         if ($nextInQueue) {
-            $nextInQueue->update(['status' => 'notified']);
-            $holdMins = (int)\App\Models\SystemSetting::get('queue_hold_minutes', 10);
-            
+            $holdMins = (int)\App\Models\SystemSetting::get('queue_hold_minutes', 5);
+            if ($holdMins <= 0) $holdMins = 5;
+
+            $nextInQueue->update([
+                'status' => 'notified',
+                'notified_at' => now(),
+                'claim_expires_at' => now()->addMinutes($holdMins),
+            ]);
+
             Notification::send(
                 $nextInQueue->user_id,
                 'queue',
-                'Seat Available!',
-                "Seat {$booking->seat->seat_number} is now free. You have {$holdMins} minutes to check in.",
+                'Priority Seat Claim Available!',
+                "Seat {$booking->seat->seat_number} is now free. You have {$holdMins} minutes to reserve your seat.",
                 $booking->seat
             );
         }
@@ -849,10 +943,6 @@ class BookingController extends Controller
     }
     public function cancel(Request $request, $id)
     {
-        if (!\App\Models\SystemSetting::get('allow_cancellations', true)) {
-            return response()->json(['message' => 'Student booking cancellations are currently disabled in system settings.'], 403);
-        }
-
         SeatBooking::cancelExpiredBookings();
         $booking = SeatBooking::findOrFail($id);
 

@@ -52,8 +52,11 @@ class SeatBooking extends Model
      */
     public static function cancelExpiredBookings()
     {
+        $maxCheckinMins = (int)\App\Models\SystemSetting::get('max_checkin_time_minutes', 15);
+        if ($maxCheckinMins <= 0) $maxCheckinMins = 15;
+
         $expiredBookings = self::where('status', 'booked')
-            ->where('booking_time', '<=', now()->subMinutes(15))
+            ->where('booking_time', '<=', now()->subMinutes($maxCheckinMins))
             ->get();
 
         foreach ($expiredBookings as $booking) {
@@ -69,6 +72,32 @@ class SeatBooking extends Model
                     ->exists();
                 if (!$otherActive) {
                     $booking->seat->update(['status' => 'available']);
+
+                    $nextInQueue = SmartQueue::where('seat_id', $booking->seat_id)
+                        ->where('status', 'waiting')
+                        ->orderBy('queue_position', 'asc')
+                        ->first();
+
+                    if ($nextInQueue) {
+                        $holdMins = (int)\App\Models\SystemSetting::get('queue_hold_minutes', 5);
+                        if ($holdMins <= 0) $holdMins = 5;
+
+                        $nextInQueue->update([
+                            'status' => 'notified',
+                            'notified_at' => now(),
+                            'claim_expires_at' => now()->addMinutes($holdMins),
+                        ]);
+
+                        try {
+                            Notification::send(
+                                $nextInQueue->user_id,
+                                'queue',
+                                'Priority Seat Claim Available!',
+                                "Seat " . ($booking->seat->seat_number ?? '') . " is now free. You have {$holdMins} minutes to reserve your seat.",
+                                $booking->seat
+                            );
+                        } catch (\Exception $e) {}
+                    }
                 }
             }
 
@@ -77,7 +106,7 @@ class SeatBooking extends Model
                     $booking->user_id,
                     'booking',
                     'Booking Auto-Cancelled',
-                    "Your booking for seat " . ($booking->seat->seat_number ?? 'N/A') . " was automatically cancelled because you did not check in within 15 minutes.",
+                    "Your booking for seat " . ($booking->seat->seat_number ?? 'N/A') . " was automatically cancelled because you did not check in within {$maxCheckinMins} minutes.",
                     $booking
                 );
             } catch (\Exception $e) {

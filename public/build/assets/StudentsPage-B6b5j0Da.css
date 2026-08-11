@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit[data-v-abf00527] {
+  font-family: 'Outfit', sans-serif;
+}
+.text-slate-850[data-v-abf00527] {
+  color: #1e293b;
+}
+.text-slate-550[data-v-abf00527] {
+  color: #64748b;
+}
+.text-slate-455[data-v-abf00527] {
+  color: #475569;
+}
+.text-slate-505[data-v-abf00527] {
+  color: #334155;
+}
+.bg-red-55\/60[data-v-abf00527] {
+  background-color: rgba(254, 242, 242, 0.6);
+}
+.border-red-150[data-v-abf00527] {
+  border-color: rgba(239, 68, 68, 0.2);
+}
+.border-green-150[data-v-abf00527] {
+  border-color: rgba(34, 197, 94, 0.2);
+}
+.border-orange-150[data-v-abf00527] {
+  border-color: rgba(249, 115, 22, 0.2);
+}
+.bg-blue-105\/50[data-v-abf00527] {
+  background-color: rgba(219, 234, 254, 0.5);
+}

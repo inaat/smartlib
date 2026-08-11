@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit[data-v-14ea3d30] {
+  font-family: 'Outfit', sans-serif;
+}
+@keyframes pulseSlow-14ea3d30 {
+0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+}
+50% {
+    transform: scale(1.03);
+    opacity: 0.9;
+}
+}
+.animate-pulse-slow[data-v-14ea3d30] {
+  animation: pulseSlow-14ea3d30 3s infinite ease-in-out;
+}
+@keyframes fadeIn-14ea3d30 {
+from {
+    opacity: 0;
+    transform: translateY(12px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.animate-fade-in[data-v-14ea3d30] {
+  animation: fadeIn-14ea3d30 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes scaleUp-14ea3d30 {
+from {
+    opacity: 0;
+    transform: scale(0.95);
+}
+to {
+    opacity: 1;
+    transform: scale(1);
+}
+}
+.animate-scale-up[data-v-14ea3d30] {
+  animation: scaleUp-14ea3d30 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hover-lift[data-v-14ea3d30] {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift[data-v-14ea3d30]:hover {
+  transform: translateY(-4px);
+}
+.line-clamp-2[data-v-14ea3d30] {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.text-slate-650[data-v-14ea3d30] {
+  color: #475569;
+}

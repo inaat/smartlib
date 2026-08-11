@@ -99,8 +99,10 @@
         </div>
         <div class="p-6 border-b border-gray-100">
           <div class="flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-700">Recent Bookings</h2>
-            <router-link to="/librarian/bookings" class="text-xs text-emerald-600 hover:text-emerald-600 font-bold flex items-center">
+            <div class="flex items-center space-x-2">
+              <h2 class="text-lg font-bold text-slate-700">Recent Activity</h2>
+            </div>
+            <router-link to="/librarian/bookings" class="text-xs text-emerald-600 hover:text-emerald-700 font-bold flex items-center">
               View All <span class="ml-1">→</span>
             </router-link>
           </div>
@@ -432,8 +434,8 @@ const fetchDashboardData = async (isSilent = false) => {
       overstay_count: data.stats.overstay_count || 0
     };
 
-    // Map recent bookings
-    recentBookings.value = (data.recentBookings || []).map((b: any) => ({
+    // Map recent bookings (Auto-limit to 7 latest activities)
+    recentBookings.value = (data.recentBookings || []).slice(0, 7).map((b: any) => ({
       id: b.id,
       studentName: b.user?.name || 'Unknown',
       profilePicture: b.user?.profile_picture,

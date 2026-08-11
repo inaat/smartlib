@@ -1,15 +1,18 @@
 <template>
-  <div v-if="recommendations.length === 0" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 text-center font-outfit">
+  <div v-if="recommendations.length === 0" class="bg-white rounded-3xl p-6 border border-slate-100/90 shadow-xs text-center font-outfit">
     <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">No recommendations available</div>
   </div>
-  <div v-else class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden font-outfit text-left">
+  <div v-else class="bg-white rounded-3xl p-6 border border-slate-100/90 shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden font-outfit text-left relative">
     <!-- Header -->
-    <div class="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between">
-      <div class="flex items-center space-x-2.5">
-        <div class="p-2  text-orange-500 ">
-          <Sparkles class="w-4 h-4" />
+    <div class="flex items-center justify-between gap-4 mb-5 border-b border-slate-100/80 pb-4">
+      <div class="flex items-center space-x-3 text-left">
+        <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <Sparkles class="w-4.5 h-4.5" />
         </div>
-        <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wider">Recommendations</h2>
+        <div>
+          <h3 class="text-base font-bold text-slate-800 tracking-tight leading-snug">Recommendations</h3>
+          <p class="text-[11px] text-slate-400 font-medium">Personalized AI study suggestions tailored for you.</p>
+        </div>
       </div>
       <div class="flex items-center space-x-2">
         <!-- Slide indicators -->
@@ -19,17 +22,17 @@
             :key="index"
             @click="goToSlide(index)"
             :class="[
-              'w-1.5 h-1.5 rounded-full transition-all duration-300',
+              'w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer',
               index === currentIndex ? 'bg-blue-600 w-4' : 'bg-slate-200 hover:bg-slate-300'
             ]"
           />
         </div>
         
         <!-- Navigation buttons -->
-        <div class="flex space-x-1 ml-3.5">
+        <div class="flex space-x-1 ml-3">
           <button
             @click="goToPrevious"
-            class="p-1.5 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100 transition-colors disabled:opacity-40"
+            class="p-1.5 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100 transition-colors disabled:opacity-40 cursor-pointer"
             :disabled="recommendations.length <= 1"
             title="Previous Slide"
           >
@@ -37,7 +40,7 @@
           </button>
           <button
             @click="goToNext"
-            class="p-1.5 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100 transition-colors disabled:opacity-40"
+            class="p-1.5 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100 transition-colors disabled:opacity-40 cursor-pointer"
             :disabled="recommendations.length <= 1"
             title="Next Slide"
           >

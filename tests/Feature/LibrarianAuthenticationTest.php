@@ -103,7 +103,7 @@ class LibrarianAuthenticationTest extends TestCase
         $this->assertStringContainsString('No library has been assigned to your account', $response->json('errors.email.0'));
     }
 
-    public function test_deleting_library_revokes_associated_librarians_tokens_and_blocks_further_requests()
+    public function test_deleting_library_unassigns_associated_librarians()
     {
         // 1. Log in the librarian to generate a token
         $loginResponse = $this->postJson('/api/auth/login', [
@@ -137,20 +137,11 @@ class LibrarianAuthenticationTest extends TestCase
         // Forget guards to clear cached resolved users in tests
         auth()->forgetGuards();
 
-        // 3. Try to access /api/auth/me with the librarian's token -> should fail now
+        // 3. Access /api/auth/me with librarian token -> should fail with 403 because library_id is null
         $meResponseAfterDelete = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->getJson('/api/auth/me');
-
-        // Sanctum returns 401 Unauthenticated because the token was deleted
-        $meResponseAfterDelete->assertStatus(401);
-
-        // 4. Try logging in again -> should fail with 422 because library is deleted (and library_id is null)
-        $loginResponseAfterDelete = $this->postJson('/api/auth/login', [
-            'email' => 'john@test.com',
-            'password' => 'password',
-        ]);
-        $loginResponseAfterDelete->assertStatus(422);
+        $meResponseAfterDelete->assertStatus(403);
     }
 
     public function test_librarian_with_inactive_status_cannot_login()

@@ -1,56 +1,117 @@
 <template>
   <div class="p-6 space-y-6 font-outfit">
-    <!-- Tab Switcher -->
-    <div class="flex items-center space-x-1.5 bg-slate-100 rounded-xl p-1 w-fit">
-      <button
-        @click="activeSubView = 'bookings'"
-        :class="[
-          'px-5 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-2 border border-transparent',
-          activeSubView === 'bookings'
-            ? 'bg-white text-emerald-700 shadow-sm border-slate-200/40'
-            : 'text-slate-500 hover:text-slate-700'
-        ]"
-      >
-        <Armchair class="w-4 h-4" />
-        <span>Bookings List</span>
-      </button>
-      <button
-        @click="activeSubView = 'override_requests'"
-        :class="[
-          'px-5 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-2 border border-transparent',
-          activeSubView === 'override_requests'
-            ? 'bg-white text-emerald-700 shadow-sm border-slate-200/40'
-            : 'text-slate-500 hover:text-slate-700'
-        ]"
-      >
-        <ShieldAlert class="w-4 h-4" />
-        <span>Override Requests</span>
-      </button>
+    <!-- Top Header Bar: Tabs (Left) & Time Frame Filter (Right) -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <!-- Tab Switcher -->
+      <div class="flex items-center space-x-1.5 bg-slate-100 rounded-xl p-1 w-fit">
+        <button
+          @click="activeSubView = 'bookings'"
+          :class="[
+            'px-5 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-2 border border-transparent',
+            activeSubView === 'bookings'
+              ? 'bg-white text-emerald-700 shadow-sm border-slate-200/40'
+              : 'text-slate-500 hover:text-slate-700'
+          ]"
+        >
+          <Armchair class="w-4 h-4" />
+          <span>Bookings List</span>
+        </button>
+        <button
+          @click="activeSubView = 'override_requests'"
+          :class="[
+            'px-5 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-2 border border-transparent',
+            activeSubView === 'override_requests'
+              ? 'bg-white text-emerald-700 shadow-sm border-slate-200/40'
+              : 'text-slate-500 hover:text-slate-700'
+          ]"
+        >
+          <ShieldAlert class="w-4 h-4" />
+          <span>Override Requests</span>
+        </button>
+      </div>
+
+      <!-- Time Frame Dropdown on Top Right Header -->
+      <div class="flex items-center gap-2">
+        <TimeFrameSelector
+          v-if="activeSubView === 'bookings'"
+          v-model="timeRange"
+          color="emerald"
+          @change="handleTimeRangeChange"
+        />
+        <TimeFrameSelector
+          v-else
+          v-model="overrideTimeRange"
+          color="emerald"
+          @change="handleOverrideTimeRangeChange"
+        />
+
+        <!-- Custom Date Inputs (when Custom Range selected) -->
+        <div v-if="activeSubView === 'bookings' && timeRange === 'custom'" class="flex items-center gap-1.5">
+          <input 
+            type="date" 
+            v-model="fromDate" 
+            @change="fetchBookings(1)" 
+            class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
+          />
+          <span class="text-xs text-slate-400 font-bold">to</span>
+          <input 
+            type="date" 
+            v-model="toDate" 
+            @change="fetchBookings(1)" 
+            class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
+          />
+        </div>
+        <div v-if="activeSubView === 'override_requests' && overrideTimeRange === 'custom'" class="flex items-center gap-1.5">
+          <input 
+            type="date" 
+            v-model="overrideFromDate" 
+            @change="fetchOverrideRequests(1)" 
+            class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
+          />
+          <span class="text-xs text-slate-400 font-bold">to</span>
+          <input 
+            type="date" 
+            v-model="overrideToDate" 
+            @change="fetchOverrideRequests(1)" 
+            class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
+          />
+        </div>
+
+        <!-- Refresh Icon Button -->
+        <button
+          @click="refreshData"
+          class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shadow-sm flex items-center justify-center"
+          title="Refresh List"
+        >
+          <RefreshCw :class="['w-4 h-4 text-slate-500', (loading || loadingOverrides) ? 'animate-spin text-emerald-600' : '']" />
+        </button>
+      </div>
     </div>
 
     <!-- Bookings List View -->
     <div v-if="activeSubView === 'bookings'" class="space-y-6">
-      <!-- Search and Filters in One Line -->
+      <!-- Search & Status Filter Header -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
-        <div class="flex flex-col md:flex-row items-center gap-4">
+        <div class="flex flex-col sm:flex-row items-center gap-3">
           <!-- Search bar -->
           <div class="relative flex-1 w-full text-left">
             <Search class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Search student by name or ID..."
+              placeholder="Search student by name or CRN..."
               class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-655 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none placeholder-slate-400"
               @input="debounceSearch"
             />
           </div>
-          <!-- Status filter select dropdown -->
+
+          <!-- Status filter dropdown -->
           <select
             v-model="activeFilter"
             @change="fetchBookings(1)"
-            class="w-full md:w-56 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-655 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none cursor-pointer"
+            class="w-full sm:w-56 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-655 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none cursor-pointer"
           >
-            <option value="all">All Bookings ({{ stats.all || 0 }})</option>
+            <option value="all">All Statuses ({{ stats.all || 0 }})</option>
             <option value="active">Active ({{ stats.active || 0 }})</option>
             <option value="pending">Pending ({{ stats.pending || 0 }})</option>
             <option value="completed">Completed ({{ stats.completed || 0 }})</option>
@@ -67,7 +128,7 @@
         </div>
         <div v-else-if="bookings.length === 0" class="p-16 text-center text-slate-400">
           <Search class="w-10 h-10 text-slate-200 mx-auto mb-4" />
-          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">No bookings found</p>
+          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">No bookings found for the selected range</p>
         </div>
         <div v-else class="overflow-x-auto">
           <table class="w-full divide-y divide-gray-100">
@@ -216,24 +277,60 @@
           </table>
         </div>
         
-        <!-- Pagination controls -->
-        <div v-if="bookings.length > 0 && pagination.last_page > 1" class="px-6 py-4 border-t border-gray-100 flex items-center justify-between font-outfit text-xs font-bold text-slate-500">
-          <div>
-            Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} reservations
+        <!-- Pagination controls with Per Page Select -->
+        <div v-if="pagination.total > 0" class="px-6 py-4 bg-gray-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 font-outfit text-xs font-semibold text-slate-500">
+          <div class="flex items-center space-x-3">
+            <span>Showing {{ pagination.from || 0 }} to {{ pagination.to || 0 }} of {{ pagination.total }} entries</span>
+            
+            <!-- Items per page dropdown -->
+            <div class="relative flex items-center space-x-1.5 border-l border-slate-200 pl-3">
+              <span class="text-slate-400 font-medium">Show</span>
+              <select
+                v-model="perPage"
+                @change="fetchBookings(1)"
+                class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none cursor-pointer shadow-2xs"
+              >
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <span class="text-slate-400 font-medium">per page</span>
+            </div>
           </div>
+
           <div class="flex items-center space-x-2">
-            <button 
-              @click="changePage(pagination.current_page - 1)" 
+            <button
+              @click="fetchBookings(pagination.current_page - 1)"
               :disabled="pagination.current_page === 1"
-              class="px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
             >
               Previous
             </button>
-            <span class="px-3 py-1.5 bg-slate-100 rounded-lg text-emerald-700">{{ pagination.current_page }} of {{ pagination.last_page }}</span>
-            <button 
-              @click="changePage(pagination.current_page + 1)" 
+
+            <!-- Page Number Buttons -->
+            <div class="flex items-center space-x-1">
+              <button
+                v-for="p in visiblePages"
+                :key="p"
+                @click="typeof p === 'number' && fetchBookings(p)"
+                :disabled="typeof p !== 'number'"
+                :class="[
+                  'px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer',
+                  p === pagination.current_page
+                    ? 'bg-emerald-600 text-white shadow-2xs'
+                    : typeof p === 'number'
+                    ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    : 'bg-transparent text-slate-400 cursor-default'
+                ]"
+              >
+                {{ p }}
+              </button>
+            </div>
+
+            <button
+              @click="fetchBookings(pagination.current_page + 1)"
               :disabled="pagination.current_page === pagination.last_page"
-              class="px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
             >
               Next
             </button>
@@ -244,6 +341,36 @@
 
     <!-- Override Requests View -->
     <div v-else-if="activeSubView === 'override_requests'" class="space-y-6 animate-fade-in">
+      <!-- Search & Status Filter Header for Override Requests -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+          <!-- Search bar -->
+          <div class="relative flex-1 w-full text-left">
+            <Search class="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+            <input
+              v-model="overrideSearchQuery"
+              type="text"
+              placeholder="Search override request by student..."
+              class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-655 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none placeholder-slate-400"
+              @input="debounceOverrideSearch"
+            />
+          </div>
+
+          <!-- Status filter dropdown -->
+          <select
+            v-model="overrideStatusFilter"
+            @change="fetchOverrideRequests(1)"
+            class="w-full sm:w-56 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-655 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none cursor-pointer"
+          >
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table Container for Override Requests -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden text-left">
         <div v-if="loadingOverrides" class="p-16 flex flex-col items-center justify-center">
           <RefreshCw class="w-10 h-10 text-emerald-600 animate-spin mb-4" />
@@ -251,7 +378,7 @@
         </div>
         <div v-else-if="overrideRequests.length === 0" class="p-16 text-center text-slate-400">
           <ShieldAlert class="w-10 h-10 text-slate-200 mx-auto mb-4" />
-          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">No override requests found</p>
+          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">No override requests found for the selected range</p>
         </div>
         <div v-else class="overflow-x-auto">
           <table class="w-full divide-y divide-gray-100">
@@ -285,17 +412,17 @@
                 </td>
                 <!-- Student Academic Level -->
                 <td class="px-6 py-4 whitespace-nowrap text-left">
-                  <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-50 border border-amber-100 text-amber-700">
-                    {{ req.user?.ca_level || 'N/A' }}
+                  <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-50 border border-blue-100 text-blue-700">
+                    {{ req.user?.ca_level || req.user_level || 'N/A' }}
                   </span>
                 </td>
-                <!-- Target Seat & Section / Subsection Details -->
+                <!-- Target Seat & Section -->
                 <td class="px-6 py-4 whitespace-nowrap text-left">
-                  <div class="space-y-1">
-                    <div class="flex items-center space-x-2 text-xs font-semibold text-slate-800">
-                      <MapPin class="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                      <span class="font-bold text-slate-800">Seat {{ req.seat?.seat_number }}</span>
-                      <span class="text-[10px] text-slate-500 font-semibold bg-slate-100 px-2 py-0.5 border border-slate-200 rounded-md">
+                  <div class="space-y-0.5">
+                    <div class="flex items-center space-x-2 text-xs font-semibold text-slate-600">
+                      <MapPin class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span class="font-semibold text-slate-800">Seat {{ req.seat?.seat_number }}</span>
+                      <span class="text-[10px] text-slate-400 font-semibold bg-slate-50 px-2 py-0.5 border border-gray-200 rounded-md">
                         {{ req.seat?.floor?.name }}
                       </span>
                     </div>
@@ -352,6 +479,66 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Override Requests Pagination controls with Per Page Select -->
+        <div v-if="overridePagination.total > 0" class="px-6 py-4 bg-gray-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 font-outfit text-xs font-semibold text-slate-500">
+          <div class="flex items-center space-x-3">
+            <span>Showing {{ overridePagination.from || 0 }} to {{ overridePagination.to || 0 }} of {{ overridePagination.total }} entries</span>
+            
+            <!-- Items per page dropdown -->
+            <div class="relative flex items-center space-x-1.5 border-l border-slate-200 pl-3">
+              <span class="text-slate-400 font-medium">Show</span>
+              <select
+                v-model="overridePerPage"
+                @change="fetchOverrideRequests(1)"
+                class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none cursor-pointer shadow-2xs"
+              >
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <span class="text-slate-400 font-medium">per page</span>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button
+              @click="fetchOverrideRequests(overridePagination.current_page - 1)"
+              :disabled="overridePagination.current_page === 1"
+              class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+            >
+              Previous
+            </button>
+
+            <!-- Page Number Buttons -->
+            <div class="flex items-center space-x-1">
+              <button
+                v-for="p in overrideVisiblePages"
+                :key="p"
+                @click="typeof p === 'number' && fetchOverrideRequests(p)"
+                :disabled="typeof p !== 'number'"
+                :class="[
+                  'px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer',
+                  p === overridePagination.current_page
+                    ? 'bg-emerald-600 text-white shadow-2xs'
+                    : typeof p === 'number'
+                    ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    : 'bg-transparent text-slate-400 cursor-default'
+                ]"
+              >
+                {{ p }}
+              </button>
+            </div>
+
+            <button
+              @click="fetchOverrideRequests(overridePagination.current_page + 1)"
+              :disabled="overridePagination.current_page === overridePagination.last_page"
+              class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -470,7 +657,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   Search,
@@ -481,11 +668,13 @@ import {
   XCircle,
   X,
   Calendar,
+  ChevronDown,
   RefreshCw,
   Armchair,
   ShieldAlert
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/shared/services/api';
+import TimeFrameSelector from '@/shared/components/TimeFrameSelector.vue';
 import { format } from 'date-fns';
 import { useSwal } from '@/shared/composables/useSwal';
 
@@ -522,6 +711,8 @@ interface Booking {
   check_out_time?: string;
 }
 
+const todayStr = format(new Date(), 'yyyy-MM-dd');
+
 const loading = ref(false);
 const activeSubView = ref<'bookings' | 'override_requests'>('bookings');
 const overrideRequests = ref<any[]>([]);
@@ -534,9 +725,29 @@ const stats = ref<BookingStats>({
   completed: 0,
   cancelled: 0
 });
+
+// Bookings Filters & Pagination
 const activeFilter = ref('all');
 const searchQuery = ref('');
+const timeRange = ref('today');
+const fromDate = ref(todayStr);
+const toDate = ref(todayStr);
+const perPage = ref('20');
 const selectedBooking = ref<any>(null);
+
+const getTimeRangeLabel = (val: string) => {
+  const map: Record<string, string> = {
+    today: 'Today',
+    yesterday: 'Yesterday',
+    this_month: 'This Month',
+    last_month: 'Last Month',
+    this_year: 'This Year',
+    custom: 'Custom Range',
+    all: 'All Time'
+  };
+  return map[val] || 'Today';
+};
+
 const pagination = ref({
   current_page: 1,
   last_page: 1,
@@ -545,21 +756,61 @@ const pagination = ref({
   to: 0
 });
 
+// Override Requests Filters & Pagination
+const overrideSearchQuery = ref('');
+const overrideTimeRange = ref('today');
+const overrideFromDate = ref(todayStr);
+const overrideToDate = ref(todayStr);
+const overrideStatusFilter = ref('all');
+const overridePerPage = ref('20');
+
+const overridePagination = ref({
+  current_page: 1,
+  last_page: 1,
+  total: 0,
+  from: 0,
+  to: 0
+});
+
+const handleTimeRangeChange = () => {
+  fetchBookings(1);
+};
+
+const handleOverrideTimeRangeChange = () => {
+  fetchOverrideRequests(1);
+};
+
+const refreshData = () => {
+  if (activeSubView.value === 'override_requests') {
+    fetchOverrideRequests(overridePagination.value.current_page);
+  } else {
+    fetchBookings(pagination.value.current_page);
+    fetchStats();
+  }
+};
+
 const fetchBookings = async (page = 1) => {
   loading.value = true;
   try {
-    const response = await librarianAPI.getBookings({
+    const params: any = {
       page,
       status: activeFilter.value,
-      search: searchQuery.value
-    });
-    bookings.value = response.data;
+      search: searchQuery.value,
+      time_range: timeRange.value,
+      per_page: perPage.value
+    };
+    if (timeRange.value === 'custom' && fromDate.value && toDate.value) {
+      params.from_date = fromDate.value;
+      params.to_date = toDate.value;
+    }
+    const response = await librarianAPI.getBookings(params);
+    bookings.value = response.data || [];
     pagination.value = {
-      current_page: response.current_page,
-      last_page: response.last_page,
-      total: response.total,
-      from: response.from,
-      to: response.to
+      current_page: response.current_page || 1,
+      last_page: response.last_page || 1,
+      total: response.total || 0,
+      from: response.from || 0,
+      to: response.to || 0
     };
   } catch (error) {
     console.error('Error fetching bookings:', error);
@@ -581,12 +832,62 @@ const debounceSearch = () => {
   if (searchTimeout) clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
     fetchBookings(1);
-  }, 500);
+  }, 400);
 };
+
+let overrideSearchTimeout: any = null;
+const debounceOverrideSearch = () => {
+  if (overrideSearchTimeout) clearTimeout(overrideSearchTimeout);
+  overrideSearchTimeout = setTimeout(() => {
+    fetchOverrideRequests(1);
+  }, 400);
+};
+
+const visiblePages = computed(() => {
+  const total = pagination.value.last_page;
+  const current = pagination.value.current_page;
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const pages: (number | string)[] = [1];
+  if (current > 3) pages.push('...');
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+  if (current < total - 2) pages.push('...');
+  pages.push(total);
+  return pages;
+});
+
+const overrideVisiblePages = computed(() => {
+  const total = overridePagination.value.last_page;
+  const current = overridePagination.value.current_page;
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const pages: (number | string)[] = [1];
+  if (current > 3) pages.push('...');
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+  if (current < total - 2) pages.push('...');
+  pages.push(total);
+  return pages;
+});
 
 const changePage = (page: number) => {
   if (page >= 1 && page <= pagination.value.last_page) {
     fetchBookings(page);
+  }
+};
+
+const changeOverridePage = (page: number) => {
+  if (page >= 1 && page <= overridePagination.value.last_page) {
+    fetchOverrideRequests(page);
   }
 };
 
@@ -669,11 +970,40 @@ const getProfilePictureUrl = (path: string) => {
   return `/storage/${path}`;
 };
 
-const fetchOverrideRequests = async () => {
+const fetchOverrideRequests = async (page = 1) => {
   loadingOverrides.value = true;
   try {
-    const response = await librarianAPI.getOverrideRequests();
-    overrideRequests.value = response;
+    const params: any = {
+      page,
+      status: overrideStatusFilter.value,
+      search: overrideSearchQuery.value,
+      time_range: overrideTimeRange.value,
+      per_page: overridePerPage.value
+    };
+    if (overrideTimeRange.value === 'custom' && overrideFromDate.value && overrideToDate.value) {
+      params.from_date = overrideFromDate.value;
+      params.to_date = overrideToDate.value;
+    }
+    const response = await librarianAPI.getOverrideRequests(params);
+    if (response && response.data) {
+      overrideRequests.value = response.data;
+      overridePagination.value = {
+        current_page: response.current_page || 1,
+        last_page: response.last_page || 1,
+        total: response.total || 0,
+        from: response.from || 0,
+        to: response.to || 0
+      };
+    } else {
+      overrideRequests.value = Array.isArray(response) ? response : [];
+      overridePagination.value = {
+        current_page: 1,
+        last_page: 1,
+        total: overrideRequests.value.length,
+        from: overrideRequests.value.length ? 1 : 0,
+        to: overrideRequests.value.length
+      };
+    }
   } catch (error) {
     console.error('Error fetching override requests:', error);
   } finally {
@@ -697,7 +1027,7 @@ const handleOverrideAction = async (id: number, action: 'approve' | 'reject') =>
       await librarianAPI.rejectOverrideRequest(id);
       showSuccess('Rejected', 'Override request has been rejected.');
     }
-    await fetchOverrideRequests();
+    await fetchOverrideRequests(overridePagination.value.current_page);
   } catch (error) {
     console.error('Error processing override action:', error);
     showError('Error', 'Failed to process request.');
@@ -706,7 +1036,7 @@ const handleOverrideAction = async (id: number, action: 'approve' | 'reject') =>
 
 watch(activeSubView, (newVal) => {
   if (newVal === 'override_requests') {
-    fetchOverrideRequests();
+    fetchOverrideRequests(1);
   } else {
     fetchBookings(1);
     fetchStats();
@@ -716,9 +1046,9 @@ watch(activeSubView, (newVal) => {
 onMounted(() => {
   if (route.query.tab === 'override_requests') {
     activeSubView.value = 'override_requests';
-    fetchOverrideRequests();
+    fetchOverrideRequests(1);
   } else {
-    fetchBookings();
+    fetchBookings(1);
     fetchStats();
   }
 });

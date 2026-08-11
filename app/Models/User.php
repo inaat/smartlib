@@ -297,5 +297,66 @@ class User extends Authenticatable
             'max_streak' => $maxStreak,
         ];
     }
+
+    /**
+     * Completely delete/purge a SuperAdmin user and all associated libraries,
+     * librarians, students, bookings, attendance, reports, and related records.
+     */
+    public static function purgeSuperAdmin(User $superAdmin): void
+    {
+        if ($superAdmin->role !== 'super_admin') {
+            $superAdmin->tokens()->delete();
+            $superAdmin->forceDelete();
+            return;
+        }
+
+        $superAdminId = $superAdmin->id;
+
+        // 1. Get all libraries created by or linked to this SuperAdmin
+        $libraries = Library::where('created_by', $superAdminId)->get();
+        $libraryIds = $libraries->pluck('id')->toArray();
+
+        // 2. Get all librarians and students created by or assigned to these libraries
+        $usersToPurge = User::withTrashed()
+            ->where('id', '!=', $superAdminId)
+            ->where(function ($query) use ($superAdminId, $libraryIds) {
+                $query->where('created_by', $superAdminId);
+                if (!empty($libraryIds)) {
+                    $query->orWhereIn('library_id', $libraryIds);
+                }
+            })
+            ->get();
+
+        foreach ($usersToPurge as $u) {
+            $u->tokens()->delete();
+            $u->forceDelete();
+        }
+
+        // 3. Delete all libraries and related child records
+        foreach ($libraries as $library) {
+            SeatBooking::where('library_id', $library->id)->delete();
+            Attendance::where('library_id', $library->id)->delete();
+            LibraryReview::where('library_id', $library->id)->delete();
+            ScheduledReport::where('library_id', $library->id)->delete();
+            Book::where('library_id', $library->id)->delete();
+            Event::where('library_id', $library->id)->delete();
+            Floor::where('library_id', $library->id)->delete();
+            SeatSection::where('library_id', $library->id)->delete();
+            StudyTable::where('library_id', $library->id)->delete();
+            LibraryOperatingHour::where('library_id', $library->id)->delete();
+            LibraryFacility::where('library_id', $library->id)->delete();
+            LibraryRule::where('library_id', $library->id)->delete();
+            Ban::where('library_id', $library->id)->delete();
+
+            $library->delete();
+        }
+
+        // 4. Delete any bans set by or for this SuperAdmin
+        Ban::where('super_admin_id', $superAdminId)->orWhere('banned_by', $superAdminId)->delete();
+
+        // 5. Finally purge the SuperAdmin tokens & account
+        $superAdmin->tokens()->delete();
+        $superAdmin->forceDelete();
+    }
 }
 

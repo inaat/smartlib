@@ -70,12 +70,12 @@ class SystemSettingSeeder extends Seeder
 
             // Booking Settings
             [
-                'key' => 'max_booking_duration',
-                'value' => '240',
+                'key' => 'max_checkin_time_minutes',
+                'value' => '15',
                 'group' => 'booking',
                 'type' => 'number',
-                'label' => 'Max Booking Duration (Minutes)',
-                'description' => 'Maximum single session duration allowed per seat booking.',
+                'label' => 'Max Check-In Time (Minutes)',
+                'description' => 'Maximum allowed time window after booking start time for student check-in before auto-cancellation.',
             ],
             [
                 'key' => 'allow_seat_extensions',
@@ -100,14 +100,6 @@ class SystemSettingSeeder extends Seeder
                 'type' => 'number',
                 'label' => 'Queue Notification Hold (Minutes)',
                 'description' => 'Time window a queued student has to check in when a seat becomes free.',
-            ],
-            [
-                'key' => 'allow_cancellations',
-                'value' => 'true',
-                'group' => 'booking',
-                'type' => 'boolean',
-                'label' => 'Allow Student Booking Cancellations',
-                'description' => 'Permit students to cancel upcoming bookings prior to start time.',
             ],
             [
                 'key' => 'overstay_penalty_enabled',

@@ -40,16 +40,26 @@
 
     <!-- Global Extension Modal -->
     <GlobalExtensionModal />
+
+    <!-- ICAP CA Pakistan AI Chatbot (Dashboard Only) -->
+    <IcapChatbot v-if="isDashboardPage" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAuth } from '@/shared/composables/useAuth';
 import { useGeolocation } from '@/shared/composables/useGeolocation';
 import StudentSidebar from './StudentSidebar.vue';
 import StudentTopbar from './StudentTopbar.vue';
 import GlobalExtensionModal from './GlobalExtensionModal.vue';
+import IcapChatbot from '@/shared/components/IcapChatbot.vue';
+
+const route = useRoute();
+const isDashboardPage = computed(() => {
+  return route.path === '/student/dashboard' || route.path === '/student/dashboard/';
+});
 
 const { user } = useAuth();
 const { locationGranted, requestLocation } = useGeolocation();

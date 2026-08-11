@@ -11,27 +11,37 @@ class EventController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
+
         $query = Event::where('is_active', true)
             ->where(function ($q) {
                 $q->where('date', '>', now()->toDateString())
                   ->orWhere(function ($q2) {
                       $q2->where('date', '=', now()->toDateString())
-                         ->where('start_time', '>=', now()->toTimeString());
+                         ->where(function ($q3) {
+                             $q3->whereNull('end_time')
+                                ->orWhere('end_time', '>=', now()->toTimeString())
+                                ->orWhere('start_time', '>=', now()->toTimeString());
+                         });
                   });
             });
 
-        // Filter by library
-        if ($request->has('library_id')) {
+        // Filter by library if specified or fallback to student's assigned library
+        if ($request->filled('library_id')) {
             $query->where('library_id', $request->library_id);
+        } elseif ($user && $user->library_id) {
+            $query->where(function ($q) use ($user) {
+                $q->where('library_id', $user->library_id)
+                  ->orWhereNull('library_id');
+            });
         }
 
         $events = $query->with('library')->orderBy('date')->orderBy('start_time')->get();
 
         // Add registration count and check if user is registered
-        $user = $request->user();
         $events->each(function($event) use ($user) {
             $event->registered_count = $event->registrations()->count();
-            $reg = $event->registrations()->where('user_id', $user->id)->first();
+            $reg = $user ? $event->registrations()->where('user_id', $user->id)->first() : null;
             $event->is_registered = $reg ? true : false;
             $event->seat_number = $reg ? $event->registrations()->where('id', '<=', $reg->id)->count() : null;
         });

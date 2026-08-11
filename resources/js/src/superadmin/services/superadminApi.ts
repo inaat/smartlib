@@ -226,8 +226,13 @@ export const superadminAPI = {
     }
   },
 
-  async updateEvent(eventId: string, updates: Partial<Event>): Promise<Event> {
+  async updateEvent(eventId: string, updates: any): Promise<Event> {
     try {
+      if (updates instanceof FormData) {
+        if (!updates.has('_method')) updates.append('_method', 'PUT');
+        const response = await api.post(`/admin/events/${eventId}`, updates);
+        return response.data;
+      }
       const response = await api.put(`/admin/events/${eventId}`, updates);
       return response.data;
     } catch (error) {

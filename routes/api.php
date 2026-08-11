@@ -27,6 +27,7 @@ use App\Http\Controllers\Student\BookingController;
 use App\Http\Controllers\Student\BookController as StudentBook;
 use App\Http\Controllers\Student\EventController as StudentEvent;
 use App\Http\Controllers\Student\ProfileController;
+use App\Http\Controllers\Api\IcapChatbotController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,6 +47,10 @@ Route::post('/auth/send-otp', [AuthController::class, 'sendOTP'])->name('api.aut
 Route::post('/auth/check-uniqueness', [AuthController::class, 'checkUniqueness'])->name('api.auth.check-uniqueness');
 Route::get('/settings/public', [\App\Http\Controllers\Admin\SystemSettingController::class, 'publicSettings'])->name('api.settings.public');
 Route::get('/subscription-plans/public', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'publicIndex'])->name('api.subscription-plans.public');
+
+// ICAP AI Assistant Routes
+Route::post('/icap-assistant/chat', [IcapChatbotController::class, 'chat'])->name('api.icap-assistant.chat');
+Route::get('/icap-assistant/suggestions', [IcapChatbotController::class, 'getSuggestions'])->name('api.icap-assistant.suggestions');
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {

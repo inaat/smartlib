@@ -267,6 +267,25 @@
 
       <!-- Right Column: Actions & Hours -->
       <div class="space-y-6">
+        <!-- Operating Hours -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">Operating Hours</h3>
+          <div class="space-y-3">
+            <div 
+              v-for="day in library.operating_days" 
+              :key="day.day"
+              class="flex justify-between items-center text-xs font-semibold"
+              :class="{'font-bold text-blue-650': isToday(day.day)}"
+            >
+              <span class="text-slate-500" :class="{'text-blue-650': isToday(day.day)}">{{ day.day }}</span>
+              <span v-if="day.isOpen" class="text-slate-800 font-bold">
+                {{ formatTime12(day.openTime) }} - {{ formatTime12(day.closeTime) }}
+              </span>
+              <span v-else class="text-red-500 font-semibold">Closed</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Booking Card -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 sticky top-24 text-left">
           <h3 class="text-base font-semibold text-slate-800 mb-1.5">Reserve a Seat</h3>
@@ -307,25 +326,6 @@
                 <span class="text-[9px] uppercase tracking-wider text-emerald-600/80 font-bold">WiFi Password</span>
                 <span class="font-mono text-xs font-bold text-emerald-900 mt-1 select-all">{{ library.wifi_password }}</span>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Operating Hours -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left">
-          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">Operating Hours</h3>
-          <div class="space-y-3">
-            <div 
-              v-for="day in library.operating_days" 
-              :key="day.day"
-              class="flex justify-between items-center text-xs font-semibold"
-              :class="{'font-bold text-blue-650': isToday(day.day)}"
-            >
-              <span class="text-slate-500" :class="{'text-blue-650': isToday(day.day)}">{{ day.day }}</span>
-              <span v-if="day.isOpen" class="text-slate-800">
-                {{ day.openTime }} - {{ day.closeTime }}
-              </span>
-              <span v-else class="text-red-500 font-semibold">Closed</span>
             </div>
           </div>
         </div>
@@ -578,6 +578,27 @@ const getFacilityIcon = (facility: string) => {
   if (name.includes('locker')) return Lock;
   if (name.includes('cctv') || name.includes('security')) return Camera;
   return CheckCircle;
+};
+
+const formatTime12 = (timeStr: string) => {
+  if (!timeStr) return '';
+  const cleanStr = timeStr.trim();
+  const match12 = cleanStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (match12) {
+    let h = parseInt(match12[1]);
+    const m = match12[2];
+    const ampm = match12[3].toUpperCase();
+    return `${h}:${m} ${ampm}`;
+  }
+  const match24 = cleanStr.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    let h = parseInt(match24[1]);
+    const m = match24[2];
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const displayH = h % 12 === 0 ? 12 : h % 12;
+    return `${displayH}:${m} ${ampm}`;
+  }
+  return timeStr;
 };
 
 const formatDateRelative = (date: string) => {

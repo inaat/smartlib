@@ -1,0 +1,19 @@
+
+@keyframes bounceSlow-8404fe19 {
+0%, 100% { transform: translateY(0);
+}
+50% { transform: translateY(-6px);
+}
+}
+@keyframes spinSlow-8404fe19 {
+from { transform: rotate(0deg);
+}
+to { transform: rotate(360deg);
+}
+}
+.animate-bounce-slow[data-v-8404fe19] {
+  animation: bounceSlow-8404fe19 3s ease-in-out infinite;
+}
+.animate-spin-slow[data-v-8404fe19] {
+  animation: spinSlow-8404fe19 8s linear infinite;
+}

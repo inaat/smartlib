@@ -308,7 +308,7 @@
                       >
                         <Zap v-if="!submitting" class="w-4 h-4 text-white fill-current" />
                         <span v-else class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        <span>{{ submitting ? 'Claiming...' : 'Claim Priority Spot' }}</span>
+                        <span>{{ submitting ? 'Joining...' : 'Join Queue' }}</span>
                       </button>
 
                       <button 

@@ -110,64 +110,66 @@
       <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Loading publications...</p>
     </div>
     
-    <div v-else-if="filteredBooks.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      <div 
-        v-for="book in filteredBooks" 
-        :key="book.id"
-        class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden group hover:shadow-md hover:translate-y-[-1px] transition-all flex flex-col justify-between"
-      >
-        <!-- Card Image Header -->
-        <div class="aspect-[3/4] relative overflow-hidden bg-slate-50">
-          <img 
-            :src="book.cover_url" 
-            :alt="book.title"
-            class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
-          >
-          <!-- Status Tag Badges -->
-          <div class="absolute top-3.5 right-3.5 flex flex-col items-end gap-1.5 z-10">
-            <span :class="[
-              'px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider border shadow-sm',
-              book.type === 'digital' ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-indigo-600 border-indigo-700 text-white'
-            ]">
-              {{ book.type }}
-            </span>
-            <span :class="[
-              'px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider border shadow-sm',
-              book.availability === 'available' ? 'bg-green-500 border-green-600 text-white' : 'bg-red-500 border-red-600 text-white'
-            ]">
-              {{ book.availability }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Card Body Content -->
-        <div class="p-4 flex-1 flex flex-col justify-between text-left">
-          <div>
-            <p class="text-[9px] font-bold text-emerald-650 uppercase tracking-widest mb-1">{{ book.category }}</p>
-            <h3 class="font-bold text-slate-800 text-sm line-clamp-1 mb-0.5" :title="book.title">{{ book.title }}</h3>
-            <p class="text-xs text-slate-400 font-semibold mb-3">{{ book.author }}</p>
-          </div>
-          
-          <div class="flex items-center justify-between pt-3 border-t border-slate-100/80">
-            <div class="text-[10px] text-slate-450 font-bold uppercase tracking-wide flex items-center">
-              <span v-if="book.type === 'physical'">Loc: {{ book.location || 'N/A' }}</span>
-              <span v-else class="text-emerald-650 flex items-center">Digital PDF</span>
+    <div v-else-if="filteredBooks.length > 0" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div 
+          v-for="book in filteredBooks" 
+          :key="book.id"
+          class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden group hover:shadow-md hover:translate-y-[-1px] transition-all flex flex-col justify-between"
+        >
+          <!-- Card Image Header -->
+          <div class="aspect-[3/4] relative overflow-hidden bg-slate-50">
+            <img 
+              :src="book.cover_url" 
+              :alt="book.title"
+              class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
+            >
+            <!-- Status Tag Badges -->
+            <div class="absolute top-3.5 right-3.5 flex flex-col items-end gap-1.5 z-10">
+              <span :class="[
+                'px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider border shadow-sm',
+                book.type === 'digital' ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-indigo-600 border-indigo-700 text-white'
+              ]">
+                {{ book.type }}
+              </span>
+              <span :class="[
+                'px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider border shadow-sm',
+                book.availability === 'available' ? 'bg-green-500 border-green-600 text-white' : 'bg-red-500 border-red-600 text-white'
+              ]">
+                {{ book.availability }}
+              </span>
             </div>
-            <div class="flex items-center space-x-1.5">
-              <button 
-                @click="handleEdit(book)" 
-                class="p-1.5 text-slate-400 hover:text-slate-650 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl transition-all cursor-pointer"
-                title="Edit Book"
-              >
-                <Edit2 class="w-3.5 h-3.5" />
-              </button>
-              <button 
-                @click="handleDelete(book.id)" 
-                class="p-1.5 text-rose-500 hover:text-rose-650 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-xl transition-all cursor-pointer"
-                title="Remove Book"
-              >
-                <Trash2 class="w-3.5 h-3.5" />
-              </button>
+          </div>
+
+          <!-- Card Body Content -->
+          <div class="p-4 flex-1 flex flex-col justify-between text-left">
+            <div>
+              <p class="text-[9px] font-bold text-emerald-650 uppercase tracking-widest mb-1">{{ book.category }}</p>
+              <h3 class="font-bold text-slate-800 text-sm line-clamp-1 mb-0.5" :title="book.title">{{ book.title }}</h3>
+              <p class="text-xs text-slate-400 font-semibold mb-3">{{ book.author }}</p>
+            </div>
+            
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100/80">
+              <div class="text-[10px] text-slate-450 font-bold uppercase tracking-wide flex items-center">
+                <span v-if="book.type === 'physical'">Loc: {{ book.location || 'N/A' }}</span>
+                <span v-else class="text-emerald-650 flex items-center">Digital PDF</span>
+              </div>
+              <div class="flex items-center space-x-1.5">
+                <button 
+                  @click="handleEdit(book)" 
+                  class="p-1.5 text-slate-400 hover:text-slate-655 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl transition-all cursor-pointer"
+                  title="Edit Book"
+                >
+                  <Edit2 class="w-3.5 h-3.5" />
+                </button>
+                <button 
+                  @click="handleDelete(book.id)" 
+                  class="p-1.5 text-rose-500 hover:text-rose-655 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-xl transition-all cursor-pointer"
+                  title="Remove Book"
+                >
+                  <Trash2 class="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -369,7 +371,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import {
   Plus,
   Search,

@@ -1,10 +1,15 @@
 <template>
-  <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 relative overflow-hidden text-left">
+  <div class="bg-white rounded-3xl p-6 border border-slate-100/90 shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden text-left font-outfit">
     <!-- Header -->
-    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center space-x-2">
-      <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-      <span>Active & Upcoming</span>
-    </h3>
+    <div class="flex items-center space-x-3 mb-5 border-b border-slate-100/80 pb-4 text-left">
+      <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+        <Armchair class="w-4.5 h-4.5" />
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-slate-800 tracking-tight leading-snug">Active & Upcoming</h3>
+        <p class="text-[11px] text-slate-400 font-medium">Your current seat reservations and upcoming sessions.</p>
+      </div>
+    </div>
     
     <!-- Empty state -->
     <div v-if="activeBookings.length === 0" class="text-center py-10 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">

@@ -164,9 +164,10 @@ export const librarianAPI = {
   },
 
   // Analytics
-  async getAnalytics(timeRange: string = 'week'): Promise<any> {
+  async getAnalytics(params?: any): Promise<any> {
     try {
-      const response = await api.get('/librarian/analytics', { params: { timeRange } });
+      const queryParams = typeof params === 'string' ? { timeRange: params, range: params } : params;
+      const response = await api.get('/librarian/analytics', { params: queryParams });
       return response.data;
     } catch (error) {
       handleApiError(error);

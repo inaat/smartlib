@@ -31,25 +31,38 @@
         </button>
       </div>
 
-      <!-- Time Range Controls for Analytics (Aligned on Same Line) -->
-      <div v-if="activeView === 'analytics'" class="flex items-center space-x-3 sm:ml-auto">
-        <select 
-          v-model="timeRange" 
-          class="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 bg-white text-xs font-semibold text-slate-600 cursor-pointer shadow-sm appearance-none pr-8 relative"
-        >
-          <option value="today">Today</option>
-          <option value="week">Last 7 Days</option>
-          <option value="month">Last 30 Days</option>
-          <option value="year">Last Year</option>
-        </select>
+      <!-- Time Range Controls for Analytics (Top Right Header) -->
+      <div v-if="activeView === 'analytics'" class="flex items-center gap-2 sm:ml-auto">
+        <TimeFrameSelector
+          v-model="timeRange"
+          color="emerald"
+          @change="fetchAnalytics"
+        />
         
+        <!-- Custom Date Inputs (when Custom Range selected) -->
+        <div v-if="timeRange === 'custom'" class="flex items-center gap-1.5">
+          <input 
+            type="date" 
+            v-model="fromDate" 
+            @change="fetchAnalytics" 
+            class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
+          />
+          <span class="text-xs text-slate-400 font-bold">to</span>
+          <input 
+            type="date" 
+            v-model="toDate" 
+            @change="fetchAnalytics" 
+            class="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
+          />
+        </div>
+
         <button 
           @click="fetchAnalytics" 
           :disabled="loading"
-          class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+          class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer shadow-sm flex items-center justify-center"
           title="Refresh Statistics"
         >
-          <RefreshCw :class="['w-4 h-4 text-slate-500', loading ? 'animate-spin' : '']" />
+          <RefreshCw :class="['w-4 h-4 text-slate-500', loading ? 'animate-spin text-emerald-600' : '']" />
         </button>
       </div>
     </div>
@@ -153,69 +166,28 @@
         </div>
       </div>
 
-      <!-- Charts Section -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left mb-6">
-        
-        <!-- Booking Trends Bar Chart -->
+      <!-- Charts Section: Full-Width Booking Trends Card -->
+      <div class="mb-6">
+        <!-- Booking Trends Line Chart (Full Width - Smart Tailor Design) -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
-          <div>
-            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1">Booking Trends</h2>
-            <p class="text-[10px] text-slate-400 font-semibold mb-6">Total bookings distribution over selected time duration.</p>
-          </div>
-          
-          <div class="h-64 flex items-end justify-between space-x-2 border-b border-slate-100 pb-2">
-            <div
-              v-for="(day, index) in bookingTrends"
-              :key="index"
-              class="flex-1 h-full flex flex-col justify-end items-center group cursor-pointer relative"
-            >
-              <!-- Hover details popover -->
-              <div class="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[9px] font-bold py-1 px-2 rounded absolute mb-2 -translate-y-16 shadow pointer-events-none z-20">
-                {{ day.value }} bookings
-              </div>
-              
-              <!-- Bar wrapper container to allow proper percentage height rendering -->
-              <div class="w-full h-44 flex items-end relative">
-                <div 
-                  class="w-full bg-gradient-to-t from-emerald-600 to-teal-500 rounded-t-md transition-all group-hover:brightness-105"
-                  :style="{ height: (day.value / (Math.max(...bookingTrends.map(d => d.value)) || 1) * 100) + '%' }"
-                ></div>
-              </div>
-              
-              <span class="text-[10px] font-bold text-slate-400 mt-2 truncate w-full text-center">{{ day.label }}</span>
+          <div class="mb-2">
+            <div class="flex items-center justify-between mb-1">
+              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+                <TrendingUp class="w-4 h-4 text-emerald-600" />
+                <span>Booking Trends</span>
+              </h2>
+              <span class="text-xs text-slate-400 font-semibold">{{ timeRangeDescription }}</span>
             </div>
-            <div v-if="bookingTrends.length === 0" class="w-full h-full flex items-center justify-center text-slate-400 text-xs italic">
-              No booking trend data for this period
-            </div>
-          </div>
-        </div>
-
-        <!-- Peak Hours Slots Chart -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
-          <div>
-            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-1">Peak Occupancy Hours</h2>
-            <p class="text-[10px] text-slate-400 font-semibold mb-6">Distribution of session booking times across high-traffic hours.</p>
+            <p class="text-[10px] text-slate-400 font-semibold">Total bookings distribution over selected time duration.</p>
           </div>
 
-          <div class="space-y-4 flex-1 flex flex-col justify-center">
-            <div
-              v-for="hour in peakHours"
-              :key="hour.time"
-              class="flex items-center space-x-3"
-            >
-              <span class="text-[11px] font-bold text-slate-500 w-16 uppercase tracking-wider">{{ hour.time }}</span>
-              <div class="flex-1 bg-slate-50 rounded-xl h-6 overflow-hidden border border-slate-100 relative">
-                <div
-                  class="h-full bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl transition-all"
-                  :style="{ width: hour.percentage + '%' }"
-                ></div>
-                <span class="absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-slate-600">{{ hour.bookings }} Bookings</span>
-              </div>
-            </div>
-            <div v-if="peakHours.length === 0" class="text-center py-8 text-slate-400 text-xs italic">
-              No traffic data available for this range
-            </div>
-          </div>
+          <BookingTrendsChart
+            :data="bookingTrends"
+            x-key="label"
+            y-key="value"
+            label="Bookings"
+            color="#059669"
+          />
         </div>
       </div>
 
@@ -337,7 +309,10 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between min-h-[320px]">
           <div>
             <div class="flex items-center justify-between mb-1">
-              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Books</h2>
+              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+                <BookOpen class="w-4 h-4 text-emerald-600" />
+                <span>Books</span>
+              </h2>
               <span class="text-xs text-slate-400 font-semibold">{{ timeRangeDescription }}</span>
             </div>
             <p class="text-[10px] text-slate-400 font-semibold mb-6">Overview of book borrowing activities and reservation statuses.</p>
@@ -420,7 +395,10 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between min-h-[320px]">
           <div>
             <div class="flex items-center justify-between mb-1">
-              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Most Issued</h2>
+              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+                <BookMarked class="w-4 h-4 text-emerald-600" />
+                <span>Most Issued</span>
+              </h2>
               <span class="text-xs text-slate-400 font-semibold">{{ timeRangeDescription }}</span>
             </div>
             <p class="text-[10px] text-slate-400 font-semibold mb-6">Top borrowed books in the selected library.</p>
@@ -473,7 +451,10 @@
         <!-- Top Active Students List -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div class="p-5 border-b border-slate-50">
-            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Top Active Students</h2>
+            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
+              <Award class="w-4 h-4 text-emerald-600" />
+              <span>Top Active Students</span>
+            </h2>
             <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Registered students with most library study time.</p>
           </div>
           
@@ -502,42 +483,8 @@
           </div>
         </div>
 
-        <!-- Most Popular Seats List -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="p-5 border-b border-slate-50">
-            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Most Popular Seats</h2>
-            <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Top reservation spots and seat utility percentage rates.</p>
-          </div>
-
-          <div class="p-5 space-y-3.5">
-            <div v-if="popularSeats.length === 0" class="text-center py-8">
-              <MapPin class="w-8 h-8 text-slate-200 mx-auto mb-2" />
-              <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">No seat statistics available</p>
-            </div>
-
-            <div
-              v-else
-              v-for="seat in popularSeats"
-              :key="seat.number"
-              class="flex items-center justify-between p-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl transition-colors"
-            >
-              <div class="flex items-center space-x-3">
-                <div class="p-2 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-700">
-                  <MapPin class="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 class="font-bold text-slate-700 text-xs">Seat {{ seat.number }}</h4>
-                  <p class="text-[10px] text-slate-400 font-semibold mt-0.5">{{ seat.bookings }} total reservations</p>
-                </div>
-              </div>
-
-              <div class="text-right">
-                <span class="text-xs font-bold text-slate-700">{{ seat.utilization }}%</span>
-                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">utilization</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Peak Traffic Hours Chart (Redesigned exact reference bar chart) -->
+        <PeakTrafficHoursChart :data="hourlyDistribution" :total-bookings="stats.total_bookings" />
       </div>
     </div>
 
@@ -553,24 +500,52 @@ import { ref, onMounted, watch, defineAsyncComponent, computed } from 'vue';
 import {
   Users,
   Calendar,
+  ChevronDown,
   Clock,
   BarChart3,
   TrendingUp,
   TrendingDown,
   RefreshCw,
   Award,
+  BookOpen,
+  BookMarked,
   MapPin,
   FileBarChart,
   GraduationCap
 } from 'lucide-vue-next';
 import { librarianAPI } from '@/librarian/services/librarianApi';
+import TimeFrameSelector from '@/shared/components/TimeFrameSelector.vue';
+import BookingTrendsChart from '@/shared/components/charts/BookingTrendsChart.vue';
+import PeakTrafficHoursChart from '@/shared/components/charts/PeakTrafficHoursChart.vue';
 
 // Lazy-load ReportsPage to avoid loading its heavy code unless the Reports tab is active
 const ReportsPage = defineAsyncComponent(() => import('@/librarian/components/Reports/ReportsPage.vue'));
 
+import { format } from 'date-fns';
+
+const todayStr = format(new Date(), 'yyyy-MM-dd');
 const activeView = ref<'analytics' | 'reports'>('analytics');
 const loading = ref(false);
-const timeRange = ref('week');
+const timeRange = ref('this_month');
+const fromDate = ref(todayStr);
+const toDate = ref(todayStr);
+
+const timeRangeDescription = computed(() => {
+  const mapping: Record<string, string> = {
+    today: 'Today',
+    yesterday: 'Yesterday',
+    this_month: 'This Month',
+    last_month: 'Last Month',
+    this_year: 'This Year',
+    custom: 'Custom Range',
+    all: 'All Time',
+    week: 'Last 7 Days',
+    month: 'Last 30 Days',
+    year: 'Last Year'
+  };
+  return mapping[timeRange.value] || 'Today';
+});
+
 const stats = ref({
   total_bookings: 0,
   total_bookings_change: 0,
@@ -588,6 +563,60 @@ const stats = ref({
 });
 
 const bookingTrends = ref<any[]>([]);
+const hourlyDistribution = ref<any[]>([]);
+
+// Computed SVG Line Chart Drawing Math
+const maxTrendValue = computed(() => {
+  if (!bookingTrends.value || bookingTrends.value.length === 0) return 5;
+  const max = Math.max(...bookingTrends.value.map(d => d.value), 0);
+  return max === 0 ? 5 : Math.ceil(max * 1.25);
+});
+
+const trendLinePoints = computed(() => {
+  if (!bookingTrends.value || bookingTrends.value.length === 0) return [];
+  const max = maxTrendValue.value;
+  const width = 800;
+  const height = 220;
+  const paddingX = 40;
+  const paddingY = 25;
+
+  const count = bookingTrends.value.length;
+  const stepX = count > 1 ? (width - paddingX * 2) / (count - 1) : 0;
+
+  return bookingTrends.value.map((item, idx) => {
+    const x = count === 1 ? width / 2 : paddingX + idx * stepX;
+    const y = height - paddingY - (item.value / max) * (height - paddingY * 2);
+    return { x, y, label: item.label, value: item.value };
+  });
+});
+
+const linePathD = computed(() => {
+  const points = trendLinePoints.value;
+  if (points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+
+  return points.reduce((acc, point, idx) => {
+    if (idx === 0) return `M ${point.x} ${point.y}`;
+    const prev = points[idx - 1];
+    const cp1x = prev.x + (point.x - prev.x) / 2;
+    const cp1y = prev.y;
+    const cp2x = prev.x + (point.x - prev.x) / 2;
+    const cp2y = point.y;
+    return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${point.x} ${point.y}`;
+  }, '');
+});
+
+const areaPathD = computed(() => {
+  const lineD = linePathD.value;
+  if (!lineD) return '';
+  const points = trendLinePoints.value;
+  if (points.length === 0) return '';
+  const lastX = points[points.length - 1].x;
+  const firstX = points[0].x;
+  const bottomY = 220;
+  return `${lineD} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
+});
+
 const peakHours = ref<any[]>([]);
 const topStudents = ref<any[]>([]);
 const popularSeats = ref<any[]>([]);
@@ -664,16 +693,6 @@ const bookStats = ref({
 });
 const mostIssuedBooks = ref<any[]>([]);
 
-const timeRangeDescription = computed(() => {
-  const mapping: Record<string, string> = {
-    today: 'Today',
-    week: 'Last 7 Days',
-    month: 'Last 30 Days',
-    year: 'Last Year'
-  };
-  return mapping[timeRange.value] || 'Last 7 Days';
-});
-
 const yAxisMax = computed(() => {
   const max = Math.max(...mostIssuedBooks.value.map(b => b.count), 0);
   if (max === 0) return 10;
@@ -725,53 +744,79 @@ const donutSegments = computed(() => {
   return segments;
 });
 
+const formatTime = (timeStr: string) => {
+  if (!timeStr) return '';
+  const [hours] = timeStr.split(':');
+  const h = parseInt(hours);
+  if (isNaN(h)) return timeStr;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 || 12;
+  return `${hour12}:00 ${ampm}`;
+};
+
 const fetchAnalytics = async () => {
   loading.value = true;
   try {
-    const data = await librarianAPI.getAnalytics(timeRange.value);
-    stats.value = data.stats;
+    const params: any = {
+      timeRange: timeRange.value,
+      range: timeRange.value
+    };
+    if (timeRange.value === 'custom' && fromDate.value && toDate.value) {
+      params.from_date = fromDate.value;
+      params.to_date = toDate.value;
+    }
+    const data = await librarianAPI.getAnalytics(params);
+    stats.value = data?.stats || {
+      total_bookings: 0,
+      total_bookings_change: 0,
+      active_bookings: 0,
+      completed_bookings: 0,
+      completed_bookings_change: 0,
+      completion_rate: 0,
+      no_show_rate: 0,
+      avg_session_duration: 0,
+      avg_session_duration_change: 0,
+      total_seats: 0,
+      available_seats: 0,
+      occupancy_rate: 0,
+      occupancy_rate_change: 0
+    };
     
     // Map daily trends
-    bookingTrends.value = data.dailyTrends.map((d: any) => ({
+    bookingTrends.value = (data?.dailyTrends || []).map((d: any) => ({
       label: d.day,
       value: d.bookings
     }));
 
-    // Map peak hours
-    const maxBookings = Math.max(...data.popularTimeSlots.map((s: any) => s.bookings), 1);
-    peakHours.value = data.popularTimeSlots.map((s: any) => ({
+    // Map peak hours & hourly distribution
+    hourlyDistribution.value = data?.hourlyDistribution || [];
+    const slots = data?.popularTimeSlots || [];
+    const maxBookings = slots.length > 0 ? Math.max(...slots.map((s: any) => s.bookings), 1) : 1;
+    peakHours.value = slots.map((s: any) => ({
       time: formatTime(s.time),
       bookings: s.bookings,
       percentage: Math.round((s.bookings / maxBookings) * 100)
     }));
 
     // Map top students
-    topStudents.value = data.topStudents;
+    topStudents.value = data?.topStudents || [];
 
     // Map popular seats
-    popularSeats.value = data.popularSeats;
+    popularSeats.value = data?.popularSeats || [];
 
     // Map gender and level stats
-    genderStats.value = data.genderStats || { male: 0, female: 0, mixed: 0, total: 0 };
-    levelStats.value = data.levelStats || { PRC: 0, CAF: 0, Final: 0, all: 0, total: 0 };
+    genderStats.value = data?.genderStats || { male: 0, female: 0, mixed: 0, total: 0 };
+    levelStats.value = data?.levelStats || { PRC: 0, CAF: 0, Final: 0, all: 0, total: 0 };
 
     // Map book stats
-    bookStats.value = data.bookStats || { issued: 0, returned: 0, pending: 0, total: 0 };
-    mostIssuedBooks.value = data.mostIssuedBooks || [];
+    bookStats.value = data?.bookStats || { issued: 0, returned: 0, pending: 0, total: 0 };
+    mostIssuedBooks.value = data?.mostIssuedBooks || [];
 
   } catch (error) {
     console.error('Error fetching analytics:', error);
   } finally {
     loading.value = false;
   }
-};
-
-const formatTime = (timeStr: string) => {
-  const [hours] = timeStr.split(':');
-  const h = parseInt(hours);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hour12 = h % 12 || 12;
-  return `${hour12}:00 ${ampm}`;
 };
 
 watch(timeRange, () => {

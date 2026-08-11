@@ -93,8 +93,8 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else class="text-center py-20 bg-slate-100 rounded-2xl border border-dashed border-slate-200/80 p-8 font-outfit">
-      <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-inner">
+     <div v-else class="bg-white rounded-2xl p-8 text-center py-20 border border-dashed border-slate-200 shadow-sm">
+        <div class="w-16 h-16 bg-slate-50 text-slate-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-inner">
         <BookOpen class="w-7 h-7 text-slate-400" />
       </div>
       <h3 class="text-base font-semibold text-slate-800 mb-1">No active reservations</h3>
@@ -183,6 +183,7 @@ const formatDate = (date: string) => {
 
 const getDaysRemaining = (reservation: any) => {
   if (reservation?.status === 'returned') return 'Book Returned';
+  if (reservation?.status === 'pending_return') return 'Return Requested';
   if (reservation?.status === 'rejected') return 'Request Rejected';
   if (!reservation?.due_date) return 'N/A';
   const due = new Date(reservation.due_date);
@@ -190,13 +191,14 @@ const getDaysRemaining = (reservation: any) => {
   const diffTime = due.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  if (diffDays < 0) return `Overdue by ${Math.abs(diffDays)} days`;
+  if (diffDays < 0 || reservation?.status === 'overdue') return `Overdue by ${Math.abs(diffDays)} days`;
   if (diffDays === 0) return 'Due today';
   return `${diffDays} days remaining`;
 };
 
 const getDaysRemainingColor = (reservation: any) => {
   if (reservation?.status === 'returned') return 'text-slate-400';
+  if (reservation?.status === 'pending_return') return 'text-slate-400';
   if (reservation?.status === 'rejected') return 'text-slate-400';
   if (!reservation?.due_date) return 'text-slate-400';
   const due = new Date(reservation.due_date);

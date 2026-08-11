@@ -88,9 +88,9 @@
               <Car class="w-4 h-4 mr-2 text-green-600" />
               Parking Available
             </div>
-            <div v-if="library.latitude && library.longitude" class="flex items-center text-xs font-semibold text-gray-600">
-              <MapPin class="w-4 h-4 mr-2 text-purple-600" />
-              {{ library.latitude }}, {{ library.longitude }}
+            <div v-if="library.contact_info?.phone" class="flex items-center text-xs font-semibold text-gray-600">
+              <Phone class="w-4 h-4 mr-2 text-purple-600" />
+              {{ library.contact_info.phone }}
             </div>
           </div>
         </div>
@@ -308,6 +308,7 @@ import {
   Users,
   Wifi,
   Car,
+  Phone,
   ArrowLeft,
   CheckCircle,
   UserCheck,

@@ -54,7 +54,7 @@
               <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-2">
                 <!-- Staff ID Badge -->
                 <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-lg text-[11px] font-bold tracking-wide border border-emerald-100 uppercase">
-                  STAFF ID: #{{ user?.id || 'LIB' }}
+                  STAFF ID: {{ user?.crn || ('#' + user?.id) }}
                 </span>
 
                 <!-- Role Badge -->

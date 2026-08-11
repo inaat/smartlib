@@ -94,7 +94,8 @@ class LibraryController extends Controller
     public function index(Request $request)
     {
         \App\Models\SeatBooking::cancelExpiredBookings();
-        $libraries = Library::with(['facilities', 'operatingHours'])
+        $libraries = Library::where('is_active', true)
+            ->with(['facilities', 'operatingHours'])
             ->withCount([
                 'seats as totalSeats',
                 'seats as availableSeats' => function ($query) {

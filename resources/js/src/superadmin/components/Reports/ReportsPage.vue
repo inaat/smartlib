@@ -413,7 +413,7 @@
     </div>
 
     <!-- Generated Report View Container -->
-    <div v-if="generatedReport" class="space-y-5 animate-in fade-in duration-300">
+    <div id="generated-report-view" v-if="generatedReport" class="space-y-5 animate-in fade-in duration-300 scroll-mt-6">
       <!-- Export Options Bar -->
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center justify-between">
         <div class="flex items-center gap-2 text-left">
@@ -441,6 +441,14 @@
           >
             <Printer class="w-4 h-4 text-slate-500" />
             <span>Print Report</span>
+          </button>
+          <button
+            @click="generatedReport = null"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer flex items-center gap-1.5"
+            title="Close Report View"
+          >
+            <X class="w-4 h-4 text-slate-500" />
+            <span>Close View</span>
           </button>
         </div>
       </div>
@@ -996,7 +1004,7 @@ import { useSwal } from '@/shared/composables/useSwal';
 import {
   Zap, FileText, Sheet, Clock,
   History, Download, RefreshCw, BookMarked, Printer, ChevronDown,
-  Library as LibraryIcon, CalendarDays, Eye
+  Library as LibraryIcon, CalendarDays, Eye, X
 } from 'lucide-vue-next';
 
 const { showSuccess, showError } = useSwal();
@@ -2369,10 +2377,20 @@ const fetchSuperadminScheduledReports = async () => {
   }
 };
 
-const viewScheduledReport = (s: any) => {
+const scrollToReportView = () => {
+  setTimeout(() => {
+    const el = document.getElementById('generated-report-view');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 150);
+};
+
+const viewScheduledReport = async (s: any) => {
   if (s.library_id) selectedLibraryId.value = s.library_id;
   if (s.report_type) filters.category = s.report_type;
-  generateOnScreenReport(s);
+  await generateOnScreenReport(s);
+  scrollToReportView();
   showSuccess('Scheduled Report View', `Compiled ${s.report_type} scheduled report for ${s.library_name}.`);
 };
 
@@ -2388,19 +2406,21 @@ const downloadScheduledReport = async (s: any) => {
   }
 };
 
-const printScheduledReport = (s: any) => {
+const printScheduledReport = async (s: any) => {
   if (s.library_id) selectedLibraryId.value = s.library_id;
   if (s.report_type) filters.category = s.report_type;
-  generateOnScreenReport(s);
+  await generateOnScreenReport(s);
+  scrollToReportView();
   setTimeout(() => {
     exportReport('pdf');
   }, 500);
 };
 
-const viewGeneratedReportArchive = (g: any) => {
+const viewGeneratedReportArchive = async (g: any) => {
   if (g.library_id) selectedLibraryId.value = g.library_id;
   if (g.report_type) filters.category = g.report_type;
-  generateOnScreenReport(g);
+  await generateOnScreenReport(g);
+  scrollToReportView();
 };
 
 const downloadGeneratedReportArchive = (g: any) => {

@@ -1,0 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.font-outfit[data-v-2f919b57] {
+  font-family: 'Outfit', sans-serif;
+}
+.active\:scale-98[data-v-2f919b57]:active {
+  transform: scale(0.98);
+}

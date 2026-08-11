@@ -135,7 +135,7 @@
                   {{ librarian.email }}
                 </div>
                 <div class="text-xs font-normal text-slate-555 flex items-center mt-1">
-                  <Shield class="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                  <Phone class="w-3.5 h-3.5 mr-1.5 text-slate-400" />
                   {{ librarian.phone || 'No phone' }}
                 </div>
               </td>
@@ -179,9 +179,9 @@
 
     <!-- Create/Edit Modal -->
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 border border-slate-100 flex flex-col">
+      <div class="bg-white rounded-3xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200 border border-slate-100 flex flex-col">
         <!-- Modal Header -->
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between text-left">
+        <div class="p-5 md:p-6 border-b border-slate-100 flex items-center justify-between text-left flex-shrink-0">
           <h2 class="text-lg font-bold text-slate-800">{{ isEditing ? 'Edit Librarian' : 'Add New Librarian' }}</h2>
           <button @click="showModal = false" class="p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">
             <X class="w-5 h-5 text-slate-450" />
@@ -189,7 +189,8 @@
         </div>
 
         <!-- Form Body -->
-        <form @submit.prevent="saveLibrarian" class="p-6 space-y-4 text-left">
+        <form @submit.prevent="saveLibrarian" class="p-5 md:p-6 space-y-4 text-left overflow-y-auto flex-1">
+          <!-- Full Name -->
           <div>
             <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Full Name</label>
             <input
@@ -201,68 +202,88 @@
             />
           </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Email Address</label>
-            <input
-              v-model="form.email"
-              type="email"
-              required
-              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
-              placeholder="john@example.com"
-            />
+          <!-- Email & Phone Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Email Address</label>
+              <input
+                v-model="form.email"
+                type="email"
+                required
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
+                placeholder="john@example.com"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Contact Number</label>
+              <input
+                v-model="form.phone"
+                type="text"
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
+                placeholder="e.g. +92 300 1234567"
+              />
+            </div>
           </div>
 
-          <div v-if="!isEditing">
-            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Staff ID</label>
-            <input
-              v-model="form.crn"
-              type="text"
-              required
-              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
-              placeholder="e.g. 001"
-            />
+          <!-- Staff ID & Password Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Staff ID (Auto-Assigned)</label>
+              <input
+                v-model="form.crn"
+                type="text"
+                disabled
+                readonly
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none text-xs font-bold text-slate-500 bg-slate-100 cursor-not-allowed shadow-inner"
+                placeholder="Auto-generated (e.g. 1001)"
+              />
+            </div>
+
+            <div v-if="!isEditing">
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Password</label>
+              <input
+                v-model="form.password"
+                type="password"
+                required
+                minlength="8"
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
+                placeholder="Min. 8 characters"
+              />
+            </div>
           </div>
 
-          <div v-if="!isEditing">
-            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Password</label>
-            <input
-              v-model="form.password"
-              type="password"
-              required
-              minlength="8"
-              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-semibold text-slate-655 bg-white"
-              placeholder="Min. 8 characters"
-            />
-          </div>
+          <!-- Library & Status Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Assign Library</label>
+              <select
+                v-model="form.library_id"
+                required
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-bold text-slate-655 bg-white cursor-pointer"
+              >
+                <option :value="null">Select a Library</option>
+                <option v-for="library in libraries" :key="library.id" :value="library.id">
+                  {{ library.name }}
+                </option>
+              </select>
+            </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Assign Library</label>
-            <select
-              v-model="form.library_id"
-              required
-              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-bold text-slate-655 bg-white cursor-pointer"
-            >
-              <option :value="null">Select a Library</option>
-              <option v-for="library in libraries" :key="library.id" :value="library.id">
-                {{ library.name }}
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Account Status</label>
-            <select
-              v-model="form.status"
-              required
-              class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-bold text-slate-655 bg-white cursor-pointer"
-            >
-              <option value="approved">Active</option>
-              <option value="suspended">Inactive</option>
-            </select>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Account Status</label>
+              <select
+                v-model="form.status"
+                required
+                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-bold text-slate-655 bg-white cursor-pointer"
+              >
+                <option value="approved">Active</option>
+                <option value="suspended">Inactive</option>
+              </select>
+            </div>
           </div>
 
           <!-- Form Actions Footer -->
-          <div class="pt-4 flex items-center space-x-3">
+          <div class="pt-4 flex items-center space-x-3 border-t border-slate-100 flex-shrink-0">
             <button
               type="button"
               @click="showModal = false"
@@ -296,12 +317,15 @@ import {
   Trash2,
   AlertCircle,
   Mail,
-  Shield,
+  Phone,
   Search,
   Users,
   UserCheck
 } from 'lucide-vue-next';
 import { adminAPI } from '@/shared/services/api';
+import { useSwal } from '@/shared/composables/useSwal';
+
+const { showConfirm, showSuccess, showError } = useSwal();
 
 const librarians = ref<any[]>([]);
 const libraries = ref<any[]>([]);
@@ -317,6 +341,7 @@ const form = ref({
   id: null as number | null,
   name: '',
   email: '',
+  phone: '',
   crn: '',
   password: '',
   library_id: null as number | null,
@@ -368,13 +393,23 @@ const stats = computed(() => {
   return { total, approved, unassigned };
 });
 
+const generateNextStaffId = () => {
+  const existingNums = librarians.value
+    .map(l => parseInt(l.crn, 10))
+    .filter(num => !isNaN(num));
+
+  const maxNum = existingNums.length > 0 ? Math.max(...existingNums) : 1000;
+  return (maxNum >= 1000 ? maxNum + 1 : 1001).toString();
+};
+
 const openCreateModal = () => {
   isEditing.value = false;
   form.value = {
     id: null,
     name: '',
     email: '',
-    crn: '',
+    phone: '',
+    crn: generateNextStaffId(),
     password: '',
     library_id: libraries.value[0]?.id || null,
     status: 'approved'
@@ -388,6 +423,7 @@ const editLibrarian = (librarian: any) => {
     id: librarian.id,
     name: librarian.name,
     email: librarian.email,
+    phone: librarian.phone || '',
     crn: librarian.crn,
     password: '',
     library_id: librarian.library_id,
@@ -407,33 +443,37 @@ const saveLibrarian = async () => {
 
     if (isEditing.value && form.value.id) {
       await adminAPI.updateLibrarian(form.value.id, payload);
+      showSuccess('Updated!', 'Librarian details updated successfully');
     } else {
       await adminAPI.createLibrarian(payload);
+      showSuccess('Created!', 'New librarian account created successfully');
     }
     await fetchLibrarians();
     showModal.value = false;
   } catch (error: any) {
     console.error('Error saving librarian:', error);
-    // Show validation errors from backend
     const errData = error.response?.data;
+    let msg = 'Failed to save librarian details.';
     if (errData?.errors) {
-      const messages = Object.values(errData.errors).flat().join('\n');
-      alert(messages);
+      msg = Object.values(errData.errors).flat().join(' ');
     } else if (errData?.message) {
-      alert(errData.message);
+      msg = errData.message;
     }
+    showError('Save Failed', msg);
   } finally {
     saving.value = false;
   }
 };
 
 const confirmDelete = async (librarian: any) => {
-  if (confirm(`Are you sure you want to delete librarian "${librarian.name}"?`)) {
+  if (await showConfirm('Delete Librarian', `Are you sure you want to delete librarian "${librarian.name}"?`, 'Yes, Delete')) {
     try {
       await adminAPI.deleteLibrarian(librarian.id);
+      showSuccess('Deleted!', 'Librarian account deleted successfully.');
       await fetchLibrarians();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting librarian:', error);
+      showError('Delete Failed', error.response?.data?.message || 'Could not delete librarian.');
     }
   }
 };
